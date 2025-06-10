@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
 import Header from '@/components/layout/Header';
 import SessionModal from '@/components/modals/SessionModal';
@@ -8,11 +9,15 @@ import EditSessionModal from '@/components/modals/EditSessionModal';
 import EditClientModal from '@/components/modals/EditClientModal';
 import AddModal from '@/components/AddModal';
 import { Session, Client } from '@/types';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek } from 'date-fns';
+import { formatTime, formatDayDate, formatMonthYear, combineDateAndTime } from '@/utils/dateFormatting';
 import { ChevronLeft, ChevronRight, Calendar, UserPlus } from 'lucide-react';
 
 export default function CalendarPage() {
   const { state } = useApp();
+  const router = useRouter();
+
+
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -20,32 +25,34 @@ export default function CalendarPage() {
   const [showEditSessionModal, setShowEditSessionModal] = useState(false);
   const [showEditClientModal, setShowEditClientModal] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
+
 
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
-  const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
+
+  // Get the calendar grid - start from Monday of the week containing the first day
+  const calendarStart = startOfWeek(monthStart, { weekStartsOn: 1 }); // 1 = Monday
+  const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 1 });
+  const daysInMonth = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
 
   const getSessionsForDay = (day: Date) => {
-    const daySessions = state.sessions.filter(session =>
-      isSameDay(new Date(session.bookingDate), day)
-    );
+    const daySessions = state.sessions.filter(session => {
+      // Skip sessions with missing date/time data
+      if (!session.bookingDate || !session.bookingTime) {
+        console.warn('Session missing date/time data:', session);
+        return false;
+      }
 
-    // Filter by search query if provided
-    if (!searchQuery.trim()) {
-      return daySessions;
-    }
-
-    return daySessions.filter(session => {
-      const searchTerm = searchQuery.toLowerCase();
-      const client = state.clients.find(c => c.id === session.clientId);
-      return (
-        client?.firstName.toLowerCase().includes(searchTerm) ||
-        client?.lastName.toLowerCase().includes(searchTerm) ||
-        client?.dogName?.toLowerCase().includes(searchTerm) ||
-        session.sessionType.toLowerCase().includes(searchTerm)
-      );
+      try {
+        const sessionDateTime = combineDateAndTime(session.bookingDate, session.bookingTime);
+        return isSameDay(sessionDateTime, day);
+      } catch (error) {
+        console.warn('Error processing session date:', session, error);
+        return false;
+      }
     });
+
+    return daySessions;
   };
 
   const handlePreviousMonth = () => {
@@ -107,6 +114,10 @@ export default function CalendarPage() {
     }
   };
 
+  const handleCreateSessionPlan = (session: Session) => {
+    router.push(`/session-plan?sessionId=${session.id}`);
+  };
+
   // Keyboard navigation for months
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -131,8 +142,34 @@ export default function CalendarPage() {
     }
   }, []);
 
-  // Get the first session for the bottom preview
-  const firstSession = state.sessions[0];
+  // Get the first session for the bottom preview (upcoming sessions)
+  const upcomingSessions = state.sessions
+    .filter(session => {
+      // Skip sessions with missing date/time data
+      if (!session.bookingDate || !session.bookingTime) {
+        return false;
+      }
+
+      try {
+        const sessionDateTime = combineDateAndTime(session.bookingDate, session.bookingTime);
+        return sessionDateTime >= new Date();
+      } catch (error) {
+        console.warn('Error processing upcoming session:', session, error);
+        return false;
+      }
+    })
+    .sort((a, b) => {
+      try {
+        const aDateTime = combineDateAndTime(a.bookingDate, a.bookingTime);
+        const bDateTime = combineDateAndTime(b.bookingDate, b.bookingTime);
+        return aDateTime.getTime() - bDateTime.getTime();
+      } catch (error) {
+        console.warn('Error sorting sessions:', { a, b, error });
+        return 0;
+      }
+    });
+
+  const firstSession = upcomingSessions[0];
   const firstSessionClient = firstSession ? state.clients.find(c => c.id === firstSession.clientId) : null;
 
   return (
@@ -156,9 +193,7 @@ export default function CalendarPage() {
               title: 'Add Client'
             }
           ]}
-          showSearch
-          onSearch={setSearchQuery}
-          searchPlaceholder="Search"
+          noBottomMargin={true}
         />
       </div>
 
@@ -168,7 +203,7 @@ export default function CalendarPage() {
         <div className="px-4 py-4 border-b border-gray-200 flex-shrink-0">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold">
-              {format(currentDate, 'MMM yyyy')}
+              {formatMonthYear(currentDate)}
             </h2>
             <div className="flex items-center gap-2">
               <button
@@ -201,14 +236,18 @@ export default function CalendarPage() {
             {daysInMonth.map(day => {
               const sessions = getSessionsForDay(day);
               const dayNumber = format(day, 'd');
+              const isCurrentMonth = isSameDay(day, currentDate) ||
+                (day >= monthStart && day <= monthEnd);
 
               return (
                 <div key={day.toISOString()} className="flex flex-col p-1 min-h-0 border-r border-b border-gray-100 last:border-r-0">
-                  <div className="text-sm font-medium mb-1 flex-shrink-0">{dayNumber}</div>
+                  <div className={`text-sm font-medium mb-1 flex-shrink-0 ${
+                    isCurrentMonth ? 'text-gray-900' : 'text-gray-400'
+                  }`}>{dayNumber}</div>
                   <div className="space-y-1 flex-1 min-h-0 overflow-hidden">
                     {sessions.slice(0, 2).map(session => {
                       const client = state.clients.find(c => c.id === session.clientId);
-                      const timeOnly = format(new Date(session.bookingDate), 'HH:mm');
+                      const timeOnly = formatTime(session.bookingTime);
                       const fullDisplayText = client
                         ? `${timeOnly} | ${client.firstName} ${client.lastName}${client.dogName ? ` w/ ${client.dogName}` : ''}`
                         : `${timeOnly} | Unknown Client`;
@@ -248,10 +287,10 @@ export default function CalendarPage() {
         {firstSession && firstSessionClient ? (
           <>
             <div className="text-lg font-medium">
-              {format(new Date(firstSession.bookingDate), 'HH:mm')} | {firstSessionClient.firstName} {firstSessionClient.lastName} w/ {firstSessionClient.dogName}
+              {formatTime(firstSession.bookingTime)} | {firstSessionClient.firstName} {firstSessionClient.lastName} w/ {firstSessionClient.dogName}
             </div>
             <div className="text-white/80 text-sm">
-              {firstSession.sessionType} • {format(new Date(firstSession.bookingDate), 'EEEE, d MMMM yyyy')}
+              {firstSession.sessionType} • {formatDayDate(firstSession.bookingDate)}
             </div>
           </>
         ) : (
@@ -265,6 +304,7 @@ export default function CalendarPage() {
         onClose={handleCloseModal}
         onEditSession={handleEditSession}
         onEditClient={handleEditClient}
+        onCreateSessionPlan={handleCreateSessionPlan}
       />
 
       <EditSessionModal

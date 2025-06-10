@@ -9,6 +9,7 @@ import EditClientModal from '@/components/modals/EditClientModal';
 import AddModal from '@/components/AddModal';
 import { Session, Client } from '@/types';
 import { format } from 'date-fns';
+import { formatDateTime, formatFullMonthYear } from '@/utils/dateFormatting';
 import { Calendar, UserPlus, ChevronDown, ChevronRight } from 'lucide-react';
 
 export default function SessionsPage() {
@@ -35,7 +36,7 @@ export default function SessionsPage() {
 
   // Group sessions by month
   const sessionsByMonth = filteredSessions.reduce((acc, session) => {
-    const monthKey = format(session.bookingDate, 'MMMM yyyy');
+    const monthKey = formatFullMonthYear(session.bookingDate);
     if (!acc[monthKey]) {
       acc[monthKey] = [];
     }
@@ -188,7 +189,7 @@ export default function SessionsPage() {
                           <div>
                             <h3 className="font-medium text-gray-900">{displayName}</h3>
                             <p className="text-sm text-gray-500">
-                              {format(session.bookingDate, 'dd/MM/yyyy, HH:mm')} · {session.sessionType}
+                              {formatDateTime(session.bookingDate, session.bookingTime)} · {session.sessionType}
                             </p>
                           </div>
                         </div>

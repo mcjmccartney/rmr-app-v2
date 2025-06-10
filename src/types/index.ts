@@ -2,10 +2,32 @@ export interface Session {
   id: string;
   clientId: string;
   sessionType: 'In-Person' | 'Online' | 'Training' | 'Online Catchup' | 'Group' | 'Phone Call' | 'Coaching';
-  bookingDate: Date;
+  bookingDate: string; // Date in YYYY-MM-DD format
+  bookingTime: string; // Time in HH:mm format
   notes?: string;
   quote: number;
-  notes?: string;
+  email?: string; // For linking during import
+  sessionPlanId?: string; // Link to session plan
+}
+
+export interface ActionPoint {
+  id: string;
+  header: string;
+  details: string;
+}
+
+export interface SessionPlan {
+  id: string;
+  sessionId: string;
+  sessionNumber: number; // Auto-calculated based on client's session count
+  mainGoal1?: string;
+  mainGoal2?: string;
+  mainGoal3?: string;
+  mainGoal4?: string;
+  explanationOfBehaviour?: string;
+  actionPoints: string[]; // Array of ActionPoint IDs
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface BehaviouralBrief {
@@ -100,7 +122,7 @@ export interface Client {
   id: string;
   firstName: string;
   lastName: string;
-  dogName: string;
+  dogName?: string; // Made optional - some clients might not have a dog yet
   otherDogs?: string[];
   phone?: string;
   email?: string;
@@ -126,12 +148,15 @@ export interface AppState {
   finances: MonthlyFinance[];
   behaviouralBriefs: BehaviouralBrief[];
   behaviourQuestionnaires: BehaviourQuestionnaire[];
+  sessionPlans: SessionPlan[];
+  actionPoints: ActionPoint[];
   selectedSession: Session | null;
   selectedClient: Client | null;
   selectedBehaviouralBrief: BehaviouralBrief | null;
   selectedBehaviourQuestionnaire: BehaviourQuestionnaire | null;
+  selectedSessionPlan: SessionPlan | null;
   isModalOpen: boolean;
-  modalType: 'session' | 'client' | 'behaviouralBrief' | 'behaviourQuestionnaire' | null;
+  modalType: 'session' | 'client' | 'behaviouralBrief' | 'behaviourQuestionnaire' | 'sessionPlan' | null;
 }
 
 export type AppAction =
@@ -148,6 +173,11 @@ export type AppAction =
   | { type: 'UPDATE_BEHAVIOURAL_BRIEF'; payload: BehaviouralBrief }
   | { type: 'DELETE_BEHAVIOURAL_BRIEF'; payload: string }
   | { type: 'SET_BEHAVIOUR_QUESTIONNAIRES'; payload: BehaviourQuestionnaire[] }
+  | { type: 'SET_SESSION_PLANS'; payload: SessionPlan[] }
+  | { type: 'ADD_SESSION_PLAN'; payload: SessionPlan }
+  | { type: 'UPDATE_SESSION_PLAN'; payload: SessionPlan }
+  | { type: 'DELETE_SESSION_PLAN'; payload: string }
+  | { type: 'SET_ACTION_POINTS'; payload: ActionPoint[] }
   | { type: 'ADD_BEHAVIOUR_QUESTIONNAIRE'; payload: BehaviourQuestionnaire }
   | { type: 'UPDATE_BEHAVIOUR_QUESTIONNAIRE'; payload: BehaviourQuestionnaire }
   | { type: 'DELETE_BEHAVIOUR_QUESTIONNAIRE'; payload: string }

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Session } from '@/types';
 import { useApp } from '@/context/AppContext';
 import SlideUpModal from './SlideUpModal';
-import { format } from 'date-fns';
+import { formatForDateInput, formatForTimeInput } from '@/utils/dateFormatting';
 
 interface EditSessionModalProps {
   session: Session | null;
@@ -25,12 +25,11 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
 
   useEffect(() => {
     if (session) {
-      const sessionDate = new Date(session.bookingDate);
       setFormData({
         clientId: session.clientId,
         sessionType: session.sessionType,
-        date: format(sessionDate, 'yyyy-MM-dd'),
-        time: format(sessionDate, 'HH:mm'),
+        date: session.bookingDate, // Already in YYYY-MM-DD format
+        time: session.bookingTime, // Already in HH:mm format
         quote: session.quote.toString(),
         notes: session.notes || ''
       });
@@ -47,7 +46,8 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
       ...session,
       clientId: formData.clientId,
       sessionType: formData.sessionType as Session['sessionType'],
-      bookingDate,
+      bookingDate: formData.date, // YYYY-MM-DD format
+      bookingTime: formData.time, // HH:mm format
       quote: parseFloat(formData.quote),
       notes: formData.notes || undefined
     };

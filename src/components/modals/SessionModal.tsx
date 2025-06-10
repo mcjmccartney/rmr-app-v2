@@ -3,7 +3,7 @@
 import { Session } from '@/types';
 import { useApp } from '@/context/AppContext';
 import SlideUpModal from './SlideUpModal';
-import { format } from 'date-fns';
+import { formatDateTime } from '@/utils/dateFormatting';
 
 interface SessionModalProps {
   session: Session | null;
@@ -11,21 +11,27 @@ interface SessionModalProps {
   onClose: () => void;
   onEditSession: (session: Session) => void;
   onEditClient: (session: Session) => void;
+  onCreateSessionPlan?: (session: Session) => void;
 }
 
-export default function SessionModal({ session, isOpen, onClose, onEditSession, onEditClient }: SessionModalProps) {
-  const { dispatch, state } = useApp();
+export default function SessionModal({ session, isOpen, onClose, onEditSession, onEditClient, onCreateSessionPlan }: SessionModalProps) {
+  const { dispatch, state, deleteSession } = useApp();
 
   if (!session) return null;
 
   // Find the client for this session
   const client = state.clients.find(c => c.id === session.clientId);
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     // Show confirmation dialog
     if (window.confirm('Are you sure you want to delete this session? This action cannot be undone.')) {
-      dispatch({ type: 'DELETE_SESSION', payload: session.id });
-      onClose();
+      try {
+        await deleteSession(session.id);
+        onClose();
+      } catch (error) {
+        console.error('Error deleting session:', error);
+        alert('Failed to delete session. Please try again.');
+      }
     }
   };
 
@@ -75,7 +81,7 @@ export default function SessionModal({ session, isOpen, onClose, onEditSession, 
           <div className="flex justify-between items-center">
             <span className="text-gray-600">Booking</span>
             <span className="font-medium text-gray-900">
-              {format(session.bookingDate, 'dd/MM/yyyy, HH:mm')}
+              {formatDateTime(session.bookingDate, session.bookingTime)}
             </span>
           </div>
 
@@ -99,19 +105,31 @@ export default function SessionModal({ session, isOpen, onClose, onEditSession, 
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-3">
-          <button
-            onClick={() => onEditSession(session)}
-            className="flex-1 bg-amber-800 hover:bg-amber-700 text-white py-3 px-4 rounded-lg font-medium transition-colors"
-          >
-            Edit Session
-          </button>
-          <button
-            onClick={() => onEditClient(session)}
-            className="flex-1 bg-amber-800 hover:bg-amber-700 text-white py-3 px-4 rounded-lg font-medium transition-colors"
-          >
-            Edit Client
-          </button>
+        <div className="space-y-3">
+          <div className="flex gap-3">
+            <button
+              onClick={() => onEditSession(session)}
+              className="flex-1 bg-amber-800 hover:bg-amber-700 text-white py-3 px-4 rounded-lg font-medium transition-colors"
+            >
+              Edit Session
+            </button>
+            <button
+              onClick={() => onEditClient(session)}
+              className="flex-1 bg-amber-800 hover:bg-amber-700 text-white py-3 px-4 rounded-lg font-medium transition-colors"
+            >
+              Edit Client
+            </button>
+          </div>
+
+          {/* Session Plan Button */}
+          {onCreateSessionPlan && (
+            <button
+              onClick={() => onCreateSessionPlan(session)}
+              className="w-full bg-amber-800 hover:bg-amber-700 text-white py-3 px-4 rounded-lg font-medium transition-colors"
+            >
+              Create Session Plan
+            </button>
+          )}
         </div>
 
         {/* Delete Button */}

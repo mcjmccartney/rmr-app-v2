@@ -1,12 +1,14 @@
 'use client';
 
-import React, { createContext, useContext, useReducer, ReactNode } from 'react';
+import React, { createContext, useContext, useReducer, ReactNode, useEffect } from 'react';
 import { AppState, AppAction, Session, Client, BehaviouralBrief, BehaviourQuestionnaire } from '@/types';
-import { mockSessions, mockClients, mockFinances } from '@/data/mockData';
+import { mockFinances } from '@/data/mockData';
+import { clientService } from '@/services/clientService';
+import { sessionService } from '@/services/sessionService';
 
 const initialState: AppState = {
-  sessions: mockSessions,
-  clients: mockClients,
+  sessions: [],
+  clients: [],
   finances: mockFinances,
   behaviouralBriefs: [],
   behaviourQuestionnaires: [],
@@ -130,13 +132,141 @@ function appReducer(state: AppState, action: AppAction): AppState {
 const AppContext = createContext<{
   state: AppState;
   dispatch: React.Dispatch<AppAction>;
+  // Supabase service functions
+  loadClients: () => Promise<void>;
+  loadSessions: () => Promise<void>;
+  createClient: (client: Omit<Client, 'id'>) => Promise<Client>;
+  updateClient: (id: string, updates: Partial<Client>) => Promise<Client>;
+  deleteClient: (id: string) => Promise<void>;
+  createSession: (session: Omit<Session, 'id'>) => Promise<Session>;
+  updateSession: (id: string, updates: Partial<Session>) => Promise<Session>;
+  deleteSession: (id: string) => Promise<void>;
+  findClientByEmail: (email: string) => Promise<Client | null>;
 } | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(appReducer, initialState);
 
+  // Load clients from Supabase
+  const loadClients = async () => {
+    try {
+      const clients = await clientService.getAll();
+      dispatch({ type: 'SET_CLIENTS', payload: clients });
+    } catch (error) {
+      console.error('Failed to load clients:', error);
+    }
+  };
+
+  // Load sessions from Supabase
+  const loadSessions = async () => {
+    try {
+      const sessions = await sessionService.getAll();
+      dispatch({ type: 'SET_SESSIONS', payload: sessions });
+    } catch (error) {
+      console.error('Failed to load sessions:', error);
+    }
+  };
+
+  // Create client in Supabase
+  const createClient = async (clientData: Omit<Client, 'id'>): Promise<Client> => {
+    try {
+      const client = await clientService.create(clientData);
+      dispatch({ type: 'ADD_CLIENT', payload: client });
+      return client;
+    } catch (error) {
+      console.error('Failed to create client:', error);
+      throw error;
+    }
+  };
+
+  // Update client in Supabase
+  const updateClient = async (id: string, updates: Partial<Client>): Promise<Client> => {
+    try {
+      const client = await clientService.update(id, updates);
+      dispatch({ type: 'UPDATE_CLIENT', payload: client });
+      return client;
+    } catch (error) {
+      console.error('Failed to update client:', error);
+      throw error;
+    }
+  };
+
+  // Delete client from Supabase
+  const deleteClient = async (id: string): Promise<void> => {
+    try {
+      await clientService.delete(id);
+      dispatch({ type: 'DELETE_CLIENT', payload: id });
+    } catch (error) {
+      console.error('Failed to delete client:', error);
+      throw error;
+    }
+  };
+
+  // Create session in Supabase
+  const createSession = async (sessionData: Omit<Session, 'id'>): Promise<Session> => {
+    try {
+      const session = await sessionService.create(sessionData);
+      dispatch({ type: 'ADD_SESSION', payload: session });
+      return session;
+    } catch (error) {
+      console.error('Failed to create session:', error);
+      throw error;
+    }
+  };
+
+  // Update session in Supabase
+  const updateSession = async (id: string, updates: Partial<Session>): Promise<Session> => {
+    try {
+      const session = await sessionService.update(id, updates);
+      dispatch({ type: 'UPDATE_SESSION', payload: session });
+      return session;
+    } catch (error) {
+      console.error('Failed to update session:', error);
+      throw error;
+    }
+  };
+
+  // Delete session from Supabase
+  const deleteSession = async (id: string): Promise<void> => {
+    try {
+      await sessionService.delete(id);
+      dispatch({ type: 'DELETE_SESSION', payload: id });
+    } catch (error) {
+      console.error('Failed to delete session:', error);
+      throw error;
+    }
+  };
+
+  // Find client by email (for questionnaire pairing)
+  const findClientByEmail = async (email: string): Promise<Client | null> => {
+    try {
+      return await clientService.findByEmail(email);
+    } catch (error) {
+      console.error('Failed to find client by email:', error);
+      throw error;
+    }
+  };
+
+  // Load initial data on mount
+  useEffect(() => {
+    loadClients();
+    loadSessions();
+  }, []);
+
   return (
-    <AppContext.Provider value={{ state, dispatch }}>
+    <AppContext.Provider value={{
+      state,
+      dispatch,
+      loadClients,
+      loadSessions,
+      createClient,
+      updateClient,
+      deleteClient,
+      createSession,
+      updateSession,
+      deleteSession,
+      findClientByEmail,
+    }}>
       {children}
     </AppContext.Provider>
   );

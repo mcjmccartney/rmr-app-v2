@@ -5,7 +5,7 @@ import { useApp } from '@/context/AppContext';
 import { BehaviourQuestionnaire, Client } from '@/types';
 
 export default function BehaviourQuestionnairePage() {
-  const { dispatch, state } = useApp();
+  const { dispatch, state, createClient, updateClient, findClientByEmail } = useApp();
   const [formData, setFormData] = useState({
     // Owner Information
     ownerFirstName: '',
@@ -95,28 +95,26 @@ export default function BehaviourQuestionnairePage() {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Generate questionnaire ID
-    const behaviourQuestionnaireId = Date.now().toString();
+    try {
+      // Generate questionnaire ID
+      const behaviourQuestionnaireId = Date.now().toString();
 
-    // Try to find existing client by email
-    const existingClient = state.clients.find(client =>
-      client.email?.toLowerCase() === formData.email.toLowerCase()
-    );
+      // Try to find existing client by email using Supabase
+      const existingClient = await findClientByEmail(formData.email);
 
-    let clientId: string;
-    let shouldCreateClient = false;
+      let clientId: string;
+      let shouldCreateClient = false;
 
-    if (existingClient) {
-      // Use existing client
-      clientId = existingClient.id;
-    } else {
-      // Create new client
-      clientId = (Date.now() + 1).toString();
-      shouldCreateClient = true;
-    }
+      if (existingClient) {
+        // Use existing client
+        clientId = existingClient.id;
+      } else {
+        // Will create new client
+        shouldCreateClient = true;
+      }
 
     // Create behaviour questionnaire
     const behaviourQuestionnaire: BehaviourQuestionnaire = {
@@ -179,35 +177,41 @@ export default function BehaviourQuestionnairePage() {
       submittedAt: new Date(),
     };
 
-    // Add questionnaire to state
-    dispatch({ type: 'ADD_BEHAVIOUR_QUESTIONNAIRE', payload: behaviourQuestionnaire });
+      // Add questionnaire to state (not connected to Supabase yet)
+      dispatch({ type: 'ADD_BEHAVIOUR_QUESTIONNAIRE', payload: behaviourQuestionnaire });
 
-    if (shouldCreateClient) {
-      // Create new client
-      const client: Client = {
-        id: clientId,
-        firstName: formData.ownerFirstName,
-        lastName: formData.ownerLastName,
-        dogName: formData.dogName,
-        phone: formData.contactNumber,
-        email: formData.email,
-        address: `${formData.address1}${formData.address2 ? ', ' + formData.address2 : ''}, ${formData.city}, ${formData.stateProvince} ${formData.zipPostalCode}, ${formData.country}`,
-        active: true,
-        membership: false,
-        behaviourQuestionnaireId,
-      };
-      dispatch({ type: 'ADD_CLIENT', payload: client });
-    } else {
-      // Update existing client with questionnaire reference
-      const updatedClient: Client = {
-        ...existingClient!,
-        behaviourQuestionnaireId,
-      };
-      dispatch({ type: 'UPDATE_CLIENT', payload: updatedClient });
+      if (shouldCreateClient) {
+        // Create new client with Supabase
+        const client = await createClient({
+          firstName: formData.ownerFirstName,
+          lastName: formData.ownerLastName,
+          dogName: formData.dogName,
+          phone: formData.contactNumber,
+          email: formData.email,
+          address: `${formData.address1}${formData.address2 ? ', ' + formData.address2 : ''}, ${formData.city}, ${formData.stateProvince} ${formData.zipPostalCode}, ${formData.country}`,
+          active: true,
+          membership: false,
+          behaviourQuestionnaireId,
+        });
+
+        // Update questionnaire with actual client ID
+        behaviourQuestionnaire.clientId = client.id;
+      } else {
+        // Update existing client with questionnaire reference
+        await updateClient(existingClient!.id, {
+          behaviourQuestionnaireId,
+        });
+
+        // Update questionnaire with client ID
+        behaviourQuestionnaire.clientId = existingClient!.id;
+      }
+
+      // Reset form (truncated for brevity - would reset all fields)
+      alert('Thank you for your submission!');
+    } catch (error) {
+      console.error('Error submitting questionnaire:', error);
+      alert('There was an error submitting your questionnaire. Please try again.');
     }
-
-    // Reset form (truncated for brevity - would reset all fields)
-    alert('Thank you for your submission!');
   };
 
   return (

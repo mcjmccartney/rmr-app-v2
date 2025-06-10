@@ -5,7 +5,7 @@ import { useApp } from '@/context/AppContext';
 import { BehaviouralBrief, Client } from '@/types';
 
 export default function BehaviouralBriefPage() {
-  const { dispatch } = useApp();
+  const { createClient, dispatch } = useApp();
   const [formData, setFormData] = useState({
     ownerFirstName: '',
     ownerLastName: '',
@@ -35,64 +35,66 @@ export default function BehaviouralBriefPage() {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Generate IDs
-    const behaviouralBriefId = Date.now().toString();
-    const clientId = (Date.now() + 1).toString();
 
-    // Create behavioural brief
-    const behaviouralBrief: BehaviouralBrief = {
-      id: behaviouralBriefId,
-      clientId,
-      ownerFirstName: formData.ownerFirstName,
-      ownerLastName: formData.ownerLastName,
-      email: formData.email,
-      contactNumber: formData.contactNumber,
-      postcode: formData.postcode,
-      dogName: formData.dogName,
-      sex: formData.sex as 'Male' | 'Female',
-      breed: formData.breed,
-      lifeWithDog: formData.lifeWithDog,
-      bestOutcome: formData.bestOutcome,
-      sessionType: formData.sessionType as BehaviouralBrief['sessionType'],
-      submittedAt: new Date(),
-    };
+    try {
+      // Generate behavioural brief ID
+      const behaviouralBriefId = Date.now().toString();
 
-    // Create client
-    const client: Client = {
-      id: clientId,
-      firstName: formData.ownerFirstName,
-      lastName: formData.ownerLastName,
-      dogName: formData.dogName,
-      phone: formData.contactNumber,
-      email: formData.email,
-      active: true,
-      membership: false,
-      behaviouralBriefId,
-    };
+      // Create client with Supabase
+      const client = await createClient({
+        firstName: formData.ownerFirstName,
+        lastName: formData.ownerLastName,
+        dogName: formData.dogName,
+        phone: formData.contactNumber,
+        email: formData.email,
+        active: true,
+        membership: false,
+        behaviouralBriefId,
+      });
 
-    // Add to state
-    dispatch({ type: 'ADD_BEHAVIOURAL_BRIEF', payload: behaviouralBrief });
-    dispatch({ type: 'ADD_CLIENT', payload: client });
+      // Create behavioural brief
+      const behaviouralBrief: BehaviouralBrief = {
+        id: behaviouralBriefId,
+        clientId: client.id,
+        ownerFirstName: formData.ownerFirstName,
+        ownerLastName: formData.ownerLastName,
+        email: formData.email,
+        contactNumber: formData.contactNumber,
+        postcode: formData.postcode,
+        dogName: formData.dogName,
+        sex: formData.sex as 'Male' | 'Female',
+        breed: formData.breed,
+        lifeWithDog: formData.lifeWithDog,
+        bestOutcome: formData.bestOutcome,
+        sessionType: formData.sessionType as BehaviouralBrief['sessionType'],
+        submittedAt: new Date(),
+      };
 
-    // Reset form
-    setFormData({
-      ownerFirstName: '',
-      ownerLastName: '',
-      email: '',
-      contactNumber: '',
-      postcode: '',
-      dogName: '',
-      sex: '',
-      breed: '',
-      lifeWithDog: '',
-      bestOutcome: '',
-      sessionType: '',
-    });
+      // Add behavioural brief to local state (not connected to Supabase yet)
+      dispatch({ type: 'ADD_BEHAVIOURAL_BRIEF', payload: behaviouralBrief });
 
-    alert('Thank you for your submission!');
+      // Reset form
+      setFormData({
+        ownerFirstName: '',
+        ownerLastName: '',
+        email: '',
+        contactNumber: '',
+        postcode: '',
+        dogName: '',
+        sex: '',
+        breed: '',
+        lifeWithDog: '',
+        bestOutcome: '',
+        sessionType: '',
+      });
+
+      alert('Thank you for your submission!');
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      alert('There was an error submitting your form. Please try again.');
+    }
   };
 
   return (

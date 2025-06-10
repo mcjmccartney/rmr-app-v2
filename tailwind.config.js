@@ -7,6 +7,12 @@ module.exports = {
   ],
   theme: {
     extend: {
+      colors: {
+        'brand': {
+          'primary': '#973b00',
+          'primary-dark': '#7a2f00',
+        },
+      },
       padding: {
         'safe': 'env(safe-area-inset-top)',
       },

@@ -18,6 +18,7 @@ interface HeaderProps {
   showSearch?: boolean;
   onSearch?: (query: string) => void;
   searchPlaceholder?: string;
+  noBottomMargin?: boolean; // New prop to remove bottom margin
 }
 
 export default function Header({
@@ -29,6 +30,7 @@ export default function Header({
   showSearch = false,
   onSearch,
   searchPlaceholder = 'Search',
+  noBottomMargin = false,
 }: HeaderProps) {
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -41,7 +43,7 @@ export default function Header({
   return (
     <div className="bg-amber-800 text-white px-4 pb-3 safe-area-pt">
       {/* Top row with title and buttons */}
-      <div className="flex items-center justify-between mb-3">
+      <div className={`flex items-center justify-between ${noBottomMargin ? 'mb-0' : 'mb-3'}`}>
         <h1 className="text-3xl font-semibold">{title}</h1>
         <div className="flex items-center gap-2">
           {/* Legacy single button support */}

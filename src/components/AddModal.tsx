@@ -122,7 +122,7 @@ export default function AddModal({ isOpen, onClose, type }: AddModalProps) {
 }
 
 function SessionForm({ onSubmit }: { onSubmit: () => void }) {
-  const { state } = useApp();
+  const { state, createSession } = useApp();
   const [formData, setFormData] = useState({
     clientId: '',
     sessionType: 'In-Person' as Session['sessionType'],
@@ -152,11 +152,24 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement session creation
-    console.log('Creating session:', formData);
-    onSubmit();
+
+    try {
+      await createSession({
+        clientId: formData.clientId,
+        sessionType: formData.sessionType,
+        bookingDate: formData.date, // YYYY-MM-DD format
+        bookingTime: formData.time, // HH:mm format
+        quote: formData.quote,
+        notes: formData.notes || undefined,
+      });
+
+      onSubmit();
+    } catch (error) {
+      console.error('Error creating session:', error);
+      alert('Failed to create session. Please try again.');
+    }
   };
 
   return (
@@ -273,7 +286,7 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
 }
 
 function ClientForm({ onSubmit }: { onSubmit: () => void }) {
-  const { dispatch } = useApp();
+  const { createClient } = useApp();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -286,24 +299,27 @@ function ClientForm({ onSubmit }: { onSubmit: () => void }) {
     membership: false
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const newClient: Client = {
-      id: Date.now().toString(),
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      dogName: formData.dogName,
-      otherDogs: formData.otherDogs.filter(dog => dog.trim() !== ''),
-      phone: formData.phone,
-      email: formData.email,
-      address: formData.address,
-      active: formData.active,
-      membership: formData.membership,
-    };
+    try {
+      await createClient({
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        dogName: formData.dogName,
+        otherDogs: formData.otherDogs.filter(dog => dog.trim() !== ''),
+        phone: formData.phone || undefined,
+        email: formData.email || undefined,
+        address: formData.address || undefined,
+        active: formData.active,
+        membership: formData.membership,
+      });
 
-    dispatch({ type: 'ADD_CLIENT', payload: newClient });
-    onSubmit();
+      onSubmit();
+    } catch (error) {
+      console.error('Error creating client:', error);
+      alert('Failed to create client. Please try again.');
+    }
   };
 
   const addDogField = () => {
@@ -354,15 +370,14 @@ function ClientForm({ onSubmit }: { onSubmit: () => void }) {
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Dog Name
+          Dog Name <span className="text-gray-500">(optional)</span>
         </label>
         <input
           type="text"
           value={formData.dogName}
           onChange={(e) => setFormData({ ...formData, dogName: e.target.value })}
           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-          placeholder="Enter primary dog name"
-          required
+          placeholder="Enter primary dog name (optional)"
         />
 
         {/* Add another dog button */}
