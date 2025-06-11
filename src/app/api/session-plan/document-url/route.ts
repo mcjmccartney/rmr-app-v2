@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     console.log('Received document URL from Make.com:', body);
 
-    const { sessionId, documentUrl, sessionNumber, clientName, dogName } = body;
+    const { sessionId, documentUrl } = body;
 
     // Validate required fields
     if (!sessionId || !documentUrl) {

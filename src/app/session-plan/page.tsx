@@ -7,6 +7,7 @@ import { predefinedActionPoints, personalizeActionPoint } from '@/data/actionPoi
 import { sessionPlanService } from '@/services/sessionPlanService';
 import { clientService } from '@/services/clientService';
 import { sessionService } from '@/services/sessionService';
+import type { SessionPlan, Client, Session } from '@/types';
 // import SessionPlanPreviewModal from '@/components/modals/SessionPlanPreviewModal';
 
 export default function SessionPlanPage() {
@@ -41,11 +42,11 @@ export default function SessionPlanPage() {
 
   const [selectedActionPoints, setSelectedActionPoints] = useState<string[]>([]);
   const [showActionPoints, setShowActionPoints] = useState(false);
-  const [existingSessionPlan, setExistingSessionPlan] = useState<any>(null);
+  const [existingSessionPlan, setExistingSessionPlan] = useState<SessionPlan | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [sessionNumber, setSessionNumber] = useState<number>(1);
-  const [fallbackClient, setFallbackClient] = useState<any>(null);
-  const [fallbackSession, setFallbackSession] = useState<any>(null);
+  const [fallbackClient, setFallbackClient] = useState<Client | null>(null);
+  const [fallbackSession, setFallbackSession] = useState<Session | null>(null);
   const [isGeneratingDoc, setIsGeneratingDoc] = useState(false);
   const [generatedDocUrl, setGeneratedDocUrl] = useState<string | null>(null);
   const [isPollingForUrl, setIsPollingForUrl] = useState(false);
@@ -259,7 +260,7 @@ export default function SessionPlanPage() {
       explanationOfBehaviour: formData.explanationOfBehaviour || '',
 
       // Action points (personalized)
-      actionPoints: selectedActionPoints.map((actionPointId, index) => {
+      actionPoints: selectedActionPoints.map((actionPointId) => {
         const actionPoint = predefinedActionPoints.find(ap => ap.id === actionPointId);
         if (!actionPoint) return null;
 
@@ -298,7 +299,7 @@ export default function SessionPlanPage() {
         try {
           result = await response.json();
           console.log('Make.com response data:', result);
-        } catch (jsonError) {
+        } catch {
           console.log('Response is not JSON, treating as success');
           result = { success: true };
         }
@@ -340,24 +341,7 @@ export default function SessionPlanPage() {
     }
   };
 
-  const handleSaveEditedContent = async (editedContent: string) => {
-    if (!session || !client) return;
-
-    try {
-      // For now, we'll save the edited content as a note or additional field
-      // You could extend the database schema to include an 'edited_document' field
-      console.log('Edited content saved:', editedContent);
-
-      // Optionally, you could save this to a separate table or field
-      // await sessionPlanService.saveEditedDocument(session.id, editedContent);
-
-      // Close the modal
-      // setShowPreviewModal(false);
-
-    } catch (error) {
-      console.error('Error saving edited content:', error);
-    }
-  };
+  // Removed unused function handleSaveEditedContent
 
   if (!sessionId || (!currentSession && !session) || (!currentClient && !client)) {
     return (
