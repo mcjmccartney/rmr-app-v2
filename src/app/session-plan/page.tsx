@@ -188,40 +188,50 @@ function SessionPlanContent() {
   const currentSession = session || fallbackSession;
   const currentClient = client || fallbackClient;
 
+  // Save function that navigates away (for the main Save button)
   const handleSave = async () => {
     if (!currentSession || !currentClient) return;
 
     try {
-      const sessionPlanData = {
-        sessionId: currentSession.id,
-        mainGoal1: formData.mainGoal1,
-        mainGoal2: formData.mainGoal2,
-        mainGoal3: formData.mainGoal3,
-        mainGoal4: formData.mainGoal4,
-        explanationOfBehaviour: formData.explanationOfBehaviour,
-        actionPoints: selectedActionPoints,
-        sessionNumber: sessionNumber
-      };
-
-      console.log('Saving session plan data:', sessionPlanData);
-      console.log('Existing session plan:', existingSessionPlan);
-
-      let savedPlan;
-      if (existingSessionPlan) {
-        console.log('Updating existing session plan with ID:', existingSessionPlan.id);
-        savedPlan = await sessionPlanService.update(existingSessionPlan.id, sessionPlanData);
-      } else {
-        console.log('Creating new session plan');
-        savedPlan = await sessionPlanService.create(sessionPlanData);
-      }
-
-      console.log('Session plan saved successfully:', savedPlan);
+      await saveSessionPlan();
       router.push('/calendar');
-
     } catch (error) {
       console.error('Error saving session plan:', error);
       router.push('/calendar');
     }
+  };
+
+  // Internal save function that doesn't navigate (for auto-save)
+  const saveSessionPlan = async () => {
+    if (!currentSession || !currentClient) return;
+
+    const sessionPlanData = {
+      sessionId: currentSession.id,
+      mainGoal1: formData.mainGoal1,
+      mainGoal2: formData.mainGoal2,
+      mainGoal3: formData.mainGoal3,
+      mainGoal4: formData.mainGoal4,
+      explanationOfBehaviour: formData.explanationOfBehaviour,
+      actionPoints: selectedActionPoints,
+      sessionNumber: sessionNumber
+    };
+
+    console.log('Saving session plan data:', sessionPlanData);
+    console.log('Existing session plan:', existingSessionPlan);
+
+    let savedPlan;
+    if (existingSessionPlan) {
+      console.log('Updating existing session plan with ID:', existingSessionPlan.id);
+      savedPlan = await sessionPlanService.update(existingSessionPlan.id, sessionPlanData);
+    } else {
+      console.log('Creating new session plan');
+      savedPlan = await sessionPlanService.create(sessionPlanData);
+      // Update the existingSessionPlan state so subsequent saves will be updates
+      setExistingSessionPlan(savedPlan);
+    }
+
+    console.log('Session plan saved successfully:', savedPlan);
+    return savedPlan;
   };
 
   const handleActionPointToggle = (actionPointId: string) => {
@@ -236,6 +246,16 @@ function SessionPlanContent() {
     if (!currentSession || !currentClient) return;
 
     setIsGeneratingDoc(true);
+
+    try {
+      // First, auto-save the session plan to ensure data is preserved
+      console.log('Auto-saving session plan before generating document...');
+      await saveSessionPlan();
+      console.log('Session plan auto-saved successfully');
+    } catch (error) {
+      console.error('Error auto-saving session plan:', error);
+      // Continue with document generation even if save fails
+    }
 
     // Prepare the data for the webhook
     const sessionData = {
