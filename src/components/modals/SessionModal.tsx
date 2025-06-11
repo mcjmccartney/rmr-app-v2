@@ -47,61 +47,65 @@ export default function SessionModal({ session, isOpen, onClose, onEditSession, 
     >
       <div className="space-y-6">
         {/* Session Details */}
-        <div className="space-y-4">
+        <div className="space-y-0 divide-y divide-gray-100">
           {client && (
-            <>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">Owner(s) Name</span>
-                <span className="font-medium text-gray-900">{client.firstName} {client.lastName}</span>
-              </div>
-
-              {client.phone && (
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Phone</span>
-                  <span className="font-medium text-gray-900">{client.phone}</span>
-                </div>
-              )}
-
-              {client.email && (
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Email</span>
-                  <span className="font-medium text-gray-900">{client.email}</span>
-                </div>
-              )}
-
-              {client.address && (
-                <div className="space-y-1">
-                  <span className="text-gray-600">Address</span>
-                  <div className="font-medium text-gray-900 text-right">{client.address}</div>
-                </div>
-              )}
-            </>
+            <div className="flex justify-between items-center py-4">
+              <span className="text-gray-600 font-medium">Owner(s) Name</span>
+              <span className="font-semibold text-gray-900 text-right">{client.firstName} {client.lastName}</span>
+            </div>
           )}
 
-          <div className="flex justify-between items-center">
-            <span className="text-gray-600">Booking</span>
-            <span className="font-medium text-gray-900">
+          {client?.dogName && (
+            <div className="flex justify-between items-center py-4">
+              <span className="text-gray-600 font-medium">Dog(s) Name</span>
+              <span className="font-semibold text-gray-900 text-right">{client.dogName}</span>
+            </div>
+          )}
+
+          <div className="flex justify-between items-center py-4">
+            <span className="text-gray-600 font-medium">Booking</span>
+            <span className="font-semibold text-gray-900 text-right">
               {formatDateTime(session.bookingDate, session.bookingTime)}
             </span>
           </div>
 
-          <div className="flex justify-between items-center">
-            <span className="text-gray-600">Session Type</span>
-            <span className="font-medium text-gray-900">{session.sessionType}</span>
+          <div className="flex justify-between items-center py-4">
+            <span className="text-gray-600 font-medium">Session Type</span>
+            <span className="font-semibold text-gray-900 text-right">{session.sessionType}</span>
           </div>
 
-          <div className="flex justify-between items-center">
-            <span className="text-gray-600">Quote</span>
-            <span className="font-medium text-gray-900">£{session.quote}</span>
+          <div className="flex justify-between items-center py-4">
+            <span className="text-gray-600 font-medium">Quote</span>
+            <span className="font-semibold text-gray-900 text-right">£{session.quote}</span>
           </div>
 
-          {session.notes && (
-            <div className="flex justify-between items-start">
-              <span className="text-gray-600">Notes</span>
-              <span className="font-medium text-gray-900 text-right max-w-48">{session.notes}</span>
+          {client?.phone && (
+            <div className="flex justify-between items-center py-4">
+              <span className="text-gray-600 font-medium">Phone</span>
+              <span className="font-semibold text-gray-900 text-right">{client.phone}</span>
             </div>
           )}
 
+          {client?.email && (
+            <div className="flex justify-between items-center py-4">
+              <span className="text-gray-600 font-medium">Email</span>
+              <span className="font-semibold text-gray-900 text-right break-all">{client.email}</span>
+            </div>
+          )}
+
+          {client?.address && (
+            <div className="flex justify-between items-start py-4">
+              <span className="text-gray-600 font-medium">Address</span>
+              <span className="font-semibold text-gray-900 text-right max-w-48">{client.address}</span>
+            </div>
+          )}
+
+          {session.notes && (
+            <div className="flex justify-between items-start py-4">
+              <span className="text-gray-600 font-medium">Notes</span>
+              <span className="font-semibold text-gray-900 text-right max-w-48">{session.notes}</span>
+            </div>
+          )}
         </div>
 
         {/* Action Buttons */}

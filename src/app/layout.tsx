@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { AppProvider } from "@/context/AppContext";
 import { ModalProvider } from "@/context/ModalContext";
+import { AuthProvider } from "@/context/AuthContext";
 import Layout from "@/components/layout/Layout";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
@@ -71,15 +72,17 @@ export default function RootLayout({
         <meta name="viewport" content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no, user-scalable=no, viewport-fit=cover" />
       </head>
       <body className={`${inter.className} antialiased`}>
-        <AppProvider>
-          <ModalProvider>
-            <Layout>
-              {children}
-            </Layout>
-            <PWAInstallPrompt />
-            <ServiceWorkerRegistration />
-          </ModalProvider>
-        </AppProvider>
+        <AuthProvider>
+          <AppProvider>
+            <ModalProvider>
+              <Layout>
+                {children}
+              </Layout>
+              <PWAInstallPrompt />
+              <ServiceWorkerRegistration />
+            </ModalProvider>
+          </AppProvider>
+        </AuthProvider>
       </body>
     </html>
   );
