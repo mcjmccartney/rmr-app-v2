@@ -46,65 +46,55 @@ export default function BehaviouralBriefModal({ behaviouralBrief, isOpen, onClos
       title={displayName}
     >
       <div className="space-y-6">
-        {/* Submission Info */}
-        <div className="bg-gray-50 p-4 rounded-lg">
-          <div className="flex justify-between items-center">
-            <span className="text-gray-600">Submitted</span>
-            <span className="font-medium text-gray-900">
-              {format(behaviouralBrief.submittedAt, 'PPP')} at {format(behaviouralBrief.submittedAt, 'p')}
+        {/* Basic Information */}
+        <div className="space-y-0 divide-y divide-gray-100">
+          <div className="flex justify-between items-center py-4">
+            <span className="text-gray-600 font-medium">Owner(s) Name</span>
+            <span className="font-semibold text-gray-900 text-right">
+              {behaviouralBrief.ownerFirstName} {behaviouralBrief.ownerLastName}
             </span>
           </div>
-        </div>
 
-        {/* Contact Information */}
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-3 pb-2 border-b border-gray-200">
-            Contact Information
-          </h3>
-          <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Owner Name</span>
-              <span className="font-medium text-gray-900">
-                {behaviouralBrief.ownerFirstName} {behaviouralBrief.ownerLastName}
-              </span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Email</span>
-              <span className="font-medium text-gray-900">{behaviouralBrief.email}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Contact Number</span>
-              <span className="font-medium text-gray-900">{behaviouralBrief.contactNumber}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Postcode</span>
-              <span className="font-medium text-gray-900">{behaviouralBrief.postcode}</span>
-            </div>
+          <div className="flex justify-between items-center py-4">
+            <span className="text-gray-600 font-medium">Dog(s) Name</span>
+            <span className="font-semibold text-gray-900 text-right">{behaviouralBrief.dogName}</span>
           </div>
-        </div>
 
-        {/* Dog Information */}
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-3 pb-2 border-b border-gray-200">
-            Dog Information
-          </h3>
-          <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Dog Name</span>
-              <span className="font-medium text-gray-900">{behaviouralBrief.dogName}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Sex</span>
-              <span className="font-medium text-gray-900">{behaviouralBrief.sex}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Breed</span>
-              <span className="font-medium text-gray-900">{behaviouralBrief.breed}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Preferred Session Type</span>
-              <span className="font-medium text-gray-900">{behaviouralBrief.sessionType}</span>
-            </div>
+          <div className="flex justify-between items-center py-4">
+            <span className="text-gray-600 font-medium">Email</span>
+            <span className="font-semibold text-gray-900 text-right break-all">{behaviouralBrief.email}</span>
+          </div>
+
+          <div className="flex justify-between items-center py-4">
+            <span className="text-gray-600 font-medium">Contact Number</span>
+            <span className="font-semibold text-gray-900 text-right">{behaviouralBrief.contactNumber}</span>
+          </div>
+
+          <div className="flex justify-between items-center py-4">
+            <span className="text-gray-600 font-medium">Postcode</span>
+            <span className="font-semibold text-gray-900 text-right">{behaviouralBrief.postcode}</span>
+          </div>
+
+          <div className="flex justify-between items-center py-4">
+            <span className="text-gray-600 font-medium">Sex</span>
+            <span className="font-semibold text-gray-900 text-right">{behaviouralBrief.sex}</span>
+          </div>
+
+          <div className="flex justify-between items-center py-4">
+            <span className="text-gray-600 font-medium">Breed</span>
+            <span className="font-semibold text-gray-900 text-right">{behaviouralBrief.breed}</span>
+          </div>
+
+          <div className="flex justify-between items-center py-4">
+            <span className="text-gray-600 font-medium">Session Type</span>
+            <span className="font-semibold text-gray-900 text-right">{behaviouralBrief.sessionType}</span>
+          </div>
+
+          <div className="flex justify-between items-center py-4">
+            <span className="text-gray-600 font-medium">Submitted</span>
+            <span className="font-semibold text-gray-900 text-right">
+              {format(behaviouralBrief.submittedAt, 'dd/MM/yyyy, HH:mm')}
+            </span>
           </div>
         </div>
 

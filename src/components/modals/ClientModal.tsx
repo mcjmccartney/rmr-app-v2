@@ -127,45 +127,50 @@ export default function ClientModal({ client, isOpen, onClose, onEditClient, onV
     >
       <div className="space-y-6">
         {/* Client Details */}
-        <div className="space-y-4">
-          {currentClient.email && (
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Email</span>
-              <span className="font-medium text-gray-900">{currentClient.email}</span>
+        <div className="space-y-0 divide-y divide-gray-100">
+          <div className="flex justify-between items-center py-4">
+            <span className="text-gray-600 font-medium">Owner(s) Name</span>
+            <span className="font-semibold text-gray-900 text-right">{currentClient.firstName} {currentClient.lastName}</span>
+          </div>
+
+          {currentClient.dogName && (
+            <div className="flex justify-between items-center py-4">
+              <span className="text-gray-600 font-medium">Dog(s) Name</span>
+              <span className="font-semibold text-gray-900 text-right">{currentClient.dogName}</span>
             </div>
           )}
 
           {currentClient.phone && (
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Phone</span>
-              <span className="font-medium text-gray-900">{currentClient.phone}</span>
+            <div className="flex justify-between items-center py-4">
+              <span className="text-gray-600 font-medium">Phone</span>
+              <span className="font-semibold text-gray-900 text-right">{currentClient.phone}</span>
             </div>
           )}
 
-          {currentClient.dogName && (
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Dog Name</span>
-              <span className="font-medium text-gray-900">{currentClient.dogName}</span>
+          {currentClient.email && (
+            <div className="flex justify-between items-center py-4">
+              <span className="text-gray-600 font-medium">Email</span>
+              <span className="font-semibold text-gray-900 text-right break-all">{currentClient.email}</span>
             </div>
           )}
 
           {currentClient.otherDogs && currentClient.otherDogs.length > 0 && (
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Other Dogs</span>
-              <span className="font-medium text-gray-900">{currentClient.otherDogs.join(', ')}</span>
+            <div className="flex justify-between items-start py-4">
+              <span className="text-gray-600 font-medium">Other Dogs</span>
+              <span className="font-semibold text-gray-900 text-right max-w-48">{currentClient.otherDogs.join(', ')}</span>
             </div>
           )}
 
           {currentClient.address && (
-            <div className="space-y-1">
-              <span className="text-gray-600">Address</span>
-              <div className="font-medium text-gray-900 text-right">{currentClient.address}</div>
+            <div className="flex justify-between items-start py-4">
+              <span className="text-gray-600 font-medium">Address</span>
+              <span className="font-semibold text-gray-900 text-right max-w-48">{currentClient.address}</span>
             </div>
           )}
 
           {/* Toggle Switches */}
-          <div className="flex justify-between items-center">
-            <span className="text-gray-600">Active</span>
+          <div className="flex justify-between items-center py-4">
+            <span className="text-gray-600 font-medium">Active</span>
             <button
               onClick={handleToggleActive}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ${
@@ -181,8 +186,8 @@ export default function ClientModal({ client, isOpen, onClose, onEditClient, onV
             </button>
           </div>
 
-          <div className="flex justify-between items-center">
-            <span className="text-gray-600">Membership</span>
+          <div className="flex justify-between items-center py-4">
+            <span className="text-gray-600 font-medium">Membership</span>
             <button
               onClick={handleToggleMembership}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ${

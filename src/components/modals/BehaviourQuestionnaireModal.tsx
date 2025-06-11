@@ -46,80 +46,72 @@ export default function BehaviourQuestionnaireModal({ behaviourQuestionnaire, is
       title={displayName}
     >
       <div className="space-y-6">
-        {/* Submission Info */}
-        <div className="bg-gray-50 p-4 rounded-lg">
-          <div className="flex justify-between items-center">
-            <span className="text-gray-600">Submitted</span>
-            <span className="font-medium text-gray-900">
-              {format(behaviourQuestionnaire.submittedAt, 'PPP')} at {format(behaviourQuestionnaire.submittedAt, 'p')}
+        {/* Basic Information */}
+        <div className="space-y-0 divide-y divide-gray-100">
+          <div className="flex justify-between items-center py-4">
+            <span className="text-gray-600 font-medium">Owner(s) Name</span>
+            <span className="font-semibold text-gray-900 text-right">
+              {behaviourQuestionnaire.ownerFirstName} {behaviourQuestionnaire.ownerLastName}
             </span>
           </div>
-        </div>
 
-        {/* Owner Information */}
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-3 pb-2 border-b border-gray-200">
-            Owner Information
-          </h3>
-          <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Owner Name</span>
-              <span className="font-medium text-gray-900">
-                {behaviourQuestionnaire.ownerFirstName} {behaviourQuestionnaire.ownerLastName}
-              </span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Email</span>
-              <span className="font-medium text-gray-900">{behaviourQuestionnaire.email}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Contact Number</span>
-              <span className="font-medium text-gray-900">{behaviourQuestionnaire.contactNumber}</span>
-            </div>
-            <div className="space-y-1">
-              <span className="text-gray-600">Address</span>
-              <div className="font-medium text-gray-900 text-right">
-                {behaviourQuestionnaire.address1}
-                {behaviourQuestionnaire.address2 && <br />}{behaviourQuestionnaire.address2}
-                <br />{behaviourQuestionnaire.city}, {behaviourQuestionnaire.stateProvince} {behaviourQuestionnaire.zipPostalCode}
-                <br />{behaviourQuestionnaire.country}
-              </div>
-            </div>
-            {behaviourQuestionnaire.howDidYouHear && (
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">How they heard about services</span>
-                <span className="font-medium text-gray-900">{behaviourQuestionnaire.howDidYouHear}</span>
-              </div>
-            )}
+          <div className="flex justify-between items-center py-4">
+            <span className="text-gray-600 font-medium">Dog(s) Name</span>
+            <span className="font-semibold text-gray-900 text-right">{behaviourQuestionnaire.dogName}</span>
           </div>
-        </div>
 
-        {/* Dog Information */}
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-3 pb-2 border-b border-gray-200">
-            Dog Information
-          </h3>
-          <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Dog Name</span>
-              <span className="font-medium text-gray-900">{behaviourQuestionnaire.dogName}</span>
+          <div className="flex justify-between items-center py-4">
+            <span className="text-gray-600 font-medium">Email</span>
+            <span className="font-semibold text-gray-900 text-right break-all">{behaviourQuestionnaire.email}</span>
+          </div>
+
+          <div className="flex justify-between items-center py-4">
+            <span className="text-gray-600 font-medium">Contact Number</span>
+            <span className="font-semibold text-gray-900 text-right">{behaviourQuestionnaire.contactNumber}</span>
+          </div>
+
+          <div className="flex justify-between items-center py-4">
+            <span className="text-gray-600 font-medium">Age</span>
+            <span className="font-semibold text-gray-900 text-right">{behaviourQuestionnaire.age}</span>
+          </div>
+
+          <div className="flex justify-between items-center py-4">
+            <span className="text-gray-600 font-medium">Sex</span>
+            <span className="font-semibold text-gray-900 text-right">{behaviourQuestionnaire.sex}</span>
+          </div>
+
+          <div className="flex justify-between items-center py-4">
+            <span className="text-gray-600 font-medium">Breed</span>
+            <span className="font-semibold text-gray-900 text-right">{behaviourQuestionnaire.breed}</span>
+          </div>
+
+          <div className="flex justify-between items-center py-4">
+            <span className="text-gray-600 font-medium">Neutered/Spayed</span>
+            <span className="font-semibold text-gray-900 text-right">{behaviourQuestionnaire.neuteredSpayed}</span>
+          </div>
+
+          <div className="flex justify-between items-start py-4">
+            <span className="text-gray-600 font-medium">Address</span>
+            <span className="font-semibold text-gray-900 text-right max-w-48">
+              {behaviourQuestionnaire.address1}
+              {behaviourQuestionnaire.address2 && <><br />{behaviourQuestionnaire.address2}</>}
+              <br />{behaviourQuestionnaire.city}, {behaviourQuestionnaire.stateProvince} {behaviourQuestionnaire.zipPostalCode}
+              <br />{behaviourQuestionnaire.country}
+            </span>
+          </div>
+
+          {behaviourQuestionnaire.howDidYouHear && (
+            <div className="flex justify-between items-center py-4">
+              <span className="text-gray-600 font-medium">How They Heard</span>
+              <span className="font-semibold text-gray-900 text-right">{behaviourQuestionnaire.howDidYouHear}</span>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Age</span>
-              <span className="font-medium text-gray-900">{behaviourQuestionnaire.age}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Sex</span>
-              <span className="font-medium text-gray-900">{behaviourQuestionnaire.sex}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Breed</span>
-              <span className="font-medium text-gray-900">{behaviourQuestionnaire.breed}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Neutered/Spayed</span>
-              <span className="font-medium text-gray-900">{behaviourQuestionnaire.neuteredSpayed}</span>
-            </div>
+          )}
+
+          <div className="flex justify-between items-center py-4">
+            <span className="text-gray-600 font-medium">Submitted</span>
+            <span className="font-semibold text-gray-900 text-right">
+              {format(behaviourQuestionnaire.submittedAt, 'dd/MM/yyyy, HH:mm')}
+            </span>
           </div>
         </div>
 
