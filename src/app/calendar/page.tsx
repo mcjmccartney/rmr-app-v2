@@ -1,9 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
-import Header from '@/components/layout/Header';
 import SessionModal from '@/components/modals/SessionModal';
 import EditSessionModal from '@/components/modals/EditSessionModal';
 import EditClientModal from '@/components/modals/EditClientModal';
@@ -16,7 +15,8 @@ import { ChevronLeft, ChevronRight, Calendar, UserPlus } from 'lucide-react';
 export default function CalendarPage() {
   const { state } = useApp();
   const router = useRouter();
-
+  const touchStartX = useRef<number>(0);
+  const touchEndX = useRef<number>(0);
 
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
@@ -118,6 +118,30 @@ export default function CalendarPage() {
     router.push(`/session-plan?sessionId=${session.id}`);
   };
 
+  // Touch gesture handlers for swipe navigation
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.targetTouches[0].clientX;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    touchEndX.current = e.targetTouches[0].clientX;
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStartX.current || !touchEndX.current) return;
+
+    const distance = touchStartX.current - touchEndX.current;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    if (isLeftSwipe) {
+      handleNextMonth();
+    }
+    if (isRightSwipe) {
+      handlePreviousMonth();
+    }
+  };
+
   // Keyboard navigation for months
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -132,7 +156,7 @@ export default function CalendarPage() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [currentDate]);
 
   // Focus the calendar container to enable keyboard navigation
   useEffect(() => {
@@ -177,56 +201,58 @@ export default function CalendarPage() {
       id="calendar-container"
       className="h-screen bg-white flex flex-col overflow-hidden outline-none"
       tabIndex={0}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
     >
-      <div className="bg-amber-800">
-        <Header
-          title="Calendar"
-          buttons={[
-            {
-              icon: Calendar,
-              onClick: handleAddSession,
-              title: 'Add Session'
-            },
-            {
-              icon: UserPlus,
-              onClick: handleAddClient,
-              title: 'Add Client'
-            }
-          ]}
-          noBottomMargin={true}
-        />
+      {/* Top Header with Month Navigation and Action Buttons */}
+      <div className="bg-amber-800 px-4 py-3 flex items-center justify-between flex-shrink-0">
+        {/* Left: Month Navigation */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handlePreviousMonth}
+            className="p-2 hover:bg-amber-700 rounded transition-colors text-white"
+          >
+            <ChevronLeft size={20} />
+          </button>
+          <h2 className="text-lg font-semibold text-white min-w-[120px] text-center">
+            {formatMonthYear(currentDate)}
+          </h2>
+          <button
+            onClick={handleNextMonth}
+            className="p-2 hover:bg-amber-700 rounded transition-colors text-white"
+          >
+            <ChevronRight size={20} />
+          </button>
+        </div>
+
+        {/* Right: Action Buttons */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleAddSession}
+            className="p-2 hover:bg-amber-700 rounded transition-colors text-white"
+            title="Add Session"
+          >
+            <Calendar size={20} />
+          </button>
+          <button
+            onClick={handleAddClient}
+            className="p-2 hover:bg-amber-700 rounded transition-colors text-white"
+            title="Add Client"
+          >
+            <UserPlus size={20} />
+          </button>
+        </div>
       </div>
 
       {/* Calendar Section - Flex-1 to take remaining space */}
       <div className="bg-white flex flex-col flex-1 overflow-hidden">
-        {/* Month Navigation */}
-        <div className="px-4 py-4 border-b border-gray-200 flex-shrink-0">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">
-              {formatMonthYear(currentDate)}
-            </h2>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={handlePreviousMonth}
-                className="p-2 hover:bg-gray-100 rounded transition-colors"
-              >
-                <ChevronLeft size={20} />
-              </button>
-              <button
-                onClick={handleNextMonth}
-                className="p-2 hover:bg-gray-100 rounded transition-colors"
-              >
-                <ChevronRight size={20} />
-              </button>
-            </div>
-          </div>
-        </div>
 
         {/* Calendar Grid - Fills remaining space */}
-        <div className="flex-1 px-4 py-2 flex flex-col min-h-0 overflow-hidden">
-          <div className="grid grid-cols-7 gap-1 mb-2 flex-shrink-0">
+        <div className="flex-1 px-4 py-3 flex flex-col min-h-0 overflow-hidden">
+          <div className="grid grid-cols-7 gap-1 mb-3 flex-shrink-0">
             {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
-              <div key={day} className="text-center text-sm font-medium text-gray-500 py-2">
+              <div key={day} className="text-center text-sm font-medium text-gray-500 py-3">
                 {day}
               </div>
             ))}
