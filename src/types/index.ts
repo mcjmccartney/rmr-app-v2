@@ -1,7 +1,7 @@
 export interface Session {
   id: string;
   clientId: string;
-  sessionType: 'In-Person' | 'Online' | 'Training' | 'Online Catchup' | 'Group' | 'Phone Call' | 'Coaching';
+  sessionType: 'In-Person' | 'Online' | 'Training' | 'Online Catchup' | 'Group' | 'RMR Live' | 'Phone Call' | 'Coaching';
   bookingDate: string; // Date in YYYY-MM-DD format
   bookingTime: string; // Time in HH:mm format
   notes?: string;

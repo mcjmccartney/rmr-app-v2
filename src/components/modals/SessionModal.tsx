@@ -35,8 +35,12 @@ export default function SessionModal({ session, isOpen, onClose, onEditSession, 
     }
   };
 
+  // For Group and RMR Live sessions, show session type instead of "Unknown Client"
+  const isGroupOrRMRLive = session.sessionType === 'Group' || session.sessionType === 'RMR Live';
   const displayName = client
     ? `${client.firstName} ${client.lastName}${client.dogName ? ` w/ ${client.dogName}` : ''}`
+    : isGroupOrRMRLive
+    ? session.sessionType
     : 'Unknown Client';
 
   return (

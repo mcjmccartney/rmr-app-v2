@@ -22,6 +22,9 @@ module.exports = {
         'safe-left': 'env(safe-area-inset-left)',
         'safe-right': 'env(safe-area-inset-right)',
       },
+      spacing: {
+        '42': '10.5rem', // 168px
+      },
     },
   },
   plugins: [],

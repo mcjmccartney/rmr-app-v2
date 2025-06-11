@@ -177,12 +177,15 @@ export default function CalendarPage() {
       tabIndex={0}
     >
       {/* Top Header with Month Navigation and Action Buttons */}
-      <div className="bg-amber-800 px-4 py-3 flex items-center justify-between flex-shrink-0">
+      <div className="px-4 py-3 flex items-center justify-between flex-shrink-0" style={{ backgroundColor: '#973b00' }}>
         {/* Left: Month Navigation */}
         <div className="flex items-center gap-2">
           <button
             onClick={handlePreviousMonth}
-            className="p-2 hover:bg-amber-700 rounded transition-colors text-white"
+            className="p-2 rounded transition-colors text-white"
+            style={{ ':hover': { backgroundColor: '#7a2f00' } }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#7a2f00'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
           >
             <ChevronLeft size={20} />
           </button>
@@ -191,7 +194,9 @@ export default function CalendarPage() {
           </h2>
           <button
             onClick={handleNextMonth}
-            className="p-2 hover:bg-amber-700 rounded transition-colors text-white"
+            className="p-2 rounded transition-colors text-white"
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#7a2f00'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
           >
             <ChevronRight size={20} />
           </button>
@@ -201,15 +206,19 @@ export default function CalendarPage() {
         <div className="flex items-center gap-2">
           <button
             onClick={handleAddSession}
-            className="p-2 hover:bg-amber-700 rounded transition-colors text-white"
+            className="p-2 rounded transition-colors text-white"
             title="Add Session"
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#7a2f00'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
           >
             <Calendar size={20} />
           </button>
           <button
             onClick={handleAddClient}
-            className="p-2 hover:bg-amber-700 rounded transition-colors text-white"
+            className="p-2 rounded transition-colors text-white"
             title="Add Client"
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#7a2f00'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
           >
             <UserPlus size={20} />
           </button>
@@ -245,8 +254,13 @@ export default function CalendarPage() {
                     {sessions.slice(0, 2).map(session => {
                       const client = state.clients.find(c => c.id === session.clientId);
                       const timeOnly = formatTime(session.bookingTime);
+
+                      // For Group and RMR Live sessions, show session type instead of "Unknown Client"
+                      const isGroupOrRMRLive = session.sessionType === 'Group' || session.sessionType === 'RMR Live';
                       const fullDisplayText = client
                         ? `${timeOnly} | ${client.firstName} ${client.lastName}${client.dogName ? ` w/ ${client.dogName}` : ''}`
+                        : isGroupOrRMRLive
+                        ? `${timeOnly} | ${session.sessionType}`
                         : `${timeOnly} | Unknown Client`;
 
                       return (
@@ -278,8 +292,11 @@ export default function CalendarPage() {
       <button
         onClick={handleUpNextClick}
         disabled={!firstSession}
-        className="bg-amber-800 text-white px-4 py-4 flex-shrink-0 w-full text-left disabled:cursor-default"
-        style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 20px)' }}
+        className="text-white px-4 py-4 flex-shrink-0 w-full text-left disabled:cursor-default"
+        style={{
+          backgroundColor: '#973b00',
+          paddingBottom: 'max(env(safe-area-inset-bottom), 20px)'
+        }}
       >
         {firstSession && firstSessionClient ? (
           <>

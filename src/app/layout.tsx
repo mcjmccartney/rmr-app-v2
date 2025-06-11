@@ -55,7 +55,7 @@ export default function RootLayout({
         <meta name="msapplication-config" content="/icons/browserconfig.xml" />
         <meta name="msapplication-TileColor" content="#4f6749" />
         <meta name="msapplication-tap-highlight" content="no" />
-        <meta name="theme-color" content="#4f6749" />
+        <meta name="theme-color" content="#973b00" />
 
         {/* Apple Touch Icons */}
         <link rel="apple-touch-icon" href="/icons/icon-152x152.png" />

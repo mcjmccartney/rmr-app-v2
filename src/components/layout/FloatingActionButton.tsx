@@ -54,7 +54,7 @@ export default function FloatingActionButton() {
 
       {/* Navigation Items */}
       {isExpanded && (
-        <div className="fixed bottom-24 right-6 z-50 flex flex-col-reverse gap-3">
+        <div className={`fixed right-6 z-50 flex flex-col-reverse gap-3 ${pathname === '/calendar' ? 'bottom-42' : 'bottom-24'}`}>
           {/* Logout Button */}
           <button
             onClick={handleLogout}
@@ -101,13 +101,14 @@ export default function FloatingActionButton() {
       <button
         onClick={toggleExpanded}
         className={`
-          fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full shadow-lg
+          fixed right-6 z-50 w-14 h-14 rounded-full shadow-lg
           flex items-center justify-center
           transition-all duration-300 transform hover:scale-110 active:scale-95
           ${isExpanded
             ? 'bg-gray-600 text-white'
             : 'bg-amber-800 text-white'
           }
+          ${pathname === '/calendar' ? 'bottom-24' : 'bottom-6'}
         `}
       >
         {isExpanded ? (

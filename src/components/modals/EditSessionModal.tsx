@@ -98,6 +98,7 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
             <option value="Training">Training</option>
             <option value="Online Catchup">Online Catchup</option>
             <option value="Group">Group</option>
+            <option value="RMR Live">RMR Live</option>
             <option value="Phone Call">Phone Call</option>
             <option value="Coaching">Coaching</option>
           </select>
