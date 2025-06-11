@@ -105,7 +105,7 @@ export default function BehaviourQuestionnairePage() {
       // Try to find existing client by email using Supabase
       const existingClient = await findClientByEmail(formData.email);
 
-      let clientId: string;
+      let clientId: string = '';
       let shouldCreateClient = false;
 
       if (existingClient) {
@@ -114,6 +114,8 @@ export default function BehaviourQuestionnairePage() {
       } else {
         // Will create new client
         shouldCreateClient = true;
+        // Temporary ID that will be updated later
+        clientId = 'temp-' + behaviourQuestionnaireId;
       }
 
     // Create behaviour questionnaire
