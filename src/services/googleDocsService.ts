@@ -21,9 +21,9 @@ interface EditableContent {
   actionPoints: { header: string; details: string }[];
 }
 
-// Google Docs API configuration
-const GOOGLE_DOCS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_DOCS_API_KEY;
-const GOOGLE_DOCS_TEMPLATE_ID = process.env.NEXT_PUBLIC_GOOGLE_DOCS_TEMPLATE_ID;
+// Google Docs API configuration (for future use)
+// const GOOGLE_DOCS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_DOCS_API_KEY;
+// const GOOGLE_DOCS_TEMPLATE_ID = process.env.NEXT_PUBLIC_GOOGLE_DOCS_TEMPLATE_ID;
 
 interface SessionPlanDocumentData {
   sessionPlan: SessionPlan;
@@ -370,7 +370,7 @@ export const googleDocsService = {
   },
 
   // Future: Integrate with actual Google Docs API
-  async createGoogleDoc(content: any): Promise<string> {
+  async createGoogleDoc(_content: any): Promise<string> {
     // This would use the Google Docs API to create a real Google Doc
     // For now, we'll return a placeholder
     throw new Error('Google Docs API integration not yet implemented. Using HTML export instead.');

@@ -1,6 +1,6 @@
 'use client';
 
-import { BehaviouralBrief } from '@/types';
+import { BehaviouralBrief, Client } from '@/types';
 import { useApp } from '@/context/AppContext';
 import SlideUpModal from './SlideUpModal';
 import { format } from 'date-fns';
@@ -9,7 +9,7 @@ interface BehaviouralBriefModalProps {
   behaviouralBrief: BehaviouralBrief | null;
   isOpen: boolean;
   onClose: () => void;
-  onViewClient?: (client: any) => void;
+  onViewClient?: (client: Client) => void;
 }
 
 export default function BehaviouralBriefModal({ behaviouralBrief, isOpen, onClose, onViewClient }: BehaviouralBriefModalProps) {

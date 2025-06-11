@@ -51,9 +51,7 @@ export default function ClientsPage() {
   const membersCount = state.clients.filter(client => client.membership).length;
   const nonMembersCount = state.clients.filter(client => !client.membership).length;
 
-  const getAvatarText = (firstName: string, lastName: string) => {
-    return `${firstName?.[0] || ''}${lastName?.[0] || ''}`.toUpperCase();
-  };
+
 
   const handleClientClick = (client: Client) => {
     setSelectedClient(client);

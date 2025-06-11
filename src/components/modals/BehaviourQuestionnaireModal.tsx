@@ -1,6 +1,6 @@
 'use client';
 
-import { BehaviourQuestionnaire } from '@/types';
+import { BehaviourQuestionnaire, Client } from '@/types';
 import { useApp } from '@/context/AppContext';
 import SlideUpModal from './SlideUpModal';
 import { format } from 'date-fns';
@@ -9,7 +9,7 @@ interface BehaviourQuestionnaireModalProps {
   behaviourQuestionnaire: BehaviourQuestionnaire | null;
   isOpen: boolean;
   onClose: () => void;
-  onViewClient?: (client: any) => void;
+  onViewClient?: (client: Client) => void;
 }
 
 export default function BehaviourQuestionnaireModal({ behaviourQuestionnaire, isOpen, onClose, onViewClient }: BehaviourQuestionnaireModalProps) {

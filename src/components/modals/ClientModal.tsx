@@ -19,7 +19,7 @@ export default function ClientModal({ client, isOpen, onClose, onEditClient, onV
   const { dispatch, state } = useApp();
   const [activeTab, setActiveTab] = useState<'sessions' | 'membership'>('sessions');
   const [clientSessions, setClientSessions] = useState<Session[]>([]);
-  const [membershipMonths, setMembershipMonths] = useState<any[]>([]); // Placeholder for membership data
+  const [membershipMonths, setMembershipMonths] = useState<Array<{ month: string; amount: number; status: string }>>([]); // Placeholder for membership data
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [isTabExpanded, setIsTabExpanded] = useState(false);
 
@@ -117,9 +117,7 @@ export default function ClientModal({ client, isOpen, onClose, onEditClient, onV
   // Early return after all hooks - ensure we have valid client data
   if (!client || !currentClient || !isOpen) return null;
 
-  const getAvatarText = (firstName: string, lastName: string) => {
-    return `${firstName?.[0] || ''}${lastName?.[0] || ''}`.toUpperCase();
-  };
+
 
   return (
     <SlideUpModal

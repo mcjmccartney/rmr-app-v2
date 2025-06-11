@@ -1,10 +1,10 @@
 'use client';
 
-import { Search, Plus, Calendar, UserPlus } from 'lucide-react';
+import { Search, Plus } from 'lucide-react';
 import { useState } from 'react';
 
 interface HeaderButton {
-  icon: React.ComponentType<any>;
+  icon: React.ComponentType<{ size?: number }>;
   onClick: () => void;
   title: string;
 }

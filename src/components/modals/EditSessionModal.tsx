@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Session } from '@/types';
 import { useApp } from '@/context/AppContext';
 import SlideUpModal from './SlideUpModal';
-import { formatForDateInput, formatForTimeInput } from '@/utils/dateFormatting';
+
 
 interface EditSessionModalProps {
   session: Session | null;
@@ -40,7 +40,7 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
     e.preventDefault();
     if (!session) return;
 
-    const bookingDate = new Date(`${formData.date}T${formData.time}`);
+
 
     const updatedSession: Session = {
       ...session,

@@ -8,12 +8,12 @@ import EditSessionModal from '@/components/modals/EditSessionModal';
 import EditClientModal from '@/components/modals/EditClientModal';
 import AddModal from '@/components/AddModal';
 import { Session, Client } from '@/types';
-import { format } from 'date-fns';
+
 import { formatDateTime, formatFullMonthYear } from '@/utils/dateFormatting';
 import { Calendar, UserPlus, ChevronDown, ChevronRight } from 'lucide-react';
 
 export default function SessionsPage() {
-  const { state, dispatch } = useApp();
+  const { state } = useApp();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
   const [showEditSessionModal, setShowEditSessionModal] = useState(false);
@@ -96,18 +96,7 @@ export default function SessionsPage() {
     setShowAddModal(false);
   };
 
-  const getSessionIcon = (sessionType: string) => {
-    switch (sessionType) {
-      case 'Group':
-        return '📹';
-      default:
-        return '🐕';
-    }
-  };
 
-  const getAvatarText = (firstName: string, lastName: string) => {
-    return `${firstName?.[0] || ''}${lastName?.[0] || ''}`.toUpperCase();
-  };
 
   const toggleMonth = (monthKey: string) => {
     const newExpandedMonths = new Set(expandedMonths);

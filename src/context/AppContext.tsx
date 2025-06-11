@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useReducer, ReactNode, useEffect } from 'react';
-import { AppState, AppAction, Session, Client, BehaviouralBrief, BehaviourQuestionnaire } from '@/types';
+import { AppState, AppAction, Session, Client } from '@/types';
 import { clientService } from '@/services/clientService';
 import { sessionService } from '@/services/sessionService';
 

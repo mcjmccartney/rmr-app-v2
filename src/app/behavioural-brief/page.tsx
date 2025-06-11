@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useApp } from '@/context/AppContext';
-import { BehaviouralBrief, Client } from '@/types';
+import { BehaviouralBrief } from '@/types';
 
 export default function BehaviouralBriefPage() {
   const { createClient, dispatch } = useApp();

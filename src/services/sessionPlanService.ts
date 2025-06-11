@@ -2,7 +2,7 @@ import { supabase } from '@/lib/supabase';
 import { SessionPlan, ActionPoint } from '@/types';
 
 // Convert database row to SessionPlan type
-function dbRowToSessionPlan(row: any): SessionPlan {
+function dbRowToSessionPlan(row: Record<string, any>): SessionPlan {
   return {
     id: row.id,
     sessionId: row.session_id,
@@ -36,7 +36,7 @@ function sessionPlanToDbRow(sessionPlan: Partial<SessionPlan>) {
 }
 
 // Convert database row to ActionPoint type
-function dbRowToActionPoint(row: any): ActionPoint {
+function dbRowToActionPoint(row: Record<string, any>): ActionPoint {
   return {
     id: row.id,
     header: row.header,

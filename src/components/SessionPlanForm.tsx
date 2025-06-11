@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { SessionPlan, ActionPoint, Session, Client } from '@/types';
+import { SessionPlan, Session, Client } from '@/types';
 import { predefinedActionPoints, personalizeActionPoint } from '@/data/actionPoints';
 // import { sessionPlanService } from '@/services/sessionPlanService';
 // import { googleDocsService } from '@/services/googleDocsService';
@@ -15,7 +15,7 @@ interface SessionPlanFormProps {
   onClose: () => void;
 }
 
-export default function SessionPlanForm({ session, client, existingPlan, onSave, onClose }: SessionPlanFormProps) {
+export default function SessionPlanForm({ session, client, existingPlan, onClose }: SessionPlanFormProps) {
   const [sessionPlan, setSessionPlan] = useState<Partial<SessionPlan>>({
     sessionId: session.id,
     sessionNumber: 1,
@@ -33,7 +33,7 @@ export default function SessionPlanForm({ session, client, existingPlan, onSave,
   );
   const [isLoading, setIsLoading] = useState(false);
   const [showActionPointSelector, setShowActionPointSelector] = useState(false);
-  const [showPreview, setShowPreview] = useState(false);
+
 
   useEffect(() => {
     // For now, just default to session number 1

@@ -15,7 +15,7 @@ interface SessionModalProps {
 }
 
 export default function SessionModal({ session, isOpen, onClose, onEditSession, onEditClient, onCreateSessionPlan }: SessionModalProps) {
-  const { dispatch, state, deleteSession } = useApp();
+  const { state, deleteSession } = useApp();
 
   if (!session) return null;
 

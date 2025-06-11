@@ -2,7 +2,7 @@ import { supabase } from '@/lib/supabase'
 import { Client } from '@/types'
 
 // Convert database row to Client type
-function dbRowToClient(row: any): Client {
+function dbRowToClient(row: Record<string, any>): Client {
   return {
     id: row.id,
     firstName: row.first_name,

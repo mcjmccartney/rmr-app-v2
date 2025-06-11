@@ -2,7 +2,7 @@ import { supabase } from '@/lib/supabase'
 import { Session } from '@/types'
 
 // Convert database row to Session type
-function dbRowToSession(row: any): Session {
+function dbRowToSession(row: Record<string, any>): Session {
   // Handle both old format (timestamp) and new format (separate date/time)
   let bookingDate: string;
   let bookingTime: string;
@@ -32,7 +32,7 @@ function dbRowToSession(row: any): Session {
 
 // Convert Session type to database insert/update format
 function sessionToDbRow(session: Partial<Session>) {
-  const dbRow: any = {
+  const dbRow: Record<string, any> = {
     id: session.id,
     client_id: session.clientId,
     session_type: session.sessionType,

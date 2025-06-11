@@ -2,10 +2,10 @@
 
 import { useState } from 'react';
 import { useApp } from '@/context/AppContext';
-import { BehaviourQuestionnaire, Client } from '@/types';
+import { BehaviourQuestionnaire } from '@/types';
 
 export default function BehaviourQuestionnairePage() {
-  const { dispatch, state, createClient, updateClient, findClientByEmail } = useApp();
+  const { dispatch, createClient, updateClient, findClientByEmail } = useApp();
   const [formData, setFormData] = useState({
     // Owner Information
     ownerFirstName: '',
@@ -80,13 +80,7 @@ export default function BehaviourQuestionnairePage() {
     }));
   };
 
-  const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: parseInt(value) || 0
-    }));
-  };
+
 
   const handleRadioChange = (name: string, value: string) => {
     setFormData(prev => ({
