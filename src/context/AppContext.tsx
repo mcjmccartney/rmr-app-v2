@@ -2,20 +2,22 @@
 
 import React, { createContext, useContext, useReducer, ReactNode, useEffect } from 'react';
 import { AppState, AppAction, Session, Client, BehaviouralBrief, BehaviourQuestionnaire } from '@/types';
-import { mockFinances } from '@/data/mockData';
 import { clientService } from '@/services/clientService';
 import { sessionService } from '@/services/sessionService';
 
 const initialState: AppState = {
   sessions: [],
   clients: [],
-  finances: mockFinances,
+  finances: [],
   behaviouralBriefs: [],
   behaviourQuestionnaires: [],
+  sessionPlans: [],
+  actionPoints: [],
   selectedSession: null,
   selectedClient: null,
   selectedBehaviouralBrief: null,
   selectedBehaviourQuestionnaire: null,
+  selectedSessionPlan: null,
   isModalOpen: false,
   modalType: null,
 };

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
 import { predefinedActionPoints, personalizeActionPoint } from '@/data/actionPoints';
@@ -10,7 +10,7 @@ import { sessionService } from '@/services/sessionService';
 import type { SessionPlan, Client, Session } from '@/types';
 // import SessionPlanPreviewModal from '@/components/modals/SessionPlanPreviewModal';
 
-export default function SessionPlanPage() {
+function SessionPlanContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { state } = useApp();
@@ -386,10 +386,10 @@ export default function SessionPlanPage() {
             <div>
               <div className="border-b border-gray-200 pb-4 mb-6">
                 <h2 className="text-lg font-semibold text-gray-900 mb-2">
-                  {currentClient.dogName || 'Unknown Dog'} - Session Plan
+                  {currentClient?.dogName || 'Unknown Dog'} - Session Plan
                 </h2>
                 <p className="text-gray-600">
-                  {currentClient.firstName} {currentClient.lastName} • {currentSession.sessionType}
+                  {currentClient?.firstName} {currentClient?.lastName} • {currentSession?.sessionType}
                 </p>
               </div>
 
@@ -598,5 +598,17 @@ export default function SessionPlanPage() {
         onSave={handleSaveEditedContent}
       /> */}
     </div>
+  );
+}
+
+export default function SessionPlanPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-gray-500">Loading...</div>
+      </div>
+    }>
+      <SessionPlanContent />
+    </Suspense>
   );
 }

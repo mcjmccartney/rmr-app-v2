@@ -59,7 +59,7 @@ export default function SessionPlanPreview({
       sessionPlan.mainGoal2,
       sessionPlan.mainGoal3,
       sessionPlan.mainGoal4,
-    ].filter(Boolean),
+    ].filter((goal): goal is string => Boolean(goal)),
     explanationOfBehaviour: sessionPlan.explanationOfBehaviour || '',
     actionPoints: selectedActionPoints,
   });

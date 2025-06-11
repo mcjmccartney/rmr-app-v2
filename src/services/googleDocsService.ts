@@ -334,7 +334,7 @@ export const googleDocsService = {
     <div class="section">
         <h2>Main Goals</h2>
         <ul class="goals-list">
-            ${content.mainGoals.map((goal, index) => `
+            ${content.mainGoals.map((goal: string, index: number) => `
                 <li><strong>Main Goal ${index + 1}:</strong> ${goal}</li>
             `).join('')}
         </ul>
@@ -353,7 +353,7 @@ export const googleDocsService = {
     ${content.actionPoints.length > 0 ? `
     <div class="section">
         <h2>Action Points</h2>
-        ${content.actionPoints.map((actionPoint, index) => `
+        ${content.actionPoints.map((actionPoint: any, index: number) => `
             <div class="action-point">
                 <h3>Action Point ${index + 1}: ${actionPoint.header}</h3>
                 <p>${actionPoint.details.replace(/\n/g, '<br>')}</p>

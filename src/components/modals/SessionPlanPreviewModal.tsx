@@ -122,7 +122,7 @@ Raising My Rescue - Professional Dog Training Services`;
   if (!isOpen) return null;
 
   return (
-    <SlideUpModal isOpen={isOpen} onClose={onClose}>
+    <SlideUpModal isOpen={isOpen} onClose={onClose} title={isEditing ? 'Edit Session Plan' : 'Session Plan Preview'}>
       <div className="p-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">

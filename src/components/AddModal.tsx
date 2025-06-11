@@ -291,7 +291,7 @@ function ClientForm({ onSubmit }: { onSubmit: () => void }) {
     firstName: '',
     lastName: '',
     dogName: '',
-    otherDogs: [],
+    otherDogs: [] as string[],
     phone: '',
     email: '',
     address: '',

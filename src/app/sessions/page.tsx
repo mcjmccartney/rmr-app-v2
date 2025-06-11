@@ -29,7 +29,7 @@ export default function SessionsPage() {
     return (
       client?.firstName.toLowerCase().includes(searchTerm) ||
       client?.lastName.toLowerCase().includes(searchTerm) ||
-      client?.dogName.toLowerCase().includes(searchTerm) ||
+      client?.dogName?.toLowerCase().includes(searchTerm) ||
       session.sessionType.toLowerCase().includes(searchTerm)
     );
   });

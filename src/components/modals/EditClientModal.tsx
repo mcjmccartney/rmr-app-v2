@@ -19,7 +19,7 @@ export default function EditClientModal({ client, isOpen, onClose }: EditClientM
     email: '',
     phone: '',
     dogName: '',
-    otherDogs: [],
+    otherDogs: [] as string[],
     address: '',
     active: true,
     membership: false
@@ -33,7 +33,7 @@ export default function EditClientModal({ client, isOpen, onClose }: EditClientM
         email: client.email || '',
         phone: client.phone || '',
         dogName: client.dogName || '',
-        otherDogs: client.otherDogs || [],
+        otherDogs: (client.otherDogs || []) as string[],
         address: client.address || '',
         active: client.active,
         membership: client.membership

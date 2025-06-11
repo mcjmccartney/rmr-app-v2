@@ -91,8 +91,8 @@ export default function CalendarPage() {
   };
 
   const handleEditClient = (session: Session) => {
-    // Find the client based on the session's owner name
-    const client = state.clients.find(c => c.ownerName === session.ownerName);
+    // Find the client based on the session's client ID
+    const client = state.clients.find(c => c.id === session.clientId);
     if (client) {
       setEditingClient(client);
       setShowEditClientModal(true);
