@@ -182,10 +182,7 @@ export default function CalendarPage() {
         <div className="flex items-center gap-2">
           <button
             onClick={handlePreviousMonth}
-            className="p-2 rounded transition-colors text-white"
-            style={{ ':hover': { backgroundColor: '#7a2f00' } }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#7a2f00'}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+            className="p-2 rounded transition-colors text-white hover:bg-brand-primary-dark"
           >
             <ChevronLeft size={20} />
           </button>
@@ -194,9 +191,7 @@ export default function CalendarPage() {
           </h2>
           <button
             onClick={handleNextMonth}
-            className="p-2 rounded transition-colors text-white"
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#7a2f00'}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+            className="p-2 rounded transition-colors text-white hover:bg-brand-primary-dark"
           >
             <ChevronRight size={20} />
           </button>
@@ -206,19 +201,15 @@ export default function CalendarPage() {
         <div className="flex items-center gap-2">
           <button
             onClick={handleAddSession}
-            className="p-2 rounded transition-colors text-white"
+            className="p-2 rounded transition-colors text-white hover:bg-brand-primary-dark"
             title="Add Session"
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#7a2f00'}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
           >
             <Calendar size={20} />
           </button>
           <button
             onClick={handleAddClient}
-            className="p-2 rounded transition-colors text-white"
+            className="p-2 rounded transition-colors text-white hover:bg-brand-primary-dark"
             title="Add Client"
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#7a2f00'}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
           >
             <UserPlus size={20} />
           </button>
