@@ -128,18 +128,6 @@ export default function ClientModal({ client, isOpen, onClose, onEditClient, onV
       <div className="space-y-6">
         {/* Client Details */}
         <div className="space-y-0 divide-y divide-gray-100">
-          <div className="flex justify-between items-center py-4">
-            <span className="text-gray-600 font-medium">Owner(s) Name</span>
-            <span className="font-semibold text-gray-900 text-right">{currentClient.firstName} {currentClient.lastName}</span>
-          </div>
-
-          {currentClient.dogName && (
-            <div className="flex justify-between items-center py-4">
-              <span className="text-gray-600 font-medium">Dog(s) Name</span>
-              <span className="font-semibold text-gray-900 text-right">{currentClient.dogName}</span>
-            </div>
-          )}
-
           {currentClient.phone && (
             <div className="flex justify-between items-center py-4">
               <span className="text-gray-600 font-medium">Phone</span>

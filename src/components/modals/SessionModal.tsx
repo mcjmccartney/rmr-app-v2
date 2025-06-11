@@ -48,20 +48,6 @@ export default function SessionModal({ session, isOpen, onClose, onEditSession, 
       <div className="space-y-6">
         {/* Session Details */}
         <div className="space-y-0 divide-y divide-gray-100">
-          {client && (
-            <div className="flex justify-between items-center py-4">
-              <span className="text-gray-600 font-medium">Owner(s) Name</span>
-              <span className="font-semibold text-gray-900 text-right">{client.firstName} {client.lastName}</span>
-            </div>
-          )}
-
-          {client?.dogName && (
-            <div className="flex justify-between items-center py-4">
-              <span className="text-gray-600 font-medium">Dog(s) Name</span>
-              <span className="font-semibold text-gray-900 text-right">{client.dogName}</span>
-            </div>
-          )}
-
           <div className="flex justify-between items-center py-4">
             <span className="text-gray-600 font-medium">Booking</span>
             <span className="font-semibold text-gray-900 text-right">
