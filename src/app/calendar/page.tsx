@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
 import SessionModal from '@/components/modals/SessionModal';
@@ -15,8 +15,6 @@ import { ChevronLeft, ChevronRight, Calendar, UserPlus } from 'lucide-react';
 export default function CalendarPage() {
   const { state } = useApp();
   const router = useRouter();
-  const touchStartX = useRef<number>(0);
-  const touchEndX = useRef<number>(0);
 
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
@@ -118,30 +116,6 @@ export default function CalendarPage() {
     router.push(`/session-plan?sessionId=${session.id}`);
   };
 
-  // Touch gesture handlers for swipe navigation
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartX.current = e.targetTouches[0].clientX;
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    touchEndX.current = e.targetTouches[0].clientX;
-  };
-
-  const handleTouchEnd = () => {
-    if (!touchStartX.current || !touchEndX.current) return;
-
-    const distance = touchStartX.current - touchEndX.current;
-    const isLeftSwipe = distance > 50;
-    const isRightSwipe = distance < -50;
-
-    if (isLeftSwipe) {
-      handleNextMonth();
-    }
-    if (isRightSwipe) {
-      handlePreviousMonth();
-    }
-  };
-
   // Keyboard navigation for months
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -201,9 +175,6 @@ export default function CalendarPage() {
       id="calendar-container"
       className="h-screen bg-white flex flex-col overflow-hidden outline-none"
       tabIndex={0}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
     >
       {/* Top Header with Month Navigation and Action Buttons */}
       <div className="bg-amber-800 px-4 py-3 flex items-center justify-between flex-shrink-0">
