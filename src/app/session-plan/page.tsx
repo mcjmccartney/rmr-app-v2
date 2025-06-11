@@ -5,6 +5,8 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
 import { predefinedActionPoints, personalizeActionPoint } from '@/data/actionPoints';
 import { sessionPlanService } from '@/services/sessionPlanService';
+import { clientService } from '@/services/clientService';
+import { sessionService } from '@/services/sessionService';
 // import SessionPlanPreviewModal from '@/components/modals/SessionPlanPreviewModal';
 
 export default function SessionPlanPage() {
@@ -15,6 +17,19 @@ export default function SessionPlanPage() {
   const sessionId = searchParams.get('sessionId');
   const session = sessionId ? state.sessions.find(s => s.id === sessionId) : null;
   const client = session ? state.clients.find(c => c.id === session.clientId) : null;
+
+  // Debug logging for Lisa Gebler issue
+  useEffect(() => {
+    if (sessionId && session) {
+      console.log('Session Plan Debug:', {
+        sessionId,
+        session,
+        sessionClientId: session.clientId,
+        availableClients: state.clients.map(c => ({ id: c.id, name: `${c.firstName} ${c.lastName}` })),
+        foundClient: client
+      });
+    }
+  }, [sessionId, session, client, state.clients]);
 
   const [formData, setFormData] = useState({
     mainGoal1: '',
@@ -28,9 +43,15 @@ export default function SessionPlanPage() {
   const [showActionPoints, setShowActionPoints] = useState(false);
   const [existingSessionPlan, setExistingSessionPlan] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [sessionNumber, setSessionNumber] = useState<number>(1);
+  const [fallbackClient, setFallbackClient] = useState<any>(null);
+  const [fallbackSession, setFallbackSession] = useState<any>(null);
+  const [isGeneratingDoc, setIsGeneratingDoc] = useState(false);
+  const [generatedDocUrl, setGeneratedDocUrl] = useState<string | null>(null);
+  const [isPollingForUrl, setIsPollingForUrl] = useState(false);
+  // const [showPreviewModal, setShowPreviewModal] = useState(false);
 
-  // Load existing session plan if it exists
+  // Load existing session plan and calculate session number
   useEffect(() => {
     const loadExistingSessionPlan = async () => {
       if (!sessionId) {
@@ -39,8 +60,48 @@ export default function SessionPlanPage() {
       }
 
       try {
+        // If session or client not found in state, try to fetch from database
+        if (!session || !client) {
+          console.log('Session or client not found in state, fetching from database...');
+
+          // Fetch session from database
+          if (!session) {
+            const dbSession = await sessionService.getById(sessionId);
+            if (dbSession) {
+              setFallbackSession(dbSession);
+              console.log('Fetched session from database:', dbSession);
+
+              // Fetch client from database using the session's clientId
+              if (dbSession.clientId) {
+                const dbClient = await clientService.getById(dbSession.clientId);
+                if (dbClient) {
+                  setFallbackClient(dbClient);
+                  console.log('Fetched client from database:', dbClient);
+                }
+              }
+            }
+          }
+        }
+
+        // Calculate session number for this session
+        const calculatedSessionNumber = await sessionPlanService.calculateSessionNumber(sessionId);
+        setSessionNumber(calculatedSessionNumber);
+
+        // Load existing session plan if it exists
+        console.log('Attempting to load session plan for sessionId:', sessionId);
         const existingPlan = await sessionPlanService.getBySessionId(sessionId);
+        console.log('Loaded session plan:', existingPlan);
+
         if (existingPlan) {
+          console.log('Setting form data from existing plan:', {
+            mainGoal1: existingPlan.mainGoal1,
+            mainGoal2: existingPlan.mainGoal2,
+            mainGoal3: existingPlan.mainGoal3,
+            mainGoal4: existingPlan.mainGoal4,
+            explanationOfBehaviour: existingPlan.explanationOfBehaviour,
+            actionPoints: existingPlan.actionPoints
+          });
+
           setExistingSessionPlan(existingPlan);
           setFormData({
             mainGoal1: existingPlan.mainGoal1 || '',
@@ -50,6 +111,15 @@ export default function SessionPlanPage() {
             explanationOfBehaviour: existingPlan.explanationOfBehaviour || '',
           });
           setSelectedActionPoints(existingPlan.actionPoints || []);
+          // Use existing session number if plan already exists
+          setSessionNumber(existingPlan.sessionNumber);
+
+          // Check if document URL exists
+          if (existingPlan.documentEditUrl) {
+            setGeneratedDocUrl(existingPlan.documentEditUrl);
+          }
+        } else {
+          console.log('No existing session plan found for sessionId:', sessionId);
         }
       } catch (error) {
         console.error('Error loading existing session plan:', error);
@@ -59,7 +129,7 @@ export default function SessionPlanPage() {
     };
 
     loadExistingSessionPlan();
-  }, [sessionId]);
+  }, [sessionId]); // Only depend on sessionId to prevent unnecessary re-runs
 
   const handleBack = () => {
     router.push('/calendar');
@@ -69,27 +139,82 @@ export default function SessionPlanPage() {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  // Poll for document URL from the API endpoint
+  const pollForDocumentUrl = async (sessionId: string, maxAttempts = 30) => {
+    setIsPollingForUrl(true);
+    let attempts = 0;
+
+    const poll = async (): Promise<void> => {
+      try {
+        const response = await fetch(`/api/session-plan/document-url?sessionId=${sessionId}`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.documentUrl) {
+            console.log('Document URL received:', data.documentUrl);
+            setGeneratedDocUrl(data.documentUrl);
+            setIsPollingForUrl(false);
+
+            // Auto-redirect to the document
+            window.open(data.documentUrl, '_blank');
+            return;
+          }
+        }
+
+        attempts++;
+        if (attempts < maxAttempts) {
+          // Poll every 2 seconds
+          setTimeout(poll, 2000);
+        } else {
+          console.log('Polling timeout - document URL not received');
+          setIsPollingForUrl(false);
+        }
+      } catch (error) {
+        console.error('Error polling for document URL:', error);
+        attempts++;
+        if (attempts < maxAttempts) {
+          setTimeout(poll, 2000);
+        } else {
+          setIsPollingForUrl(false);
+        }
+      }
+    };
+
+    // Start polling after a short delay to allow Make.com to process
+    setTimeout(poll, 3000);
+  };
+
+  // Use fallback data if state data is not available
+  const currentSession = session || fallbackSession;
+  const currentClient = client || fallbackClient;
+
   const handleSave = async () => {
-    if (!session || !client) return;
+    if (!currentSession || !currentClient) return;
 
     try {
       const sessionPlanData = {
-        sessionId: session.id,
+        sessionId: currentSession.id,
         mainGoal1: formData.mainGoal1,
         mainGoal2: formData.mainGoal2,
         mainGoal3: formData.mainGoal3,
         mainGoal4: formData.mainGoal4,
         explanationOfBehaviour: formData.explanationOfBehaviour,
         actionPoints: selectedActionPoints,
-        sessionNumber: existingSessionPlan?.sessionNumber || 1
+        sessionNumber: sessionNumber
       };
 
+      console.log('Saving session plan data:', sessionPlanData);
+      console.log('Existing session plan:', existingSessionPlan);
+
+      let savedPlan;
       if (existingSessionPlan) {
-        await sessionPlanService.update(existingSessionPlan.id, sessionPlanData);
+        console.log('Updating existing session plan with ID:', existingSessionPlan.id);
+        savedPlan = await sessionPlanService.update(existingSessionPlan.id, sessionPlanData);
       } else {
-        await sessionPlanService.create(sessionPlanData);
+        console.log('Creating new session plan');
+        savedPlan = await sessionPlanService.create(sessionPlanData);
       }
 
+      console.log('Session plan saved successfully:', savedPlan);
       router.push('/calendar');
 
     } catch (error) {
@@ -106,15 +231,135 @@ export default function SessionPlanPage() {
     );
   };
 
-  const handlePreviewAndEdit = () => {
-    console.log('Preview functionality temporarily disabled');
+  const handlePreviewAndEdit = async () => {
+    if (!currentSession || !currentClient) return;
+
+    setIsGeneratingDoc(true);
+
+    // Prepare the data for the webhook
+    const sessionData = {
+      // Session identification for callback
+      sessionId: currentSession.id,
+
+      // Basic session info
+      sessionNumber: sessionNumber.toString(),
+      dogName: currentClient.dogName || 'Unknown Dog',
+      clientName: `${currentClient.firstName} ${currentClient.lastName}`.trim(),
+      sessionType: currentSession.sessionType,
+      sessionDate: new Date(currentSession.bookingDate).toLocaleDateString('en-GB'),
+      sessionTime: currentSession.bookingTime,
+
+      // Main goals
+      mainGoal1: formData.mainGoal1 || '',
+      mainGoal2: formData.mainGoal2 || '',
+      mainGoal3: formData.mainGoal3 || '',
+      mainGoal4: formData.mainGoal4 || '',
+
+      // Explanation
+      explanationOfBehaviour: formData.explanationOfBehaviour || '',
+
+      // Action points (personalized)
+      actionPoints: selectedActionPoints.map((actionPointId, index) => {
+        const actionPoint = predefinedActionPoints.find(ap => ap.id === actionPointId);
+        if (!actionPoint) return null;
+
+        const personalizedActionPoint = personalizeActionPoint(
+          actionPoint,
+          currentClient?.dogName || 'Dog',
+          'Male'
+        );
+
+        return {
+          header: personalizedActionPoint.header,
+          details: personalizedActionPoint.details
+        };
+      }).filter(Boolean),
+
+      // Callback URL for Make.com to send the document URL back
+      callbackUrl: `${window.location.origin}/api/session-plan/document-url`
+    };
+
+    try {
+      console.log('Sending data to Make.com webhook:', sessionData);
+
+      // Send data to Make.com webhook to generate the document
+      const response = await fetch('https://hook.eu1.make.com/lbfmnhl3xpf7c0y2sfos3vdln6y1fmqm', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(sessionData)
+      });
+
+      console.log('Make.com response status:', response.status);
+
+      if (response.ok) {
+        let result;
+        try {
+          result = await response.json();
+          console.log('Make.com response data:', result);
+        } catch (jsonError) {
+          console.log('Response is not JSON, treating as success');
+          result = { success: true };
+        }
+
+        // If Make.com returns a document URL immediately, store it and open it
+        if (result.documentUrl) {
+          setGeneratedDocUrl(result.documentUrl);
+          window.open(result.documentUrl, '_blank');
+        } else {
+          // Document generation was initiated successfully
+          // Start polling for the document URL
+          console.log('Document generation initiated, starting to poll for URL...');
+          pollForDocumentUrl(currentSession.id);
+        }
+      } else {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+    } catch (error) {
+      console.error('Error generating document:', error);
+      // Don't show alert popup - just log the error
+      console.log('Document generation may still be in progress despite the error');
+      // Still start polling since Make.com might be processing it
+      pollForDocumentUrl(currentSession.id);
+    } finally {
+      setIsGeneratingDoc(false);
+    }
   };
 
-  const handleSaveEditedContent = (editedContent: string) => {
-    console.log('Edited content:', editedContent);
+  const handleEditGoogleDoc = () => {
+    if (generatedDocUrl && generatedDocUrl !== 'pending') {
+      // Open the specific document URL for editing
+      window.open(generatedDocUrl, '_blank');
+    } else {
+      // If we don't have a specific URL, open Google Drive to find the document
+      // The document should be named with the client and session info
+      const searchQuery = `${currentClient?.firstName} ${currentClient?.lastName} Session ${sessionNumber}`;
+      const driveSearchUrl = `https://drive.google.com/drive/search?q=${encodeURIComponent(searchQuery)}`;
+      window.open(driveSearchUrl, '_blank');
+    }
   };
 
-  if (!sessionId || !session || !client) {
+  const handleSaveEditedContent = async (editedContent: string) => {
+    if (!session || !client) return;
+
+    try {
+      // For now, we'll save the edited content as a note or additional field
+      // You could extend the database schema to include an 'edited_document' field
+      console.log('Edited content saved:', editedContent);
+
+      // Optionally, you could save this to a separate table or field
+      // await sessionPlanService.saveEditedDocument(session.id, editedContent);
+
+      // Close the modal
+      // setShowPreviewModal(false);
+
+    } catch (error) {
+      console.error('Error saving edited content:', error);
+    }
+  };
+
+  if (!sessionId || (!currentSession && !session) || (!currentClient && !client)) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
@@ -157,10 +402,10 @@ export default function SessionPlanPage() {
             <div>
               <div className="border-b border-gray-200 pb-4 mb-6">
                 <h2 className="text-lg font-semibold text-gray-900 mb-2">
-                  {client.dogName || 'Unknown Dog'} - Session Plan
+                  {currentClient.dogName || 'Unknown Dog'} - Session Plan
                 </h2>
                 <p className="text-gray-600">
-                  {client.firstName} {client.lastName} • {session.sessionType}
+                  {currentClient.firstName} {currentClient.lastName} • {currentSession.sessionType}
                 </p>
               </div>
 
@@ -322,12 +567,26 @@ export default function SessionPlanPage() {
                     {existingSessionPlan ? 'Update Session Plan' : 'Save Session Plan'}
                   </button>
 
-                  <button
-                    onClick={handlePreviewAndEdit}
-                    className="w-full bg-white text-amber-800 py-3 rounded-md font-medium border border-amber-800 hover:bg-amber-800/10 transition-colors"
-                  >
-                    Preview & Edit Document
-                  </button>
+                  {!generatedDocUrl ? (
+                    <button
+                      onClick={handlePreviewAndEdit}
+                      disabled={isGeneratingDoc || isPollingForUrl}
+                      className="w-full bg-white text-amber-800 py-3 rounded-md font-medium border border-amber-800 hover:bg-amber-800/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isGeneratingDoc
+                        ? 'Generating Document...'
+                        : isPollingForUrl
+                        ? 'Waiting for Document...'
+                        : 'Generate Google Doc'}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleEditGoogleDoc}
+                      className="w-full bg-green-600 text-white py-3 rounded-md font-medium hover:bg-green-700 transition-colors"
+                    >
+                      Edit Google Doc
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -335,7 +594,7 @@ export default function SessionPlanPage() {
         </div>
       </div>
 
-      {/* Preview Modal - Temporarily disabled */}
+      {/* Preview Modal - Replaced with Make webhook */}
       {/* <SessionPlanPreviewModal
         isOpen={showPreviewModal}
         onClose={() => setShowPreviewModal(false)}

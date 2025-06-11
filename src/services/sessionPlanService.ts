@@ -13,6 +13,7 @@ function dbRowToSessionPlan(row: any): SessionPlan {
     mainGoal4: row.main_goal_4,
     explanationOfBehaviour: row.explanation_of_behaviour,
     actionPoints: row.action_points || [],
+    documentEditUrl: row.document_edit_url,
     createdAt: new Date(row.created_at),
     updatedAt: new Date(row.updated_at),
   };
@@ -30,6 +31,7 @@ function sessionPlanToDbRow(sessionPlan: Partial<SessionPlan>) {
     main_goal_4: sessionPlan.mainGoal4,
     explanation_of_behaviour: sessionPlan.explanationOfBehaviour,
     action_points: sessionPlan.actionPoints,
+    document_edit_url: sessionPlan.documentEditUrl,
   };
 }
 
@@ -98,15 +100,40 @@ export const sessionPlanService = {
 
   // Calculate session number for a session
   async calculateSessionNumber(sessionId: string): Promise<number> {
-    const { data, error } = await supabase
-      .rpc('calculate_session_number', { p_session_id: sessionId });
+    try {
+      // First, get the session to find the client
+      const { data: session, error: sessionError } = await supabase
+        .from('sessions')
+        .select('client_id, booking_date, booking_time')
+        .eq('id', sessionId)
+        .single();
 
-    if (error) {
+      if (sessionError || !session) {
+        console.error('Error fetching session:', sessionError);
+        return 1;
+      }
+
+      // Get all sessions for this client ordered by date/time
+      const { data: clientSessions, error: sessionsError } = await supabase
+        .from('sessions')
+        .select('id, booking_date, booking_time')
+        .eq('client_id', session.client_id)
+        .order('booking_date', { ascending: true })
+        .order('booking_time', { ascending: true });
+
+      if (sessionsError || !clientSessions) {
+        console.error('Error fetching client sessions:', sessionsError);
+        return 1;
+      }
+
+      // Find the position of this session in the chronological order
+      const sessionIndex = clientSessions.findIndex(s => s.id === sessionId);
+      return sessionIndex >= 0 ? sessionIndex + 1 : 1;
+
+    } catch (error) {
       console.error('Error calculating session number:', error);
-      throw error;
+      return 1;
     }
-
-    return data || 1;
   },
 
   // Create new session plan

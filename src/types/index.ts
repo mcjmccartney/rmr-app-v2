@@ -26,6 +26,7 @@ export interface SessionPlan {
   mainGoal4?: string;
   explanationOfBehaviour?: string;
   actionPoints: string[]; // Array of ActionPoint IDs
+  documentEditUrl?: string; // Google Doc edit URL from Make.com
   createdAt: Date;
   updatedAt: Date;
 }
