@@ -235,11 +235,18 @@ export default function CalendarPage() {
               const dayNumber = format(day, 'd');
               const isCurrentMonth = isSameDay(day, currentDate) ||
                 (day >= monthStart && day <= monthEnd);
+              const isToday = isSameDay(day, new Date());
 
               return (
-                <div key={day.toISOString()} className="flex flex-col p-1 min-h-0 border-r border-b border-gray-100 last:border-r-0">
+                <div key={day.toISOString()} className={`flex flex-col p-1 min-h-0 border-r border-b border-gray-100 last:border-r-0 ${
+                  isToday ? 'bg-brand-primary' : ''
+                }`}>
                   <div className={`text-sm font-medium mb-1 flex-shrink-0 ${
-                    isCurrentMonth ? 'text-gray-900' : 'text-gray-400'
+                    isToday
+                      ? 'text-white'
+                      : isCurrentMonth
+                        ? 'text-gray-900'
+                        : 'text-gray-400'
                   }`}>{dayNumber}</div>
                   <div className="space-y-1 flex-1 min-h-0 overflow-hidden">
                     {sessions.slice(0, 2).map(session => {
