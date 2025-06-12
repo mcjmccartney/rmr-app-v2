@@ -121,13 +121,9 @@ export interface BehaviourQuestionnaire {
 
 export interface Membership {
   id: string;
-  clientId: string;
   email: string;
-  month: string; // e.g., "January 2024"
+  date: string; // Date in YYYY-MM-DD format
   amount: number;
-  status: 'Paid' | 'Pending' | 'Overdue';
-  paymentDate?: string; // Date when payment was made
-  createdAt: Date;
 }
 
 export interface Client {

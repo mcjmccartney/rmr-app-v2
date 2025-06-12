@@ -1,52 +1,67 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import Header from '@/components/layout/Header';
+import { useState } from 'react';
 import { useApp } from '@/context/AppContext';
-import { CreditCard } from 'lucide-react';
+import Header from '@/components/layout/Header';
 import { Membership } from '@/types';
+import { ChevronDown, ChevronRight, CreditCard } from 'lucide-react';
 
 export default function MembershipsPage() {
-  const { state, loadMemberships } = useApp();
-  const [isLoading, setIsLoading] = useState(true);
+  const { state } = useApp();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [expandedMonths, setExpandedMonths] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
-    const loadData = async () => {
-      setIsLoading(true);
-      try {
-        await loadMemberships();
-      } catch (error) {
-        console.error('Error loading memberships:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const filteredMemberships = state.memberships.filter(membership => {
+    const searchTerm = searchQuery.toLowerCase();
+    return membership.email.toLowerCase().includes(searchTerm);
+  });
 
-    loadData();
-  }, [loadMemberships]);
-
-  const groupedMemberships = state.memberships.reduce((acc, membership) => {
-    const month = membership.month;
-    if (!acc[month]) {
-      acc[month] = [];
+  // Group memberships by month/year from date
+  const membershipsByMonth = filteredMemberships.reduce((acc, membership) => {
+    const date = new Date(membership.date);
+    const monthKey = date.toLocaleDateString('en-GB', { year: 'numeric', month: 'long' });
+    if (!acc[monthKey]) {
+      acc[monthKey] = [];
     }
-    acc[month].push(membership);
+    acc[monthKey].push(membership);
     return acc;
   }, {} as Record<string, Membership[]>);
 
+  // Sort months in descending order (newest first)
+  const sortedMonths = Object.keys(membershipsByMonth).sort((a, b) => {
+    const dateA = new Date(a);
+    const dateB = new Date(b);
+    return dateB.getTime() - dateA.getTime();
+  });
+
+  const toggleMonth = (monthKey: string) => {
+    const newExpandedMonths = new Set(expandedMonths);
+    if (newExpandedMonths.has(monthKey)) {
+      newExpandedMonths.delete(monthKey);
+    } else {
+      newExpandedMonths.add(monthKey);
+    }
+    setExpandedMonths(newExpandedMonths);
+  };
+
+  const calculateMonthlyRevenue = (memberships: Membership[]) => {
+    return memberships.reduce((total, membership) => total + membership.amount, 0);
+  };
+
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white flex flex-col">
       <div className="bg-amber-800">
-        <Header title="Memberships" />
+        <Header
+          title="Memberships"
+          showSearch
+          onSearch={setSearchQuery}
+          searchPlaceholder="Search by email"
+        />
       </div>
 
-      <div className="px-4 py-8 bg-gray-50 min-h-screen">
-        {isLoading ? (
+      <div className="px-4 pb-4 bg-gray-50 flex-1">
+        {state.memberships.length === 0 ? (
           <div className="text-center mt-8">
-            <div className="text-gray-500">Loading memberships...</div>
-          </div>
-        ) : state.memberships.length === 0 ? (
-          <div className="text-center mt-4">
             <CreditCard size={64} className="mx-auto text-gray-300 mb-4" />
             <h2 className="text-xl font-semibold text-gray-900 mb-2">No Memberships Yet</h2>
             <p className="text-gray-500">
@@ -54,46 +69,57 @@ export default function MembershipsPage() {
             </p>
           </div>
         ) : (
-          <div className="space-y-6">
-            {Object.entries(groupedMemberships)
-              .sort(([a], [b]) => b.localeCompare(a))
-              .map(([month, memberships]) => (
-                <div key={month} className="bg-white rounded-lg shadow-sm">
-                  <div className="px-4 py-3 border-b border-gray-200">
-                    <h3 className="text-lg font-semibold text-gray-900">{month}</h3>
-                    <p className="text-sm text-gray-500">{memberships.length} payment(s)</p>
-                  </div>
-                  <div className="divide-y divide-gray-100">
-                    {memberships.map((membership) => (
-                      <div key={membership.id} className="p-4">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <div className="font-medium text-gray-900">
-                              {membership.email}
+          <div className="space-y-3 mt-4">
+            {sortedMonths.map((monthKey) => {
+              const monthMemberships = membershipsByMonth[monthKey];
+              const monthlyRevenue = calculateMonthlyRevenue(monthMemberships);
+              const isExpanded = expandedMonths.has(monthKey);
+
+              return (
+                <div key={monthKey} className="bg-white rounded-lg shadow-sm overflow-hidden">
+                  {/* Month Header */}
+                  <button
+                    onClick={() => toggleMonth(monthKey)}
+                    className="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+                  >
+                    <h2 className="text-lg font-semibold text-gray-900">
+                      {monthKey} - £{monthlyRevenue.toFixed(2)} | {monthMemberships.length} Payments
+                    </h2>
+                    {isExpanded ? (
+                      <ChevronDown size={20} className="text-gray-400" />
+                    ) : (
+                      <ChevronRight size={20} className="text-gray-400" />
+                    )}
+                  </button>
+
+                  {/* Memberships List */}
+                  {isExpanded && (
+                    <div className="border-t border-gray-100">
+                      {monthMemberships.map((membership) => (
+                        <div
+                          key={membership.id}
+                          className="p-4 border-b border-gray-100 last:border-b-0"
+                        >
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h3 className="font-medium text-gray-900">{membership.email}</h3>
+                              <p className="text-sm text-gray-500">
+                                {new Date(membership.date).toLocaleDateString('en-GB')}
+                              </p>
                             </div>
-                            <div className={`text-sm ${
-                              membership.status === 'Paid' ? 'text-green-600' :
-                              membership.status === 'Pending' ? 'text-amber-600' : 'text-red-600'
-                            }`}>
-                              {membership.status}
-                            </div>
-                            {membership.paymentDate && (
-                              <div className="text-xs text-gray-500 mt-1">
-                                Paid: {new Date(membership.paymentDate).toLocaleDateString('en-GB')}
+                            <div className="text-right">
+                              <div className="font-medium text-gray-900">
+                                £{membership.amount.toFixed(2)}
                               </div>
-                            )}
-                          </div>
-                          <div className="text-right">
-                            <div className="font-medium text-gray-900">
-                              £{membership.amount.toFixed(2)}
                             </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              ))}
+              );
+            })}
           </div>
         )}
       </div>

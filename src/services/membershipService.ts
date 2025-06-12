@@ -5,27 +5,20 @@ import { Membership } from '@/types'
 function dbRowToMembership(row: Record<string, any>): Membership {
   return {
     id: row.id,
-    clientId: row.client_id,
     email: row.email,
-    month: row.month,
-    amount: row.amount,
-    status: row.status,
-    paymentDate: row.payment_date,
-    createdAt: new Date(row.created_at),
+    date: row.date,
+    amount: parseFloat(row.amount) || 0,
   }
 }
 
 // Convert Membership to database row format
 function membershipToDbRow(membership: Partial<Membership>): Record<string, any> {
   const dbRow: Record<string, any> = {}
-  
-  if (membership.clientId !== undefined) dbRow.client_id = membership.clientId
+
   if (membership.email !== undefined) dbRow.email = membership.email
-  if (membership.month !== undefined) dbRow.month = membership.month
+  if (membership.date !== undefined) dbRow.date = membership.date
   if (membership.amount !== undefined) dbRow.amount = membership.amount
-  if (membership.status !== undefined) dbRow.status = membership.status
-  if (membership.paymentDate !== undefined) dbRow.payment_date = membership.paymentDate
-  
+
   return dbRow
 }
 
@@ -35,7 +28,7 @@ export const membershipService = {
     const { data, error } = await supabase
       .from('memberships')
       .select('*')
-      .order('created_at', { ascending: false })
+      .order('date', { ascending: false })
 
     if (error) {
       console.error('Error fetching memberships:', error)
@@ -45,20 +38,10 @@ export const membershipService = {
     return data?.map(dbRowToMembership) || []
   },
 
-  // Get memberships by client ID
+  // Get memberships by client ID (not used since we don't have client_id in your table)
   async getByClientId(clientId: string): Promise<Membership[]> {
-    const { data, error } = await supabase
-      .from('memberships')
-      .select('*')
-      .eq('client_id', clientId)
-      .order('created_at', { ascending: false })
-
-    if (error) {
-      console.error('Error fetching memberships by client ID:', error)
-      throw error
-    }
-
-    return data?.map(dbRowToMembership) || []
+    // Since your table doesn't have client_id, return empty array
+    return []
   },
 
   // Get memberships by email (for pairing with clients)
@@ -67,7 +50,7 @@ export const membershipService = {
       .from('memberships')
       .select('*')
       .eq('email', email)
-      .order('created_at', { ascending: false })
+      .order('date', { ascending: false })
 
     if (error) {
       console.error('Error fetching memberships by email:', error)

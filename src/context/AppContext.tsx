@@ -312,6 +312,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // Load initial data on mount
   useEffect(() => {
+    console.log('AppContext: Loading initial data...');
     loadClients();
     loadSessions();
     loadMemberships();

@@ -49,24 +49,17 @@ export default function ClientModal({ client, isOpen, onClose, onEditClient, onV
       setIsLoadingData(true);
       try {
         // Load sessions for this client
+        console.log('Loading sessions for client:', currentClient.id);
         const sessions = await sessionService.getByClientId(currentClient.id);
+        console.log('Found sessions:', sessions.length);
         setClientSessions(sessions || []);
 
-        // Load memberships for this client
+        // Load memberships for this client by email
         let memberships: Membership[] = [];
-
-        // First try to get memberships by client ID
-        memberships = await getMembershipsByClientId(currentClient.id);
-
-        // If no memberships found by client ID and client has email, try by email
-        if (memberships.length === 0 && currentClient.email) {
+        if (currentClient.email) {
+          console.log('Loading memberships for email:', currentClient.email);
           memberships = await getMembershipsByEmail(currentClient.email);
-
-          // If we found memberships by email, update them to link to this client
-          if (memberships.length > 0) {
-            // TODO: Update membership records to link to this client ID
-            console.log('Found memberships by email for client:', currentClient.email);
-          }
+          console.log('Found memberships:', memberships.length);
         }
 
         setClientMemberships(memberships || []);
