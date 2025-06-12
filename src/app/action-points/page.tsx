@@ -87,7 +87,7 @@ export default function ActionPointsPage() {
       {/* Content */}
       <div className="flex-1 p-4">
         <div className="max-w-2xl mx-auto">
-            <div className="space-y-6">
+          <div className="space-y-6">
               {/* Add New Action Point Button */}
               {!showAddForm && (
                 <button
