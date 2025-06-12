@@ -6,11 +6,12 @@ import Header from '@/components/layout/Header';
 import SessionModal from '@/components/modals/SessionModal';
 import EditSessionModal from '@/components/modals/EditSessionModal';
 import EditClientModal from '@/components/modals/EditClientModal';
+import ActionPointsModal from '@/components/modals/ActionPointsModal';
 import AddModal from '@/components/AddModal';
 import { Session, Client } from '@/types';
 
 import { formatDateTime, formatFullMonthYear } from '@/utils/dateFormatting';
-import { Calendar, UserPlus, ChevronDown, ChevronRight } from 'lucide-react';
+import { Calendar, UserPlus, ChevronDown, ChevronRight, Target } from 'lucide-react';
 
 export default function SessionsPage() {
   const { state } = useApp();
@@ -22,6 +23,7 @@ export default function SessionsPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [addModalType, setAddModalType] = useState<'session' | 'client'>('session');
   const [expandedMonths, setExpandedMonths] = useState<Set<string>>(new Set());
+  const [showActionPointsModal, setShowActionPointsModal] = useState(false);
 
   const filteredSessions = state.sessions.filter(session => {
     const searchTerm = searchQuery.toLowerCase();
@@ -96,6 +98,14 @@ export default function SessionsPage() {
     setShowAddModal(false);
   };
 
+  const handleActionPoints = () => {
+    setShowActionPointsModal(true);
+  };
+
+  const handleCloseActionPointsModal = () => {
+    setShowActionPointsModal(false);
+  };
+
 
 
   const toggleMonth = (monthKey: string) => {
@@ -118,6 +128,11 @@ export default function SessionsPage() {
         <Header
           title="Sessions"
           buttons={[
+            {
+              icon: Target,
+              onClick: handleActionPoints,
+              title: 'Manage Action Points'
+            },
             {
               icon: Calendar,
               onClick: handleAddSession,
@@ -221,6 +236,11 @@ export default function SessionsPage() {
         isOpen={showAddModal}
         onClose={handleCloseAddModal}
         type={addModalType}
+      />
+
+      <ActionPointsModal
+        isOpen={showActionPointsModal}
+        onClose={handleCloseActionPointsModal}
       />
     </div>
   );

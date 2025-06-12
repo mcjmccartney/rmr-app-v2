@@ -584,12 +584,28 @@ function SessionPlanContent() {
                         : 'Generate Google Doc'}
                     </button>
                   ) : (
-                    <button
-                      onClick={handleEditGoogleDoc}
-                      className="w-full bg-green-600 text-white py-3 rounded-md font-medium hover:bg-green-700 transition-colors"
-                    >
-                      Edit Google Doc
-                    </button>
+                    <div className="space-y-2">
+                      <button
+                        onClick={handleEditGoogleDoc}
+                        className="w-full text-white py-3 rounded-md font-medium transition-colors"
+                        style={{ backgroundColor: '#4f6749' }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3d5037'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#4f6749'}
+                      >
+                        Edit Google Doc
+                      </button>
+                      <button
+                        onClick={handlePreviewAndEdit}
+                        disabled={isGeneratingDoc || isPollingForUrl}
+                        className="w-full bg-amber-600 text-white py-3 rounded-md font-medium hover:bg-amber-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isGeneratingDoc
+                          ? 'Re-Generating Document...'
+                          : isPollingForUrl
+                          ? 'Waiting for Document...'
+                          : 'Re-Generate Google Doc'}
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>
