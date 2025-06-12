@@ -257,7 +257,33 @@ function SessionPlanContent() {
       // Continue with document generation even if save fails
     }
 
-    // Prepare the data for the webhook
+    await generateDocument();
+  };
+
+  const handleReGenerate = async () => {
+    if (!currentSession || !currentClient) return;
+
+    setIsGeneratingDoc(true);
+
+    try {
+      // Save the current form state to ensure fresh data
+      console.log('Saving current session plan before re-generating document...');
+      await saveSessionPlan();
+      console.log('Session plan saved successfully');
+
+      // Clear the existing document URL to force regeneration
+      setGeneratedDocUrl(null);
+    } catch (error) {
+      console.error('Error saving session plan:', error);
+      // Continue with document generation even if save fails
+    }
+
+    await generateDocument();
+  };
+
+  const generateDocument = async () => {
+
+    // Prepare the data for the webhook with current form state
     const sessionData = {
       // Session identification for callback
       sessionId: currentSession.id,
@@ -270,16 +296,16 @@ function SessionPlanContent() {
       sessionDate: new Date(currentSession.bookingDate).toLocaleDateString('en-GB'),
       sessionTime: currentSession.bookingTime,
 
-      // Main goals
+      // Main goals (current form state)
       mainGoal1: formData.mainGoal1 || '',
       mainGoal2: formData.mainGoal2 || '',
       mainGoal3: formData.mainGoal3 || '',
       mainGoal4: formData.mainGoal4 || '',
 
-      // Explanation
+      // Explanation (current form state)
       explanationOfBehaviour: formData.explanationOfBehaviour || '',
 
-      // Action points (personalized)
+      // Action points (current selection - personalized)
       actionPoints: selectedActionPoints.map((actionPointId) => {
         const actionPoint = predefinedActionPoints.find(ap => ap.id === actionPointId);
         if (!actionPoint) return null;
@@ -297,7 +323,10 @@ function SessionPlanContent() {
       }).filter(Boolean),
 
       // Callback URL for Make.com to send the document URL back
-      callbackUrl: `${window.location.origin}/api/session-plan/document-url`
+      callbackUrl: `${window.location.origin}/api/session-plan/document-url`,
+
+      // Add timestamp to ensure fresh generation
+      timestamp: new Date().toISOString()
     };
 
     try {
@@ -595,9 +624,12 @@ function SessionPlanContent() {
                         Edit Google Doc
                       </button>
                       <button
-                        onClick={handlePreviewAndEdit}
+                        onClick={handleReGenerate}
                         disabled={isGeneratingDoc || isPollingForUrl}
-                        className="w-full bg-amber-600 text-white py-3 rounded-md font-medium hover:bg-amber-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full text-white py-3 rounded-md font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        style={{ backgroundColor: '#973b00' }}
+                        onMouseEnter={(e) => !e.currentTarget.disabled && (e.currentTarget.style.backgroundColor = '#7a2f00')}
+                        onMouseLeave={(e) => !e.currentTarget.disabled && (e.currentTarget.style.backgroundColor = '#973b00')}
                       >
                         {isGeneratingDoc
                           ? 'Re-Generating Document...'
