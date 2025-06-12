@@ -16,6 +16,8 @@ interface Finance {
 
 export default function FinancesPage() {
   const [finances, setFinances] = useState<Finance[]>([]);
+  const [sessions, setSessions] = useState<any[]>([]);
+  const [memberships, setMemberships] = useState<any[]>([]);
   const [selectedFinance, setSelectedFinance] = useState<Finance | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -23,21 +25,41 @@ export default function FinancesPage() {
   const [expandedMonths, setExpandedMonths] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    fetchFinances();
+    fetchAllData();
   }, []);
 
-  const fetchFinances = async () => {
+  const fetchAllData = async () => {
     try {
-      const { data, error } = await supabase
+      // Fetch finances
+      const { data: financesData, error: financesError } = await supabase
         .from('finances')
         .select('*')
         .order('year', { ascending: false })
         .order('month');
 
-      if (error) throw error;
-      setFinances(data || []);
+      if (financesError) throw financesError;
+
+      // Fetch sessions
+      const { data: sessionsData, error: sessionsError } = await supabase
+        .from('sessions')
+        .select('*')
+        .order('bookingDate', { ascending: false });
+
+      if (sessionsError) throw sessionsError;
+
+      // Fetch memberships
+      const { data: membershipsData, error: membershipsError } = await supabase
+        .from('memberships')
+        .select('*')
+        .order('date', { ascending: false });
+
+      if (membershipsError) throw membershipsError;
+
+      setFinances(financesData || []);
+      setSessions(sessionsData || []);
+      setMemberships(membershipsData || []);
     } catch (error) {
-      console.error('Error fetching finances:', error);
+      console.error('Error fetching data:', error);
     } finally {
       setLoading(false);
     }
@@ -136,12 +158,54 @@ export default function FinancesPage() {
     setExpandedMonths(newExpandedMonths);
   };
 
-  const calculateMonthlyTotal = (finances: Finance[]) => {
-    return finances.reduce((total, finance) => total + (finance.expected || 0), 0);
+  // Helper function to get month number from name
+  const getMonthNumber = (monthName: string): number => {
+    const months = ['January', 'February', 'March', 'April', 'May', 'June',
+                   'July', 'August', 'September', 'October', 'November', 'December'];
+    return months.indexOf(monthName) + 1;
+  };
+
+  // Calculate actual income for a specific month/year from sessions and memberships
+  const calculateActualIncome = (month: string, year: number) => {
+    const monthNum = getMonthNumber(month);
+
+    // Get sessions for this month/year
+    const monthSessions = sessions.filter(session => {
+      const sessionDate = new Date(session.bookingDate);
+      return sessionDate.getMonth() + 1 === monthNum && sessionDate.getFullYear() === year;
+    });
+
+    // Get memberships for this month/year
+    const monthMemberships = memberships.filter(membership => {
+      const membershipDate = new Date(membership.date);
+      return membershipDate.getMonth() + 1 === monthNum && membershipDate.getFullYear() === year;
+    });
+
+    const sessionTotal = monthSessions.reduce((sum, session) => sum + (session.quote || 0), 0);
+    const membershipTotal = monthMemberships.reduce((sum, membership) => sum + (membership.amount || 0), 0);
+
+    return sessionTotal + membershipTotal;
+  };
+
+  const calculateMonthlyTotal = (finances: Finance[], month: string, year: number) => {
+    const expectedTotal = finances.reduce((total, finance) => total + (finance.expected || 0), 0);
+    const actualTotal = calculateActualIncome(month, year);
+    return { expected: expectedTotal, actual: actualTotal };
   };
 
   const calculateTaxYearTotal = (monthsData: Record<string, Finance[]>) => {
-    return Object.values(monthsData).flat().reduce((total, finance) => total + (finance.expected || 0), 0);
+    let expectedTotal = 0;
+    let actualTotal = 0;
+
+    Object.entries(monthsData).forEach(([monthKey, finances]) => {
+      const [month, yearStr] = monthKey.split(' ');
+      const year = parseInt(yearStr);
+
+      expectedTotal += finances.reduce((sum, finance) => sum + (finance.expected || 0), 0);
+      actualTotal += calculateActualIncome(month, year);
+    });
+
+    return { expected: expectedTotal, actual: actualTotal };
   };
 
   if (loading) {
@@ -175,7 +239,7 @@ export default function FinancesPage() {
         <div className="space-y-3 mt-4">
           {sortedTaxYears.map((taxYear) => {
             const taxYearData = financesByTaxYear[taxYear];
-            const taxYearTotal = calculateTaxYearTotal(taxYearData);
+            const taxYearTotals = calculateTaxYearTotal(taxYearData);
             const isTaxYearExpanded = expandedMonths.has(taxYear);
             const sortedMonthsInTaxYear = sortMonthsInTaxYear(Object.keys(taxYearData), taxYear);
 
@@ -187,7 +251,7 @@ export default function FinancesPage() {
                   className="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
                 >
                   <h2 className="text-lg font-semibold text-gray-900">
-                    {taxYear} - £{taxYearTotal.toLocaleString()}
+                    {taxYear} - £{taxYearTotals.actual.toLocaleString()} (Expected: £{taxYearTotals.expected.toLocaleString()})
                   </h2>
                   {isTaxYearExpanded ? (
                     <ChevronDown size={20} className="text-gray-400" />
@@ -201,8 +265,9 @@ export default function FinancesPage() {
                   <div className="border-t border-gray-100">
                     {sortedMonthsInTaxYear.map((monthKey) => {
                       const monthFinances = taxYearData[monthKey];
-                      const monthlyTotal = calculateMonthlyTotal(monthFinances);
-                      const isMonthExpanded = expandedMonths.has(`${taxYear}-${monthKey}`);
+                      const [month, yearStr] = monthKey.split(' ');
+                      const year = parseInt(yearStr);
+                      const monthlyTotals = calculateMonthlyTotal(monthFinances, month, year);
 
                       return (
                         <div key={`${taxYear}-${monthKey}`} className="border-b border-gray-100 last:border-b-0">
@@ -214,7 +279,7 @@ export default function FinancesPage() {
                             <div>
                               <h3 className="font-medium text-gray-900">{monthKey}</h3>
                               <p className="text-sm text-gray-500">
-                                £{monthlyTotal.toLocaleString()} | {monthFinances.length} Entries
+                                Actual: £{monthlyTotals.actual.toLocaleString()} | Expected: £{monthlyTotals.expected.toLocaleString()}
                               </p>
                             </div>
                             <ChevronRight size={16} className="text-gray-400" />
@@ -231,13 +296,12 @@ export default function FinancesPage() {
       </div>
 
       {/* Monthly Breakdown Modal */}
-      {isModalOpen && selectedFinance && (
-        <MonthlyBreakdownModal
-          finance={selectedFinance}
-          onClose={closeModal}
-          onUpdate={fetchFinances}
-        />
-      )}
+      <MonthlyBreakdownModal
+        finance={selectedFinance}
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        onUpdate={fetchAllData}
+      />
     </div>
   );
 }

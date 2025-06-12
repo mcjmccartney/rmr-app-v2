@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, ChevronUp, ChevronDown } from 'lucide-react';
+import { ChevronUp, ChevronDown } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import SlideUpModal from './modals/SlideUpModal';
 
 interface Finance {
   id: string;
@@ -33,11 +34,12 @@ interface BreakdownData {
 
 interface MonthlyBreakdownModalProps {
   finance: Finance;
+  isOpen: boolean;
   onClose: () => void;
   onUpdate: () => void;
 }
 
-export default function MonthlyBreakdownModal({ finance, onClose, onUpdate }: MonthlyBreakdownModalProps) {
+export default function MonthlyBreakdownModal({ finance, isOpen, onClose, onUpdate }: MonthlyBreakdownModalProps) {
   const [isEditingExpected, setIsEditingExpected] = useState(false);
   const [expectedAmount, setExpectedAmount] = useState(finance.expected?.toString() || '0');
   const [breakdownData, setBreakdownData] = useState<BreakdownData>({
@@ -167,24 +169,19 @@ export default function MonthlyBreakdownModal({ finance, onClose, onUpdate }: Mo
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end justify-center z-50 md:items-center">
-      <div className="bg-white w-full max-w-md mx-4 rounded-t-lg md:rounded-lg shadow-xl max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b">
-          <h2 className="text-lg font-semibold">{finance.month} {finance.year} Breakdown</h2>
-          <button onClick={onClose} className="text-gray-600">
-            <X size={24} />
-          </button>
+    <SlideUpModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={`${finance.month} ${finance.year} Breakdown`}
+    >
+      {loading ? (
+        <div className="text-center py-8">
+          <div className="text-gray-600">Loading breakdown...</div>
         </div>
-
-        {loading ? (
-          <div className="p-6 text-center">
-            <div className="text-gray-600">Loading breakdown...</div>
-          </div>
-        ) : (
-          <div className="p-6">
-            {/* Expected Amount Section */}
-            <div className="mb-6">
+      ) : (
+        <div className="space-y-6">
+          {/* Expected Amount Section */}
+          <div>
               {isEditingExpected ? (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Expected Amount</label>
@@ -259,44 +256,43 @@ export default function MonthlyBreakdownModal({ finance, onClose, onUpdate }: Mo
               )}
             </div>
 
-            {/* Breakdown Chart and Legend */}
-            {chartData.length > 0 && (
-              <>
-                <h4 className="font-medium text-gray-900 mb-4">Income Breakdown</h4>
+          {/* Breakdown Chart and Legend */}
+          {chartData.length > 0 && (
+            <>
+              <h4 className="font-medium text-gray-900 mb-4">Income Breakdown</h4>
                 
-                {/* Simple Bar Chart */}
-                <div className="space-y-3 mb-6">
-                  {chartData.map((item, index) => (
-                    <div key={index} className="flex items-center justify-between">
-                      <div className="flex items-center flex-1">
-                        <div 
-                          className="w-4 h-4 rounded mr-3"
-                          style={{ backgroundColor: item.color }}
-                        ></div>
-                        <div className="flex-1">
-                          <div className="text-sm font-medium text-gray-900">{item.label}</div>
-                          <div className="text-xs text-gray-500">{item.count} entries</div>
-                        </div>
-                      </div>
-                      <div className="text-sm font-medium text-gray-900">
-                        £{item.value.toLocaleString()}
+              {/* Simple Bar Chart */}
+              <div className="space-y-3">
+                {chartData.map((item, index) => (
+                  <div key={index} className="flex items-center justify-between">
+                    <div className="flex items-center flex-1">
+                      <div
+                        className="w-4 h-4 rounded mr-3"
+                        style={{ backgroundColor: item.color }}
+                      ></div>
+                      <div className="flex-1">
+                        <div className="text-sm font-medium text-gray-900">{item.label}</div>
+                        <div className="text-xs text-gray-500">{item.count} entries</div>
                       </div>
                     </div>
-                  ))}
-                </div>
-              </>
-            )}
-
-            {chartData.length === 0 && (
-              <div className="text-center py-8">
-                <div className="text-gray-500 text-sm">
-                  No income data found for this month
-                </div>
+                    <div className="text-sm font-medium text-gray-900">
+                      £{item.value.toLocaleString()}
+                    </div>
+                  </div>
+                ))}
               </div>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
+            </>
+          )}
+
+          {chartData.length === 0 && (
+            <div className="text-center py-8">
+              <div className="text-gray-500 text-sm">
+                No income data found for this month
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </SlideUpModal>
   );
 }
