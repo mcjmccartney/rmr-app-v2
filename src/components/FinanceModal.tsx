@@ -8,8 +8,8 @@ interface Finance {
   id: string;
   month: string;
   year: number;
-  expected_amount: number;
-  actual_amount: number;
+  expected: number;
+  created?: string;
 }
 
 interface FinanceBreakdown {
@@ -30,20 +30,22 @@ interface FinanceModalProps {
 
 export default function FinanceModal({ finance, breakdowns, onClose, onUpdate }: FinanceModalProps) {
   const [isEditingTarget, setIsEditingTarget] = useState(false);
-  const [targetAmount, setTargetAmount] = useState(finance.expected_amount.toString());
+  const [targetAmount, setTargetAmount] = useState(finance.expected?.toString() || '0');
 
-  const difference = finance.actual_amount - finance.expected_amount;
+  // For now, we'll just show the expected amount since we don't have actual amounts yet
+  const actualAmount = 0; // TODO: Calculate from breakdowns or add actual field
+  const difference = actualAmount - (finance.expected || 0);
   const differenceText = difference >= 0 ? `+£${difference}` : `-£${Math.abs(difference)}`;
 
   const handleTargetUpdate = async () => {
     try {
       const { error } = await supabase
         .from('finances')
-        .update({ expected_amount: parseFloat(targetAmount) })
+        .update({ expected: parseFloat(targetAmount) })
         .eq('id', finance.id);
 
       if (error) throw error;
-      
+
       setIsEditingTarget(false);
       onUpdate();
     } catch (error) {
@@ -167,24 +169,24 @@ export default function FinanceModal({ finance, breakdowns, onClose, onUpdate }:
 
         {/* Target Section */}
         <div className="p-6">
-          <div 
+          <div
             className="cursor-pointer hover:bg-gray-50 rounded-lg p-2 -m-2"
             onClick={handleTargetClick}
           >
             <h3 className="text-xl font-semibold mb-2">
-              This Months Target: £{finance.expected_amount.toLocaleString()}
+              This Months Target: £{finance.expected?.toLocaleString() || '0'}
             </h3>
             <div className="flex justify-between items-center mb-4">
               <span className="text-gray-600">Difference: {differenceText}</span>
-              <span className="text-xl font-semibold">£{finance.actual_amount.toLocaleString()}</span>
+              <span className="text-xl font-semibold">£{actualAmount.toLocaleString()}</span>
             </div>
           </div>
 
           {/* Progress Bar */}
           <div className="w-full bg-gray-200 rounded-full h-3 mb-6">
-            <div 
+            <div
               className="bg-[#973b00] h-3 rounded-full transition-all duration-300"
-              style={{ width: `${Math.min((finance.actual_amount / finance.expected_amount) * 100, 100)}%` }}
+              style={{ width: `${Math.min((actualAmount / (finance.expected || 1)) * 100, 100)}%` }}
             ></div>
           </div>
 
