@@ -155,6 +155,12 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const sessionId = searchParams.get('sessionId');
+    const timestamp = searchParams.get('t'); // Cache busting parameter
+
+    console.log(`GET request for session ${sessionId} at ${new Date().toISOString()}`);
+    if (timestamp) {
+      console.log(`Cache busting timestamp: ${timestamp}`);
+    }
 
     if (!sessionId) {
       return NextResponse.json(
@@ -166,7 +172,7 @@ export async function GET(request: NextRequest) {
     // Get the session plan with document URL
     const { data, error } = await supabase
       .from('session_plans')
-      .select('document_edit_url')
+      .select('document_edit_url, updated_at')
       .eq('session_id', sessionId)
       .single();
 
@@ -178,8 +184,18 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    console.log(`Retrieved document URL: ${data.document_edit_url}`);
+    console.log(`Last updated: ${data.updated_at}`);
+
     return NextResponse.json({
-      documentUrl: data.document_edit_url || null
+      documentUrl: data.document_edit_url || null,
+      lastUpdated: data.updated_at
+    }, {
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
     });
 
   } catch (error) {

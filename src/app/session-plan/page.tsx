@@ -147,18 +147,32 @@ function SessionPlanContent() {
 
     const poll = async (): Promise<void> => {
       try {
-        const response = await fetch(`/api/session-plan/document-url?sessionId=${sessionId}`);
+        console.log(`Polling attempt ${attempts + 1} for session ${sessionId}`);
+        const response = await fetch(`/api/session-plan/document-url?sessionId=${sessionId}&t=${Date.now()}`);
         if (response.ok) {
           const data = await response.json();
+          console.log('Polling response:', data);
           if (data.documentUrl) {
             console.log('Document URL received:', data.documentUrl);
-            setGeneratedDocUrl(data.documentUrl);
-            setIsPollingForUrl(false);
+            console.log('Current generatedDocUrl state:', generatedDocUrl);
 
-            // Auto-redirect to the document
-            window.open(data.documentUrl, '_blank');
-            return;
+            // Check if this is a different URL than what we already have
+            if (data.documentUrl !== generatedDocUrl) {
+              console.log('New document URL detected, updating state and opening');
+              setGeneratedDocUrl(data.documentUrl);
+              setIsPollingForUrl(false);
+
+              // Auto-redirect to the document
+              window.open(data.documentUrl, '_blank');
+              return;
+            } else {
+              console.log('Same document URL as before, continuing to poll...');
+            }
+          } else {
+            console.log('No document URL in response yet');
           }
+        } else {
+          console.log('Polling response not ok:', response.status);
         }
 
         attempts++;
@@ -180,8 +194,9 @@ function SessionPlanContent() {
       }
     };
 
-    // Start polling after a short delay to allow Make.com to process
-    setTimeout(poll, 3000);
+    // Start polling after a longer delay to allow Make.com to process and send webhook
+    console.log('Starting polling in 8 seconds to allow Make.com webhook to complete...');
+    setTimeout(poll, 8000);
   };
 
   // Use fallback data if state data is not available
@@ -373,12 +388,14 @@ function SessionPlanContent() {
 
         // If Make.com returns a document URL immediately, store it and open it
         if (result.documentUrl) {
+          console.log('Make.com returned immediate document URL:', result.documentUrl);
           setGeneratedDocUrl(result.documentUrl);
           window.open(result.documentUrl, '_blank');
         } else {
           // Document generation was initiated successfully
           // Start polling for the document URL
           console.log('Document generation initiated, starting to poll for URL...');
+          console.log('Current session ID:', currentSession?.id);
           pollForDocumentUrl(currentSession?.id || '');
         }
       } else {
