@@ -95,26 +95,37 @@ export default function MembershipsPage() {
                   {/* Memberships List */}
                   {isExpanded && (
                     <div className="border-t border-gray-100">
-                      {monthMemberships.map((membership) => (
-                        <div
-                          key={membership.id}
-                          className="p-4 border-b border-gray-100 last:border-b-0"
-                        >
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <h3 className="font-medium text-gray-900">{membership.email}</h3>
-                              <p className="text-sm text-gray-500">
-                                {new Date(membership.date).toLocaleDateString('en-GB')}
-                              </p>
-                            </div>
-                            <div className="text-right">
-                              <div className="font-medium text-gray-900">
-                                £{membership.amount.toFixed(2)}
+                      {monthMemberships.map((membership) => {
+                        // Find client by email
+                        const client = state.clients.find(c => c.email === membership.email);
+                        const displayName = client
+                          ? `${client.firstName} ${client.lastName}${client.dogName ? ` w/ ${client.dogName}` : ''}`
+                          : membership.email;
+
+                        return (
+                          <div
+                            key={membership.id}
+                            className="p-4 border-b border-gray-100 last:border-b-0"
+                          >
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <h3 className="font-medium text-gray-900">{displayName}</h3>
+                                <p className="text-sm text-gray-500">
+                                  {new Date(membership.date).toLocaleDateString('en-GB')}
+                                </p>
+                                {client && client.email !== displayName && (
+                                  <p className="text-xs text-gray-400">{membership.email}</p>
+                                )}
+                              </div>
+                              <div className="text-right">
+                                <div className="font-medium text-gray-900">
+                                  £{membership.amount.toFixed(2)}
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </div>

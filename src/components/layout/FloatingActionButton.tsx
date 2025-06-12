@@ -11,7 +11,7 @@ const navItems = [
   { icon: FileText, label: 'Sessions', path: '/sessions' },
   { icon: Star, label: 'Memberships', path: '/memberships' },
   { icon: Users, label: 'Clients', path: '/clients' },
-  { icon: Grid3X3, label: 'Finance', path: '/finance' },
+  { icon: Grid3X3, label: 'Finances', path: '/finances' },
 ];
 
 export default function FloatingActionButton() {
