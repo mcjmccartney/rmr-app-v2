@@ -280,19 +280,11 @@ export default function ClientModal({ client, isOpen, onClose, onEditClient, onV
                               <div className="flex justify-between items-center">
                                 <div>
                                   <div className="font-medium text-gray-900 text-sm">
-                                    {membership.month || 'Unknown month'}
+                                    {new Date(membership.date).toLocaleDateString('en-GB', { year: 'numeric', month: 'long' })}
                                   </div>
-                                  <div className={`text-xs ${
-                                    membership.status === 'Paid' ? 'text-green-600' :
-                                    membership.status === 'Pending' ? 'text-amber-600' : 'text-red-600'
-                                  }`}>
-                                    {membership.status || 'Unknown status'}
+                                  <div className="text-xs text-gray-500">
+                                    {new Date(membership.date).toLocaleDateString('en-GB')}
                                   </div>
-                                  {membership.paymentDate && (
-                                    <div className="text-xs text-gray-500">
-                                      Paid: {new Date(membership.paymentDate).toLocaleDateString('en-GB')}
-                                    </div>
-                                  )}
                                 </div>
                                 <div className="text-right">
                                   <div className="font-medium text-gray-900 text-sm">
