@@ -177,7 +177,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Load clients from Supabase
   const loadClients = async () => {
     try {
+      console.log('Loading clients...');
       const clients = await clientService.getAll();
+      console.log('Loaded clients:', clients.length);
       dispatch({ type: 'SET_CLIENTS', payload: clients });
     } catch (error) {
       console.error('Failed to load clients:', error);
@@ -187,7 +189,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Load sessions from Supabase
   const loadSessions = async () => {
     try {
+      console.log('Loading sessions...');
       const sessions = await sessionService.getAll();
+      console.log('Loaded sessions:', sessions.length);
       dispatch({ type: 'SET_SESSIONS', payload: sessions });
     } catch (error) {
       console.error('Failed to load sessions:', error);
@@ -197,7 +201,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Load memberships from Supabase
   const loadMemberships = async () => {
     try {
+      console.log('Loading memberships...');
       const memberships = await membershipService.getAll();
+      console.log('Loaded memberships:', memberships.length);
       dispatch({ type: 'SET_MEMBERSHIPS', payload: memberships });
     } catch (error) {
       console.error('Failed to load memberships:', error);
