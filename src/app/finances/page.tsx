@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAppContext } from '@/context/AppContext';
+import { useApp } from '@/context/AppContext';
 import { supabase } from '@/lib/supabase';
 import FinanceModal from '@/components/FinanceModal';
 
@@ -23,7 +23,6 @@ interface FinanceBreakdown {
 }
 
 export default function FinancesPage() {
-  const { state } = useAppContext();
   const [finances, setFinances] = useState<Finance[]>([]);
   const [breakdowns, setBreakdowns] = useState<FinanceBreakdown[]>([]);
   const [selectedFinance, setSelectedFinance] = useState<Finance | null>(null);
@@ -88,7 +87,6 @@ export default function FinancesPage() {
   }, {} as Record<number, Finance[]>);
 
   // Calculate totals
-  const totalExpected = finances.reduce((sum, f) => sum + f.expected_amount, 0);
   const totalActual = finances.reduce((sum, f) => sum + f.actual_amount, 0);
 
   if (loading) {
