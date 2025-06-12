@@ -1,12 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
 import Header from '@/components/layout/Header';
 import SessionModal from '@/components/modals/SessionModal';
 import EditSessionModal from '@/components/modals/EditSessionModal';
 import EditClientModal from '@/components/modals/EditClientModal';
-import ActionPointsModal from '@/components/modals/ActionPointsModal';
 import AddModal from '@/components/AddModal';
 import { Session, Client } from '@/types';
 

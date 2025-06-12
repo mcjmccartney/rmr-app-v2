@@ -11,8 +11,8 @@ const testGet = async () => {
   }
 };
 
-const restoreCorrectUrl = async () => {
-  console.log('Restoring correct document URL...');
+const simulateMakeComWebhook = async () => {
+  console.log('Simulating Make.com webhook with correct URL...');
   const correctData = {
     sessionId: "5305343b-4b88-46e2-b579-41f88c489997",
     documentUrl: "https://docs.google.com/document/d/1lEGiB_BmzgN8c7XwrRk52WjDKhZ4agfyCyOytuY_3bw/edit?usp=drivesdk"
@@ -82,9 +82,9 @@ const testWebhook = async () => {
 const runTests = async () => {
   await testGet();
   console.log('\n' + '='.repeat(50) + '\n');
-  await restoreCorrectUrl();
+  await simulateMakeComWebhook();
   console.log('\n' + '='.repeat(50) + '\n');
-  await testGet(); // Check again after restore
+  await testGet(); // Check again after webhook
 };
 
 runTests();
