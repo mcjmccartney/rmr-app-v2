@@ -15,6 +15,7 @@ import { Calendar, UserPlus, ChevronDown, ChevronRight, Target } from 'lucide-re
 
 export default function SessionsPage() {
   const { state } = useApp();
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
   const [showEditSessionModal, setShowEditSessionModal] = useState(false);
@@ -23,7 +24,6 @@ export default function SessionsPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [addModalType, setAddModalType] = useState<'session' | 'client'>('session');
   const [expandedMonths, setExpandedMonths] = useState<Set<string>>(new Set());
-  const [showActionPointsModal, setShowActionPointsModal] = useState(false);
 
   const filteredSessions = state.sessions.filter(session => {
     const searchTerm = searchQuery.toLowerCase();
@@ -99,11 +99,7 @@ export default function SessionsPage() {
   };
 
   const handleActionPoints = () => {
-    setShowActionPointsModal(true);
-  };
-
-  const handleCloseActionPointsModal = () => {
-    setShowActionPointsModal(false);
+    router.push('/action-points');
   };
 
 
@@ -236,11 +232,6 @@ export default function SessionsPage() {
         isOpen={showAddModal}
         onClose={handleCloseAddModal}
         type={addModalType}
-      />
-
-      <ActionPointsModal
-        isOpen={showActionPointsModal}
-        onClose={handleCloseActionPointsModal}
       />
     </div>
   );

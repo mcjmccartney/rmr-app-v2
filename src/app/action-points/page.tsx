@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Plus, Edit2, Trash2, Save, X } from 'lucide-react';
 import { ActionPoint } from '@/types';
@@ -227,7 +227,7 @@ export default function ActionPointsPage() {
               {actionPoints.length === 0 && (
                 <div className="text-center py-12">
                   <p className="text-gray-500 text-lg">No action points available</p>
-                  <p className="text-gray-400 text-sm mt-2">Click "Add New Action Point" to get started</p>
+                  <p className="text-gray-400 text-sm mt-2">Click &quot;Add New Action Point&quot; to get started</p>
                 </div>
               )}
             </div>
