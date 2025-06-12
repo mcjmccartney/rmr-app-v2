@@ -41,7 +41,7 @@ export default function ClientModal({ client, isOpen, onClose, onEditClient, onV
     const loadClientData = async () => {
       if (!isOpen || !currentClient?.id) {
         setClientSessions([]);
-        setMembershipMonths([]);
+        setClientMemberships([]);
         setIsLoadingData(false);
         return;
       }
@@ -73,7 +73,7 @@ export default function ClientModal({ client, isOpen, onClose, onEditClient, onV
       } catch (error) {
         console.error('Error loading client data:', error);
         setClientSessions([]);
-        setMembershipMonths([]);
+        setClientMemberships([]);
       } finally {
         setIsLoadingData(false);
       }
