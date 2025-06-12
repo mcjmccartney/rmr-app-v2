@@ -273,6 +273,20 @@ function SessionPlanContent() {
 
       // Clear the existing document URL to force regeneration
       setGeneratedDocUrl(null);
+
+      // Also clear from database to ensure fresh generation
+      try {
+        const response = await fetch('/api/session-plan/document-url', {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ sessionId: currentSession.id })
+        });
+        console.log('Cleared document URL from database:', response.ok);
+      } catch (error) {
+        console.log('Could not clear document URL from database:', error);
+      }
     } catch (error) {
       console.error('Error saving session plan:', error);
       // Continue with document generation even if save fails
@@ -326,12 +340,15 @@ function SessionPlanContent() {
       // Callback URL for Make.com to send the document URL back
       callbackUrl: `${window.location.origin}/api/session-plan/document-url`,
 
-      // Add timestamp to ensure fresh generation
-      timestamp: new Date().toISOString()
+      // Add timestamp and unique request ID to ensure fresh generation
+      timestamp: new Date().toISOString(),
+      requestId: `${currentSession.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
     };
 
     try {
       console.log('Sending data to Make.com webhook:', sessionData);
+      console.log('Selected action points being sent:', selectedActionPoints);
+      console.log('Action points data being sent:', sessionData.actionPoints);
 
       // Send data to Make.com webhook to generate the document
       const response = await fetch('https://hook.eu1.make.com/lbfmnhl3xpf7c0y2sfos3vdln6y1fmqm', {
