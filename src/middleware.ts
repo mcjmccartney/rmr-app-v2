@@ -62,8 +62,14 @@ export async function middleware(req: NextRequest) {
   // Public routes that don't require authentication
   const publicRoutes = ['/login', '/behavioural-brief', '/behaviour-questionnaire'];
 
+  // Debug logging
+  console.log('Middleware - Path:', req.nextUrl.pathname);
+  console.log('Middleware - Session exists:', !!session);
+  console.log('Middleware - Is public route:', publicRoutes.includes(req.nextUrl.pathname));
+
   // If user is not signed in and the current path is not a public route, redirect to /login
   if (!session && !publicRoutes.includes(req.nextUrl.pathname)) {
+    console.log('Middleware - Redirecting to login');
     return NextResponse.redirect(new URL('/login', req.url))
   }
 
