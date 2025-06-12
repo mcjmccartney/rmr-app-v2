@@ -50,7 +50,8 @@ export default function Header({
           {showAddButton && !buttons.length && (
             <button
               onClick={onAddClick}
-              className="bg-white/20 hover:bg-white/30 p-2 rounded-full transition-colors"
+              className="text-white p-2 rounded-md transition-colors"
+              style={{ backgroundColor: '#973b00' }}
               title={addButtonText}
             >
               <Plus size={20} />
@@ -64,7 +65,8 @@ export default function Header({
               <button
                 key={index}
                 onClick={button.onClick}
-                className="bg-white/20 hover:bg-white/30 p-2 rounded-full transition-colors"
+                className="text-white p-2 rounded-md transition-colors hover:opacity-90"
+                style={{ backgroundColor: '#973b00' }}
                 title={button.title}
               >
                 <IconComponent size={20} />
