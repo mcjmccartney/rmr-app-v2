@@ -553,7 +553,7 @@ function SessionPlanContent() {
               </div>
 
               {/* Selected Action Points */}
-              {selectedActionPoints.length > 0 && (
+              {selectedActionPoints.length > 0 && !showActionPoints && (
                 <div className="space-y-3 mb-4">
                   {selectedActionPoints.map((actionPointId, index) => {
                     const actionPoint = predefinedActionPoints.find(ap => ap.id === actionPointId);
