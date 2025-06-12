@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Plus, Edit2, Trash2, Save, X } from 'lucide-react';
 import SlideUpModal from './SlideUpModal';
 import { ActionPoint } from '@/types';

@@ -282,6 +282,7 @@ function SessionPlanContent() {
   };
 
   const generateDocument = async () => {
+    if (!currentSession || !currentClient) return;
 
     // Prepare the data for the webhook with current form state
     const sessionData = {
@@ -361,7 +362,7 @@ function SessionPlanContent() {
           // Document generation was initiated successfully
           // Start polling for the document URL
           console.log('Document generation initiated, starting to poll for URL...');
-          pollForDocumentUrl(currentSession.id);
+          pollForDocumentUrl(currentSession?.id || '');
         }
       } else {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -371,7 +372,7 @@ function SessionPlanContent() {
       // Don't show alert popup - just log the error
       console.log('Document generation may still be in progress despite the error');
       // Still start polling since Make.com might be processing it
-      pollForDocumentUrl(currentSession.id);
+      pollForDocumentUrl(currentSession?.id || '');
     } finally {
       setIsGeneratingDoc(false);
     }
