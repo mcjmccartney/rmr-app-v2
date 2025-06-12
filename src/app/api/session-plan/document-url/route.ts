@@ -1,6 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 
+// OPTIONS handler for CORS preflight requests
+export async function OPTIONS(request: NextRequest) {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST, GET, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    },
+  });
+}
+
 // POST endpoint for Make.com to send back the document URL
 export async function POST(request: NextRequest) {
   try {
@@ -15,8 +27,12 @@ export async function POST(request: NextRequest) {
     console.log('Body type:', typeof body);
     console.log('Body keys:', Object.keys(body));
 
-    const { sessionId, documentUrl } = body;
+    // Try multiple possible field names that Make.com might send
+    const sessionId = body.sessionId || body.session_id || body.sessionid;
+    const documentUrl = body.documentUrl || body.document_url || body.documenturl || body.url;
+
     console.log('Extracted values:', { sessionId, documentUrl });
+    console.log('Original body for reference:', body);
 
     // Validate required fields
     if (!sessionId || !documentUrl) {
@@ -63,6 +79,13 @@ export async function POST(request: NextRequest) {
       message: 'Document URL saved successfully',
       sessionPlanId: data.id,
       documentUrl: documentUrl
+    }, {
+      status: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type',
+      }
     });
 
   } catch (error) {
