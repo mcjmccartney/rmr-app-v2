@@ -195,8 +195,8 @@ function SessionPlanContent() {
     };
 
     // Start polling after a delay to allow Make.com to process and send webhook
-    console.log('Starting polling in 5 seconds to allow Make.com webhook to complete...');
-    setTimeout(poll, 5000);
+    console.log('Starting polling in 3 seconds to allow Make.com webhook to complete...');
+    setTimeout(poll, 3000);
   };
 
   // Use fallback data if state data is not available

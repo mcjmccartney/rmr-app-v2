@@ -67,7 +67,7 @@ export default function ActionPointsPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#4f6749' }}>
+    <div className="min-h-screen bg-white flex flex-col">
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-4 py-4">
         <div className="flex items-center justify-between">
@@ -87,7 +87,6 @@ export default function ActionPointsPage() {
       {/* Content */}
       <div className="flex-1 p-4">
         <div className="max-w-2xl mx-auto">
-          <div className="rounded-lg p-6" style={{ backgroundColor: '#ebeadf' }}>
             <div className="space-y-6">
               {/* Add New Action Point Button */}
               {!showAddForm && (
