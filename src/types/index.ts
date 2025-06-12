@@ -119,6 +119,17 @@ export interface BehaviourQuestionnaire {
   submittedAt: Date;
 }
 
+export interface Membership {
+  id: string;
+  clientId: string;
+  email: string;
+  month: string; // e.g., "January 2024"
+  amount: number;
+  status: 'Paid' | 'Pending' | 'Overdue';
+  paymentDate?: string; // Date when payment was made
+  createdAt: Date;
+}
+
 export interface Client {
   id: string;
   firstName: string;
@@ -151,6 +162,7 @@ export interface AppState {
   behaviourQuestionnaires: BehaviourQuestionnaire[];
   sessionPlans: SessionPlan[];
   actionPoints: ActionPoint[];
+  memberships: Membership[];
   selectedSession: Session | null;
   selectedClient: Client | null;
   selectedBehaviouralBrief: BehaviouralBrief | null;
@@ -174,6 +186,10 @@ export type AppAction =
   | { type: 'UPDATE_BEHAVIOURAL_BRIEF'; payload: BehaviouralBrief }
   | { type: 'DELETE_BEHAVIOURAL_BRIEF'; payload: string }
   | { type: 'SET_BEHAVIOUR_QUESTIONNAIRES'; payload: BehaviourQuestionnaire[] }
+  | { type: 'SET_MEMBERSHIPS'; payload: Membership[] }
+  | { type: 'ADD_MEMBERSHIP'; payload: Membership }
+  | { type: 'UPDATE_MEMBERSHIP'; payload: Membership }
+  | { type: 'DELETE_MEMBERSHIP'; payload: string }
   | { type: 'SET_SESSION_PLANS'; payload: SessionPlan[] }
   | { type: 'ADD_SESSION_PLAN'; payload: SessionPlan }
   | { type: 'UPDATE_SESSION_PLAN'; payload: SessionPlan }

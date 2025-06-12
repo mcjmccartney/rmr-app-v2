@@ -1,9 +1,10 @@
 'use client';
 
 import React, { createContext, useContext, useReducer, ReactNode, useEffect } from 'react';
-import { AppState, AppAction, Session, Client } from '@/types';
+import { AppState, AppAction, Session, Client, Membership } from '@/types';
 import { clientService } from '@/services/clientService';
 import { sessionService } from '@/services/sessionService';
+import { membershipService } from '@/services/membershipService';
 
 const initialState: AppState = {
   sessions: [],
@@ -13,6 +14,7 @@ const initialState: AppState = {
   behaviourQuestionnaires: [],
   sessionPlans: [],
   actionPoints: [],
+  memberships: [],
   selectedSession: null,
   selectedClient: null,
   selectedBehaviouralBrief: null,
@@ -108,6 +110,26 @@ function appReducer(state: AppState, action: AppAction): AppState {
         selectedBehaviourQuestionnaire: state.selectedBehaviourQuestionnaire?.id === action.payload ? null : state.selectedBehaviourQuestionnaire,
       };
 
+    case 'SET_MEMBERSHIPS':
+      return { ...state, memberships: action.payload };
+
+    case 'ADD_MEMBERSHIP':
+      return { ...state, memberships: [...state.memberships, action.payload] };
+
+    case 'UPDATE_MEMBERSHIP':
+      return {
+        ...state,
+        memberships: state.memberships.map(membership =>
+          membership.id === action.payload.id ? action.payload : membership
+        ),
+      };
+
+    case 'DELETE_MEMBERSHIP':
+      return {
+        ...state,
+        memberships: state.memberships.filter(membership => membership.id !== action.payload),
+      };
+
     case 'SET_SELECTED_SESSION':
       return { ...state, selectedSession: action.payload };
 
@@ -137,6 +159,7 @@ const AppContext = createContext<{
   // Supabase service functions
   loadClients: () => Promise<void>;
   loadSessions: () => Promise<void>;
+  loadMemberships: () => Promise<void>;
   createClient: (client: Omit<Client, 'id'>) => Promise<Client>;
   updateClient: (id: string, updates: Partial<Client>) => Promise<Client>;
   deleteClient: (id: string) => Promise<void>;
@@ -144,6 +167,8 @@ const AppContext = createContext<{
   updateSession: (id: string, updates: Partial<Session>) => Promise<Session>;
   deleteSession: (id: string) => Promise<void>;
   findClientByEmail: (email: string) => Promise<Client | null>;
+  getMembershipsByClientId: (clientId: string) => Promise<Membership[]>;
+  getMembershipsByEmail: (email: string) => Promise<Membership[]>;
 } | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
@@ -166,6 +191,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
       dispatch({ type: 'SET_SESSIONS', payload: sessions });
     } catch (error) {
       console.error('Failed to load sessions:', error);
+    }
+  };
+
+  // Load memberships from Supabase
+  const loadMemberships = async () => {
+    try {
+      const memberships = await membershipService.getAll();
+      dispatch({ type: 'SET_MEMBERSHIPS', payload: memberships });
+    } catch (error) {
+      console.error('Failed to load memberships:', error);
     }
   };
 
@@ -249,10 +284,31 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Get memberships by client ID
+  const getMembershipsByClientId = async (clientId: string): Promise<Membership[]> => {
+    try {
+      return await membershipService.getByClientId(clientId);
+    } catch (error) {
+      console.error('Failed to get memberships by client ID:', error);
+      throw error;
+    }
+  };
+
+  // Get memberships by email (for pairing with clients)
+  const getMembershipsByEmail = async (email: string): Promise<Membership[]> => {
+    try {
+      return await membershipService.getByEmail(email);
+    } catch (error) {
+      console.error('Failed to get memberships by email:', error);
+      throw error;
+    }
+  };
+
   // Load initial data on mount
   useEffect(() => {
     loadClients();
     loadSessions();
+    loadMemberships();
   }, []);
 
   return (
@@ -261,6 +317,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       dispatch,
       loadClients,
       loadSessions,
+      loadMemberships,
       createClient,
       updateClient,
       deleteClient,
@@ -268,6 +325,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       updateSession,
       deleteSession,
       findClientByEmail,
+      getMembershipsByClientId,
+      getMembershipsByEmail,
     }}>
       {children}
     </AppContext.Provider>

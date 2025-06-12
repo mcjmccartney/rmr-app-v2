@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Client, Session } from '@/types';
+import { Client, Session, Membership } from '@/types';
 import { useApp } from '@/context/AppContext';
 import { sessionService } from '@/services/sessionService';
 import SlideUpModal from './SlideUpModal';
@@ -16,10 +16,10 @@ interface ClientModalProps {
 }
 
 export default function ClientModal({ client, isOpen, onClose, onEditClient, onViewBehaviouralBrief, onViewBehaviourQuestionnaire }: ClientModalProps) {
-  const { dispatch, state } = useApp();
-  const [activeTab, setActiveTab] = useState<'sessions' | 'membership'>('sessions');
+  const { dispatch, state, getMembershipsByClientId, getMembershipsByEmail } = useApp();
+  const [activeTab, setActiveTab] = useState<'sessions' | 'memberships'>('sessions');
   const [clientSessions, setClientSessions] = useState<Session[]>([]);
-  const [membershipMonths, setMembershipMonths] = useState<Array<{ month: string; amount: number; status: string }>>([]); // Placeholder for membership data
+  const [clientMemberships, setClientMemberships] = useState<Membership[]>([]);
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [isTabExpanded, setIsTabExpanded] = useState(false);
 
@@ -52,18 +52,24 @@ export default function ClientModal({ client, isOpen, onClose, onEditClient, onV
         const sessions = await sessionService.getByClientId(currentClient.id);
         setClientSessions(sessions || []);
 
-        // TODO: Load membership months when membership payments table is implemented
-        // For now, create placeholder data based on membership status
-        if (currentClient.membership) {
-          // Placeholder: assume 3 months paid for members
-          setMembershipMonths([
-            { month: 'January 2024', amount: 50, status: 'Paid' },
-            { month: 'February 2024', amount: 50, status: 'Paid' },
-            { month: 'March 2024', amount: 50, status: 'Pending' },
-          ]);
-        } else {
-          setMembershipMonths([]);
+        // Load memberships for this client
+        let memberships: Membership[] = [];
+
+        // First try to get memberships by client ID
+        memberships = await getMembershipsByClientId(currentClient.id);
+
+        // If no memberships found by client ID and client has email, try by email
+        if (memberships.length === 0 && currentClient.email) {
+          memberships = await getMembershipsByEmail(currentClient.email);
+
+          // If we found memberships by email, update them to link to this client
+          if (memberships.length > 0) {
+            // TODO: Update membership records to link to this client ID
+            console.log('Found memberships by email for client:', currentClient.email);
+          }
         }
+
+        setClientMemberships(memberships || []);
       } catch (error) {
         console.error('Error loading client data:', error);
         setClientSessions([]);
@@ -211,16 +217,16 @@ export default function ClientModal({ client, isOpen, onClose, onEditClient, onV
             </button>
             <button
               onClick={() => {
-                setActiveTab('membership');
-                setIsTabExpanded(!isTabExpanded || activeTab !== 'membership');
+                setActiveTab('memberships');
+                setIsTabExpanded(!isTabExpanded || activeTab !== 'memberships');
               }}
               className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                activeTab === 'membership' && isTabExpanded
+                activeTab === 'memberships' && isTabExpanded
                   ? 'bg-white text-gray-900 shadow-sm'
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
-              Membership ({Array.isArray(membershipMonths) ? membershipMonths.length : 0})
+              Memberships ({Array.isArray(clientMemberships) ? clientMemberships.length : 0})
             </button>
           </div>
 
@@ -270,29 +276,34 @@ export default function ClientModal({ client, isOpen, onClose, onEditClient, onV
                     </div>
                   )}
 
-                  {/* Membership Tab */}
-                  {activeTab === 'membership' && (
+                  {/* Memberships Tab */}
+                  {activeTab === 'memberships' && (
                     <div className="space-y-2">
-                      {Array.isArray(membershipMonths) && membershipMonths.length > 0 ? (
-                        membershipMonths.map((month, index) => {
-                          if (!month) return null;
+                      {Array.isArray(clientMemberships) && clientMemberships.length > 0 ? (
+                        clientMemberships.map((membership) => {
+                          if (!membership || !membership.id) return null;
                           return (
-                            <div key={index} className="bg-gray-50 p-3 rounded-lg">
+                            <div key={membership.id} className="bg-gray-50 p-3 rounded-lg">
                               <div className="flex justify-between items-center">
                                 <div>
                                   <div className="font-medium text-gray-900 text-sm">
-                                    {month.month || 'Unknown month'}
+                                    {membership.month || 'Unknown month'}
                                   </div>
                                   <div className={`text-xs ${
-                                    month.status === 'Paid' ? 'text-green-600' :
-                                    month.status === 'Pending' ? 'text-amber-600' : 'text-red-600'
+                                    membership.status === 'Paid' ? 'text-green-600' :
+                                    membership.status === 'Pending' ? 'text-amber-600' : 'text-red-600'
                                   }`}>
-                                    {month.status || 'Unknown status'}
+                                    {membership.status || 'Unknown status'}
                                   </div>
+                                  {membership.paymentDate && (
+                                    <div className="text-xs text-gray-500">
+                                      Paid: {new Date(membership.paymentDate).toLocaleDateString('en-GB')}
+                                    </div>
+                                  )}
                                 </div>
                                 <div className="text-right">
                                   <div className="font-medium text-gray-900 text-sm">
-                                    £{(month.amount || 0).toFixed(2)}
+                                    £{(membership.amount || 0).toFixed(2)}
                                   </div>
                                 </div>
                               </div>
