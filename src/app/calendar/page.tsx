@@ -239,11 +239,11 @@ export default function CalendarPage() {
 
               return (
                 <div key={day.toISOString()} className={`flex flex-col p-1 min-h-0 border-r border-b border-gray-100 last:border-r-0 ${
-                  isToday ? 'bg-brand-primary' : ''
+                  isToday ? 'ring-2 ring-brand-primary ring-inset' : ''
                 }`}>
                   <div className={`text-sm font-medium mb-1 flex-shrink-0 ${
                     isToday
-                      ? 'text-white'
+                      ? 'text-brand-primary font-bold'
                       : isCurrentMonth
                         ? 'text-gray-900'
                         : 'text-gray-400'
