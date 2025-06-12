@@ -88,8 +88,8 @@ export default function ActionPointsPage() {
       <div className="flex-1 p-4">
         <div className="max-w-2xl mx-auto">
           <div className="space-y-6">
-              {/* Add New Action Point Button */}
-              {!showAddForm && (
+            {/* Add New Action Point Button */}
+            {!showAddForm && (
                 <button
                   onClick={() => setShowAddForm(true)}
                   className="w-full flex items-center justify-center gap-2 py-3 px-4 text-white rounded-lg hover:opacity-90 transition-colors"
@@ -98,10 +98,10 @@ export default function ActionPointsPage() {
                   <Plus size={20} />
                   Add New Action Point
                 </button>
-              )}
+            )}
 
-              {/* Add Form */}
-              {showAddForm && (
+            {/* Add Form */}
+            {showAddForm && (
                 <div className="bg-white p-4 rounded-lg space-y-4 border border-gray-200">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -145,10 +145,10 @@ export default function ActionPointsPage() {
                     </button>
                   </div>
                 </div>
-              )}
+            )}
 
-              {/* Action Points List */}
-              <div className="space-y-4">
+            {/* Action Points List */}
+            <div className="space-y-4">
                 {actionPoints.map((actionPoint) => (
                   <div key={actionPoint.id} className="bg-white border border-gray-200 rounded-lg p-4">
                     {editingId === actionPoint.id ? (
@@ -221,15 +221,14 @@ export default function ActionPointsPage() {
                     )}
                   </div>
                 ))}
-              </div>
+            </div>
 
-              {actionPoints.length === 0 && (
+            {actionPoints.length === 0 && (
                 <div className="text-center py-12">
                   <p className="text-gray-500 text-lg">No action points available</p>
                   <p className="text-gray-400 text-sm mt-2">Click &quot;Add New Action Point&quot; to get started</p>
                 </div>
-              )}
-            </div>
+            )}
           </div>
         </div>
       </div>
