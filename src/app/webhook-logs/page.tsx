@@ -16,6 +16,8 @@ export default function WebhookLogsPage() {
   const [loading, setLoading] = useState(true);
   const [testResult, setTestResult] = useState<any>(null);
   const [testing, setTesting] = useState(false);
+  const [sessionTestResult, setSessionTestResult] = useState<any>(null);
+  const [sessionTesting, setSessionTesting] = useState(false);
 
   useEffect(() => {
     fetchRecentMemberships();
@@ -49,7 +51,7 @@ export default function WebhookLogsPage() {
       const response = await fetch('/api/stripe/webhook/test');
       const result = await response.json();
       setTestResult(result);
-      
+
       // Refresh the memberships list after test
       setTimeout(() => {
         fetchRecentMemberships();
@@ -61,6 +63,24 @@ export default function WebhookLogsPage() {
       });
     } finally {
       setTesting(false);
+    }
+  };
+
+  const runSessionTest = async () => {
+    setSessionTesting(true);
+    setSessionTestResult(null);
+
+    try {
+      const response = await fetch('/api/test-session-webhook');
+      const result = await response.json();
+      setSessionTestResult(result);
+    } catch (error) {
+      setSessionTestResult({
+        error: 'Session test failed',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    } finally {
+      setSessionTesting(false);
     }
   };
 
@@ -81,27 +101,54 @@ export default function WebhookLogsPage() {
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Webhook Logs & Testing</h1>
           
           <div className="mb-6">
-            <h2 className="text-lg font-semibold mb-2">Webhook Endpoint</h2>
-            <code className="bg-gray-100 p-2 rounded text-sm block">
-              https://raising-my-rescue.vercel.app/api/stripe/webhook
-            </code>
+            <h2 className="text-lg font-semibold mb-2">Webhook Endpoints</h2>
+            <div className="space-y-2">
+              <div>
+                <span className="text-sm font-medium">Stripe Payments:</span>
+                <code className="bg-gray-100 p-2 rounded text-sm block">
+                  https://raising-my-rescue.vercel.app/api/stripe/webhook
+                </code>
+              </div>
+              <div>
+                <span className="text-sm font-medium">Session Creation:</span>
+                <code className="bg-gray-100 p-2 rounded text-sm block">
+                  https://hook.eu1.make.com/lipggo8kcd8kwq2vp6j6mr3gnxbx12h7
+                </code>
+              </div>
+            </div>
           </div>
 
-          <div className="mb-6">
+          <div className="mb-6 flex gap-3">
             <button
               onClick={runTest}
               disabled={testing}
               className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
             >
-              {testing ? 'Testing...' : 'Test Webhook'}
+              {testing ? 'Testing...' : 'Test Stripe Webhook'}
+            </button>
+            <button
+              onClick={runSessionTest}
+              disabled={sessionTesting}
+              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 disabled:opacity-50"
+            >
+              {sessionTesting ? 'Testing...' : 'Test Session Webhook'}
             </button>
           </div>
 
           {testResult && (
             <div className="mb-6 p-4 bg-gray-50 rounded">
-              <h3 className="font-semibold mb-2">Test Result:</h3>
+              <h3 className="font-semibold mb-2">Stripe Webhook Test Result:</h3>
               <pre className="text-sm overflow-auto">
                 {JSON.stringify(testResult, null, 2)}
+              </pre>
+            </div>
+          )}
+
+          {sessionTestResult && (
+            <div className="mb-6 p-4 bg-green-50 rounded">
+              <h3 className="font-semibold mb-2">Session Webhook Test Result:</h3>
+              <pre className="text-sm overflow-auto">
+                {JSON.stringify(sessionTestResult, null, 2)}
               </pre>
             </div>
           )}

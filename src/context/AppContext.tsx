@@ -245,11 +245,58 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Trigger Make.com webhook for new session
+  const triggerSessionWebhook = async (session: Session) => {
+    try {
+      // Find the client for this session
+      const client = state.clients.find(c => c.id === session.clientId);
+
+      // Prepare session data for Make.com
+      const webhookData = {
+        sessionId: session.id,
+        clientId: session.clientId,
+        clientName: client ? `${client.firstName} ${client.lastName}`.trim() : 'Unknown Client',
+        clientEmail: client?.email || '',
+        dogName: client?.dogName || '',
+        sessionType: session.sessionType,
+        bookingDate: session.bookingDate, // YYYY-MM-DD format
+        bookingTime: session.bookingTime, // HH:mm format
+        quote: session.quote,
+        notes: session.notes || '',
+        createdAt: new Date().toISOString()
+      };
+
+      console.log('Triggering Make.com webhook for new session:', webhookData);
+
+      // Send to Make.com webhook
+      const response = await fetch('https://hook.eu1.make.com/lipggo8kcd8kwq2vp6j6mr3gnxbx12h7', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(webhookData)
+      });
+
+      if (response.ok) {
+        console.log('Successfully triggered Make.com webhook for session:', session.id);
+      } else {
+        console.error('Failed to trigger Make.com webhook:', response.status, response.statusText);
+      }
+    } catch (error) {
+      console.error('Error triggering Make.com webhook:', error);
+      // Don't throw error - webhook failure shouldn't prevent session creation
+    }
+  };
+
   // Create session in Supabase
   const createSession = async (sessionData: Omit<Session, 'id'>): Promise<Session> => {
     try {
       const session = await sessionService.create(sessionData);
       dispatch({ type: 'ADD_SESSION', payload: session });
+
+      // Trigger Make.com webhook after successful creation
+      await triggerSessionWebhook(session);
+
       return session;
     } catch (error) {
       console.error('Failed to create session:', error);
