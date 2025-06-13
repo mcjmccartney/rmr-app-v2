@@ -4,6 +4,16 @@ import { useState, useEffect } from 'react';
 import { ChevronUp, ChevronDown } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import SlideUpModal from './modals/SlideUpModal';
+import {
+  Chart as ChartJS,
+  ArcElement,
+  Tooltip,
+  Legend,
+  ChartOptions
+} from 'chart.js';
+import { Doughnut } from 'react-chartjs-2';
+
+ChartJS.register(ArcElement, Tooltip, Legend);
 
 interface Finance {
   id: string;
@@ -268,34 +278,31 @@ export default function MonthlyBreakdownModal({ finance, isOpen, onClose, onUpda
             <>
               <h4 className="font-medium text-gray-900 mb-4">Income Breakdown</h4>
 
-              {/* Full Size Donut Chart */}
+              {/* Chart.js Donut Chart */}
               <div className="w-full h-64 mb-6">
-                <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
-                  {(() => {
-                    let cumulativePercentage = 0;
-                    return chartData.map((item, index) => {
-                      const percentage = (item.value / breakdownData.totalActual) * 100;
-                      const strokeDasharray = `${percentage} ${100 - percentage}`;
-                      const strokeDashoffset = -cumulativePercentage;
-                      cumulativePercentage += percentage;
-
-                      return (
-                        <circle
-                          key={index}
-                          cx="50"
-                          cy="50"
-                          r="15.915"
-                          fill="transparent"
-                          stroke={item.color}
-                          strokeWidth="12"
-                          strokeDasharray={strokeDasharray}
-                          strokeDashoffset={strokeDashoffset}
-                          className="transition-all duration-300"
-                        />
-                      );
-                    });
-                  })()}
-                </svg>
+                <Doughnut
+                  data={{
+                    labels: chartData.map(item => item.label),
+                    datasets: [{
+                      data: chartData.map(item => item.value),
+                      backgroundColor: chartData.map(item => item.color),
+                      borderWidth: 0,
+                      cutout: '60%'
+                    }]
+                  }}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: {
+                        display: false
+                      },
+                      tooltip: {
+                        enabled: false
+                      }
+                    }
+                  }}
+                />
               </div>
 
               {/* Legend */}
