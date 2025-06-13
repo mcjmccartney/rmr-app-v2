@@ -32,6 +32,14 @@ export default function FinancesPage() {
   const fetchAllData = async () => {
     try {
       console.log('Fetching finances data...');
+      console.log('Supabase client:', supabase);
+
+      // Test basic connection
+      const { data: testData, error: testError } = await supabase
+        .from('finances')
+        .select('count', { count: 'exact', head: true });
+
+      console.log('Connection test result:', { testData, testError });
 
       // Fetch finances
       const { data: financesData, error: financesError } = await supabase
@@ -41,8 +49,14 @@ export default function FinancesPage() {
         .order('month');
 
       if (financesError) {
-        console.error('Finances error:', financesError);
-        throw financesError;
+        console.error('Finances error details:', {
+          message: financesError.message,
+          details: financesError.details,
+          hint: financesError.hint,
+          code: financesError.code
+        });
+        // Don't throw error, just log it and continue with empty data
+        console.warn('Continuing with empty finances data due to error');
       }
 
       // Fetch sessions
@@ -67,12 +81,17 @@ export default function FinancesPage() {
         // Don't throw error for memberships, just log it
       }
 
+      console.log('Raw finances data from Supabase:', financesData);
+      console.log('Number of finance entries:', financesData?.length || 0);
+
       // Map database fields to interface fields
       const mappedFinances = (financesData || []).map(finance => ({
         ...finance,
         expected: finance.expected_amount || 0,
         actual: finance.actual_amount || 0
       }));
+
+      console.log('Mapped finances data:', mappedFinances);
       setFinances(mappedFinances);
       setSessions(sessionsData || []);
       setMemberships(membershipsData || []);
