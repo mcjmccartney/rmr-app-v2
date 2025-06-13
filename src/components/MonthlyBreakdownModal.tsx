@@ -53,11 +53,16 @@ export default function MonthlyBreakdownModal({ finance, isOpen, onClose, onUpda
       // Get sessions for this month/year
       const { data: sessions, error: sessionsError } = await supabase
         .from('sessions')
-        .select('sessionType, quote, bookingDate')
-        .gte('bookingDate', `${finance.year}-${getMonthNumber(finance.month).toString().padStart(2, '0')}-01`)
-        .lt('bookingDate', getNextMonthDate(finance.month, finance.year));
+        .select('session_type, quote, booking_date')
+        .gte('booking_date', `${finance.year}-${getMonthNumber(finance.month).toString().padStart(2, '0')}-01`)
+        .lt('booking_date', getNextMonthDate(finance.month, finance.year));
 
       if (sessionsError) throw sessionsError;
+
+      console.log(`Fetching data for ${finance.month} ${finance.year}:`, {
+        sessions: sessions?.length || 0,
+        sessionsSample: sessions?.slice(0, 2)
+      });
 
       // Get memberships for this month/year
       const { data: memberships, error: membershipsError } = await supabase
@@ -68,10 +73,15 @@ export default function MonthlyBreakdownModal({ finance, isOpen, onClose, onUpda
 
       if (membershipsError) throw membershipsError;
 
+      console.log(`Memberships for ${finance.month} ${finance.year}:`, {
+        memberships: memberships?.length || 0,
+        membershipsSample: memberships?.slice(0, 2)
+      });
+
       // Process session data
       const sessionTypes: Record<string, { count: number; total: number }> = {};
       (sessions || []).forEach((session: any) => {
-        const type = session.sessionType || 'Unknown';
+        const type = session.session_type || 'Unknown';
         if (!sessionTypes[type]) {
           sessionTypes[type] = { count: 0, total: 0 };
         }
@@ -257,26 +267,69 @@ export default function MonthlyBreakdownModal({ finance, isOpen, onClose, onUpda
           {chartData.length > 0 && (
             <>
               <h4 className="font-medium text-gray-900 mb-4">Income Breakdown</h4>
-                
-              {/* Simple Bar Chart */}
+
+              {/* Donut Chart */}
+              <div className="flex flex-col items-center mb-6">
+                <div className="relative w-48 h-48">
+                  <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
+                    {(() => {
+                      let cumulativePercentage = 0;
+                      return chartData.map((item, index) => {
+                        const percentage = (item.value / breakdownData.totalActual) * 100;
+                        const strokeDasharray = `${percentage} ${100 - percentage}`;
+                        const strokeDashoffset = -cumulativePercentage;
+                        cumulativePercentage += percentage;
+
+                        return (
+                          <circle
+                            key={index}
+                            cx="50"
+                            cy="50"
+                            r="15.915"
+                            fill="transparent"
+                            stroke={item.color}
+                            strokeWidth="8"
+                            strokeDasharray={strokeDasharray}
+                            strokeDashoffset={strokeDashoffset}
+                            className="transition-all duration-300"
+                          />
+                        );
+                      });
+                    })()}
+                  </svg>
+
+                  {/* Center text */}
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <div className="text-lg font-bold text-gray-900">
+                      £{breakdownData.totalActual.toLocaleString()}
+                    </div>
+                    <div className="text-xs text-gray-500">Total Income</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Legend */}
               <div className="space-y-3">
-                {chartData.map((item, index) => (
-                  <div key={index} className="flex items-center justify-between">
-                    <div className="flex items-center flex-1">
-                      <div
-                        className="w-4 h-4 rounded mr-3"
-                        style={{ backgroundColor: item.color }}
-                      ></div>
-                      <div className="flex-1">
-                        <div className="text-sm font-medium text-gray-900">{item.label}</div>
-                        <div className="text-xs text-gray-500">{item.count} entries</div>
+                {chartData.map((item, index) => {
+                  const percentage = ((item.value / breakdownData.totalActual) * 100).toFixed(1);
+                  return (
+                    <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center flex-1">
+                        <div
+                          className="w-4 h-4 rounded-full mr-3"
+                          style={{ backgroundColor: item.color }}
+                        ></div>
+                        <div className="flex-1">
+                          <div className="text-sm font-medium text-gray-900">{item.label}</div>
+                          <div className="text-xs text-gray-500">{item.count} entries • {percentage}%</div>
+                        </div>
+                      </div>
+                      <div className="text-sm font-medium text-gray-900">
+                        £{item.value.toLocaleString()}
                       </div>
                     </div>
-                    <div className="text-sm font-medium text-gray-900">
-                      £{item.value.toLocaleString()}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </>
           )}
