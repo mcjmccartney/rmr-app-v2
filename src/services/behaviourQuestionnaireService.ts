@@ -201,7 +201,7 @@ export const behaviourQuestionnaireService = {
   },
 
   // Create new behaviour questionnaire
-  async create(questionnaire: Omit<BehaviourQuestionnaire, 'submittedAt'>): Promise<BehaviourQuestionnaire> {
+  async create(questionnaire: Omit<BehaviourQuestionnaire, 'id' | 'submittedAt'>): Promise<BehaviourQuestionnaire> {
     const dbRow = behaviourQuestionnaireToDbRow({
       ...questionnaire,
       submittedAt: new Date()

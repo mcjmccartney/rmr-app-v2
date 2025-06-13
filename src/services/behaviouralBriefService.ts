@@ -95,7 +95,7 @@ export const behaviouralBriefService = {
   },
 
   // Create new behavioural brief
-  async create(brief: Omit<BehaviouralBrief, 'submittedAt'>): Promise<BehaviouralBrief> {
+  async create(brief: Omit<BehaviouralBrief, 'id' | 'submittedAt'>): Promise<BehaviouralBrief> {
     const dbRow = behaviouralBriefToDbRow({
       ...brief,
       submittedAt: new Date()

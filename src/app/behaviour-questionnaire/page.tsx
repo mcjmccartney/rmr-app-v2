@@ -7,7 +7,7 @@ import { BehaviourQuestionnaire } from '@/types';
 import { behaviourQuestionnaireService } from '@/services/behaviourQuestionnaireService';
 
 function BehaviourQuestionnaireForm() {
-  const { dispatch, createClient, updateClient, findClientByEmail } = useApp();
+  const { dispatch, createClient, findClientByEmail } = useApp();
   const searchParams = useSearchParams();
   const [formData, setFormData] = useState({
     // Owner Information
