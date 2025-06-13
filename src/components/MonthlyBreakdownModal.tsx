@@ -43,7 +43,12 @@ export default function MonthlyBreakdownModal({ finance, allFinancesForMonth, is
 
   // Calculate total expected from all finance entries for this month
   const totalExpected = allFinancesForMonth?.reduce((sum, f) => sum + (f.expected || 0), 0) || finance?.expected || 0;
-  const [expectedAmount, setExpectedAmount] = useState(totalExpected.toString());
+  const [expectedAmount, setExpectedAmount] = useState('0');
+
+  // Update expectedAmount when totalExpected changes
+  useEffect(() => {
+    setExpectedAmount(totalExpected.toString());
+  }, [totalExpected]);
   const [breakdownData, setBreakdownData] = useState<BreakdownData>({
     sessionTypes: {},
     memberships: { count: 0, total: 0 },
@@ -211,7 +216,7 @@ export default function MonthlyBreakdownModal({ finance, allFinancesForMonth, is
                       type="number"
                       value={expectedAmount}
                       onChange={(e) => setExpectedAmount(e.target.value)}
-                      className="w-full text-lg font-semibold text-center border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                      className="w-full text-lg font-semibold text-center border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-amber-500 focus:border-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       placeholder="0"
                       autoFocus
                     />
