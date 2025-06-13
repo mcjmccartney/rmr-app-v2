@@ -158,20 +158,33 @@ export default function MonthlyBreakdownModal({ finance, allFinancesForMonth, is
 
       if (isNaN(newExpectedAmount)) {
         console.error('Invalid number:', expectedAmount);
+        alert('Please enter a valid number');
+        return;
+      }
+
+      if (newExpectedAmount < 0) {
+        console.error('Negative amount not allowed:', newExpectedAmount);
+        alert('Amount cannot be negative');
         return;
       }
 
       // If there's only one finance entry, update it directly
       if (allFinancesForMonth.length === 1) {
         console.log('Updating single finance entry:', allFinancesForMonth[0].id);
+        console.log('Update payload:', { expected_amount: newExpectedAmount });
         const { data, error } = await supabase
           .from('finances')
-          .update({ expected_amount: newExpectedAmount })
+          .update({ expected_amount: Number(newExpectedAmount.toFixed(2)) })
           .eq('id', allFinancesForMonth[0].id)
           .select();
 
         if (error) {
-          console.error('Supabase error:', error);
+          console.error('Supabase error details:', {
+            message: error.message,
+            details: error.details,
+            hint: error.hint,
+            code: error.code
+          });
           throw error;
         }
         console.log('Update successful:', data);
@@ -182,9 +195,10 @@ export default function MonthlyBreakdownModal({ finance, allFinancesForMonth, is
         const updates = allFinancesForMonth.map((financeEntry, index) => {
           const amount = index === 0 ? newExpectedAmount : 0;
           console.log(`Updating entry ${index + 1}:`, financeEntry.id, 'with amount:', amount);
+          console.log('Update payload:', { expected_amount: Number(amount.toFixed(2)) });
           return supabase
             .from('finances')
-            .update({ expected_amount: amount })
+            .update({ expected_amount: Number(amount.toFixed(2)) })
             .eq('id', financeEntry.id)
             .select();
         });
@@ -192,8 +206,13 @@ export default function MonthlyBreakdownModal({ finance, allFinancesForMonth, is
         const results = await Promise.all(updates);
         const errors = results.filter(result => result.error);
         if (errors.length > 0) {
-          console.error('Update errors:', errors);
-          throw new Error(`Failed to update ${errors.length} entries`);
+          console.error('Update errors details:', errors.map(e => ({
+            message: e.error?.message,
+            details: e.error?.details,
+            hint: e.error?.hint,
+            code: e.error?.code
+          })));
+          throw new Error(`Failed to update ${errors.length} entries: ${errors[0].error?.message}`);
         }
         console.log('All updates successful:', results);
       }
