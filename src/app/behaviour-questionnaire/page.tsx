@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
 import { BehaviourQuestionnaire } from '@/types';
+import { behaviourQuestionnaireService } from '@/services/behaviourQuestionnaireService';
 
 function BehaviourQuestionnaireForm() {
   const { dispatch, createClient, updateClient, findClientByEmail } = useApp();
@@ -106,9 +107,6 @@ function BehaviourQuestionnaireForm() {
     e.preventDefault();
 
     try {
-      // Generate questionnaire ID
-      const behaviourQuestionnaireId = Date.now().toString();
-
       // Try to find existing client by email using Supabase
       const existingClient = await findClientByEmail(formData.email);
 
@@ -121,76 +119,70 @@ function BehaviourQuestionnaireForm() {
       } else {
         // Will create new client
         shouldCreateClient = true;
-        // Temporary ID that will be updated later
-        clientId = 'temp-' + behaviourQuestionnaireId;
+        clientId = 'temp-client-id'; // Temporary, will be updated
       }
 
-    // Create behaviour questionnaire
-    const behaviourQuestionnaire: BehaviourQuestionnaire = {
-      id: behaviourQuestionnaireId,
-      clientId,
-      ownerFirstName: formData.ownerFirstName,
-      ownerLastName: formData.ownerLastName,
-      email: formData.email,
-      contactNumber: formData.contactNumber,
-      address1: formData.address1,
-      address2: formData.address2,
-      city: formData.city,
-      stateProvince: formData.stateProvince,
-      zipPostalCode: formData.zipPostalCode,
-      country: formData.country,
-      howDidYouHear: formData.howDidYouHear,
-      dogName: formData.dogName,
-      age: formData.age,
-      sex: formData.sex as 'Male' | 'Female',
-      breed: formData.breed,
-      neuteredSpayed: formData.neuteredSpayed,
-      mainHelp: formData.mainHelp,
-      firstNoticed: formData.firstNoticed,
-      whenWhereHow: formData.whenWhereHow,
-      recentChange: formData.recentChange,
-      canAnticipate: formData.canAnticipate,
-      whyThinking: formData.whyThinking,
-      whatDoneSoFar: formData.whatDoneSoFar,
-      idealGoal: formData.idealGoal,
-      anythingElse: formData.anythingElse,
-      medicalHistory: formData.medicalHistory,
-      vetAdvice: formData.vetAdvice,
-      whereGotDog: formData.whereGotDog,
-      rescueBackground: formData.rescueBackground,
-      ageWhenGot: formData.ageWhenGot,
-      whatFeed: formData.whatFeed,
-      foodMotivated: formData.foodMotivated,
-      mealtime: formData.mealtime,
-      treatRoutine: formData.treatRoutine,
-      happyWithTreats: formData.happyWithTreats,
-      typesOfPlay: formData.typesOfPlay,
-      affectionate: formData.affectionate,
-      exercise: formData.exercise,
-      useMuzzle: formData.useMuzzle,
-      familiarPeople: formData.familiarPeople,
-      unfamiliarPeople: formData.unfamiliarPeople,
-      housetrained: formData.housetrained,
-      likesToDo: formData.likesToDo,
-      likeAboutDog: formData.likeAboutDog,
-      mostChallenging: formData.mostChallenging,
-      howGood: formData.howGood,
-      favouriteRewards: formData.favouriteRewards,
-      howBad: formData.howBad,
-      effectOfBad: formData.effectOfBad,
-      professionalTraining: formData.professionalTraining,
-      sociabilityDogs: formData.sociabilityDogs as BehaviourQuestionnaire['sociabilityDogs'],
-      sociabilityPeople: formData.sociabilityPeople as BehaviourQuestionnaire['sociabilityPeople'],
-      anythingElseToKnow: formData.anythingElseToKnow,
-      timePerWeek: formData.timePerWeek,
-      submittedAt: new Date(),
-    };
-
-      // Add questionnaire to state (not connected to Supabase yet)
-      dispatch({ type: 'ADD_BEHAVIOUR_QUESTIONNAIRE', payload: behaviourQuestionnaire });
+      // Create behaviour questionnaire using the service (this will generate a proper UUID)
+      const questionnaireData = {
+        clientId,
+        ownerFirstName: formData.ownerFirstName,
+        ownerLastName: formData.ownerLastName,
+        email: formData.email,
+        contactNumber: formData.contactNumber,
+        address1: formData.address1,
+        address2: formData.address2,
+        city: formData.city,
+        stateProvince: formData.stateProvince,
+        zipPostalCode: formData.zipPostalCode,
+        country: formData.country,
+        howDidYouHear: formData.howDidYouHear,
+        dogName: formData.dogName,
+        age: formData.age,
+        sex: formData.sex as 'Male' | 'Female',
+        breed: formData.breed,
+        neuteredSpayed: formData.neuteredSpayed,
+        mainHelp: formData.mainHelp,
+        firstNoticed: formData.firstNoticed,
+        whenWhereHow: formData.whenWhereHow,
+        recentChange: formData.recentChange,
+        canAnticipate: formData.canAnticipate,
+        whyThinking: formData.whyThinking,
+        whatDoneSoFar: formData.whatDoneSoFar,
+        idealGoal: formData.idealGoal,
+        anythingElse: formData.anythingElse,
+        medicalHistory: formData.medicalHistory,
+        vetAdvice: formData.vetAdvice,
+        whereGotDog: formData.whereGotDog,
+        rescueBackground: formData.rescueBackground,
+        ageWhenGot: formData.ageWhenGot,
+        whatFeed: formData.whatFeed,
+        foodMotivated: formData.foodMotivated,
+        mealtime: formData.mealtime,
+        treatRoutine: formData.treatRoutine,
+        happyWithTreats: formData.happyWithTreats,
+        typesOfPlay: formData.typesOfPlay,
+        affectionate: formData.affectionate,
+        exercise: formData.exercise,
+        useMuzzle: formData.useMuzzle,
+        familiarPeople: formData.familiarPeople,
+        unfamiliarPeople: formData.unfamiliarPeople,
+        housetrained: formData.housetrained,
+        likesToDo: formData.likesToDo,
+        likeAboutDog: formData.likeAboutDog,
+        mostChallenging: formData.mostChallenging,
+        howGood: formData.howGood,
+        favouriteRewards: formData.favouriteRewards,
+        howBad: formData.howBad,
+        effectOfBad: formData.effectOfBad,
+        professionalTraining: formData.professionalTraining,
+        sociabilityDogs: formData.sociabilityDogs as BehaviourQuestionnaire['sociabilityDogs'],
+        sociabilityPeople: formData.sociabilityPeople as BehaviourQuestionnaire['sociabilityPeople'],
+        anythingElseToKnow: formData.anythingElseToKnow,
+        timePerWeek: formData.timePerWeek,
+      };
 
       if (shouldCreateClient) {
-        // Create new client with Supabase
+        // Create new client first
         const client = await createClient({
           firstName: formData.ownerFirstName,
           lastName: formData.ownerLastName,
@@ -200,23 +192,32 @@ function BehaviourQuestionnaireForm() {
           address: `${formData.address1}${formData.address2 ? ', ' + formData.address2 : ''}, ${formData.city}, ${formData.stateProvince} ${formData.zipPostalCode}, ${formData.country}`,
           active: true,
           membership: false,
-          behaviourQuestionnaireId,
         });
 
-        // Update questionnaire with actual client ID
-        behaviourQuestionnaire.clientId = client.id;
-      } else {
-        // Update existing client with questionnaire reference
-        await updateClient(existingClient!.id, {
-          behaviourQuestionnaireId,
-        });
-
-        // Update questionnaire with client ID
-        behaviourQuestionnaire.clientId = existingClient!.id;
+        // Update questionnaire data with actual client ID
+        questionnaireData.clientId = client.id;
       }
 
-      // Reset form (truncated for brevity - would reset all fields)
-      alert('Thank you for your submission!');
+      // Create the questionnaire in Supabase using the service
+      const createdQuestionnaire = await behaviourQuestionnaireService.create(questionnaireData);
+
+      // Add questionnaire to state
+      dispatch({ type: 'ADD_BEHAVIOUR_QUESTIONNAIRE', payload: createdQuestionnaire });
+
+      // Update client with questionnaire reference if needed
+      if (existingClient) {
+        await updateClient(existingClient.id, {
+          behaviourQuestionnaireId: createdQuestionnaire.id,
+        });
+      } else if (shouldCreateClient) {
+        // Update the newly created client with the questionnaire ID
+        await updateClient(questionnaireData.clientId, {
+          behaviourQuestionnaireId: createdQuestionnaire.id,
+        });
+      }
+
+      // Navigate back silently (no alert as per user preference)
+      window.location.href = '/';
     } catch (error) {
       console.error('Error submitting questionnaire:', error);
       alert('There was an error submitting your questionnaire. Please try again.');
