@@ -1,11 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
 import { BehaviourQuestionnaire } from '@/types';
 
 export default function BehaviourQuestionnairePage() {
   const { dispatch, createClient, updateClient, findClientByEmail } = useApp();
+  const searchParams = useSearchParams();
   const [formData, setFormData] = useState({
     // Owner Information
     ownerFirstName: '',
@@ -71,6 +73,17 @@ export default function BehaviourQuestionnairePage() {
     anythingElseToKnow: '',
     timePerWeek: '',
   });
+
+  // Check for email parameter in URL and prefill
+  useEffect(() => {
+    const emailParam = searchParams.get('email');
+    if (emailParam) {
+      setFormData(prev => ({
+        ...prev,
+        email: emailParam
+      }));
+    }
+  }, [searchParams]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -255,20 +268,27 @@ export default function BehaviourQuestionnairePage() {
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Email <span className="text-gray-500">*</span>
-                    </label>
-                    <input
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
-                      style={{ backgroundColor: '#ebeadf' }}
-                      required
-                    />
-                  </div>
+                  {!searchParams.get('email') && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Email <span className="text-gray-500">*</span>
+                      </label>
+                      <input
+                        type="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                        style={{ backgroundColor: '#ebeadf' }}
+                        required
+                      />
+                    </div>
+                  )}
+
+                  {/* Hidden email field when prefilled */}
+                  {searchParams.get('email') && (
+                    <input type="hidden" name="email" value={formData.email} />
+                  )}
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">

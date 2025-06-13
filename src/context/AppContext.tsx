@@ -5,6 +5,7 @@ import { AppState, AppAction, Session, Client, Membership } from '@/types';
 import { clientService } from '@/services/clientService';
 import { sessionService } from '@/services/sessionService';
 import { membershipService } from '@/services/membershipService';
+import { behaviourQuestionnaireService } from '@/services/behaviourQuestionnaireService';
 
 const initialState: AppState = {
   sessions: [],
@@ -160,6 +161,7 @@ const AppContext = createContext<{
   loadClients: () => Promise<void>;
   loadSessions: () => Promise<void>;
   loadMemberships: () => Promise<void>;
+  loadBehaviourQuestionnaires: () => Promise<void>;
   createClient: (client: Omit<Client, 'id'>) => Promise<Client>;
   updateClient: (id: string, updates: Partial<Client>) => Promise<Client>;
   deleteClient: (id: string) => Promise<void>;
@@ -210,6 +212,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Load behaviour questionnaires from Supabase
+  const loadBehaviourQuestionnaires = async () => {
+    try {
+      console.log('Loading behaviour questionnaires...');
+      const questionnaires = await behaviourQuestionnaireService.getAll();
+      console.log('Loaded behaviour questionnaires:', questionnaires.length);
+      dispatch({ type: 'SET_BEHAVIOUR_QUESTIONNAIRES', payload: questionnaires });
+    } catch (error) {
+      console.error('Failed to load behaviour questionnaires:', error);
+    }
+  };
+
   // Create client in Supabase
   const createClient = async (clientData: Omit<Client, 'id'>): Promise<Client> => {
     try {
@@ -245,45 +259,88 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Trigger Make.com webhook for new session
+  // Trigger Make.com webhooks for new session
   const triggerSessionWebhook = async (session: Session) => {
     try {
       // Find the client for this session
       const client = state.clients.find(c => c.id === session.clientId);
 
+      if (!client || !client.email) {
+        console.log('No client or email found for session, skipping webhook');
+        return;
+      }
+
+      // Check if client has already signed booking terms
+      const hasSignedBookingTerms = client.booking_terms_signed || false;
+
+      // Check if client has filled questionnaire for this dog
+      // Look for questionnaire with matching client email and dog name
+      const hasFilledQuestionnaire = state.behaviourQuestionnaires.some(q =>
+        q.email?.toLowerCase() === client.email?.toLowerCase() &&
+        q.dogName?.toLowerCase() === client.dogName?.toLowerCase()
+      );
+
       // Prepare session data for Make.com
       const webhookData = {
         sessionId: session.id,
         clientId: session.clientId,
-        clientName: client ? `${client.firstName} ${client.lastName}`.trim() : 'Unknown Client',
-        clientEmail: client?.email || '',
-        dogName: client?.dogName || '',
+        clientName: `${client.firstName} ${client.lastName}`.trim(),
+        clientEmail: client.email,
+        dogName: client.dogName || '',
         sessionType: session.sessionType,
         bookingDate: session.bookingDate, // YYYY-MM-DD format
         bookingTime: session.bookingTime, // HH:mm format
         quote: session.quote,
         notes: session.notes || '',
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        // Form completion status
+        hasSignedBookingTerms,
+        hasFilledQuestionnaire,
+        // Form URLs with email prefilled
+        bookingTermsUrl: `${window.location.origin}/booking-terms?email=${encodeURIComponent(client.email)}`,
+        questionnaireUrl: `${window.location.origin}/behaviour-questionnaire?email=${encodeURIComponent(client.email)}`
       };
 
-      console.log('Triggering Make.com webhook for new session:', webhookData);
+      console.log('Triggering Make.com webhooks for new session:', webhookData);
 
-      // Send to Make.com webhook
-      const response = await fetch('https://hook.eu1.make.com/lipggo8kcd8kwq2vp6j6mr3gnxbx12h7', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(webhookData)
+      // Send to both webhooks in parallel
+      const webhookPromises = [
+        // Original session webhook
+        fetch('https://hook.eu1.make.com/lipggo8kcd8kwq2vp6j6mr3gnxbx12h7', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(webhookData)
+        }),
+        // New booking terms email webhook
+        fetch('https://hook.eu1.make.com/yaoalfe77uqtw4xv9fbh5atf4okq14wm', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(webhookData)
+        })
+      ];
+
+      const responses = await Promise.allSettled(webhookPromises);
+
+      // Log results
+      responses.forEach((result, index) => {
+        const webhookName = index === 0 ? 'session webhook' : 'booking terms email webhook';
+        if (result.status === 'fulfilled' && result.value.ok) {
+          console.log(`Successfully triggered ${webhookName}`);
+        } else {
+          console.error(`Failed to trigger ${webhookName}:`,
+            result.status === 'fulfilled' ?
+              `${result.value.status} ${result.value.statusText}` :
+              result.reason
+          );
+        }
       });
 
-      if (response.ok) {
-        console.log('Successfully triggered Make.com webhook for session:', session.id);
-      } else {
-        console.error('Failed to trigger Make.com webhook:', response.status, response.statusText);
-      }
     } catch (error) {
-      console.error('Error triggering Make.com webhook:', error);
+      console.error('Error triggering Make.com webhooks:', error);
       // Don't throw error - webhook failure shouldn't prevent session creation
     }
   };
@@ -363,6 +420,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     loadClients();
     loadSessions();
     loadMemberships();
+    loadBehaviourQuestionnaires();
   }, []);
 
   return (
@@ -372,6 +430,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       loadClients,
       loadSessions,
       loadMemberships,
+      loadBehaviourQuestionnaires,
       createClient,
       updateClient,
       deleteClient,
