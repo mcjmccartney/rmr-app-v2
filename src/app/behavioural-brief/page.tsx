@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useApp } from '@/context/AppContext';
 import { BehaviouralBrief } from '@/types';
+import { behaviouralBriefService } from '@/services/behaviouralBriefService';
 
 export default function BehaviouralBriefPage() {
   const { createClient, dispatch } = useApp();
@@ -39,10 +40,7 @@ export default function BehaviouralBriefPage() {
     e.preventDefault();
 
     try {
-      // Generate behavioural brief ID
-      const behaviouralBriefId = Date.now().toString();
-
-      // Create client with Supabase
+      // Create client with Supabase first
       const client = await createClient({
         firstName: formData.ownerFirstName,
         lastName: formData.ownerLastName,
@@ -51,12 +49,10 @@ export default function BehaviouralBriefPage() {
         email: formData.email,
         active: true,
         membership: false,
-        behaviouralBriefId,
       });
 
-      // Create behavioural brief
-      const behaviouralBrief: BehaviouralBrief = {
-        id: behaviouralBriefId,
+      // Create behavioural brief data
+      const briefData = {
         clientId: client.id,
         ownerFirstName: formData.ownerFirstName,
         ownerLastName: formData.ownerLastName,
@@ -69,28 +65,16 @@ export default function BehaviouralBriefPage() {
         lifeWithDog: formData.lifeWithDog,
         bestOutcome: formData.bestOutcome,
         sessionType: formData.sessionType as BehaviouralBrief['sessionType'],
-        submittedAt: new Date(),
       };
 
-      // Add behavioural brief to local state (not connected to Supabase yet)
-      dispatch({ type: 'ADD_BEHAVIOURAL_BRIEF', payload: behaviouralBrief });
+      // Create the behavioural brief in Supabase using the service
+      const createdBrief = await behaviouralBriefService.create(briefData);
 
-      // Reset form
-      setFormData({
-        ownerFirstName: '',
-        ownerLastName: '',
-        email: '',
-        contactNumber: '',
-        postcode: '',
-        dogName: '',
-        sex: '',
-        breed: '',
-        lifeWithDog: '',
-        bestOutcome: '',
-        sessionType: '',
-      });
+      // Add behavioural brief to local state
+      dispatch({ type: 'ADD_BEHAVIOURAL_BRIEF', payload: createdBrief });
 
-      alert('Thank you for your submission!');
+      // Navigate back silently (no alert as per user preference)
+      window.location.href = '/';
     } catch (error) {
       console.error('Error submitting form:', error);
       alert('There was an error submitting your form. Please try again.');

@@ -204,17 +204,8 @@ function BehaviourQuestionnaireForm() {
       // Add questionnaire to state
       dispatch({ type: 'ADD_BEHAVIOUR_QUESTIONNAIRE', payload: createdQuestionnaire });
 
-      // Update client with questionnaire reference if needed
-      if (existingClient) {
-        await updateClient(existingClient.id, {
-          behaviourQuestionnaireId: createdQuestionnaire.id,
-        });
-      } else if (shouldCreateClient) {
-        // Update the newly created client with the questionnaire ID
-        await updateClient(questionnaireData.clientId, {
-          behaviourQuestionnaireId: createdQuestionnaire.id,
-        });
-      }
+      // No need to update client with questionnaire reference -
+      // the questionnaire already has the client_id reference
 
       // Navigate back silently (no alert as per user preference)
       window.location.href = '/';
