@@ -140,6 +140,8 @@ export interface Client {
   avatar?: string;
   behaviouralBriefId?: string;
   behaviourQuestionnaireId?: string;
+  booking_terms_signed?: boolean;
+  booking_terms_signed_date?: string;
 }
 
 export interface MonthlyFinance {

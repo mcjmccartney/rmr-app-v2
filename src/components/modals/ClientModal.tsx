@@ -189,6 +189,24 @@ export default function ClientModal({ client, isOpen, onClose, onEditClient, onV
               />
             </button>
           </div>
+
+          <div className="flex justify-between items-center py-4">
+            <span className="text-gray-600 font-medium">Booking Terms</span>
+            <div className="flex items-center gap-2">
+              {currentClient.booking_terms_signed ? (
+                <>
+                  <span className="text-green-600 text-sm font-medium">✓ Signed</span>
+                  {currentClient.booking_terms_signed_date && (
+                    <span className="text-gray-500 text-xs">
+                      {new Date(currentClient.booking_terms_signed_date).toLocaleDateString('en-GB')}
+                    </span>
+                  )}
+                </>
+              ) : (
+                <span className="text-gray-500 text-sm">Not signed</span>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Collapsible Tab View for Sessions and Membership */}

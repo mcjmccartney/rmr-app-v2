@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Calendar, FileText, Star, Users, Grid3X3, Menu, X, LogOut } from 'lucide-react';
+import { Calendar, FileText, Star, Users, Grid3X3, Menu, X, LogOut, ClipboardCheck } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useModal } from '@/context/ModalContext';
 import { useAuth } from '@/context/AuthContext';
@@ -12,6 +12,7 @@ const navItems = [
   { icon: Star, label: 'Memberships', path: '/memberships' },
   { icon: Users, label: 'Clients', path: '/clients' },
   { icon: Grid3X3, label: 'Finances', path: '/finances' },
+  { icon: ClipboardCheck, label: 'Booking Terms', path: '/booking-terms' },
 ];
 
 export default function FloatingActionButton() {
@@ -36,7 +37,7 @@ export default function FloatingActionButton() {
   };
 
   // Hide FAB when any modal is open or on form pages
-  if (isAnyModalOpen || pathname === '/behavioural-brief' || pathname === '/behaviour-questionnaire') {
+  if (isAnyModalOpen || pathname === '/behavioural-brief' || pathname === '/behaviour-questionnaire' || pathname === '/booking-terms') {
     return null;
   }
 
