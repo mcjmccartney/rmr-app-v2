@@ -6,8 +6,10 @@ import { useApp } from '@/context/AppContext';
 import SessionModal from '@/components/modals/SessionModal';
 import EditSessionModal from '@/components/modals/EditSessionModal';
 import EditClientModal from '@/components/modals/EditClientModal';
+import BehaviouralBriefModal from '@/components/modals/BehaviouralBriefModal';
+import BehaviourQuestionnaireModal from '@/components/modals/BehaviourQuestionnaireModal';
 import AddModal from '@/components/AddModal';
-import { Session, Client } from '@/types';
+import { Session, Client, BehaviouralBrief, BehaviourQuestionnaire } from '@/types';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek } from 'date-fns';
 import { formatTime, formatDayDate, formatMonthYear, combineDateAndTime } from '@/utils/dateFormatting';
 import { ChevronLeft, ChevronRight, Calendar, UserPlus } from 'lucide-react';
@@ -23,6 +25,10 @@ export default function CalendarPage() {
   const [showEditSessionModal, setShowEditSessionModal] = useState(false);
   const [showEditClientModal, setShowEditClientModal] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
+  const [showBehaviouralBriefModal, setShowBehaviouralBriefModal] = useState(false);
+  const [selectedBehaviouralBrief, setSelectedBehaviouralBrief] = useState<BehaviouralBrief | null>(null);
+  const [showBehaviourQuestionnaireModal, setShowBehaviourQuestionnaireModal] = useState(false);
+  const [selectedBehaviourQuestionnaire, setSelectedBehaviourQuestionnaire] = useState<BehaviourQuestionnaire | null>(null);
 
 
   const monthStart = startOfMonth(currentDate);
@@ -114,6 +120,46 @@ export default function CalendarPage() {
 
   const handleCreateSessionPlan = (session: Session) => {
     router.push(`/session-plan?sessionId=${session.id}`);
+  };
+
+  const handleViewBehaviouralBrief = (behaviouralBriefId: string) => {
+    const brief = state.behaviouralBriefs.find(b => b.id === behaviouralBriefId);
+    if (brief) {
+      setSelectedBehaviouralBrief(brief);
+      setSelectedSession(null); // Close session modal
+      setShowBehaviouralBriefModal(true);
+    }
+  };
+
+  const handleCloseBehaviouralBriefModal = () => {
+    setShowBehaviouralBriefModal(false);
+    setSelectedBehaviouralBrief(null);
+  };
+
+  const handleViewBehaviourQuestionnaire = (behaviourQuestionnaireId: string) => {
+    const questionnaire = state.behaviourQuestionnaires.find(q => q.id === behaviourQuestionnaireId);
+    if (questionnaire) {
+      setSelectedBehaviourQuestionnaire(questionnaire);
+      setSelectedSession(null); // Close session modal
+      setShowBehaviourQuestionnaireModal(true);
+    }
+  };
+
+  const handleCloseBehaviourQuestionnaireModal = () => {
+    setShowBehaviourQuestionnaireModal(false);
+    setSelectedBehaviourQuestionnaire(null);
+  };
+
+  const handleViewClientFromModal = (client: Client) => {
+    // Close any open modals first
+    setShowBehaviouralBriefModal(false);
+    setShowBehaviourQuestionnaireModal(false);
+    setSelectedBehaviouralBrief(null);
+    setSelectedBehaviourQuestionnaire(null);
+
+    // Set the client for editing
+    setEditingClient(client);
+    setShowEditClientModal(true);
   };
 
   // Keyboard navigation for months
@@ -359,6 +405,20 @@ export default function CalendarPage() {
         client={editingClient}
         isOpen={showEditClientModal}
         onClose={handleCloseEditClientModal}
+      />
+
+      <BehaviouralBriefModal
+        behaviouralBrief={selectedBehaviouralBrief}
+        isOpen={showBehaviouralBriefModal}
+        onClose={handleCloseBehaviouralBriefModal}
+        onViewClient={handleViewClientFromModal}
+      />
+
+      <BehaviourQuestionnaireModal
+        behaviourQuestionnaire={selectedBehaviourQuestionnaire}
+        isOpen={showBehaviourQuestionnaireModal}
+        onClose={handleCloseBehaviourQuestionnaireModal}
+        onViewClient={handleViewClientFromModal}
       />
 
       <AddModal

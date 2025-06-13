@@ -75,7 +75,7 @@ function BehaviourQuestionnaireForm() {
     timePerWeek: '',
   });
 
-  // Check for email parameter in URL and prefill
+  // Check for email parameter in URL and prefill, also check if already completed
   useEffect(() => {
     const emailParam = searchParams.get('email');
     if (emailParam) {
@@ -83,8 +83,19 @@ function BehaviourQuestionnaireForm() {
         ...prev,
         email: emailParam
       }));
+
+      // Check if this email already has a questionnaire submitted
+      const existingQuestionnaire = state.behaviourQuestionnaires.find(q =>
+        q.email?.toLowerCase() === emailParam.toLowerCase()
+      );
+
+      if (existingQuestionnaire) {
+        // Redirect to completion page
+        window.location.href = '/questionnaire-completed';
+        return;
+      }
     }
-  }, [searchParams]);
+  }, [searchParams, state.behaviourQuestionnaires]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;

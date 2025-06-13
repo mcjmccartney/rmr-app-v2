@@ -3,21 +3,35 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { bookingTermsService } from '@/services/bookingTermsService';
+import { useApp } from '@/context/AppContext';
 
 export default function BookingTermsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { state } = useApp();
   const [email, setEmail] = useState('');
   const [agreed, setAgreed] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Get email from URL parameters
+  // Get email from URL parameters and check if already completed
   useEffect(() => {
     const emailParam = searchParams.get('email');
     if (emailParam) {
-      setEmail(decodeURIComponent(emailParam));
+      const decodedEmail = decodeURIComponent(emailParam);
+      setEmail(decodedEmail);
+
+      // Check if this email already has booking terms signed
+      const existingClient = state.clients.find(c =>
+        c.email?.toLowerCase() === decodedEmail.toLowerCase() && c.booking_terms_signed
+      );
+
+      if (existingClient) {
+        // Redirect to completion page
+        window.location.href = '/booking-terms-completed';
+        return;
+      }
     }
-  }, [searchParams]);
+  }, [searchParams, state.clients]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

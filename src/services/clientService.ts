@@ -17,6 +17,8 @@ function dbRowToClient(row: Record<string, any>): Client {
     avatar: row.avatar,
     behaviouralBriefId: row.behavioural_brief_id,
     behaviourQuestionnaireId: row.behaviour_questionnaire_id,
+    booking_terms_signed: row.booking_terms_signed,
+    booking_terms_signed_date: row.booking_terms_signed_date,
   }
 }
 
@@ -36,6 +38,8 @@ function clientToDbRow(client: Partial<Client>) {
     avatar: client.avatar,
     behavioural_brief_id: client.behaviouralBriefId,
     behaviour_questionnaire_id: client.behaviourQuestionnaireId,
+    booking_terms_signed: client.booking_terms_signed,
+    booking_terms_signed_date: client.booking_terms_signed_date,
   }
 }
 
