@@ -40,15 +40,18 @@ interface MonthlyBreakdownModalProps {
 
 export default function MonthlyBreakdownModal({ finance, allFinancesForMonth, isOpen, onClose, onUpdate }: MonthlyBreakdownModalProps) {
   const [isEditingExpected, setIsEditingExpected] = useState(false);
+  const [localExpectedTotal, setLocalExpectedTotal] = useState(0);
 
   // Calculate total expected from all finance entries for this month
-  const totalExpected = allFinancesForMonth?.reduce((sum, f) => sum + (f.expected || 0), 0) || finance?.expected || 0;
+  const totalExpected = localExpectedTotal || allFinancesForMonth?.reduce((sum, f) => sum + (f.expected || 0), 0) || finance?.expected || 0;
   const [expectedAmount, setExpectedAmount] = useState('0');
 
   // Update expectedAmount when totalExpected changes
   useEffect(() => {
-    setExpectedAmount(totalExpected.toString());
-  }, [totalExpected]);
+    const currentTotal = allFinancesForMonth?.reduce((sum, f) => sum + (f.expected || 0), 0) || finance?.expected || 0;
+    setLocalExpectedTotal(currentTotal);
+    setExpectedAmount(currentTotal.toString());
+  }, [allFinancesForMonth, finance?.expected]);
   const [breakdownData, setBreakdownData] = useState<BreakdownData>({
     sessionTypes: {},
     memberships: { count: 0, total: 0 },
@@ -204,8 +207,15 @@ export default function MonthlyBreakdownModal({ finance, allFinancesForMonth, is
       }
 
       console.log(`Successfully updated ${allFinancesForMonth.length} finance entries`);
+
+      // Update the local state immediately to reflect the change
+      setLocalExpectedTotal(newExpectedAmount);
+
+      // Also update the input field to show the new value
+      setExpectedAmount(newExpectedAmount.toString());
+
       setIsEditingExpected(false);
-      onUpdate(); // Refresh the data
+      onUpdate(); // Refresh the parent data
 
     } catch (error) {
       console.error('Error updating expected amount:', error);
