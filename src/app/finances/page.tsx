@@ -53,8 +53,8 @@ export default function FinancesPage() {
       try {
         const result = await supabase
           .from('sessions')
-          .select('*')
-          .limit(5);
+          .select('session_type, booking_date, quote')
+          .order('booking_date', { ascending: false });
         sessionsData = result.data;
         sessionsError = result.error;
       } catch (error) {
@@ -213,8 +213,8 @@ export default function FinancesPage() {
 
     // Get sessions for this month/year
     const monthSessions = sessions.filter(session => {
-      // Try different possible date column names
-      const dateField = session.bookingDate || session.booking_date || session.date;
+      // Use booking_date column from your sessions table
+      const dateField = session.booking_date;
       if (!dateField) return false;
 
       const sessionDate = new Date(dateField);
@@ -244,9 +244,9 @@ export default function FinancesPage() {
       return matches;
     });
 
-    // Try different possible amount column names
+    // Calculate session total using quote column
     const sessionTotal = monthSessions.reduce((sum, session) => {
-      const amount = session.quote || session.price || session.amount || 0;
+      const amount = session.quote || 0;
       return sum + amount;
     }, 0);
 
