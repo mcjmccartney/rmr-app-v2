@@ -35,6 +35,31 @@ function dbRowToBehaviourQuestionnaire(row: Record<string, any>): BehaviourQuest
     vetAdvice: row.vet_advice,
     whereGotDog: row.where_got_dog,
     rescueBackground: row.rescue_background,
+    ageWhenGot: row.age_when_got,
+    whatFeed: row.what_feed,
+    foodMotivated: row.food_motivated,
+    mealtime: row.mealtime,
+    treatRoutine: row.treat_routine,
+    happyWithTreats: row.happy_with_treats,
+    typesOfPlay: row.types_of_play,
+    affectionate: row.affectionate,
+    exercise: row.exercise,
+    useMuzzle: row.use_muzzle,
+    familiarPeople: row.familiar_people,
+    unfamiliarPeople: row.unfamiliar_people,
+    housetrained: row.housetrained,
+    likesToDo: row.likes_to_do,
+    likeAboutDog: row.like_about_dog,
+    mostChallenging: row.most_challenging,
+    howGood: row.how_good,
+    favouriteRewards: row.favourite_rewards,
+    howBad: row.how_bad,
+    effectOfBad: row.effect_of_bad,
+    professionalTraining: row.professional_training,
+    sociabilityDogs: row.sociability_dogs,
+    sociabilityPeople: row.sociability_people,
+    anythingElseToKnow: row.anything_else_to_know,
+    timePerWeek: row.time_per_week,
     submittedAt: new Date(row.submitted_at)
   };
 }
@@ -42,7 +67,7 @@ function dbRowToBehaviourQuestionnaire(row: Record<string, any>): BehaviourQuest
 // Convert BehaviourQuestionnaire to database row
 function behaviourQuestionnaireToDbRow(questionnaire: Partial<BehaviourQuestionnaire>): Record<string, any> {
   const row: Record<string, any> = {};
-  
+
   if (questionnaire.id !== undefined) row.id = questionnaire.id;
   if (questionnaire.clientId !== undefined) row.client_id = questionnaire.clientId;
   if (questionnaire.ownerFirstName !== undefined) row.owner_first_name = questionnaire.ownerFirstName;
@@ -74,6 +99,31 @@ function behaviourQuestionnaireToDbRow(questionnaire: Partial<BehaviourQuestionn
   if (questionnaire.vetAdvice !== undefined) row.vet_advice = questionnaire.vetAdvice;
   if (questionnaire.whereGotDog !== undefined) row.where_got_dog = questionnaire.whereGotDog;
   if (questionnaire.rescueBackground !== undefined) row.rescue_background = questionnaire.rescueBackground;
+  if (questionnaire.ageWhenGot !== undefined) row.age_when_got = questionnaire.ageWhenGot;
+  if (questionnaire.whatFeed !== undefined) row.what_feed = questionnaire.whatFeed;
+  if (questionnaire.foodMotivated !== undefined) row.food_motivated = questionnaire.foodMotivated;
+  if (questionnaire.mealtime !== undefined) row.mealtime = questionnaire.mealtime;
+  if (questionnaire.treatRoutine !== undefined) row.treat_routine = questionnaire.treatRoutine;
+  if (questionnaire.happyWithTreats !== undefined) row.happy_with_treats = questionnaire.happyWithTreats;
+  if (questionnaire.typesOfPlay !== undefined) row.types_of_play = questionnaire.typesOfPlay;
+  if (questionnaire.affectionate !== undefined) row.affectionate = questionnaire.affectionate;
+  if (questionnaire.exercise !== undefined) row.exercise = questionnaire.exercise;
+  if (questionnaire.useMuzzle !== undefined) row.use_muzzle = questionnaire.useMuzzle;
+  if (questionnaire.familiarPeople !== undefined) row.familiar_people = questionnaire.familiarPeople;
+  if (questionnaire.unfamiliarPeople !== undefined) row.unfamiliar_people = questionnaire.unfamiliarPeople;
+  if (questionnaire.housetrained !== undefined) row.housetrained = questionnaire.housetrained;
+  if (questionnaire.likesToDo !== undefined) row.likes_to_do = questionnaire.likesToDo;
+  if (questionnaire.likeAboutDog !== undefined) row.like_about_dog = questionnaire.likeAboutDog;
+  if (questionnaire.mostChallenging !== undefined) row.most_challenging = questionnaire.mostChallenging;
+  if (questionnaire.howGood !== undefined) row.how_good = questionnaire.howGood;
+  if (questionnaire.favouriteRewards !== undefined) row.favourite_rewards = questionnaire.favouriteRewards;
+  if (questionnaire.howBad !== undefined) row.how_bad = questionnaire.howBad;
+  if (questionnaire.effectOfBad !== undefined) row.effect_of_bad = questionnaire.effectOfBad;
+  if (questionnaire.professionalTraining !== undefined) row.professional_training = questionnaire.professionalTraining;
+  if (questionnaire.sociabilityDogs !== undefined) row.sociability_dogs = questionnaire.sociabilityDogs;
+  if (questionnaire.sociabilityPeople !== undefined) row.sociability_people = questionnaire.sociabilityPeople;
+  if (questionnaire.anythingElseToKnow !== undefined) row.anything_else_to_know = questionnaire.anythingElseToKnow;
+  if (questionnaire.timePerWeek !== undefined) row.time_per_week = questionnaire.timePerWeek;
   if (questionnaire.submittedAt !== undefined) row.submitted_at = questionnaire.submittedAt.toISOString();
 
   return row;
