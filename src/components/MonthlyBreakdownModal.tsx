@@ -142,15 +142,35 @@ export default function MonthlyBreakdownModal({ finance, allFinancesForMonth, is
   };
 
   const handleExpectedUpdate = async () => {
-    if (!finance) return;
+    if (!finance || !allFinancesForMonth) return;
 
     try {
-      const { error } = await supabase
-        .from('finances')
-        .update({ expected: parseFloat(expectedAmount) })
-        .eq('id', finance.id);
+      const newExpectedAmount = parseFloat(expectedAmount);
 
-      if (error) throw error;
+      // If there's only one finance entry, update it directly
+      if (allFinancesForMonth.length === 1) {
+        const { error } = await supabase
+          .from('finances')
+          .update({ expected: newExpectedAmount })
+          .eq('id', allFinancesForMonth[0].id);
+
+        if (error) throw error;
+      } else {
+        // If there are multiple entries, update the first one with the new total
+        // and set others to 0 to avoid double counting
+        const updates = allFinancesForMonth.map((financeEntry, index) => {
+          return supabase
+            .from('finances')
+            .update({ expected: index === 0 ? newExpectedAmount : 0 })
+            .eq('id', financeEntry.id);
+        });
+
+        const results = await Promise.all(updates);
+        const errors = results.filter(result => result.error);
+        if (errors.length > 0) {
+          throw new Error(`Failed to update ${errors.length} entries`);
+        }
+      }
 
       setIsEditingExpected(false);
       onUpdate();
@@ -213,29 +233,20 @@ export default function MonthlyBreakdownModal({ finance, allFinancesForMonth, is
                   <label className="block text-sm font-medium text-gray-700 mb-2">Expected Amount</label>
                   <div className="relative">
                     <input
-                      type="number"
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       value={expectedAmount}
-                      onChange={(e) => setExpectedAmount(e.target.value)}
-                      className="w-full text-lg font-semibold text-center border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-amber-500 focus:border-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/[^0-9.]/g, '');
+                        setExpectedAmount(value);
+                      }}
+                      className="w-full text-lg font-semibold text-center border border-gray-300 rounded-lg p-3 pl-8 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                       placeholder="0"
                       autoFocus
                     />
                     <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-lg font-semibold text-gray-500">
                       £
-                    </div>
-                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex flex-col">
-                      <button
-                        onClick={() => setExpectedAmount((prev) => (parseFloat(prev) + 100).toString())}
-                        className="text-blue-500 hover:text-blue-700"
-                      >
-                        <ChevronUp size={16} />
-                      </button>
-                      <button
-                        onClick={() => setExpectedAmount((prev) => Math.max(0, parseFloat(prev) - 100).toString())}
-                        className="text-blue-500 hover:text-blue-700"
-                      >
-                        <ChevronDown size={16} />
-                      </button>
                     </div>
                   </div>
                   
