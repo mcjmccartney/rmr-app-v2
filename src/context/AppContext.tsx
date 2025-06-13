@@ -285,6 +285,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         sessionId: session.id,
         clientId: session.clientId,
         clientName: `${client.firstName} ${client.lastName}`.trim(),
+        clientFirstName: client.firstName,
         clientEmail: client.email,
         dogName: client.dogName || '',
         sessionType: session.sessionType,
