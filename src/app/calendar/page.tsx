@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
 import SessionModal from '@/components/modals/SessionModal';
 import EditSessionModal from '@/components/modals/EditSessionModal';
+import ClientModal from '@/components/modals/ClientModal';
 import EditClientModal from '@/components/modals/EditClientModal';
 import BehaviouralBriefModal from '@/components/modals/BehaviouralBriefModal';
 import BehaviourQuestionnaireModal from '@/components/modals/BehaviourQuestionnaireModal';
@@ -23,8 +24,10 @@ export default function CalendarPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [addModalType, setAddModalType] = useState<'session' | 'client'>('session');
   const [showEditSessionModal, setShowEditSessionModal] = useState(false);
+  const [showClientModal, setShowClientModal] = useState(false);
   const [showEditClientModal, setShowEditClientModal] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [showBehaviouralBriefModal, setShowBehaviouralBriefModal] = useState(false);
   const [selectedBehaviouralBrief, setSelectedBehaviouralBrief] = useState<BehaviouralBrief | null>(null);
   const [showBehaviourQuestionnaireModal, setShowBehaviourQuestionnaireModal] = useState(false);
@@ -98,13 +101,25 @@ export default function CalendarPage() {
     // Find the client based on the session's client ID
     const client = state.clients.find(c => c.id === session.clientId);
     if (client) {
-      setEditingClient(client);
-      setShowEditClientModal(true);
+      setSelectedClient(client);
+      setShowClientModal(true);
     }
+  };
+
+  const handleEditClientFromModal = (client: Client) => {
+    // Close the view modal and open the edit modal
+    setShowClientModal(false);
+    setEditingClient(client);
+    setShowEditClientModal(true);
   };
 
   const handleCloseEditSessionModal = () => {
     setShowEditSessionModal(false);
+  };
+
+  const handleCloseClientModal = () => {
+    setShowClientModal(false);
+    setSelectedClient(null);
   };
 
   const handleCloseEditClientModal = () => {
@@ -157,9 +172,9 @@ export default function CalendarPage() {
     setSelectedBehaviouralBrief(null);
     setSelectedBehaviourQuestionnaire(null);
 
-    // Set the client for editing
-    setEditingClient(client);
-    setShowEditClientModal(true);
+    // Set the client for viewing
+    setSelectedClient(client);
+    setShowClientModal(true);
   };
 
   // Keyboard navigation for months
@@ -412,7 +427,7 @@ export default function CalendarPage() {
 
       <SessionModal
         session={selectedSession}
-        isOpen={!!selectedSession && !showEditSessionModal && !showEditClientModal}
+        isOpen={!!selectedSession && !showEditSessionModal && !showClientModal && !showEditClientModal}
         onClose={handleCloseModal}
         onEditSession={handleEditSession}
         onEditClient={handleEditClient}
@@ -425,6 +440,15 @@ export default function CalendarPage() {
         session={selectedSession}
         isOpen={showEditSessionModal}
         onClose={handleCloseEditSessionModal}
+      />
+
+      <ClientModal
+        client={selectedClient}
+        isOpen={showClientModal}
+        onClose={handleCloseClientModal}
+        onEditClient={handleEditClientFromModal}
+        onViewBehaviouralBrief={handleViewBehaviouralBrief}
+        onViewBehaviourQuestionnaire={handleViewBehaviourQuestionnaire}
       />
 
       <EditClientModal
