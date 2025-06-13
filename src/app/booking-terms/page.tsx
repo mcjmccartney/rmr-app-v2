@@ -61,10 +61,7 @@ export default function BookingTermsPage() {
                     type="email"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:border-transparent"
-                    style={{
-                      '--tw-ring-color': '#973b00'
-                    }}
+                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-600 focus:border-transparent"
                     required
                   />
                 </div>
@@ -77,10 +74,7 @@ export default function BookingTermsPage() {
                     type="text"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:border-transparent"
-                    style={{
-                      '--tw-ring-color': '#973b00'
-                    }}
+                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-600 focus:border-transparent"
                     required
                   />
                 </div>
@@ -92,10 +86,9 @@ export default function BookingTermsPage() {
                   id="agree"
                   checked={agreed}
                   onChange={(e) => setAgreed(e.target.checked)}
-                  className="mt-1 h-4 w-4 rounded border-gray-300 focus:ring-2"
+                  className="mt-1 h-4 w-4 rounded border-gray-300 focus:ring-2 focus:ring-amber-600"
                   style={{
-                    accentColor: '#973b00',
-                    '--tw-ring-color': '#973b00'
+                    accentColor: '#973b00'
                   }}
                   required
                 />
