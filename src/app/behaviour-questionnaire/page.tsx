@@ -7,7 +7,7 @@ import { BehaviourQuestionnaire } from '@/types';
 import { behaviourQuestionnaireService } from '@/services/behaviourQuestionnaireService';
 
 function BehaviourQuestionnaireForm() {
-  const { dispatch, createClient, findClientByEmail } = useApp();
+  const { dispatch, createClient, findClientByEmail, state } = useApp();
   const searchParams = useSearchParams();
   const [formData, setFormData] = useState({
     // Owner Information
@@ -95,7 +95,7 @@ function BehaviourQuestionnaireForm() {
         return;
       }
     }
-  }, [searchParams, state.behaviourQuestionnaires]);
+  }, [searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;

@@ -31,7 +31,7 @@ export default function BookingTermsPage() {
         return;
       }
     }
-  }, [searchParams, state.clients]);
+  }, [searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
