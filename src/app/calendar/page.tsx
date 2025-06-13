@@ -261,11 +261,29 @@ export default function CalendarPage() {
                         ? `${timeOnly} | ${session.sessionType}`
                         : `${timeOnly} | Unknown Client`;
 
+                      // Check if client has both booking terms signed and questionnaire filled for this dog
+                      const hasSignedBookingTerms = client?.booking_terms_signed || false;
+                      const hasFilledQuestionnaire = client && client.dogName && client.email ?
+                        state.behaviourQuestionnaires.some(q =>
+                          q.email?.toLowerCase() === client.email?.toLowerCase() &&
+                          q.dogName?.toLowerCase() === client.dogName?.toLowerCase()
+                        ) : false;
+
+                      // Use amber color if both conditions are met, otherwise use default amber-800
+                      const isFullyCompleted = hasSignedBookingTerms && hasFilledQuestionnaire;
+                      const buttonStyle = isFullyCompleted ? {
+                        backgroundColor: '#e17100'
+                      } : {};
+                      const buttonClasses = isFullyCompleted
+                        ? "w-full text-white text-xs px-2 py-1 rounded text-left transition-colors flex-shrink-0 hover:opacity-80"
+                        : "w-full bg-amber-800 text-white text-xs px-2 py-1 rounded text-left hover:bg-amber-700 transition-colors flex-shrink-0";
+
                       return (
                         <button
                           key={session.id}
                           onClick={() => handleSessionClick(session)}
-                          className="w-full bg-amber-800 text-white text-xs px-2 py-1 rounded text-left hover:bg-amber-700 transition-colors flex-shrink-0"
+                          className={buttonClasses}
+                          style={buttonStyle}
                         >
                           {/* Show only time on mobile, full text on desktop */}
                           <span className="block sm:hidden">{timeOnly}</span>
@@ -292,7 +310,19 @@ export default function CalendarPage() {
         disabled={!firstSession}
         className="text-white px-4 py-4 flex-shrink-0 w-full text-left disabled:cursor-default"
         style={{
-          backgroundColor: '#973b00',
+          backgroundColor: (() => {
+            if (!firstSession || !firstSessionClient) return '#973b00';
+
+            // Check if first session client has both booking terms signed and questionnaire filled
+            const hasSignedBookingTerms = firstSessionClient.booking_terms_signed || false;
+            const hasFilledQuestionnaire = firstSessionClient.dogName && firstSessionClient.email ?
+              state.behaviourQuestionnaires.some(q =>
+                q.email?.toLowerCase() === firstSessionClient.email?.toLowerCase() &&
+                q.dogName?.toLowerCase() === firstSessionClient.dogName?.toLowerCase()
+              ) : false;
+
+            return (hasSignedBookingTerms && hasFilledQuestionnaire) ? '#e17100' : '#973b00';
+          })(),
           paddingBottom: 'max(env(safe-area-inset-bottom), 20px)'
         }}
       >
