@@ -169,7 +169,7 @@ export default function MonthlyBreakdownModal({ finance, allFinancesForMonth, is
       label: 'Memberships',
       value: breakdownData.memberships.total,
       count: breakdownData.memberships.count,
-      color: '#b5aa9f'
+      color: '#0a91b1'
     }] : [])
   ];
 
@@ -177,11 +177,11 @@ export default function MonthlyBreakdownModal({ finance, allFinancesForMonth, is
     const colors: Record<string, string> = {
       'In-Person': '#973b00',      // Amber-brown
       'Online': '#4f6749',         // Green
-      'Group': '#0a91b1',          // Blue
+      'Group': '#b5aa9f',          // Beige
       'RMR Live': '#e17100',       // Orange
       'Coaching': '#2b4f6c',       // Dark blue
       'Training': '#7aa37a',       // Light green
-      'Memberships': '#b5aa9f',    // Beige
+      'Memberships': '#0a91b1',    // Blue
       'Unknown': '#ecebdd'         // Light beige
     };
     return colors[sessionType] || '#ecebdd';
