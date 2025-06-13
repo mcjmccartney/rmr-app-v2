@@ -16,8 +16,8 @@ interface Finance {
 
 export default function FinancesPage() {
   const [finances, setFinances] = useState<Finance[]>([]);
-  const [sessions, setSessions] = useState<Array<{id: string; sessionType: string; quote: number; bookingDate: string}>>([]);
-  const [memberships, setMemberships] = useState<Array<{id: string; amount: number; date: string}>>([]);
+  const [sessions, setSessions] = useState<any[]>([]);
+  const [memberships, setMemberships] = useState<any[]>([]);
   const [selectedFinance, setSelectedFinance] = useState<Finance | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -46,7 +46,7 @@ export default function FinancesPage() {
 
       console.log('Finances data:', financesData);
 
-      // Fetch sessions
+      // Fetch sessions - try different possible column names
       const { data: sessionsData, error: sessionsError } = await supabase
         .from('sessions')
         .select('*')
@@ -56,6 +56,8 @@ export default function FinancesPage() {
         console.error('Sessions error:', sessionsError);
         // Don't throw error for sessions, just log it
       }
+
+      console.log('Sessions data sample:', sessionsData?.slice(0, 3));
 
       // Fetch memberships
       const { data: membershipsData, error: membershipsError } = await supabase
@@ -67,6 +69,8 @@ export default function FinancesPage() {
         console.error('Memberships error:', membershipsError);
         // Don't throw error for memberships, just log it
       }
+
+      console.log('Memberships data sample:', membershipsData?.slice(0, 3));
 
       setFinances(financesData || []);
       setSessions(sessionsData || []);
@@ -185,20 +189,54 @@ export default function FinancesPage() {
   const calculateActualIncome = (month: string, year: number) => {
     const monthNum = getMonthNumber(month);
 
+    console.log(`Calculating actual income for ${month} ${year} (month ${monthNum})`);
+    console.log(`Total sessions available: ${sessions.length}`);
+    console.log(`Total memberships available: ${memberships.length}`);
+
     // Get sessions for this month/year
     const monthSessions = sessions.filter(session => {
-      const sessionDate = new Date(session.bookingDate);
-      return sessionDate.getMonth() + 1 === monthNum && sessionDate.getFullYear() === year;
+      // Try different possible date column names
+      const dateField = session.bookingDate || session.booking_date || session.date;
+      if (!dateField) return false;
+
+      const sessionDate = new Date(dateField);
+      const sessionMonth = sessionDate.getMonth() + 1;
+      const sessionYear = sessionDate.getFullYear();
+      const matches = sessionMonth === monthNum && sessionYear === year;
+
+      if (matches) {
+        console.log(`Found session:`, session);
+      }
+
+      return matches;
     });
 
     // Get memberships for this month/year
     const monthMemberships = memberships.filter(membership => {
       const membershipDate = new Date(membership.date);
-      return membershipDate.getMonth() + 1 === monthNum && membershipDate.getFullYear() === year;
+      const membershipMonth = membershipDate.getMonth() + 1;
+      const membershipYear = membershipDate.getFullYear();
+      const matches = membershipMonth === monthNum && membershipYear === year;
+
+      if (matches) {
+        console.log(`Found membership:`, membership);
+      }
+
+      return matches;
     });
 
-    const sessionTotal = monthSessions.reduce((sum, session) => sum + (session.quote || 0), 0);
-    const membershipTotal = monthMemberships.reduce((sum, membership) => sum + (membership.amount || 0), 0);
+    // Try different possible amount column names
+    const sessionTotal = monthSessions.reduce((sum, session) => {
+      const amount = session.quote || session.price || session.amount || 0;
+      return sum + amount;
+    }, 0);
+
+    const membershipTotal = monthMemberships.reduce((sum, membership) => {
+      const amount = membership.amount || membership.price || 0;
+      return sum + amount;
+    }, 0);
+
+    console.log(`${month} ${year} totals - Sessions: £${sessionTotal}, Memberships: £${membershipTotal}, Total: £${sessionTotal + membershipTotal}`);
 
     return sessionTotal + membershipTotal;
   };
