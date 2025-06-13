@@ -142,110 +142,44 @@ export default function MonthlyBreakdownModal({ finance, allFinancesForMonth, is
   };
 
   const handleExpectedUpdate = async () => {
-    console.log('Save clicked - Starting update process');
-    console.log('Finance:', finance);
-    console.log('All finances for month:', allFinancesForMonth);
-    console.log('Expected amount:', expectedAmount);
-
-    // First, let's check what the current data looks like
-    if (allFinancesForMonth && allFinancesForMonth.length > 0) {
-      console.log('First finance entry structure:', Object.keys(allFinancesForMonth[0]));
-      console.log('First finance entry data:', allFinancesForMonth[0]);
-    }
-
     if (!finance || !allFinancesForMonth) {
-      console.error('Missing required data:', { finance, allFinancesForMonth });
+      console.error('Missing required data');
       return;
     }
 
     try {
       const newExpectedAmount = parseFloat(expectedAmount);
-      console.log('Parsed expected amount:', newExpectedAmount);
 
-      if (isNaN(newExpectedAmount)) {
-        console.error('Invalid number:', expectedAmount);
-        alert('Please enter a valid number');
+      if (isNaN(newExpectedAmount) || newExpectedAmount < 0) {
+        alert('Please enter a valid positive number');
         return;
       }
 
-      if (newExpectedAmount < 0) {
-        console.error('Negative amount not allowed:', newExpectedAmount);
-        alert('Amount cannot be negative');
-        return;
-      }
+      console.log(`Updating expected amount for ${finance.month} ${finance.year} to £${newExpectedAmount}`);
 
-      // First, let's test if we can read the current record
-      console.log('Testing read access to finances table...');
-      const { data: testRead, error: readError } = await supabase
-        .from('finances')
-        .select('*')
-        .eq('id', allFinancesForMonth[0].id)
-        .single();
+      // Strategy: Put the entire expected amount in the first entry, set others to 0
+      // This ensures the main page calculation (sum of all entries) shows the correct total
 
-      if (readError) {
-        console.error('Cannot read from finances table:', readError);
-        throw new Error(`Cannot read from finances table: ${readError.message}`);
-      }
-
-      console.log('Current record in database:', testRead);
-
-      // If there's only one finance entry, update it directly
-      if (allFinancesForMonth.length === 1) {
-        console.log('Updating single finance entry:', allFinancesForMonth[0].id);
-        console.log('Update payload:', { expected_amount: newExpectedAmount });
-        const { data, error } = await supabase
+      const updatePromises = allFinancesForMonth.map((financeEntry, index) => {
+        const amount = index === 0 ? newExpectedAmount : 0;
+        return supabase
           .from('finances')
-          .update({ expected_amount: Number(newExpectedAmount.toFixed(2)) })
-          .eq('id', allFinancesForMonth[0].id)
-          .select();
+          .update({ expected_amount: Number(amount.toFixed(2)) })
+          .eq('id', financeEntry.id);
+      });
 
-        if (error) {
-          console.error('Supabase error details:', {
-            message: error.message,
-            details: error.details,
-            hint: error.hint,
-            code: error.code
-          });
-          throw error;
-        }
-        console.log('Update successful:', data);
-      } else {
-        console.log('Updating multiple finance entries:', allFinancesForMonth.length);
-        // If there are multiple entries, update the first one with the new total
-        // and set others to 0 to avoid double counting
-        const updates = allFinancesForMonth.map((financeEntry, index) => {
-          const amount = index === 0 ? newExpectedAmount : 0;
-          console.log(`Updating entry ${index + 1}:`, financeEntry.id, 'with amount:', amount);
-          console.log('Update payload:', { expected_amount: Number(amount.toFixed(2)) });
-          return supabase
-            .from('finances')
-            .update({ expected_amount: Number(amount.toFixed(2)) })
-            .eq('id', financeEntry.id)
-            .select();
-        });
+      const results = await Promise.all(updatePromises);
+      const errors = results.filter(result => result.error);
 
-        const results = await Promise.all(updates);
-        const errors = results.filter(result => result.error);
-        if (errors.length > 0) {
-          console.error('Full error objects:', errors);
-          console.error('Update errors details:', errors.map(e => {
-            console.log('Individual error:', e);
-            return {
-              message: e.error?.message,
-              details: e.error?.details,
-              hint: e.error?.hint,
-              code: e.error?.code,
-              fullError: e.error
-            };
-          }));
-          throw new Error(`Failed to update ${errors.length} entries: ${errors[0].error?.message || 'Unknown error'}`);
-        }
-        console.log('All updates successful:', results);
+      if (errors.length > 0) {
+        console.error('Update failed:', errors);
+        throw new Error('Failed to update expected amount');
       }
 
-      console.log('Closing edit mode and calling onUpdate');
+      console.log(`Successfully updated ${allFinancesForMonth.length} finance entries`);
       setIsEditingExpected(false);
-      onUpdate();
+      onUpdate(); // Refresh the data
+
     } catch (error) {
       console.error('Error updating expected amount:', error);
       alert('Failed to save expected amount. Please try again.');
