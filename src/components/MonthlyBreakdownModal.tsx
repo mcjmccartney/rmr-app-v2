@@ -268,44 +268,34 @@ export default function MonthlyBreakdownModal({ finance, isOpen, onClose, onUpda
             <>
               <h4 className="font-medium text-gray-900 mb-4">Income Breakdown</h4>
 
-              {/* Donut Chart */}
-              <div className="flex flex-col items-center mb-6">
-                <div className="relative w-48 h-48">
-                  <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
-                    {(() => {
-                      let cumulativePercentage = 0;
-                      return chartData.map((item, index) => {
-                        const percentage = (item.value / breakdownData.totalActual) * 100;
-                        const strokeDasharray = `${percentage} ${100 - percentage}`;
-                        const strokeDashoffset = -cumulativePercentage;
-                        cumulativePercentage += percentage;
+              {/* Full Size Donut Chart */}
+              <div className="w-full h-64 mb-6">
+                <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
+                  {(() => {
+                    let cumulativePercentage = 0;
+                    return chartData.map((item, index) => {
+                      const percentage = (item.value / breakdownData.totalActual) * 100;
+                      const strokeDasharray = `${percentage} ${100 - percentage}`;
+                      const strokeDashoffset = -cumulativePercentage;
+                      cumulativePercentage += percentage;
 
-                        return (
-                          <circle
-                            key={index}
-                            cx="50"
-                            cy="50"
-                            r="15.915"
-                            fill="transparent"
-                            stroke={item.color}
-                            strokeWidth="8"
-                            strokeDasharray={strokeDasharray}
-                            strokeDashoffset={strokeDashoffset}
-                            className="transition-all duration-300"
-                          />
-                        );
-                      });
-                    })()}
-                  </svg>
-
-                  {/* Center text */}
-                  <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <div className="text-lg font-bold text-gray-900">
-                      £{breakdownData.totalActual.toLocaleString()}
-                    </div>
-                    <div className="text-xs text-gray-500">Total Income</div>
-                  </div>
-                </div>
+                      return (
+                        <circle
+                          key={index}
+                          cx="50"
+                          cy="50"
+                          r="15.915"
+                          fill="transparent"
+                          stroke={item.color}
+                          strokeWidth="12"
+                          strokeDasharray={strokeDasharray}
+                          strokeDashoffset={strokeDashoffset}
+                          className="transition-all duration-300"
+                        />
+                      );
+                    });
+                  })()}
+                </svg>
               </div>
 
               {/* Legend */}
