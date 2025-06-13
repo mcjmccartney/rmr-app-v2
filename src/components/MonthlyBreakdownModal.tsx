@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ChevronUp, ChevronDown } from 'lucide-react';
+
 import { supabase } from '@/lib/supabase';
 import SlideUpModal from './modals/SlideUpModal';
 import {
@@ -42,7 +42,7 @@ export default function MonthlyBreakdownModal({ finance, allFinancesForMonth, is
   const [isEditingExpected, setIsEditingExpected] = useState(false);
 
   // Calculate total expected from all finance entries for this month
-  const totalExpected = allFinancesForMonth?.reduce((sum, f) => sum + (f.expected || f.expected_amount || 0), 0) || finance?.expected || finance?.expected_amount || 0;
+  const totalExpected = allFinancesForMonth?.reduce((sum, f) => sum + (f.expected || 0), 0) || finance?.expected || 0;
   const [expectedAmount, setExpectedAmount] = useState('0');
 
   // Update expectedAmount when totalExpected changes
