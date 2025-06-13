@@ -138,7 +138,7 @@ export default function FinancesPage() {
   });
 
   // Helper function to sort months within a tax year (most recent first)
-  const sortMonthsInTaxYear = (months: string[], taxYear: string): string[] => {
+  const sortMonthsInTaxYear = (months: string[]): string[] => {
     const monthOrder = ['April', 'May', 'June', 'July', 'August', 'September',
                        'October', 'November', 'December', 'January', 'February', 'March'];
 
@@ -283,7 +283,7 @@ export default function FinancesPage() {
             const taxYearData = financesByTaxYear[taxYear];
             const taxYearTotals = calculateTaxYearTotal(taxYearData);
             const isTaxYearExpanded = expandedMonths.has(taxYear);
-            const sortedMonthsInTaxYear = sortMonthsInTaxYear(Object.keys(taxYearData), taxYear);
+            const sortedMonthsInTaxYear = sortMonthsInTaxYear(Object.keys(taxYearData));
 
             return (
               <div key={taxYear} className="bg-white rounded-lg shadow-sm overflow-hidden">

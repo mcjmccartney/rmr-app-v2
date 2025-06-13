@@ -8,8 +8,7 @@ import {
   Chart as ChartJS,
   ArcElement,
   Tooltip,
-  Legend,
-  ChartOptions
+  Legend
 } from 'chart.js';
 import { Doughnut } from 'react-chartjs-2';
 
@@ -286,13 +285,13 @@ export default function MonthlyBreakdownModal({ finance, isOpen, onClose, onUpda
                     datasets: [{
                       data: chartData.map(item => item.value),
                       backgroundColor: chartData.map(item => item.color),
-                      borderWidth: 0,
-                      cutout: '60%'
+                      borderWidth: 0
                     }]
                   }}
                   options={{
                     responsive: true,
                     maintainAspectRatio: false,
+                    cutout: '60%',
                     plugins: {
                       legend: {
                         display: false
