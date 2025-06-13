@@ -19,6 +19,7 @@ export default function FinancesPage() {
   const [sessions, setSessions] = useState<any[]>([]);
   const [memberships, setMemberships] = useState<any[]>([]);
   const [selectedFinance, setSelectedFinance] = useState<Finance | null>(null);
+  const [selectedMonthFinances, setSelectedMonthFinances] = useState<Finance[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -85,14 +86,16 @@ export default function FinancesPage() {
     );
   });
 
-  const handleFinanceClick = (finance: Finance) => {
+  const handleFinanceClick = (finance: Finance, allMonthFinances: Finance[]) => {
     setSelectedFinance(finance);
+    setSelectedMonthFinances(allMonthFinances);
     setIsModalOpen(true);
   };
 
   const closeModal = () => {
     setIsModalOpen(false);
     setSelectedFinance(null);
+    setSelectedMonthFinances([]);
   };
 
   const handleAddFinance = () => {
@@ -315,7 +318,7 @@ export default function FinancesPage() {
                         <div key={`${taxYear}-${monthKey}`} className="border-b border-gray-100 last:border-b-0">
                           {/* Month Header */}
                           <button
-                            onClick={() => handleFinanceClick(monthFinances[0])} // Open sidepane for month breakdown
+                            onClick={() => handleFinanceClick(monthFinances[0], monthFinances)} // Open sidepane for month breakdown
                             className="w-full p-3 pl-8 flex items-center justify-between hover:bg-gray-50 transition-colors text-left"
                           >
                             <div>
@@ -341,6 +344,7 @@ export default function FinancesPage() {
       {/* Monthly Breakdown Modal */}
       <MonthlyBreakdownModal
         finance={selectedFinance}
+        allFinancesForMonth={selectedMonthFinances}
         isOpen={isModalOpen}
         onClose={closeModal}
         onUpdate={fetchAllData}

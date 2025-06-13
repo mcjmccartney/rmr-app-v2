@@ -32,14 +32,18 @@ interface BreakdownData {
 
 interface MonthlyBreakdownModalProps {
   finance: Finance | null;
+  allFinancesForMonth?: Finance[];
   isOpen: boolean;
   onClose: () => void;
   onUpdate: () => void;
 }
 
-export default function MonthlyBreakdownModal({ finance, isOpen, onClose, onUpdate }: MonthlyBreakdownModalProps) {
+export default function MonthlyBreakdownModal({ finance, allFinancesForMonth, isOpen, onClose, onUpdate }: MonthlyBreakdownModalProps) {
   const [isEditingExpected, setIsEditingExpected] = useState(false);
-  const [expectedAmount, setExpectedAmount] = useState(finance?.expected?.toString() || '0');
+
+  // Calculate total expected from all finance entries for this month
+  const totalExpected = allFinancesForMonth?.reduce((sum, f) => sum + (f.expected || 0), 0) || finance?.expected || 0;
+  const [expectedAmount, setExpectedAmount] = useState(totalExpected.toString());
   const [breakdownData, setBreakdownData] = useState<BreakdownData>({
     sessionTypes: {},
     memberships: { count: 0, total: 0 },
@@ -150,7 +154,7 @@ export default function MonthlyBreakdownModal({ finance, isOpen, onClose, onUpda
     }
   };
 
-  const difference = breakdownData.totalActual - (finance?.expected || 0);
+  const difference = breakdownData.totalActual - totalExpected;
   const differenceColor = difference >= 0 ? 'text-green-600' : 'text-red-600';
 
   // Create pie chart data
@@ -251,11 +255,11 @@ export default function MonthlyBreakdownModal({ finance, isOpen, onClose, onUpda
                   onClick={() => setIsEditingExpected(true)}
                 >
                   <h3 className="text-lg font-semibold mb-2">
-                    Expected: £{finance.expected?.toLocaleString() || '0'}
+                    Actual: £{breakdownData.totalActual.toLocaleString()}
                   </h3>
                   <div className="flex justify-between items-center mb-3">
                     <span className="text-gray-600">
-                      Actual: £{breakdownData.totalActual.toLocaleString()}
+                      Expected: £{totalExpected.toLocaleString()}
                     </span>
                     <span className={`font-medium ${differenceColor}`}>
                       {difference >= 0 ? '+' : ''}£{difference.toLocaleString()}
@@ -264,9 +268,9 @@ export default function MonthlyBreakdownModal({ finance, isOpen, onClose, onUpda
                   
                   {/* Progress Bar */}
                   <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
+                    <div
                       className="bg-[#973b00] h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${Math.min((breakdownData.totalActual / (finance.expected || 1)) * 100, 100)}%` }}
+                      style={{ width: `${Math.min((breakdownData.totalActual / (totalExpected || 1)) * 100, 100)}%` }}
                     ></div>
                   </div>
                 </div>
