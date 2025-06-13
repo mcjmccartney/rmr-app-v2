@@ -164,7 +164,7 @@ export default function MonthlyBreakdownModal({ finance, allFinancesForMonth, is
         const amount = index === 0 ? newExpectedAmount : 0;
         return supabase
           .from('finances')
-          .update({ expected_amount: Number(amount.toFixed(2)) })
+          .update({ expected: Number(amount.toFixed(2)) })
           .eq('id', financeEntry.id);
       });
 

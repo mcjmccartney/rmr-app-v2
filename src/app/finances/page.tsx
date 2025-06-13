@@ -44,7 +44,7 @@ export default function FinancesPage() {
       // Fetch finances
       const { data: financesData, error: financesError } = await supabase
         .from('finances')
-        .select('id, month, year, expected_amount, actual_amount, created_at')
+        .select('id, month, year, expected, created_at')
         .order('year', { ascending: false })
         .order('month');
 
@@ -87,8 +87,8 @@ export default function FinancesPage() {
       // Map database fields to interface fields
       const mappedFinances = (financesData || []).map(finance => ({
         ...finance,
-        expected: finance.expected_amount || 0,
-        actual: finance.actual_amount || 0
+        expected: finance.expected || 0,
+        actual: 0 // We'll calculate this from sessions/memberships
       }));
 
       console.log('Mapped finances data:', mappedFinances);
