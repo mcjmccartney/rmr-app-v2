@@ -20,8 +20,17 @@ CREATE INDEX IF NOT EXISTS idx_booking_terms_submitted ON booking_terms(submitte
 ALTER TABLE booking_terms ENABLE ROW LEVEL SECURITY;
 
 -- Create policy (allow all operations for now - you can restrict later)
-CREATE POLICY "Allow all operations on booking_terms" ON booking_terms
-    FOR ALL USING (true);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies
+        WHERE tablename = 'booking_terms'
+        AND policyname = 'Allow all operations on booking_terms'
+    ) THEN
+        CREATE POLICY "Allow all operations on booking_terms" ON booking_terms
+            FOR ALL USING (true);
+    END IF;
+END $$;
 
 -- Verify the structure
 SELECT 

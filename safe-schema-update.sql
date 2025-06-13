@@ -1,10 +1,10 @@
--- Behaviour Forms Schema for Supabase
--- Run this in your Supabase SQL Editor to create the behaviour questionnaires and behavioural briefs tables
+-- Safe Schema Update for Supabase
+-- This script can be run multiple times without errors
 
 -- Enable UUID extension (if not already enabled)
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- Create behavioural_briefs table
+-- Create behavioural_briefs table (if not exists)
 CREATE TABLE IF NOT EXISTS behavioural_briefs (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     client_id UUID REFERENCES clients(id) ON DELETE CASCADE,
@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS behavioural_briefs (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create behaviour_questionnaires table
+-- Create behaviour_questionnaires table (if not exists)
 CREATE TABLE IF NOT EXISTS behaviour_questionnaires (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     client_id UUID REFERENCES clients(id) ON DELETE CASCADE,
@@ -113,7 +113,15 @@ CREATE TABLE IF NOT EXISTS behaviour_questionnaires (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create indexes for better performance
+-- Create booking_terms table (if not exists)
+CREATE TABLE IF NOT EXISTS booking_terms (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    email VARCHAR(255) NOT NULL,
+    submitted TIMESTAMP WITH TIME ZONE NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Create indexes (if not exists)
 CREATE INDEX IF NOT EXISTS idx_behavioural_briefs_email ON behavioural_briefs(email);
 CREATE INDEX IF NOT EXISTS idx_behavioural_briefs_client_id ON behavioural_briefs(client_id);
 CREATE INDEX IF NOT EXISTS idx_behavioural_briefs_submitted_at ON behavioural_briefs(submitted_at);
@@ -122,6 +130,33 @@ CREATE INDEX IF NOT EXISTS idx_behaviour_questionnaires_email ON behaviour_quest
 CREATE INDEX IF NOT EXISTS idx_behaviour_questionnaires_client_id ON behaviour_questionnaires(client_id);
 CREATE INDEX IF NOT EXISTS idx_behaviour_questionnaires_submitted_at ON behaviour_questionnaires(submitted_at);
 CREATE INDEX IF NOT EXISTS idx_behaviour_questionnaires_email_dog ON behaviour_questionnaires(email, dog_name);
+
+CREATE INDEX IF NOT EXISTS idx_booking_terms_email ON booking_terms(email);
+CREATE INDEX IF NOT EXISTS idx_booking_terms_submitted ON booking_terms(submitted);
+
+-- Enable Row Level Security (if not already enabled)
+ALTER TABLE behavioural_briefs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE behaviour_questionnaires ENABLE ROW LEVEL SECURITY;
+ALTER TABLE booking_terms ENABLE ROW LEVEL SECURITY;
+
+-- Add booking_terms_signed fields to clients table (if not already exists)
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS booking_terms_signed BOOLEAN DEFAULT false;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS booking_terms_signed_date TIMESTAMP WITH TIME ZONE;
+
+-- Remove email column from sessions table if it exists (this was causing the constraint error)
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 
+        FROM information_schema.columns 
+        WHERE table_name = 'sessions' 
+        AND column_name = 'email' 
+        AND table_schema = 'public'
+    ) THEN
+        ALTER TABLE sessions DROP COLUMN email;
+        RAISE NOTICE 'Removed email column from sessions table';
+    END IF;
+END $$;
 
 -- Create updated_at trigger function (if not already exists)
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -132,61 +167,46 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
--- Create triggers to automatically update updated_at
+-- Create triggers (drop and recreate to avoid conflicts)
+DROP TRIGGER IF EXISTS update_behavioural_briefs_updated_at ON behavioural_briefs;
 CREATE TRIGGER update_behavioural_briefs_updated_at BEFORE UPDATE ON behavioural_briefs
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_behaviour_questionnaires_updated_at ON behaviour_questionnaires;
 CREATE TRIGGER update_behaviour_questionnaires_updated_at BEFORE UPDATE ON behaviour_questionnaires
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- Enable Row Level Security (RLS)
-ALTER TABLE behavioural_briefs ENABLE ROW LEVEL SECURITY;
-ALTER TABLE behaviour_questionnaires ENABLE ROW LEVEL SECURITY;
-
--- Create policies (allow all operations for now - you can restrict later)
+-- Create policies safely (check if they exist first)
 DO $$
 BEGIN
+    -- Behavioural briefs policy
     IF NOT EXISTS (
-        SELECT 1 FROM pg_policies
-        WHERE tablename = 'behavioural_briefs'
+        SELECT 1 FROM pg_policies 
+        WHERE tablename = 'behavioural_briefs' 
         AND policyname = 'Allow all operations on behavioural_briefs'
     ) THEN
         CREATE POLICY "Allow all operations on behavioural_briefs" ON behavioural_briefs
             FOR ALL USING (true);
     END IF;
-END $$;
-
-DO $$
-BEGIN
+    
+    -- Behaviour questionnaires policy
     IF NOT EXISTS (
-        SELECT 1 FROM pg_policies
-        WHERE tablename = 'behaviour_questionnaires'
+        SELECT 1 FROM pg_policies 
+        WHERE tablename = 'behaviour_questionnaires' 
         AND policyname = 'Allow all operations on behaviour_questionnaires'
     ) THEN
         CREATE POLICY "Allow all operations on behaviour_questionnaires" ON behaviour_questionnaires
             FOR ALL USING (true);
     END IF;
-END $$;
-
--- Add booking_terms_signed fields to clients table (if not already exists)
-ALTER TABLE clients ADD COLUMN IF NOT EXISTS booking_terms_signed BOOLEAN DEFAULT false;
-ALTER TABLE clients ADD COLUMN IF NOT EXISTS booking_terms_signed_date TIMESTAMP WITH TIME ZONE;
-
--- Remove email column from sessions table if it exists (this was causing the constraint error)
--- First check if the column exists and has data
-DO $$
-BEGIN
-    -- Check if email column exists in sessions table
-    IF EXISTS (
-        SELECT 1 
-        FROM information_schema.columns 
-        WHERE table_name = 'sessions' 
-        AND column_name = 'email' 
-        AND table_schema = 'public'
+    
+    -- Booking terms policy
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies 
+        WHERE tablename = 'booking_terms' 
+        AND policyname = 'Allow all operations on booking_terms'
     ) THEN
-        -- If it exists, drop it (it shouldn't be there based on your schema)
-        ALTER TABLE sessions DROP COLUMN email;
-        RAISE NOTICE 'Removed email column from sessions table';
+        CREATE POLICY "Allow all operations on booking_terms" ON booking_terms
+            FOR ALL USING (true);
     END IF;
 END $$;
 
@@ -197,6 +217,6 @@ SELECT
   data_type,
   is_nullable
 FROM information_schema.columns 
-WHERE table_name IN ('behavioural_briefs', 'behaviour_questionnaires', 'clients', 'sessions')
+WHERE table_name IN ('behavioural_briefs', 'behaviour_questionnaires', 'booking_terms', 'clients', 'sessions')
   AND table_schema = 'public'
 ORDER BY table_name, ordinal_position;
