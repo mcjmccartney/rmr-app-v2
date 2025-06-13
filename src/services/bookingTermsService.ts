@@ -3,19 +3,17 @@ import { supabase } from '@/lib/supabase';
 export interface BookingTerms {
   id: string;
   email: string;
-  name: string;
   submitted: string;
   created_at?: string;
 }
 
 export const bookingTermsService = {
   // Create new booking terms entry
-  async create(data: { email: string; name: string }): Promise<BookingTerms> {
+  async create(data: { email: string }): Promise<BookingTerms> {
     const { data: result, error } = await supabase
       .from('booking_terms')
       .insert([{
         email: data.email.toLowerCase().trim(),
-        name: data.name.trim(),
         submitted: new Date().toISOString()
       }])
       .select()
@@ -103,7 +101,7 @@ export const bookingTermsService = {
   },
 
   // Submit booking terms and update client profile
-  async submitAndUpdateClient(data: { email: string; name: string }): Promise<BookingTerms> {
+  async submitAndUpdateClient(data: { email: string }): Promise<BookingTerms> {
     // Create booking terms entry
     const bookingTerms = await this.create(data);
 
