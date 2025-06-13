@@ -157,11 +157,32 @@ export default function MonthlyBreakdownModal({ finance, allFinancesForMonth, is
 
       console.log(`Updating expected amount for ${finance.month} ${finance.year} to £${newExpectedAmount}`);
 
+      // First, let's test if we can read the records we're trying to update
+      console.log('Testing read access to records...');
+      for (const entry of allFinancesForMonth) {
+        const { data: testRead, error: readError } = await supabase
+          .from('finances')
+          .select('*')
+          .eq('id', entry.id)
+          .single();
+
+        if (readError) {
+          console.error(`Cannot read record ${entry.id}:`, readError);
+          throw new Error(`Cannot read record: ${readError.message}`);
+        }
+        console.log(`Record ${entry.id} current data:`, testRead);
+      }
+
       // Strategy: Put the entire expected amount in the first entry, set others to 0
       // This ensures the main page calculation (sum of all entries) shows the correct total
 
       const updatePromises = allFinancesForMonth.map((financeEntry, index) => {
         const amount = index === 0 ? newExpectedAmount : 0;
+        console.log(`Preparing update for entry ${index + 1}:`, {
+          id: financeEntry.id,
+          amount: amount,
+          updatePayload: { expected: Number(amount.toFixed(2)) }
+        });
         return supabase
           .from('finances')
           .update({ expected: Number(amount.toFixed(2)) })
@@ -172,8 +193,14 @@ export default function MonthlyBreakdownModal({ finance, allFinancesForMonth, is
       const errors = results.filter(result => result.error);
 
       if (errors.length > 0) {
-        console.error('Update failed:', errors);
-        throw new Error('Failed to update expected amount');
+        console.error('Detailed update errors:', errors.map(e => ({
+          error: e.error,
+          message: e.error?.message,
+          details: e.error?.details,
+          hint: e.error?.hint,
+          code: e.error?.code
+        })));
+        throw new Error(`Failed to update expected amount: ${errors[0].error?.message || 'Unknown error'}`);
       }
 
       console.log(`Successfully updated ${allFinancesForMonth.length} finance entries`);
