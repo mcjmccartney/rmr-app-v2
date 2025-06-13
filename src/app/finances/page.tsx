@@ -46,18 +46,32 @@ export default function FinancesPage() {
 
       console.log('Finances data:', financesData);
 
-      // Fetch sessions - try different possible column names
-      const { data: sessionsData, error: sessionsError } = await supabase
-        .from('sessions')
-        .select('*')
-        .order('bookingDate', { ascending: false });
+      // Try to fetch sessions - check if table exists and has data
+      let sessionsData = null;
+      let sessionsError = null;
+
+      try {
+        const result = await supabase
+          .from('sessions')
+          .select('*')
+          .limit(5);
+        sessionsData = result.data;
+        sessionsError = result.error;
+      } catch (error) {
+        console.error('Sessions table access error:', error);
+        sessionsError = error;
+      }
 
       if (sessionsError) {
         console.error('Sessions error:', sessionsError);
         // Don't throw error for sessions, just log it
       }
 
-      console.log('Sessions data sample:', sessionsData?.slice(0, 3));
+      console.log('Sessions data:', {
+        count: sessionsData?.length || 0,
+        sample: sessionsData?.slice(0, 2),
+        error: sessionsError
+      });
 
       // Fetch memberships
       const { data: membershipsData, error: membershipsError } = await supabase
@@ -70,7 +84,11 @@ export default function FinancesPage() {
         // Don't throw error for memberships, just log it
       }
 
-      console.log('Memberships data sample:', membershipsData?.slice(0, 3));
+      console.log('Memberships data:', {
+        count: membershipsData?.length || 0,
+        sample: membershipsData?.slice(0, 2),
+        error: membershipsError
+      });
 
       setFinances(financesData || []);
       setSessions(sessionsData || []);
@@ -205,7 +223,7 @@ export default function FinancesPage() {
       const matches = sessionMonth === monthNum && sessionYear === year;
 
       if (matches) {
-        console.log(`Found session:`, session);
+        console.log(`Found session for ${month} ${year}:`, session);
       }
 
       return matches;
@@ -218,8 +236,9 @@ export default function FinancesPage() {
       const membershipYear = membershipDate.getFullYear();
       const matches = membershipMonth === monthNum && membershipYear === year;
 
-      if (matches) {
-        console.log(`Found membership:`, membership);
+      // Only log first few matches to avoid spam
+      if (matches && monthMemberships.length < 3) {
+        console.log(`Found membership for ${month} ${year}:`, membership);
       }
 
       return matches;
