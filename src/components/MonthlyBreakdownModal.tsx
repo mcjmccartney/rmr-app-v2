@@ -147,6 +147,12 @@ export default function MonthlyBreakdownModal({ finance, allFinancesForMonth, is
     console.log('All finances for month:', allFinancesForMonth);
     console.log('Expected amount:', expectedAmount);
 
+    // First, let's check what the current data looks like
+    if (allFinancesForMonth && allFinancesForMonth.length > 0) {
+      console.log('First finance entry structure:', Object.keys(allFinancesForMonth[0]));
+      console.log('First finance entry data:', allFinancesForMonth[0]);
+    }
+
     if (!finance || !allFinancesForMonth) {
       console.error('Missing required data:', { finance, allFinancesForMonth });
       return;
@@ -167,6 +173,21 @@ export default function MonthlyBreakdownModal({ finance, allFinancesForMonth, is
         alert('Amount cannot be negative');
         return;
       }
+
+      // First, let's test if we can read the current record
+      console.log('Testing read access to finances table...');
+      const { data: testRead, error: readError } = await supabase
+        .from('finances')
+        .select('*')
+        .eq('id', allFinancesForMonth[0].id)
+        .single();
+
+      if (readError) {
+        console.error('Cannot read from finances table:', readError);
+        throw new Error(`Cannot read from finances table: ${readError.message}`);
+      }
+
+      console.log('Current record in database:', testRead);
 
       // If there's only one finance entry, update it directly
       if (allFinancesForMonth.length === 1) {
@@ -206,13 +227,18 @@ export default function MonthlyBreakdownModal({ finance, allFinancesForMonth, is
         const results = await Promise.all(updates);
         const errors = results.filter(result => result.error);
         if (errors.length > 0) {
-          console.error('Update errors details:', errors.map(e => ({
-            message: e.error?.message,
-            details: e.error?.details,
-            hint: e.error?.hint,
-            code: e.error?.code
-          })));
-          throw new Error(`Failed to update ${errors.length} entries: ${errors[0].error?.message}`);
+          console.error('Full error objects:', errors);
+          console.error('Update errors details:', errors.map(e => {
+            console.log('Individual error:', e);
+            return {
+              message: e.error?.message,
+              details: e.error?.details,
+              hint: e.error?.hint,
+              code: e.error?.code,
+              fullError: e.error
+            };
+          }));
+          throw new Error(`Failed to update ${errors.length} entries: ${errors[0].error?.message || 'Unknown error'}`);
         }
         console.log('All updates successful:', results);
       }
