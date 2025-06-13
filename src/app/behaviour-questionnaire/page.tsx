@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
 import { BehaviourQuestionnaire } from '@/types';
 
-export default function BehaviourQuestionnairePage() {
+function BehaviourQuestionnaireForm() {
   const { dispatch, createClient, updateClient, findClientByEmail } = useApp();
   const searchParams = useSearchParams();
   const [formData, setFormData] = useState({
@@ -1154,5 +1154,15 @@ export default function BehaviourQuestionnairePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function BehaviourQuestionnairePage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#4f6749' }}>
+      <div className="text-white">Loading...</div>
+    </div>}>
+      <BehaviourQuestionnaireForm />
+    </Suspense>
   );
 }
