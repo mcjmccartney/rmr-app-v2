@@ -137,15 +137,22 @@ export default function FinancesPage() {
     return yearB - yearA;
   });
 
-  // Helper function to sort months within a tax year chronologically
+  // Helper function to sort months within a tax year (most recent first)
   const sortMonthsInTaxYear = (months: string[], taxYear: string): string[] => {
     const monthOrder = ['April', 'May', 'June', 'July', 'August', 'September',
                        'October', 'November', 'December', 'January', 'February', 'March'];
 
     return months.sort((a, b) => {
-      const [monthA] = a.split(' ');
-      const [monthB] = b.split(' ');
-      return monthOrder.indexOf(monthA) - monthOrder.indexOf(monthB);
+      const [monthA, yearA] = a.split(' ');
+      const [monthB, yearB] = b.split(' ');
+
+      // First sort by year (most recent first)
+      if (yearA !== yearB) {
+        return parseInt(yearB) - parseInt(yearA);
+      }
+
+      // Then sort by month within the same year (most recent first)
+      return monthOrder.indexOf(monthB) - monthOrder.indexOf(monthA);
     });
   };
 
