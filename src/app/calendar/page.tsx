@@ -15,7 +15,7 @@ import { formatTime, formatDayDate, formatMonthYear, combineDateAndTime } from '
 import { ChevronLeft, ChevronRight, Calendar, UserPlus } from 'lucide-react';
 
 export default function CalendarPage() {
-  const { state } = useApp();
+  const { state, updateClient } = useApp();
   const router = useRouter();
 
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -331,6 +331,12 @@ export default function CalendarPage() {
                           hasFilledQuestionnaire,
                           behaviourQuestionnaireId: client.behaviourQuestionnaireId
                         });
+
+                        // One-time fix for Matthew's missing dog name
+                        if (!client.dogName && client.id === '1ea6ff58-89da-453b-94b2-63dabb4b1294') {
+                          console.log('🔧 Fixing Matthew\'s missing dog name...');
+                          updateClient(client.id, { dogName: 'Kuki' });
+                        }
                       }
 
                       // Use amber color if both conditions are met, otherwise use default amber-800

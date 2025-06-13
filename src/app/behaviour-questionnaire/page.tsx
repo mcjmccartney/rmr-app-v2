@@ -215,10 +215,11 @@ function BehaviourQuestionnaireForm() {
       // Add questionnaire to state
       dispatch({ type: 'ADD_BEHAVIOUR_QUESTIONNAIRE', payload: createdQuestionnaire });
 
-      // Update client with questionnaire reference for easier lookup
+      // Update client with questionnaire reference and dog name for easier lookup
       const finalClientId = shouldCreateClient ? questionnaireData.clientId : existingClient!.id;
       await updateClient(finalClientId, {
         behaviourQuestionnaireId: createdQuestionnaire.id,
+        dogName: formData.dogName, // Ensure dog name is set on client
       });
 
       // Navigate back silently (no alert as per user preference)
