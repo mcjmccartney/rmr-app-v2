@@ -16,8 +16,8 @@ interface Finance {
 
 export default function FinancesPage() {
   const [finances, setFinances] = useState<Finance[]>([]);
-  const [sessions, setSessions] = useState<any[]>([]);
-  const [memberships, setMemberships] = useState<any[]>([]);
+  const [sessions, setSessions] = useState<Array<{id: string; sessionType: string; quote: number; bookingDate: string}>>([]);
+  const [memberships, setMemberships] = useState<Array<{id: string; amount: number; date: string}>>([]);
   const [selectedFinance, setSelectedFinance] = useState<Finance | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -138,15 +138,7 @@ export default function FinancesPage() {
     });
   };
 
-  const toggleMonth = (monthKey: string) => {
-    const newExpandedMonths = new Set(expandedMonths);
-    if (newExpandedMonths.has(monthKey)) {
-      newExpandedMonths.delete(monthKey);
-    } else {
-      newExpandedMonths.add(monthKey);
-    }
-    setExpandedMonths(newExpandedMonths);
-  };
+
 
   const toggleTaxYear = (taxYear: string) => {
     const newExpandedMonths = new Set(expandedMonths);

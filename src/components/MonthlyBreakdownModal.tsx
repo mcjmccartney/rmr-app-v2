@@ -13,18 +13,7 @@ interface Finance {
   created?: string;
 }
 
-interface Session {
-  id: string;
-  sessionType: string;
-  quote: number;
-  bookingDate: string;
-}
 
-interface Membership {
-  id: string;
-  amount: number;
-  date: string;
-}
 
 interface BreakdownData {
   sessionTypes: Record<string, { count: number; total: number }>;
@@ -33,7 +22,7 @@ interface BreakdownData {
 }
 
 interface MonthlyBreakdownModalProps {
-  finance: Finance;
+  finance: Finance | null;
   isOpen: boolean;
   onClose: () => void;
   onUpdate: () => void;
@@ -41,7 +30,7 @@ interface MonthlyBreakdownModalProps {
 
 export default function MonthlyBreakdownModal({ finance, isOpen, onClose, onUpdate }: MonthlyBreakdownModalProps) {
   const [isEditingExpected, setIsEditingExpected] = useState(false);
-  const [expectedAmount, setExpectedAmount] = useState(finance.expected?.toString() || '0');
+  const [expectedAmount, setExpectedAmount] = useState(finance?.expected?.toString() || '0');
   const [breakdownData, setBreakdownData] = useState<BreakdownData>({
     sessionTypes: {},
     memberships: { count: 0, total: 0 },
@@ -50,13 +39,17 @@ export default function MonthlyBreakdownModal({ finance, isOpen, onClose, onUpda
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchBreakdownData();
-  }, [finance.month, finance.year]);
+    if (finance) {
+      fetchBreakdownData();
+    }
+  }, [finance?.month, finance?.year]);
 
   const fetchBreakdownData = async () => {
+    if (!finance) return;
+
     try {
       setLoading(true);
-      
+
       // Get sessions for this month/year
       const { data: sessions, error: sessionsError } = await supabase
         .from('sessions')
@@ -121,6 +114,8 @@ export default function MonthlyBreakdownModal({ finance, isOpen, onClose, onUpda
   };
 
   const handleExpectedUpdate = async () => {
+    if (!finance) return;
+
     try {
       const { error } = await supabase
         .from('finances')
@@ -128,7 +123,7 @@ export default function MonthlyBreakdownModal({ finance, isOpen, onClose, onUpda
         .eq('id', finance.id);
 
       if (error) throw error;
-      
+
       setIsEditingExpected(false);
       onUpdate();
     } catch (error) {
@@ -136,7 +131,7 @@ export default function MonthlyBreakdownModal({ finance, isOpen, onClose, onUpda
     }
   };
 
-  const difference = breakdownData.totalActual - (finance.expected || 0);
+  const difference = breakdownData.totalActual - (finance?.expected || 0);
   const differenceColor = difference >= 0 ? 'text-green-600' : 'text-red-600';
 
   // Create pie chart data
@@ -167,6 +162,8 @@ export default function MonthlyBreakdownModal({ finance, isOpen, onClose, onUpda
     };
     return colors[sessionType] || '#6B7280';
   }
+
+  if (!finance) return null;
 
   return (
     <SlideUpModal
