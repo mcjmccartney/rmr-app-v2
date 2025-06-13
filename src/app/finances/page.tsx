@@ -44,34 +44,16 @@ export default function FinancesPage() {
         throw financesError;
       }
 
-      console.log('Finances data:', financesData);
-
-      // Try to fetch sessions - check if table exists and has data
-      let sessionsData = null;
-      let sessionsError = null;
-
-      try {
-        const result = await supabase
-          .from('sessions')
-          .select('session_type, booking_date, quote')
-          .order('booking_date', { ascending: false });
-        sessionsData = result.data;
-        sessionsError = result.error;
-      } catch (error) {
-        console.error('Sessions table access error:', error);
-        sessionsError = error;
-      }
+      // Fetch sessions
+      const { data: sessionsData, error: sessionsError } = await supabase
+        .from('sessions')
+        .select('session_type, booking_date, quote')
+        .order('booking_date', { ascending: false });
 
       if (sessionsError) {
         console.error('Sessions error:', sessionsError);
         // Don't throw error for sessions, just log it
       }
-
-      console.log('Sessions data:', {
-        count: sessionsData?.length || 0,
-        sample: sessionsData?.slice(0, 2),
-        error: sessionsError
-      });
 
       // Fetch memberships
       const { data: membershipsData, error: membershipsError } = await supabase
@@ -84,21 +66,9 @@ export default function FinancesPage() {
         // Don't throw error for memberships, just log it
       }
 
-      console.log('Memberships data:', {
-        count: membershipsData?.length || 0,
-        sample: membershipsData?.slice(0, 2),
-        error: membershipsError
-      });
-
       setFinances(financesData || []);
       setSessions(sessionsData || []);
       setMemberships(membershipsData || []);
-
-      console.log('Data loaded successfully:', {
-        finances: financesData?.length || 0,
-        sessions: sessionsData?.length || 0,
-        memberships: membershipsData?.length || 0
-      });
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -150,8 +120,6 @@ export default function FinancesPage() {
     const taxYear = getUKTaxYear(finance.month, finance.year);
     const monthKey = `${finance.month} ${finance.year}`;
 
-    console.log(`Processing finance: ${finance.month} ${finance.year} -> Tax Year: ${taxYear}`);
-
     if (!acc[taxYear]) {
       acc[taxYear] = {};
     }
@@ -161,9 +129,6 @@ export default function FinancesPage() {
     acc[taxYear][monthKey].push(finance);
     return acc;
   }, {} as Record<string, Record<string, Finance[]>>);
-
-  console.log('Finances by tax year:', financesByTaxYear);
-  console.log('Filtered finances count:', filteredFinances.length);
 
   // Sort tax years (most recent first)
   const sortedTaxYears = Object.keys(financesByTaxYear).sort((a, b) => {
@@ -207,10 +172,6 @@ export default function FinancesPage() {
   const calculateActualIncome = (month: string, year: number) => {
     const monthNum = getMonthNumber(month);
 
-    console.log(`Calculating actual income for ${month} ${year} (month ${monthNum})`);
-    console.log(`Total sessions available: ${sessions.length}`);
-    console.log(`Total memberships available: ${memberships.length}`);
-
     // Get sessions for this month/year
     const monthSessions = sessions.filter(session => {
       // Use booking_date column from your sessions table
@@ -222,9 +183,7 @@ export default function FinancesPage() {
       const sessionYear = sessionDate.getFullYear();
       const matches = sessionMonth === monthNum && sessionYear === year;
 
-      if (matches) {
-        console.log(`Found session for ${month} ${year}:`, session);
-      }
+
 
       return matches;
     });
@@ -236,10 +195,7 @@ export default function FinancesPage() {
       const membershipYear = membershipDate.getFullYear();
       const matches = membershipMonth === monthNum && membershipYear === year;
 
-      // Only log first few matches to avoid spam
-      if (matches && monthMemberships.length < 3) {
-        console.log(`Found membership for ${month} ${year}:`, membership);
-      }
+
 
       return matches;
     });
@@ -255,7 +211,7 @@ export default function FinancesPage() {
       return sum + amount;
     }, 0);
 
-    console.log(`${month} ${year} totals - Sessions: £${sessionTotal}, Memberships: £${membershipTotal}, Total: £${sessionTotal + membershipTotal}`);
+
 
     return sessionTotal + membershipTotal;
   };
