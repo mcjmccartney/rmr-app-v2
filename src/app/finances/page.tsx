@@ -273,6 +273,18 @@ export default function FinancesPage() {
     const sessionsTotal = monthSessions.reduce((sum, session) => sum + (session.quote || 0), 0);
     const membershipsTotal = monthMemberships.reduce((sum, membership) => sum + (membership.amount || membership.price || 0), 0);
 
+    // Debug logging for April 2025
+    if (month === 'April' && year === 2025) {
+      console.log('April 2025 Debug:', {
+        monthSessions: monthSessions.length,
+        monthMemberships: monthMemberships.length,
+        sessionsTotal,
+        membershipsTotal,
+        sessions: monthSessions,
+        memberships: monthMemberships
+      });
+    }
+
     return {
       sessions: sessionsTotal,
       memberships: membershipsTotal,
