@@ -142,40 +142,68 @@ export default function MonthlyBreakdownModal({ finance, allFinancesForMonth, is
   };
 
   const handleExpectedUpdate = async () => {
-    if (!finance || !allFinancesForMonth) return;
+    console.log('Save clicked - Starting update process');
+    console.log('Finance:', finance);
+    console.log('All finances for month:', allFinancesForMonth);
+    console.log('Expected amount:', expectedAmount);
+
+    if (!finance || !allFinancesForMonth) {
+      console.error('Missing required data:', { finance, allFinancesForMonth });
+      return;
+    }
 
     try {
       const newExpectedAmount = parseFloat(expectedAmount);
+      console.log('Parsed expected amount:', newExpectedAmount);
+
+      if (isNaN(newExpectedAmount)) {
+        console.error('Invalid number:', expectedAmount);
+        return;
+      }
 
       // If there's only one finance entry, update it directly
       if (allFinancesForMonth.length === 1) {
-        const { error } = await supabase
+        console.log('Updating single finance entry:', allFinancesForMonth[0].id);
+        const { data, error } = await supabase
           .from('finances')
           .update({ expected: newExpectedAmount })
-          .eq('id', allFinancesForMonth[0].id);
+          .eq('id', allFinancesForMonth[0].id)
+          .select();
 
-        if (error) throw error;
+        if (error) {
+          console.error('Supabase error:', error);
+          throw error;
+        }
+        console.log('Update successful:', data);
       } else {
+        console.log('Updating multiple finance entries:', allFinancesForMonth.length);
         // If there are multiple entries, update the first one with the new total
         // and set others to 0 to avoid double counting
         const updates = allFinancesForMonth.map((financeEntry, index) => {
+          const amount = index === 0 ? newExpectedAmount : 0;
+          console.log(`Updating entry ${index + 1}:`, financeEntry.id, 'with amount:', amount);
           return supabase
             .from('finances')
-            .update({ expected: index === 0 ? newExpectedAmount : 0 })
-            .eq('id', financeEntry.id);
+            .update({ expected: amount })
+            .eq('id', financeEntry.id)
+            .select();
         });
 
         const results = await Promise.all(updates);
         const errors = results.filter(result => result.error);
         if (errors.length > 0) {
+          console.error('Update errors:', errors);
           throw new Error(`Failed to update ${errors.length} entries`);
         }
+        console.log('All updates successful:', results);
       }
 
+      console.log('Closing edit mode and calling onUpdate');
       setIsEditingExpected(false);
       onUpdate();
     } catch (error) {
       console.error('Error updating expected amount:', error);
+      alert('Failed to save expected amount. Please try again.');
     }
   };
 
@@ -239,6 +267,7 @@ export default function MonthlyBreakdownModal({ finance, allFinancesForMonth, is
                       value={expectedAmount}
                       onChange={(e) => {
                         const value = e.target.value.replace(/[^0-9.]/g, '');
+                        console.log('Input changed:', value);
                         setExpectedAmount(value);
                       }}
                       className="w-full text-lg font-semibold text-center border border-gray-300 rounded-lg p-3 pl-8 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
