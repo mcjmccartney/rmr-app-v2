@@ -298,7 +298,27 @@ export default function MonthlyBreakdownModal({ finance, isOpen, onClose, onUpda
                         display: false
                       },
                       tooltip: {
-                        enabled: false
+                        enabled: true,
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleColor: 'white',
+                        bodyColor: 'white',
+                        borderColor: 'rgba(255, 255, 255, 0.2)',
+                        borderWidth: 1,
+                        cornerRadius: 8,
+                        displayColors: true,
+                        callbacks: {
+                          label: function(context: any) {
+                            const label = context.label || '';
+                            const value = context.parsed || 0;
+                            const total = context.dataset.data.reduce((a: number, b: number) => a + b, 0);
+                            const percentage = ((value / total) * 100).toFixed(1);
+                            const item = chartData[context.dataIndex];
+                            return [
+                              `${label}: £${value.toLocaleString()}`,
+                              `${item.count} entries (${percentage}%)`
+                            ];
+                          }
+                        }
                       }
                     }
                   }}
