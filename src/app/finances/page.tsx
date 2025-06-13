@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import Header from '@/components/layout/Header';
 import MonthlyBreakdownModal from '@/components/MonthlyBreakdownModal';
-import { ChevronDown, ChevronRight, Plus } from 'lucide-react';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 
 interface Finance {
   id: string;
@@ -123,10 +123,7 @@ export default function FinancesPage() {
     setSelectedMonthFinances([]);
   };
 
-  const handleAddFinance = () => {
-    // TODO: Implement add finance functionality
-    console.log('Add finance clicked');
-  };
+
 
   // Helper function to determine UK tax year from month and year
   const getUKTaxYear = (month: string, year: number): string => {
@@ -251,6 +248,38 @@ export default function FinancesPage() {
     return sessionTotal + membershipTotal;
   };
 
+  // Calculate Sessions and Membership totals separately for a month
+  const calculateMonthlyBreakdown = (month: string, year: number) => {
+    const monthNum = getMonthNumber(month);
+
+    // Get sessions for this month/year
+    const monthSessions = sessions.filter(session => {
+      const dateField = session.booking_date;
+      if (!dateField) return false;
+      const sessionDate = new Date(dateField);
+      const sessionMonth = sessionDate.getMonth() + 1;
+      const sessionYear = sessionDate.getFullYear();
+      return sessionMonth === monthNum && sessionYear === year;
+    });
+
+    // Get memberships for this month/year
+    const monthMemberships = memberships.filter(membership => {
+      const membershipDate = new Date(membership.date);
+      const membershipMonth = membershipDate.getMonth() + 1;
+      const membershipYear = membershipDate.getFullYear();
+      return membershipMonth === monthNum && membershipYear === year;
+    });
+
+    const sessionsTotal = monthSessions.reduce((sum, session) => sum + (session.quote || 0), 0);
+    const membershipsTotal = monthMemberships.reduce((sum, membership) => sum + (membership.amount || membership.price || 0), 0);
+
+    return {
+      sessions: sessionsTotal,
+      memberships: membershipsTotal,
+      total: sessionsTotal + membershipsTotal
+    };
+  };
+
   const calculateMonthlyTotal = (finances: Finance[], month: string, year: number) => {
     const expectedTotal = finances.reduce((total, finance) => total + (finance.expected || 0), 0);
     const actualTotal = calculateActualIncome(month, year);
@@ -285,13 +314,6 @@ export default function FinancesPage() {
       <div className="bg-amber-800">
         <Header
           title="Finances"
-          buttons={[
-            {
-              icon: Plus,
-              onClick: handleAddFinance,
-              title: 'Add Finance Entry'
-            }
-          ]}
           showSearch
           onSearch={setSearchQuery}
           searchPlaceholder="Search"
@@ -338,6 +360,7 @@ export default function FinancesPage() {
                       const [month, yearStr] = monthKey.split(' ');
                       const year = parseInt(yearStr);
                       const monthlyTotals = calculateMonthlyTotal(monthFinances, month, year);
+                      const monthlyBreakdown = calculateMonthlyBreakdown(month, year);
 
                       return (
                         <div key={`${taxYear}-${monthKey}`} className="border-b border-gray-100 last:border-b-0">
@@ -348,9 +371,10 @@ export default function FinancesPage() {
                           >
                             <div>
                               <h3 className="font-medium text-gray-900">{monthKey}</h3>
-                              <p className="text-sm text-gray-500">
-                                Actual: £{monthlyTotals.actual.toLocaleString()} | Expected: £{monthlyTotals.expected.toLocaleString()}
-                              </p>
+                              <div className="text-sm text-gray-500 space-y-1">
+                                <p>Sessions: £{monthlyBreakdown.sessions.toLocaleString()} | Membership: £{monthlyBreakdown.memberships.toLocaleString()}</p>
+                                <p>Actual: £{monthlyTotals.actual.toLocaleString()} | Expected: £{monthlyTotals.expected.toLocaleString()}</p>
+                              </div>
                             </div>
                             <ChevronRight size={16} className="text-gray-400" />
                           </button>
