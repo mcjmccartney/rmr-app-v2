@@ -7,7 +7,7 @@ import { BehaviourQuestionnaire } from '@/types';
 import { behaviourQuestionnaireService } from '@/services/behaviourQuestionnaireService';
 
 function BehaviourQuestionnaireForm() {
-  const { dispatch, createClient, findClientByEmail, state } = useApp();
+  const { dispatch, createClient, updateClient, findClientByEmail, state } = useApp();
   const searchParams = useSearchParams();
   const [formData, setFormData] = useState({
     // Owner Information
@@ -215,8 +215,11 @@ function BehaviourQuestionnaireForm() {
       // Add questionnaire to state
       dispatch({ type: 'ADD_BEHAVIOUR_QUESTIONNAIRE', payload: createdQuestionnaire });
 
-      // No need to update client with questionnaire reference -
-      // the questionnaire already has the client_id reference
+      // Update client with questionnaire reference for easier lookup
+      const finalClientId = shouldCreateClient ? questionnaireData.clientId : existingClient!.id;
+      await updateClient(finalClientId, {
+        behaviourQuestionnaireId: createdQuestionnaire.id,
+      });
 
       // Navigate back silently (no alert as per user preference)
       window.location.href = '/';

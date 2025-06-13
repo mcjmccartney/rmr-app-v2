@@ -12,15 +12,27 @@ interface SessionModalProps {
   onEditSession: (session: Session) => void;
   onEditClient: (session: Session) => void;
   onCreateSessionPlan?: (session: Session) => void;
+  onViewBehaviouralBrief?: (behaviouralBriefId: string) => void;
+  onViewBehaviourQuestionnaire?: (behaviourQuestionnaireId: string) => void;
 }
 
-export default function SessionModal({ session, isOpen, onClose, onEditSession, onEditClient, onCreateSessionPlan }: SessionModalProps) {
+export default function SessionModal({ session, isOpen, onClose, onEditSession, onEditClient, onCreateSessionPlan, onViewBehaviouralBrief, onViewBehaviourQuestionnaire }: SessionModalProps) {
   const { state, deleteSession } = useApp();
 
   if (!session) return null;
 
   // Find the client for this session
   const client = state.clients.find(c => c.id === session.clientId);
+
+  // Find behavioural brief and questionnaire for this client
+  const behaviouralBrief = client?.behaviouralBriefId ?
+    state.behaviouralBriefs.find(b => b.id === client.behaviouralBriefId) : null;
+
+  const behaviourQuestionnaire = client && client.email && client.dogName ?
+    state.behaviourQuestionnaires.find(q =>
+      q.email?.toLowerCase() === client.email?.toLowerCase() &&
+      q.dogName?.toLowerCase() === client.dogName?.toLowerCase()
+    ) : null;
 
   const handleDelete = async () => {
     // Show confirmation dialog
@@ -97,6 +109,35 @@ export default function SessionModal({ session, isOpen, onClose, onEditSession, 
             </div>
           )}
         </div>
+
+        {/* Behavioural Brief and Questionnaire Buttons */}
+        {(behaviouralBrief || behaviourQuestionnaire) && (
+          <div className="space-y-3 pb-3 border-b border-gray-200">
+            {behaviouralBrief && onViewBehaviouralBrief && (
+              <button
+                onClick={() => onViewBehaviouralBrief(behaviouralBrief.id)}
+                className="w-full text-white py-3 px-4 rounded-lg font-medium transition-colors"
+                style={{ backgroundColor: '#4f6749' }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3d5237'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#4f6749'}
+              >
+                View Behavioural Brief
+              </button>
+            )}
+
+            {behaviourQuestionnaire && onViewBehaviourQuestionnaire && (
+              <button
+                onClick={() => onViewBehaviourQuestionnaire(behaviourQuestionnaire.id)}
+                className="w-full text-white py-3 px-4 rounded-lg font-medium transition-colors"
+                style={{ backgroundColor: '#4f6749' }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3d5237'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#4f6749'}
+              >
+                View Behaviour Questionnaire
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Action Buttons */}
         <div className="space-y-3">

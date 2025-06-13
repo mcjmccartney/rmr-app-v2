@@ -315,6 +315,24 @@ export default function CalendarPage() {
                           q.dogName?.toLowerCase() === client.dogName?.toLowerCase()
                         ) : false;
 
+                      // Debug logging for Matthew Mccartney
+                      if (client?.firstName === 'Matthew' && client?.lastName === 'Mccartney') {
+                        console.log('🔍 Debug for Matthew Mccartney:', {
+                          clientId: client.id,
+                          email: client.email,
+                          dogName: client.dogName,
+                          booking_terms_signed: client.booking_terms_signed,
+                          hasSignedBookingTerms,
+                          questionnairesCount: state.behaviourQuestionnaires.length,
+                          questionnaires: state.behaviourQuestionnaires.map(q => ({
+                            email: q.email,
+                            dogName: q.dogName
+                          })),
+                          hasFilledQuestionnaire,
+                          behaviourQuestionnaireId: client.behaviourQuestionnaireId
+                        });
+                      }
+
                       // Use amber color if both conditions are met, otherwise use default amber-800
                       const isFullyCompleted = hasSignedBookingTerms && hasFilledQuestionnaire;
                       const buttonStyle = isFullyCompleted ? {
@@ -393,6 +411,8 @@ export default function CalendarPage() {
         onEditSession={handleEditSession}
         onEditClient={handleEditClient}
         onCreateSessionPlan={handleCreateSessionPlan}
+        onViewBehaviouralBrief={handleViewBehaviouralBrief}
+        onViewBehaviourQuestionnaire={handleViewBehaviourQuestionnaire}
       />
 
       <EditSessionModal
