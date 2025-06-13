@@ -42,7 +42,7 @@ export default function MonthlyBreakdownModal({ finance, allFinancesForMonth, is
   const [isEditingExpected, setIsEditingExpected] = useState(false);
 
   // Calculate total expected from all finance entries for this month
-  const totalExpected = allFinancesForMonth?.reduce((sum, f) => sum + (f.expected || 0), 0) || finance?.expected || 0;
+  const totalExpected = allFinancesForMonth?.reduce((sum, f) => sum + (f.expected || f.expected_amount || 0), 0) || finance?.expected || finance?.expected_amount || 0;
   const [expectedAmount, setExpectedAmount] = useState('0');
 
   // Update expectedAmount when totalExpected changes
@@ -166,7 +166,7 @@ export default function MonthlyBreakdownModal({ finance, allFinancesForMonth, is
         console.log('Updating single finance entry:', allFinancesForMonth[0].id);
         const { data, error } = await supabase
           .from('finances')
-          .update({ expected: newExpectedAmount })
+          .update({ expected_amount: newExpectedAmount })
           .eq('id', allFinancesForMonth[0].id)
           .select();
 
@@ -184,7 +184,7 @@ export default function MonthlyBreakdownModal({ finance, allFinancesForMonth, is
           console.log(`Updating entry ${index + 1}:`, financeEntry.id, 'with amount:', amount);
           return supabase
             .from('finances')
-            .update({ expected: amount })
+            .update({ expected_amount: amount })
             .eq('id', financeEntry.id)
             .select();
         });
