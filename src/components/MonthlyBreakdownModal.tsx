@@ -60,13 +60,6 @@ export default function MonthlyBreakdownModal({ finance, allFinancesForMonth, is
   });
   const [loading, setLoading] = useState(true);
 
-  // Add Enter key support for Save button when editing
-  useModalEnterKeyHandler(
-    handleExpectedUpdate,
-    isEditingExpected && isOpen,
-    [isEditingExpected, isOpen]
-  );
-
   useEffect(() => {
     if (finance) {
       fetchBreakdownData();
@@ -230,6 +223,13 @@ export default function MonthlyBreakdownModal({ finance, allFinancesForMonth, is
       alert('Failed to save expected amount. Please try again.');
     }
   };
+
+  // Add Enter key support for Save button when editing
+  useModalEnterKeyHandler(
+    handleExpectedUpdate,
+    isEditingExpected && isOpen,
+    [isEditingExpected, isOpen]
+  );
 
   const difference = breakdownData.totalActual - totalExpected;
   const differenceColor = difference >= 0 ? 'text-green-600' : 'text-red-600';
