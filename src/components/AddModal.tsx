@@ -6,6 +6,7 @@ import { useModal } from '@/context/ModalContext';
 import { useApp } from '@/context/AppContext';
 import { Session, Client } from '@/types';
 import { calculateQuote } from '@/utils/pricing';
+import { useModalEnterKeyHandler } from '@/hooks/useEnterKeyHandler';
 
 interface AddModalProps {
   isOpen: boolean;

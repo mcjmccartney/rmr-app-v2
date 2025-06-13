@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Plus, Edit2, Trash2, Save, X } from 'lucide-react';
 import { ActionPoint } from '@/types';
 import { predefinedActionPoints } from '@/data/actionPoints';
+import { useEnterKeyHandler } from '@/hooks/useEnterKeyHandler';
 
 export default function ActionPointsPage() {
   const router = useRouter();
@@ -25,16 +26,23 @@ export default function ActionPointsPage() {
 
   const handleSaveEdit = () => {
     if (!editingId) return;
-    
-    setActionPoints(prev => prev.map(ap => 
-      ap.id === editingId 
+
+    setActionPoints(prev => prev.map(ap =>
+      ap.id === editingId
         ? { ...ap, header: editForm.header, details: editForm.details }
         : ap
     ));
-    
+
     setEditingId(null);
     setEditForm({ header: '', details: '' });
   };
+
+  // Add Enter key support for Save button when editing
+  useEnterKeyHandler(
+    handleSaveEdit,
+    editingId !== null,
+    [editingId]
+  );
 
   const handleCancelEdit = () => {
     setEditingId(null);

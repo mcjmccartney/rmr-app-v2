@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 
 import { supabase } from '@/lib/supabase';
 import SlideUpModal from './modals/SlideUpModal';
+import { useModalEnterKeyHandler } from '@/hooks/useEnterKeyHandler';
 import {
   Chart as ChartJS,
   ArcElement,
@@ -58,6 +59,13 @@ export default function MonthlyBreakdownModal({ finance, allFinancesForMonth, is
     totalActual: 0
   });
   const [loading, setLoading] = useState(true);
+
+  // Add Enter key support for Save button when editing
+  useModalEnterKeyHandler(
+    handleExpectedUpdate,
+    isEditingExpected && isOpen,
+    [isEditingExpected, isOpen]
+  );
 
   useEffect(() => {
     if (finance) {

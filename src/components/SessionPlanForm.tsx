@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { SessionPlan, Session, Client } from '@/types';
 import { predefinedActionPoints, personalizeActionPoint } from '@/data/actionPoints';
+import { useEnterKeyHandler } from '@/hooks/useEnterKeyHandler';
 // import { sessionPlanService } from '@/services/sessionPlanService';
 // import { googleDocsService } from '@/services/googleDocsService';
 // import SessionPlanPreview from './SessionPlanPreview';
@@ -109,6 +110,13 @@ export default function SessionPlanForm({ session, client, existingPlan, onClose
       setIsLoading(false);
     }
   };
+
+  // Add Enter key support for Save Session Plan button
+  useEnterKeyHandler(
+    handleSave,
+    !isLoading,
+    [isLoading]
+  );
 
   const handlePreviewDocument = async () => {
     if (!sessionPlan.sessionId) return;
