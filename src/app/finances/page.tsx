@@ -273,18 +273,6 @@ export default function FinancesPage() {
     const sessionsTotal = monthSessions.reduce((sum, session) => sum + (session.quote || 0), 0);
     const membershipsTotal = monthMemberships.reduce((sum, membership) => sum + (membership.amount || membership.price || 0), 0);
 
-    // Debug logging for April 2025
-    if (month === 'April' && year === 2025) {
-      console.log('April 2025 Debug:', {
-        monthSessions: monthSessions.length,
-        monthMemberships: monthMemberships.length,
-        sessionsTotal,
-        membershipsTotal,
-        sessions: monthSessions,
-        memberships: monthMemberships
-      });
-    }
-
     return {
       sessions: sessionsTotal,
       memberships: membershipsTotal,
@@ -383,10 +371,9 @@ export default function FinancesPage() {
                           >
                             <div>
                               <h3 className="font-medium text-gray-900">{monthKey}</h3>
-                              <div className="text-sm text-gray-500 space-y-1">
-                                <p>Sessions: £{monthlyBreakdown.sessions.toLocaleString()} | Membership: £{monthlyBreakdown.memberships.toLocaleString()}</p>
-                                <p>Actual: £{monthlyTotals.actual.toLocaleString()} | Expected: £{monthlyTotals.expected.toLocaleString()}</p>
-                              </div>
+                              <p className="text-sm text-gray-500">
+                                Sessions: £{monthlyBreakdown.sessions.toLocaleString()} | Membership: £{monthlyBreakdown.memberships.toLocaleString()} | Actual: £{monthlyTotals.actual.toLocaleString()} | Expected: £{monthlyTotals.expected.toLocaleString()}
+                              </p>
                             </div>
                             <ChevronRight size={16} className="text-gray-400" />
                           </button>
