@@ -30,6 +30,8 @@ export default function FinancesPage() {
 
   const fetchAllData = async () => {
     try {
+      console.log('Fetching finances data...');
+
       // Fetch finances
       const { data: financesData, error: financesError } = await supabase
         .from('finances')
@@ -37,7 +39,12 @@ export default function FinancesPage() {
         .order('year', { ascending: false })
         .order('month');
 
-      if (financesError) throw financesError;
+      if (financesError) {
+        console.error('Finances error:', financesError);
+        throw financesError;
+      }
+
+      console.log('Finances data:', financesData);
 
       // Fetch sessions
       const { data: sessionsData, error: sessionsError } = await supabase
@@ -45,7 +52,10 @@ export default function FinancesPage() {
         .select('*')
         .order('bookingDate', { ascending: false });
 
-      if (sessionsError) throw sessionsError;
+      if (sessionsError) {
+        console.error('Sessions error:', sessionsError);
+        // Don't throw error for sessions, just log it
+      }
 
       // Fetch memberships
       const { data: membershipsData, error: membershipsError } = await supabase
@@ -53,11 +63,20 @@ export default function FinancesPage() {
         .select('*')
         .order('date', { ascending: false });
 
-      if (membershipsError) throw membershipsError;
+      if (membershipsError) {
+        console.error('Memberships error:', membershipsError);
+        // Don't throw error for memberships, just log it
+      }
 
       setFinances(financesData || []);
       setSessions(sessionsData || []);
       setMemberships(membershipsData || []);
+
+      console.log('Data loaded successfully:', {
+        finances: financesData?.length || 0,
+        sessions: sessionsData?.length || 0,
+        memberships: membershipsData?.length || 0
+      });
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -109,6 +128,8 @@ export default function FinancesPage() {
     const taxYear = getUKTaxYear(finance.month, finance.year);
     const monthKey = `${finance.month} ${finance.year}`;
 
+    console.log(`Processing finance: ${finance.month} ${finance.year} -> Tax Year: ${taxYear}`);
+
     if (!acc[taxYear]) {
       acc[taxYear] = {};
     }
@@ -118,6 +139,9 @@ export default function FinancesPage() {
     acc[taxYear][monthKey].push(finance);
     return acc;
   }, {} as Record<string, Record<string, Finance[]>>);
+
+  console.log('Finances by tax year:', financesByTaxYear);
+  console.log('Filtered finances count:', filteredFinances.length);
 
   // Sort tax years (most recent first)
   const sortedTaxYears = Object.keys(financesByTaxYear).sort((a, b) => {
@@ -229,7 +253,13 @@ export default function FinancesPage() {
       <div className="px-4 pb-4 bg-gray-50 flex-1">
         {/* Tax Year Accordions */}
         <div className="space-y-3 mt-4">
-          {sortedTaxYears.map((taxYear) => {
+          {sortedTaxYears.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-500 mb-4">No finance entries found</p>
+              <p className="text-sm text-gray-400">Add some entries to your finances table in Supabase to get started</p>
+            </div>
+          ) : (
+            sortedTaxYears.map((taxYear) => {
             const taxYearData = financesByTaxYear[taxYear];
             const taxYearTotals = calculateTaxYearTotal(taxYearData);
             const isTaxYearExpanded = expandedMonths.has(taxYear);
@@ -283,7 +313,8 @@ export default function FinancesPage() {
                 )}
               </div>
             );
-          })}
+          })
+          )}
         </div>
       </div>
 
