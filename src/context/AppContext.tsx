@@ -290,7 +290,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         dogName: client.dogName || '',
         sessionType: session.sessionType,
         bookingDate: session.bookingDate, // YYYY-MM-DD format
-        bookingTime: session.bookingTime, // HH:mm format
+        bookingTime: session.bookingTime.substring(0, 5), // Ensure HH:mm format (remove seconds)
         quote: session.quote,
         notes: session.notes || '',
         createdAt: new Date().toISOString(),

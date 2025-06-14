@@ -10,7 +10,7 @@ function dbRowToSession(row: Record<string, any>): Session {
   if (row.booking_time) {
     // New format: separate date and time columns
     bookingDate = row.booking_date; // YYYY-MM-DD
-    bookingTime = row.booking_time; // HH:mm:ss or HH:mm
+    bookingTime = row.booking_time.substring(0, 5); // Always remove seconds: HH:mm:ss -> HH:mm
   } else {
     // Old format: single timestamp column
     const timestamp = new Date(row.booking_date);
@@ -49,7 +49,7 @@ function sessionToDbRow(session: Partial<Session>) {
   if (session.bookingDate && session.bookingTime) {
     // New format: separate date and time
     dbRow.booking_date = session.bookingDate; // YYYY-MM-DD
-    dbRow.booking_time = session.bookingTime; // HH:mm
+    dbRow.booking_time = session.bookingTime.substring(0, 5); // Ensure HH:mm format (remove seconds)
   } else if (session.bookingDate) {
     // Fallback: if only date is provided, assume it's a timestamp
     dbRow.booking_date = session.bookingDate;

@@ -264,7 +264,7 @@ export default function ClientModal({ client, isOpen, onClose, onEditClient, onV
                                     Session {index + 1}
                                   </div>
                                   <div className="text-gray-600 text-xs">
-                                    {session.bookingDate ? new Date(session.bookingDate).toLocaleDateString('en-GB') : 'No date'} at {session.bookingTime || 'No time'}
+                                    {session.bookingDate ? new Date(session.bookingDate).toLocaleDateString('en-GB') : 'No date'} at {session.bookingTime ? session.bookingTime.substring(0, 5) : 'No time'}
                                   </div>
                                   <div className="text-gray-600 text-xs">
                                     {session.sessionType || 'Unknown type'}

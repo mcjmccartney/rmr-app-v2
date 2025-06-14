@@ -10,7 +10,7 @@ export async function GET() {
     dogName: "Buddy",
     sessionType: "In-Person",
     bookingDate: "2025-01-20",
-    bookingTime: "14:30",
+    bookingTime: "14:30", // HH:mm format (no seconds)
     quote: 75.00,
     notes: "Test session for webhook integration",
     createdAt: new Date().toISOString()

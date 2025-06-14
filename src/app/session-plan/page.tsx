@@ -324,7 +324,7 @@ function SessionPlanContent() {
       clientName: `${currentClient.firstName} ${currentClient.lastName}`.trim(),
       sessionType: currentSession.sessionType,
       sessionDate: new Date(currentSession.bookingDate).toLocaleDateString('en-GB'),
-      sessionTime: currentSession.bookingTime,
+      sessionTime: currentSession.bookingTime.substring(0, 5), // Ensure HH:mm format (remove seconds)
 
       // Main goals (current form state)
       mainGoal1: formData.mainGoal1 || '',

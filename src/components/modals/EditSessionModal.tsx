@@ -29,7 +29,7 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
         clientId: session.clientId,
         sessionType: session.sessionType,
         date: session.bookingDate, // Already in YYYY-MM-DD format
-        time: session.bookingTime, // Already in HH:mm format
+        time: session.bookingTime.substring(0, 5), // Ensure HH:mm format (remove seconds)
         quote: session.quote.toString(),
         notes: session.notes || ''
       });
