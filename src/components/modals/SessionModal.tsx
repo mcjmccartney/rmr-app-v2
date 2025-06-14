@@ -100,7 +100,10 @@ export default function SessionModal({ session, isOpen, onClose, onEditSession, 
     if (window.confirm('Mark this session as paid?')) {
       try {
         const updatedSession = await sessionService.markAsPaid(session.id);
-        updateSession(updatedSession);
+        await updateSession(session.id, {
+          sessionPaid: true,
+          paymentConfirmedAt: updatedSession.paymentConfirmedAt
+        });
         alert('Session marked as paid!');
       } catch (error) {
         console.error('Error marking session as paid:', error);
