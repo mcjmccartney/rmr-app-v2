@@ -139,7 +139,7 @@ export default function EditClientModal({ client, isOpen, onClose }: EditClientM
         </div>
 
         {/* Additional dog fields - only show if there are other dogs */}
-        {formData.otherDogs.length > 0 && formData.otherDogs.some(dog => dog.trim() !== '') && (
+        {formData.otherDogs.length > 0 && (
           <div>
             <label className="block text-gray-700 text-sm font-medium mb-2">
               Other Dogs

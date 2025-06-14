@@ -48,6 +48,20 @@ export default function ClientsPage() {
     }
 
     return matchesSearch && matchesFilter;
+  }).sort((a, b) => {
+    // Sort by membership first (members first), then by active status, then alphabetically
+    if (a.membership !== b.membership) {
+      return b.membership ? 1 : -1; // Members first
+    }
+
+    if (a.active !== b.active) {
+      return b.active ? 1 : -1; // Active first within each membership group
+    }
+
+    // Alphabetical by first name, then last name
+    const aName = `${a.firstName || ''} ${a.lastName || ''}`.trim();
+    const bName = `${b.firstName || ''} ${b.lastName || ''}`.trim();
+    return aName.localeCompare(bName);
   });
 
   // Calculate counts
