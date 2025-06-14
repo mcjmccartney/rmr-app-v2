@@ -4,6 +4,8 @@ import { Session } from '@/types';
 import { useApp } from '@/context/AppContext';
 import SlideUpModal from './SlideUpModal';
 import { formatDateTime } from '@/utils/dateFormatting';
+import { paymentService } from '@/services/paymentService';
+import { sessionService } from '@/services/sessionService';
 
 interface SessionModalProps {
   session: Session | null;
@@ -17,7 +19,7 @@ interface SessionModalProps {
 }
 
 export default function SessionModal({ session, isOpen, onClose, onEditSession, onEditClient, onCreateSessionPlan, onViewBehaviouralBrief, onViewBehaviourQuestionnaire }: SessionModalProps) {
-  const { state, deleteSession } = useApp();
+  const { state, deleteSession, updateSession } = useApp();
 
   if (!session) return null;
 
@@ -43,6 +45,66 @@ export default function SessionModal({ session, isOpen, onClose, onEditSession, 
       } catch (error) {
         console.error('Error deleting session:', error);
         alert('Failed to delete session. Please try again.');
+      }
+    }
+  };
+
+  const handleGeneratePaymentLink = () => {
+    if (!client) {
+      alert('Client information is required to generate payment link');
+      return;
+    }
+
+    try {
+      const paymentLink = paymentService.getPaymentUrl(session, client);
+
+      // Copy to clipboard
+      navigator.clipboard.writeText(paymentLink).then(() => {
+        alert('Payment link copied to clipboard!');
+      }).catch(() => {
+        // Fallback: show the link in an alert
+        alert(`Payment link: ${paymentLink}`);
+      });
+    } catch (error) {
+      console.error('Error generating payment link:', error);
+      alert('Failed to generate payment link. Please try again.');
+    }
+  };
+
+  const handleGeneratePaymentInstructions = () => {
+    if (!client) {
+      alert('Client information is required to generate payment instructions');
+      return;
+    }
+
+    try {
+      const instructions = paymentService.generatePaymentInstructions(session, client);
+
+      // Copy to clipboard
+      navigator.clipboard.writeText(instructions).then(() => {
+        alert('Payment instructions copied to clipboard!');
+      }).catch(() => {
+        // Fallback: show in a new window
+        const newWindow = window.open('', '_blank');
+        if (newWindow) {
+          newWindow.document.write(`<pre>${instructions}</pre>`);
+        }
+      });
+    } catch (error) {
+      console.error('Error generating payment instructions:', error);
+      alert('Failed to generate payment instructions. Please try again.');
+    }
+  };
+
+  const handleMarkAsPaid = async () => {
+    if (window.confirm('Mark this session as paid?')) {
+      try {
+        const updatedSession = await sessionService.markAsPaid(session.id);
+        updateSession(updatedSession);
+        alert('Session marked as paid!');
+      } catch (error) {
+        console.error('Error marking session as paid:', error);
+        alert('Failed to mark session as paid. Please try again.');
       }
     }
   };
@@ -80,6 +142,32 @@ export default function SessionModal({ session, isOpen, onClose, onEditSession, 
             <span className="text-gray-600 font-medium">Quote</span>
             <span className="font-semibold text-gray-900 text-right">£{session.quote}</span>
           </div>
+
+          <div className="flex justify-between items-center py-4">
+            <span className="text-gray-600 font-medium">Payment Status</span>
+            <div className="flex items-center space-x-2">
+              {session.sessionPaid ? (
+                <>
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span className="font-semibold text-green-600">Paid</span>
+                </>
+              ) : (
+                <>
+                  <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
+                  <span className="font-semibold text-amber-600">Pending</span>
+                </>
+              )}
+            </div>
+          </div>
+
+          {session.sessionPaid && session.paymentConfirmedAt && (
+            <div className="flex justify-between items-center py-4">
+              <span className="text-gray-600 font-medium">Paid On</span>
+              <span className="font-semibold text-gray-900 text-right">
+                {new Date(session.paymentConfirmedAt).toLocaleDateString('en-GB')}
+              </span>
+            </div>
+          )}
 
           {client?.phone && (
             <div className="flex justify-between items-center py-4">
@@ -136,6 +224,41 @@ export default function SessionModal({ session, isOpen, onClose, onEditSession, 
                 View Behaviour Questionnaire
               </button>
             )}
+          </div>
+        )}
+
+        {/* Payment Buttons */}
+        {client && !session.sessionPaid && (
+          <div className="space-y-3 pb-3 border-b border-gray-200">
+            <div className="flex gap-3">
+              <button
+                onClick={handleGeneratePaymentLink}
+                className="flex-1 text-white py-3 px-4 rounded-lg font-medium transition-colors"
+                style={{ backgroundColor: '#973b00' }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#7a2f00'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#973b00'}
+              >
+                Copy Payment Link
+              </button>
+              <button
+                onClick={handleGeneratePaymentInstructions}
+                className="flex-1 text-white py-3 px-4 rounded-lg font-medium transition-colors"
+                style={{ backgroundColor: '#973b00' }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#7a2f00'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#973b00'}
+              >
+                Copy Instructions
+              </button>
+            </div>
+            <button
+              onClick={handleMarkAsPaid}
+              className="w-full text-white py-3 px-4 rounded-lg font-medium transition-colors"
+              style={{ backgroundColor: '#4f6749' }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3d5237'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#4f6749'}
+            >
+              Mark as Paid
+            </button>
           </div>
         )}
 

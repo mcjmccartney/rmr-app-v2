@@ -31,6 +31,8 @@ CREATE TABLE IF NOT EXISTS sessions (
     booking_date TIMESTAMP WITH TIME ZONE NOT NULL,
     notes TEXT,
     quote DECIMAL(10,2) NOT NULL,
+    session_paid BOOLEAN DEFAULT false,
+    payment_confirmed_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

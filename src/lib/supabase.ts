@@ -79,6 +79,8 @@ export type Database = {
           notes: string | null
           quote: number
           email: string | null
+          session_paid: boolean
+          payment_confirmed_at: string | null
           created_at: string
           updated_at: string
         }
@@ -91,6 +93,8 @@ export type Database = {
           notes?: string | null
           quote: number
           email?: string | null
+          session_paid?: boolean
+          payment_confirmed_at?: string | null
           created_at?: string
           updated_at?: string
         }

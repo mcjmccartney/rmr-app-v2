@@ -191,11 +191,27 @@ export default function SessionsPage() {
                           onClick={() => handleSessionClick(session)}
                           className="p-4 border-b border-gray-100 last:border-b-0 active:bg-gray-50 transition-colors cursor-pointer"
                         >
-                          <div>
-                            <h3 className="font-medium text-gray-900">{displayName}</h3>
-                            <p className="text-sm text-gray-500">
-                              {formatDateTime(session.bookingDate, session.bookingTime)} · {session.sessionType}
-                            </p>
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <h3 className="font-medium text-gray-900">{displayName}</h3>
+                              <p className="text-sm text-gray-500">
+                                {formatDateTime(session.bookingDate, session.bookingTime)} · {session.sessionType}
+                              </p>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              {session.sessionPaid ? (
+                                <div className="flex items-center space-x-1">
+                                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                  <span className="text-xs text-green-600 font-medium">Paid</span>
+                                </div>
+                              ) : (
+                                <div className="flex items-center space-x-1">
+                                  <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
+                                  <span className="text-xs text-amber-600 font-medium">Pending</span>
+                                </div>
+                              )}
+                              <span className="text-sm font-medium text-gray-900">£{session.quote.toFixed(2)}</span>
+                            </div>
                           </div>
                         </div>
                       );

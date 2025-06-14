@@ -27,6 +27,8 @@ function dbRowToSession(row: Record<string, any>): Session {
     notes: row.notes,
     quote: parseFloat(row.quote),
     email: row.email,
+    sessionPaid: row.session_paid || false,
+    paymentConfirmedAt: row.payment_confirmed_at,
   }
 }
 
@@ -39,6 +41,8 @@ function sessionToDbRow(session: Partial<Session>) {
     notes: session.notes,
     quote: session.quote,
     email: session.email,
+    session_paid: session.sessionPaid,
+    payment_confirmed_at: session.paymentConfirmedAt,
   };
 
   // Handle both old and new database formats
@@ -212,5 +216,25 @@ export const sessionService = {
       clientName: `${row.clients.first_name} ${row.clients.last_name}`,
       dogName: row.clients.dog_name,
     })) || []
+  },
+
+  // Mark session as paid
+  async markAsPaid(sessionId: string): Promise<Session> {
+    const { data, error } = await supabase
+      .from('sessions')
+      .update({
+        session_paid: true,
+        payment_confirmed_at: new Date().toISOString()
+      })
+      .eq('id', sessionId)
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Error marking session as paid:', error)
+      throw error
+    }
+
+    return dbRowToSession(data)
   }
 }

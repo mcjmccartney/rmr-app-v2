@@ -8,6 +8,8 @@ export interface Session {
   quote: number;
   email?: string; // For linking during import
   sessionPlanId?: string; // Link to session plan
+  sessionPaid?: boolean; // Payment status
+  paymentConfirmedAt?: string; // When payment was confirmed
 }
 
 export interface ActionPoint {
