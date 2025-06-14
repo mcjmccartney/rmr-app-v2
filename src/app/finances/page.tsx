@@ -342,9 +342,14 @@ export default function FinancesPage() {
                   onClick={() => toggleTaxYear(taxYear)}
                   className="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
                 >
-                  <h2 className="text-lg font-semibold text-gray-900">
-                    {taxYear} - £{taxYearTotals.actual.toLocaleString()} (Expected: £{taxYearTotals.expected.toLocaleString()})
-                  </h2>
+                  <div className="flex flex-col items-start">
+                    <h2 className="text-lg font-semibold text-gray-900">
+                      {taxYear} - £{taxYearTotals.actual.toLocaleString()}
+                    </h2>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Expected: £{taxYearTotals.expected.toLocaleString()}
+                    </p>
+                  </div>
                   {isTaxYearExpanded ? (
                     <ChevronDown size={20} className="text-gray-400" />
                   ) : (
@@ -370,48 +375,51 @@ export default function FinancesPage() {
                             className="w-full p-3 pl-8 hover:bg-gray-50 transition-colors text-left"
                           >
                             <div className="flex items-center">
-                              <h3 className="font-medium text-gray-900 min-w-[60px] flex-shrink-0">
+                              {/* Month name with equal spacing on mobile */}
+                              <h3 className="font-medium text-gray-900 w-12 md:min-w-[60px] flex-shrink-0">
                                 {month.substring(0, 3)}
                               </h3>
 
                               {/* Table-style data with equal spacing */}
-                              <div className="flex items-center flex-1 justify-between px-4">
+                              <div className="flex items-center flex-1 justify-between px-2 md:px-4">
                                 {/* Sessions - Always visible */}
                                 <div className="flex flex-col items-center flex-1">
                                   <Calendar size={16} className="text-gray-400 mb-1" />
-                                  <span className="text-sm font-medium">£{monthlyBreakdown.sessions.toLocaleString()}</span>
+                                  <span className="text-sm font-medium text-gray-900">£{monthlyBreakdown.sessions.toLocaleString()}</span>
                                 </div>
 
                                 {/* Membership - Hidden on mobile */}
                                 <div className="hidden md:flex flex-col items-center flex-1">
                                   <Star size={16} className="text-gray-400 mb-1" />
-                                  <span className="text-sm font-medium">£{monthlyBreakdown.memberships.toLocaleString()}</span>
+                                  <span className="text-sm font-medium text-gray-900">£{monthlyBreakdown.memberships.toLocaleString()}</span>
                                 </div>
 
                                 {/* Expected - Always visible */}
                                 <div className="flex flex-col items-center flex-1">
                                   <Target size={16} className="text-gray-400 mb-1" />
-                                  <span className="text-sm font-medium">£{monthlyTotals.expected.toLocaleString()}</span>
+                                  <span className="text-sm font-medium text-gray-900">£{monthlyTotals.expected.toLocaleString()}</span>
                                 </div>
 
                                 {/* Actual - Always visible */}
                                 <div className="flex flex-col items-center flex-1">
                                   <PoundSterling size={16} className="text-gray-400 mb-1" />
-                                  <span className="text-sm font-medium">£{monthlyTotals.actual.toLocaleString()}</span>
+                                  <span className="text-sm font-medium text-gray-900">£{monthlyTotals.actual.toLocaleString()}</span>
                                 </div>
 
                                 {/* Variance - Always visible */}
                                 <div className="flex flex-col items-center flex-1">
                                   <div className="w-4 h-4 mb-1 flex items-center justify-center">
                                     {monthlyTotals.actual >= monthlyTotals.expected ? (
-                                      <TrendingUp size={16} style={{ color: '#4f6749' }} />
+                                      <TrendingUp size={16} className="text-green-600" />
                                     ) : (
-                                      <TrendingDown size={16} style={{ color: '#973b00' }} />
+                                      <TrendingDown size={16} className="text-red-600" />
                                     )}
                                   </div>
-                                  <span className={`text-sm font-medium`} style={{
-                                    color: monthlyTotals.actual >= monthlyTotals.expected ? '#4f6749' : '#973b00'
-                                  }}>
+                                  <span className={`text-sm font-medium ${
+                                    monthlyTotals.actual >= monthlyTotals.expected
+                                      ? 'text-green-600'
+                                      : 'text-red-600'
+                                  }`}>
                                     {monthlyTotals.actual >= monthlyTotals.expected ? '+' : ''}£{(monthlyTotals.actual - monthlyTotals.expected).toLocaleString()}
                                   </span>
                                 </div>

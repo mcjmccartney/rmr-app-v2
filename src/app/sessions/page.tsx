@@ -165,9 +165,14 @@ export default function SessionsPage() {
                   onClick={() => toggleMonth(monthKey)}
                   className="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
                 >
-                  <h2 className="text-lg font-semibold text-gray-900">
-                    {monthKey} - £{monthlyRevenue} | {monthSessions.length} Sessions
-                  </h2>
+                  <div className="flex flex-col items-start">
+                    <h2 className="text-lg font-semibold text-gray-900">
+                      {monthKey} - £{monthlyRevenue}
+                    </h2>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {monthSessions.length} Sessions
+                    </p>
+                  </div>
                   {isExpanded ? (
                     <ChevronDown size={20} className="text-gray-400" />
                   ) : (
