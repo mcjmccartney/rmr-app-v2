@@ -177,9 +177,24 @@ export default function CalendarPage() {
     setShowClientModal(true);
   };
 
-  // Keyboard navigation for months
+  // Keyboard navigation for months (desktop only)
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      // Only enable keyboard navigation on desktop (screen width >= 768px)
+      const isDesktop = window.innerWidth >= 768;
+
+      if (!isDesktop) return;
+
+      // Only handle arrow keys when no input/textarea is focused
+      const activeElement = document.activeElement;
+      const isInputFocused = activeElement && (
+        activeElement.tagName === 'INPUT' ||
+        activeElement.tagName === 'TEXTAREA' ||
+        activeElement.contentEditable === 'true'
+      );
+
+      if (isInputFocused) return;
+
       if (event.key === 'ArrowLeft') {
         event.preventDefault();
         handlePreviousMonth();
@@ -193,11 +208,15 @@ export default function CalendarPage() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [currentDate]);
 
-  // Focus the calendar container to enable keyboard navigation
+  // Focus the calendar container to enable keyboard navigation (desktop only)
   useEffect(() => {
-    const calendarContainer = document.getElementById('calendar-container');
-    if (calendarContainer) {
-      calendarContainer.focus();
+    const isDesktop = window.innerWidth >= 768;
+
+    if (isDesktop) {
+      const calendarContainer = document.getElementById('calendar-container');
+      if (calendarContainer) {
+        calendarContainer.focus();
+      }
     }
   }, []);
 
