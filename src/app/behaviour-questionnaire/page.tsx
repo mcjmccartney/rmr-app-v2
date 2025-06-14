@@ -238,9 +238,9 @@ function BehaviourQuestionnaireForm() {
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Owner Information Section */}
               <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-400">
-                  OWNER INFORMATION
-                </h2>
+                <div className="text-white text-xl font-bold p-4 mb-4 rounded-t-lg" style={{ backgroundColor: '#973b00' }}>
+                  Owner Information
+                </div>
                 
                 <div className="space-y-4">
                   <div>
@@ -413,9 +413,9 @@ function BehaviourQuestionnaireForm() {
 
               {/* Dog Information Section */}
               <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-2 pb-2 border-b border-gray-400">
-                  DOG INFORMATION
-                </h2>
+                <div className="text-white text-xl font-bold p-4 mb-2 rounded-t-lg" style={{ backgroundColor: '#973b00' }}>
+                  Dog Information
+                </div>
                 <p className="text-sm text-gray-600 mb-4">
                   If you are inquiring about more than one dog please complete an additional form.
                 </p>
@@ -643,9 +643,9 @@ function BehaviourQuestionnaireForm() {
 
               {/* Health and Veterinary Information Section */}
               <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-400">
-                  HEALTH AND VETERINARY INFORMATION
-                </h2>
+                <div className="text-white text-xl font-bold p-4 mb-4 rounded-t-lg" style={{ backgroundColor: '#973b00' }}>
+                  Health & Veterinary Information
+                </div>
 
                 <div className="space-y-4">
                   <div>
@@ -681,9 +681,9 @@ function BehaviourQuestionnaireForm() {
 
               {/* Background Information Section */}
               <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-400">
-                  BACKGROUND INFORMATION
-                </h2>
+                <div className="text-white text-xl font-bold p-4 mb-4 rounded-t-lg" style={{ backgroundColor: '#973b00' }}>
+                  Background Information
+                </div>
 
                 <div className="space-y-4">
                   <div>
@@ -733,9 +733,9 @@ function BehaviourQuestionnaireForm() {
 
               {/* Diet and Feeding Section */}
               <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-400">
-                  DIET AND FEEDING
-                </h2>
+                <div className="text-white text-xl font-bold p-4 mb-4 rounded-t-lg" style={{ backgroundColor: '#973b00' }}>
+                  Diet and Feeding
+                </div>
 
                 <div className="space-y-4">
                   <div>
@@ -823,9 +823,9 @@ function BehaviourQuestionnaireForm() {
 
               {/* Routines Section */}
               <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-400">
-                  ROUTINES
-                </h2>
+                <div className="text-white text-xl font-bold p-4 mb-4 rounded-t-lg" style={{ backgroundColor: '#973b00' }}>
+                  Routines
+                </div>
 
                 <div className="space-y-4">
                   <div>
@@ -947,9 +947,9 @@ function BehaviourQuestionnaireForm() {
 
               {/* Temperament Section */}
               <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-400">
-                  TEMPERAMENT
-                </h2>
+                <div className="text-white text-xl font-bold p-4 mb-4 rounded-t-lg" style={{ backgroundColor: '#973b00' }}>
+                  Temperament
+                </div>
 
                 <div className="space-y-4">
                   <div>
@@ -984,9 +984,9 @@ function BehaviourQuestionnaireForm() {
 
               {/* Training Section */}
               <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-400">
-                  TRAINING
-                </h2>
+                <div className="text-white text-xl font-bold p-4 mb-4 rounded-t-lg" style={{ backgroundColor: '#973b00' }}>
+                  Training
+                </div>
 
                 <div className="space-y-4">
                   <div>
@@ -1065,9 +1065,9 @@ function BehaviourQuestionnaireForm() {
 
               {/* Sociability Section */}
               <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-400">
-                  SOCIABILITY
-                </h2>
+                <div className="text-white text-xl font-bold p-4 mb-4 rounded-t-lg" style={{ backgroundColor: '#973b00' }}>
+                  Sociability
+                </div>
 
                 <div className="space-y-4">
                   <div>

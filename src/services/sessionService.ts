@@ -21,6 +21,7 @@ function dbRowToSession(row: Record<string, any>): Session {
   return {
     id: row.id,
     clientId: row.client_id,
+    dogName: row.dog_name,
     sessionType: row.session_type,
     bookingDate,
     bookingTime,
@@ -37,6 +38,7 @@ function sessionToDbRow(session: Partial<Session>) {
   const dbRow: Record<string, any> = {
     id: session.id,
     client_id: session.clientId,
+    dog_name: session.dogName,
     session_type: session.sessionType,
     notes: session.notes,
     quote: session.quote,

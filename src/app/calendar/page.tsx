@@ -368,7 +368,7 @@ export default function CalendarPage() {
                       // For Group and RMR Live sessions, show session type instead of "Unknown Client"
                       const isGroupOrRMRLive = session.sessionType === 'Group' || session.sessionType === 'RMR Live';
                       const fullDisplayText = client
-                        ? `${timeOnly} | ${client.firstName} ${client.lastName}${client.dogName ? ` w/ ${client.dogName}` : ''}`
+                        ? `${timeOnly} | ${client.firstName} ${client.lastName}${session.dogName ? ` w/ ${session.dogName}` : client.dogName ? ` w/ ${client.dogName}` : ''}`
                         : isGroupOrRMRLive
                         ? `${timeOnly} | ${session.sessionType}`
                         : `${timeOnly} | Unknown Client`;
@@ -465,7 +465,7 @@ export default function CalendarPage() {
         {firstSession && firstSessionClient ? (
           <>
             <div className="text-lg font-medium">
-              {formatTime(firstSession.bookingTime)} | {firstSessionClient.firstName} {firstSessionClient.lastName} w/ {firstSessionClient.dogName}
+              {formatTime(firstSession.bookingTime)} | {firstSessionClient.firstName} {firstSessionClient.lastName}{firstSession.dogName ? ` w/ ${firstSession.dogName}` : firstSessionClient.dogName ? ` w/ ${firstSessionClient.dogName}` : ''}
             </div>
             <div className="text-white/80 text-sm">
               {firstSession.sessionType} • {formatDayDate(firstSession.bookingDate)}
@@ -549,7 +549,7 @@ export default function CalendarPage() {
                 const client = state.clients.find(c => c.id === session.clientId);
                 const isGroupOrRMRLive = session.sessionType === 'Group' || session.sessionType === 'RMR Live';
                 const displayName = client
-                  ? `${client.firstName} ${client.lastName}${client.dogName ? ` w/ ${client.dogName}` : ''}`
+                  ? `${client.firstName} ${client.lastName}${session.dogName ? ` w/ ${session.dogName}` : client.dogName ? ` w/ ${client.dogName}` : ''}`
                   : isGroupOrRMRLive
                   ? session.sessionType
                   : 'Unknown Client';

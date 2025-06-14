@@ -126,6 +126,7 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
   const { state, createSession } = useApp();
   const [formData, setFormData] = useState({
     clientId: '',
+    dogName: '',
     sessionType: 'In-Person' as Session['sessionType'],
     date: '',
     time: '',
@@ -142,9 +143,14 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
     setSelectedClient(client || null);
     setClientSearch(client ? `${client.firstName} ${client.lastName}${client.dogName ? ` w/ ${client.dogName}` : ''}` : '');
     setShowClientDropdown(false);
+
+    // Set default dog name to primary dog if available
+    const defaultDogName = client?.dogName || '';
+
     setFormData({
       ...formData,
       clientId,
+      dogName: defaultDogName,
       quote: calculateQuote(formData.sessionType, client?.membership || false)
     });
   };
@@ -174,6 +180,7 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
     try {
       await createSession({
         clientId: formData.clientId,
+        dogName: formData.dogName || undefined,
         sessionType: formData.sessionType,
         bookingDate: formData.date, // YYYY-MM-DD format
         bookingTime: formData.time, // HH:mm format
@@ -242,6 +249,29 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
           </div>
         )}
       </div>
+
+      {/* Dog Selection - Only show if client has multiple dogs */}
+      {selectedClient && (selectedClient.dogName || (selectedClient.otherDogs && selectedClient.otherDogs.length > 0)) && (
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Dog
+          </label>
+          <select
+            value={formData.dogName}
+            onChange={(e) => setFormData({ ...formData, dogName: e.target.value })}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+            required
+          >
+            <option value="">Select a dog</option>
+            {selectedClient.dogName && (
+              <option value={selectedClient.dogName}>{selectedClient.dogName} (Primary)</option>
+            )}
+            {selectedClient.otherDogs?.map((dog, index) => (
+              <option key={index} value={dog}>{dog}</option>
+            ))}
+          </select>
+        </div>
+      )}
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
