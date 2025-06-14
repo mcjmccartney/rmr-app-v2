@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { ChevronUp, ChevronDown } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { predefinedActionPoints, personalizeActionPoint } from '@/data/actionPoints';
 import { sessionPlanService } from '@/services/sessionPlanService';
@@ -311,6 +312,21 @@ function SessionPlanContent() {
         [field]: value
       }
     }));
+  };
+
+  // Move action point up or down
+  const moveActionPoint = (actionPointId: string, direction: 'up' | 'down') => {
+    const currentIndex = selectedActionPoints.indexOf(actionPointId);
+    if (currentIndex === -1) return;
+
+    const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+    if (newIndex < 0 || newIndex >= selectedActionPoints.length) return;
+
+    const newSelectedActionPoints = [...selectedActionPoints];
+    [newSelectedActionPoints[currentIndex], newSelectedActionPoints[newIndex]] =
+    [newSelectedActionPoints[newIndex], newSelectedActionPoints[currentIndex]];
+
+    setSelectedActionPoints(newSelectedActionPoints);
   };
 
   const handlePreviewAndEdit = async () => {
@@ -635,12 +651,43 @@ function SessionPlanContent() {
                           <h4 className="font-medium text-gray-900">
                             Action Point {index + 1}
                           </h4>
-                          <button
-                            onClick={() => handleActionPointToggle(actionPointId)}
-                            className="text-red-600 hover:text-red-800 text-sm"
-                          >
-                            Remove
-                          </button>
+                          <div className="flex items-center space-x-2">
+                            {/* Move Up Button */}
+                            <button
+                              onClick={() => moveActionPoint(actionPointId, 'up')}
+                              disabled={index === 0}
+                              className={`p-1 rounded ${
+                                index === 0
+                                  ? 'text-gray-300 cursor-not-allowed'
+                                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+                              }`}
+                              title="Move up"
+                            >
+                              <ChevronUp size={16} />
+                            </button>
+
+                            {/* Move Down Button */}
+                            <button
+                              onClick={() => moveActionPoint(actionPointId, 'down')}
+                              disabled={index === selectedActionPoints.length - 1}
+                              className={`p-1 rounded ${
+                                index === selectedActionPoints.length - 1
+                                  ? 'text-gray-300 cursor-not-allowed'
+                                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+                              }`}
+                              title="Move down"
+                            >
+                              <ChevronDown size={16} />
+                            </button>
+
+                            {/* Remove Button */}
+                            <button
+                              onClick={() => handleActionPointToggle(actionPointId)}
+                              className="text-red-600 hover:text-red-800 text-sm ml-2"
+                            >
+                              Remove
+                            </button>
+                          </div>
                         </div>
 
                         {/* Editable Header */}
@@ -742,7 +789,7 @@ function SessionPlanContent() {
                     onClick={handleSave}
                     className="w-full bg-amber-800 text-white py-3 rounded-md font-medium hover:bg-amber-700 transition-colors"
                   >
-                    {existingSessionPlan ? 'Update Session Plan' : 'Save Session Plan'}
+                    Save & Go Back
                   </button>
 
                   {!generatedDocUrl ? (

@@ -62,7 +62,12 @@ export default function CalendarPage() {
       }
     });
 
-    return daySessions;
+    // Sort sessions by time (earliest first)
+    return daySessions.sort((a, b) => {
+      const timeA = a.bookingTime || '00:00';
+      const timeB = b.bookingTime || '00:00';
+      return timeA.localeCompare(timeB);
+    });
   };
 
   const handlePreviousMonth = () => {
@@ -525,8 +530,9 @@ export default function CalendarPage() {
 
       {/* Mobile Day Modal */}
       {showMobileDayModal && selectedDayDate && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end justify-center z-50 md:hidden">
-          <div className="bg-white rounded-t-lg w-full max-h-[80vh] overflow-hidden">
+        <div className="fixed inset-0 z-50 md:hidden">
+          <div className="fixed inset-0 bg-black bg-opacity-50" onClick={handleCloseMobileDayModal}></div>
+          <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-lg max-h-[80vh] overflow-hidden transform transition-transform duration-300 ease-out">
             <div className="flex items-center justify-between p-4 border-b border-gray-200">
               <h3 className="text-lg font-semibold text-gray-900">
                 {formatDayDate(selectedDayDate.toISOString().split('T')[0])}

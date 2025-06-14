@@ -1,17 +1,17 @@
 'use client';
 
 import { useState } from 'react';
-import { Calendar, FileText, Star, Users, Grid3X3, Menu, X, LogOut, ClipboardCheck } from 'lucide-react';
+import { Calendar, Edit3, Star, Users, PieChart, Menu, X, LogOut, ClipboardCheck } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useModal } from '@/context/ModalContext';
 import { useAuth } from '@/context/AuthContext';
 
 const navItems = [
   { icon: Calendar, label: 'Calendar', path: '/calendar' },
-  { icon: FileText, label: 'Sessions', path: '/sessions' },
+  { icon: Edit3, label: 'Sessions', path: '/sessions' },
   { icon: Star, label: 'Memberships', path: '/memberships' },
   { icon: Users, label: 'Clients', path: '/clients' },
-  { icon: Grid3X3, label: 'Finances', path: '/finances' },
+  { icon: PieChart, label: 'Finances', path: '/finances' },
   { icon: ClipboardCheck, label: 'Booking Terms', path: '/booking-terms' },
 ];
 

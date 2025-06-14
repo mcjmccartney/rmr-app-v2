@@ -297,7 +297,7 @@ export default function SessionModal({ session, isOpen, onClose, onEditSession, 
               onClick={() => onEditClient(session)}
               className="flex-1 bg-amber-800 hover:bg-amber-700 text-white py-3 px-4 rounded-lg font-medium transition-colors"
             >
-              Edit Client
+              View Client
             </button>
           </div>
 

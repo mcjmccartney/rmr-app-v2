@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import Header from '@/components/layout/Header';
 import MonthlyBreakdownModal from '@/components/MonthlyBreakdownModal';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { ChevronDown, ChevronRight, Calendar, Users, PoundSterling, Target } from 'lucide-react';
 
 interface Finance {
   id: string;
@@ -364,18 +364,45 @@ export default function FinancesPage() {
 
                       return (
                         <div key={`${taxYear}-${monthKey}`} className="border-b border-gray-100 last:border-b-0">
-                          {/* Month Header */}
+                          {/* Month Header - Table Format */}
                           <button
                             onClick={() => handleFinanceClick(monthFinances[0], monthFinances)} // Open sidepane for month breakdown
-                            className="w-full p-3 pl-8 flex items-center justify-between hover:bg-gray-50 transition-colors text-left"
+                            className="w-full p-3 pl-8 hover:bg-gray-50 transition-colors text-left"
                           >
-                            <div>
-                              <h3 className="font-medium text-gray-900">{monthKey}</h3>
-                              <p className="text-sm text-gray-500">
-                                Sessions: £{monthlyBreakdown.sessions.toLocaleString()} | Membership: £{monthlyBreakdown.memberships.toLocaleString()} | Actual: £{monthlyTotals.actual.toLocaleString()} | Expected: £{monthlyTotals.expected.toLocaleString()}
-                              </p>
+                            <div className="flex items-center justify-between">
+                              <h3 className="font-medium text-gray-900 min-w-[80px]">
+                                {month.substring(0, 3)}
+                              </h3>
+
+                              {/* Table-style data */}
+                              <div className="flex items-center space-x-6 flex-1 justify-end">
+                                {/* Sessions */}
+                                <div className="flex flex-col items-center min-w-[60px]">
+                                  <Calendar size={16} className="text-gray-400 mb-1" />
+                                  <span className="text-sm font-medium">£{monthlyBreakdown.sessions.toLocaleString()}</span>
+                                </div>
+
+                                {/* Membership */}
+                                <div className="flex flex-col items-center min-w-[60px]">
+                                  <Users size={16} className="text-gray-400 mb-1" />
+                                  <span className="text-sm font-medium">£{monthlyBreakdown.memberships.toLocaleString()}</span>
+                                </div>
+
+                                {/* Expected */}
+                                <div className="flex flex-col items-center min-w-[60px]">
+                                  <Target size={16} className="text-gray-400 mb-1" />
+                                  <span className="text-sm font-medium">£{monthlyTotals.expected.toLocaleString()}</span>
+                                </div>
+
+                                {/* Actual */}
+                                <div className="flex flex-col items-center min-w-[60px]">
+                                  <PoundSterling size={16} className="text-gray-400 mb-1" />
+                                  <span className="text-sm font-medium">£{monthlyTotals.actual.toLocaleString()}</span>
+                                </div>
+
+                                <ChevronRight size={16} className="text-gray-400 ml-2" />
+                              </div>
                             </div>
-                            <ChevronRight size={16} className="text-gray-400" />
                           </button>
                         </div>
                       );
