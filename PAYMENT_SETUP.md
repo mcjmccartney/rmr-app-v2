@@ -28,18 +28,21 @@ The payment system allows you to:
 
 ## Monzo Payment Links Configuration
 
-1. **Update your Monzo payment links** in `src/services/paymentService.ts`:
+✅ **Already Configured!** Your specific Monzo payment links are already set up in `src/services/paymentService.ts`:
+
+- **Catch Up Session**: Same link for members and non-members
+- **Online Session**: Separate member/non-member links
+- **In-Person Session**: Separate member/non-member links
+- **Training Session**: Separate member/non-member links
+
+1. **Update app domain** in `src/services/paymentService.ts`:
    ```typescript
-   const PAYMENT_CONFIG: PaymentLinkConfig = {
-     memberMonzoLink: 'https://monzo.me/your-actual-member-link',
-     nonMemberMonzoLink: 'https://monzo.me/your-actual-non-member-link',
-     appBaseUrl: 'https://your-actual-app-domain.com'
-   };
+   appBaseUrl: 'https://your-actual-vercel-domain.com'
    ```
 
-2. **Set environment variable** (optional):
+2. **Set environment variable** (recommended):
    ```bash
-   NEXT_PUBLIC_APP_URL=https://your-app-domain.com
+   NEXT_PUBLIC_APP_URL=https://your-vercel-domain.com
    ```
 
 ## How It Works
@@ -82,13 +85,13 @@ The payment system allows you to:
 
 ### Payment Link Format
 The generated Monzo links include:
-- `amount`: Session quote in pence (£75.00 = 7500)
-- `description`: "RMR-SessionType-SessionID"
-- `redirect_url`: Confirmation page URL
+- **Base URL**: Your specific Monzo link (member vs non-member, session type)
+- **Description**: "RMR-SessionType-SessionID"
+- **Redirect URL**: Confirmation page URL
 
 ### Example Payment Link
 ```
-https://monzo.me/your-link?amount=7500&description=RMR-In-Person-abc12345&redirect_url=https://yourapp.com/payment-confirmed/abc12345-def6-7890-ghij-klmnopqrstuv
+https://monzo.com/pay/r/raising-my-rescue_FDv49vPml3pICf?description=RMR-In-Person-abc12345&redirect_url=https://yourapp.com/payment-confirmed/abc12345-def6-7890-ghij-klmnopqrstuv
 ```
 
 ## Troubleshooting

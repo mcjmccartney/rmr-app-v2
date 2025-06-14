@@ -1,17 +1,49 @@
 import { Session, Client } from '@/types';
 
 export interface PaymentLinkConfig {
-  memberMonzoLink: string;
-  nonMemberMonzoLink: string;
   appBaseUrl: string;
+  monzoLinks: {
+    [key: string]: {
+      member: string;
+      nonMember: string;
+    };
+  };
 }
 
-// You can configure these URLs in your environment or directly here
+// Your specific Monzo payment links for different session types
 const PAYMENT_CONFIG: PaymentLinkConfig = {
-  // Replace these with your actual Monzo payment links
-  memberMonzoLink: 'https://monzo.me/your-member-link',
-  nonMemberMonzoLink: 'https://monzo.me/your-non-member-link',
-  appBaseUrl: process.env.NEXT_PUBLIC_APP_URL || 'https://your-app-domain.com'
+  appBaseUrl: process.env.NEXT_PUBLIC_APP_URL || 'https://your-app-domain.com',
+  monzoLinks: {
+    'Online Catchup': {
+      member: 'https://monzo.com/pay/r/raising-my-rescue_qeDXP5wJpnqGln',
+      nonMember: 'https://monzo.com/pay/r/raising-my-rescue_qeDXP5wJpnqGln'
+    },
+    'Online': {
+      member: 'https://monzo.com/pay/r/raising-my-rescue_xzbkQ7E0rYwzSC',
+      nonMember: 'https://monzo.com/pay/r/raising-my-rescue_EuzQch7MSdKgHU'
+    },
+    'In-Person': {
+      member: 'https://monzo.com/pay/r/raising-my-rescue_xWkrcsYtpvgugM',
+      nonMember: 'https://monzo.com/pay/r/raising-my-rescue_FDv49vPml3pICf'
+    },
+    'Training': {
+      member: 'https://monzo.com/pay/r/raising-my-rescue_CD0E8avgp0XVzb',
+      nonMember: 'https://monzo.com/pay/r/raising-my-rescue_wuOqWmgMVfXyXJ'
+    },
+    // Fallback for other session types - use Online rates
+    'Group': {
+      member: 'https://monzo.com/pay/r/raising-my-rescue_xzbkQ7E0rYwzSC',
+      nonMember: 'https://monzo.com/pay/r/raising-my-rescue_EuzQch7MSdKgHU'
+    },
+    'Phone Call': {
+      member: 'https://monzo.com/pay/r/raising-my-rescue_xzbkQ7E0rYwzSC',
+      nonMember: 'https://monzo.com/pay/r/raising-my-rescue_EuzQch7MSdKgHU'
+    },
+    'Coaching': {
+      member: 'https://monzo.com/pay/r/raising-my-rescue_xzbkQ7E0rYwzSC',
+      nonMember: 'https://monzo.com/pay/r/raising-my-rescue_EuzQch7MSdKgHU'
+    }
+  }
 };
 
 export const paymentService = {
@@ -22,22 +54,30 @@ export const paymentService = {
    * @returns Payment link with session ID and confirmation redirect
    */
   generatePaymentLink(session: Session, client: Client): string {
-    const baseMonzoLink = client.membership 
-      ? PAYMENT_CONFIG.memberMonzoLink 
-      : PAYMENT_CONFIG.nonMemberMonzoLink;
-    
+    // Get the appropriate Monzo link based on session type and membership
+    let sessionTypeLinks = PAYMENT_CONFIG.monzoLinks[session.sessionType];
+
+    // Fallback to Online rates if session type not found
+    if (!sessionTypeLinks) {
+      console.warn(`No payment link configured for session type: ${session.sessionType}, using Online rates`);
+      sessionTypeLinks = PAYMENT_CONFIG.monzoLinks['Online'];
+    }
+
+    const baseMonzoLink = client.membership
+      ? sessionTypeLinks.member
+      : sessionTypeLinks.nonMember;
+
     // Create the confirmation URL that the client will visit after payment
     const confirmationUrl = `${PAYMENT_CONFIG.appBaseUrl}/payment-confirmed/${session.id}`;
-    
+
     // Create a description that includes the session ID for reference
     const description = `RMR-${session.sessionType}-${session.id.substring(0, 8)}`;
-    
+
     // Build the Monzo payment link with parameters
     const paymentUrl = new URL(baseMonzoLink);
-    paymentUrl.searchParams.set('amount', (session.quote * 100).toString()); // Monzo expects pence
     paymentUrl.searchParams.set('description', description);
     paymentUrl.searchParams.set('redirect_url', confirmationUrl);
-    
+
     return paymentUrl.toString();
   },
 
