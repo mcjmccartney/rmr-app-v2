@@ -198,7 +198,7 @@ export default function SessionsPage() {
                           <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-3 flex-1">
                               {client?.membership && (
-                                <RMRLogo size={24} />
+                                <RMRLogo size={32} />
                               )}
                               <div>
                                 <h3 className="font-medium text-gray-900">{displayName}</h3>

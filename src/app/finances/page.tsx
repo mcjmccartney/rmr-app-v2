@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import Header from '@/components/layout/Header';
 import MonthlyBreakdownModal from '@/components/MonthlyBreakdownModal';
-import { ChevronDown, ChevronRight, Calendar, Star, PoundSterling, Target } from 'lucide-react';
+import { ChevronDown, ChevronRight, Calendar, Star, PoundSterling, Target, TrendingUp, TrendingDown } from 'lucide-react';
 
 interface Finance {
   id: string;
@@ -403,17 +403,15 @@ export default function FinancesPage() {
                                 {/* Variance - Always visible */}
                                 <div className="flex flex-col items-center flex-1">
                                   <div className="w-4 h-4 mb-1 flex items-center justify-center">
-                                    <div className={`w-2 h-2 rounded-full ${
-                                      monthlyTotals.actual >= monthlyTotals.expected
-                                        ? 'bg-green-500'
-                                        : 'bg-red-500'
-                                    }`}></div>
+                                    {monthlyTotals.actual >= monthlyTotals.expected ? (
+                                      <TrendingUp size={16} style={{ color: '#4f6749' }} />
+                                    ) : (
+                                      <TrendingDown size={16} style={{ color: '#973b00' }} />
+                                    )}
                                   </div>
-                                  <span className={`text-sm font-medium ${
-                                    monthlyTotals.actual >= monthlyTotals.expected
-                                      ? 'text-green-600'
-                                      : 'text-red-600'
-                                  }`}>
+                                  <span className={`text-sm font-medium`} style={{
+                                    color: monthlyTotals.actual >= monthlyTotals.expected ? '#4f6749' : '#973b00'
+                                  }}>
                                     {monthlyTotals.actual >= monthlyTotals.expected ? '+' : ''}£{(monthlyTotals.actual - monthlyTotals.expected).toLocaleString()}
                                   </span>
                                 </div>

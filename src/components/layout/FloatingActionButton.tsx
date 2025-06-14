@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { Calendar, Edit3, Star, Users, PieChart, Menu, X, LogOut, ClipboardCheck } from 'lucide-react';
+import { Calendar, Edit3, Star, Users, PieChart, Menu, X } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useModal } from '@/context/ModalContext';
-import { useAuth } from '@/context/AuthContext';
+
 
 const navItems = [
   { icon: Calendar, label: 'Calendar', path: '/calendar' },
@@ -12,7 +12,6 @@ const navItems = [
   { icon: Star, label: 'Memberships', path: '/memberships' },
   { icon: Users, label: 'Clients', path: '/clients' },
   { icon: PieChart, label: 'Finances', path: '/finances' },
-  { icon: ClipboardCheck, label: 'Booking Terms', path: '/booking-terms' },
 ];
 
 export default function FloatingActionButton() {
@@ -20,7 +19,6 @@ export default function FloatingActionButton() {
   const router = useRouter();
   const pathname = usePathname();
   const { isAnyModalOpen } = useModal();
-  const { signOut } = useAuth();
 
   const toggleExpanded = () => {
     setIsExpanded(!isExpanded);
@@ -28,11 +26,6 @@ export default function FloatingActionButton() {
 
   const handleNavigation = (path: string) => {
     router.push(path);
-    setIsExpanded(false);
-  };
-
-  const handleLogout = async () => {
-    await signOut();
     setIsExpanded(false);
   };
 
@@ -54,19 +47,6 @@ export default function FloatingActionButton() {
       {/* Navigation Items */}
       {isExpanded && (
         <div className={`fixed right-6 z-50 flex flex-col-reverse gap-3 ${pathname === '/calendar' ? 'bottom-42' : 'bottom-24'}`}>
-          {/* Logout Button */}
-          <button
-            onClick={handleLogout}
-            className="flex items-center justify-center w-12 h-12 rounded-full shadow-lg bg-red-600 text-white hover:bg-red-700 transition-all duration-300 transform hover:scale-110"
-            style={{
-              animationDelay: `${navItems.length * 50}ms`,
-              animation: 'slideInUp 0.3s ease-out forwards'
-            }}
-            title="Logout"
-          >
-            <LogOut size={20} />
-          </button>
-
           {navItems.map(({ icon: Icon, label, path }, index) => {
             const isActive = pathname === path;
             const delay = index * 50; // Stagger animation
