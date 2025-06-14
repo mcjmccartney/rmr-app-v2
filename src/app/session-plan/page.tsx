@@ -42,6 +42,7 @@ function SessionPlanContent() {
 
   const [selectedActionPoints, setSelectedActionPoints] = useState<string[]>([]);
   const [showActionPoints, setShowActionPoints] = useState(false);
+  const [editableActionPoints, setEditableActionPoints] = useState<{[key: string]: {header: string, details: string}}>({});
   const [existingSessionPlan, setExistingSessionPlan] = useState<SessionPlan | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [sessionNumber, setSessionNumber] = useState<number>(1);
@@ -249,12 +250,66 @@ function SessionPlanContent() {
     return savedPlan;
   };
 
-  const handleActionPointToggle = (actionPointId: string) => {
-    setSelectedActionPoints(prev =>
-      prev.includes(actionPointId)
-        ? prev.filter(id => id !== actionPointId)
-        : [...prev, actionPointId]
+  // Get dog's gender from questionnaire for proper pronoun replacement
+  const getDogGender = (): 'Male' | 'Female' => {
+    if (!currentClient?.email || !currentClient?.dogName) return 'Male';
+
+    const questionnaire = state.behaviourQuestionnaires.find(q =>
+      q.email?.toLowerCase() === currentClient.email?.toLowerCase() &&
+      q.dogName?.toLowerCase() === currentClient.dogName?.toLowerCase()
     );
+
+    return questionnaire?.sex || 'Male';
+  };
+
+  const handleActionPointToggle = (actionPointId: string) => {
+    setSelectedActionPoints(prev => {
+      const newSelected = prev.includes(actionPointId)
+        ? prev.filter(id => id !== actionPointId)
+        : [...prev, actionPointId];
+
+      // If removing an action point, also remove its editable version
+      if (prev.includes(actionPointId)) {
+        setEditableActionPoints(prevEditable => {
+          const newEditable = { ...prevEditable };
+          delete newEditable[actionPointId];
+          return newEditable;
+        });
+      }
+
+      return newSelected;
+    });
+  };
+
+  // Initialize editable action point with personalized content
+  const initializeEditableActionPoint = (actionPointId: string) => {
+    const actionPoint = predefinedActionPoints.find(ap => ap.id === actionPointId);
+    if (!actionPoint) return;
+
+    const personalizedActionPoint = personalizeActionPoint(
+      actionPoint,
+      currentClient?.dogName || 'Dog',
+      getDogGender()
+    );
+
+    setEditableActionPoints(prev => ({
+      ...prev,
+      [actionPointId]: {
+        header: personalizedActionPoint.header,
+        details: personalizedActionPoint.details
+      }
+    }));
+  };
+
+  // Update editable action point
+  const updateEditableActionPoint = (actionPointId: string, field: 'header' | 'details', value: string) => {
+    setEditableActionPoints(prev => ({
+      ...prev,
+      [actionPointId]: {
+        ...prev[actionPointId],
+        [field]: value
+      }
+    }));
   };
 
   const handlePreviewAndEdit = async () => {
@@ -335,15 +390,24 @@ function SessionPlanContent() {
       // Explanation (current form state)
       explanationOfBehaviour: formData.explanationOfBehaviour || '',
 
-      // Action points (current selection - personalized)
+      // Action points (current selection - use edited versions if available, otherwise personalized)
       actionPoints: selectedActionPoints.map((actionPointId) => {
+        // Check if we have an edited version
+        if (editableActionPoints[actionPointId]) {
+          return {
+            header: editableActionPoints[actionPointId].header,
+            details: editableActionPoints[actionPointId].details
+          };
+        }
+
+        // Otherwise use personalized version with correct gender
         const actionPoint = predefinedActionPoints.find(ap => ap.id === actionPointId);
         if (!actionPoint) return null;
 
         const personalizedActionPoint = personalizeActionPoint(
           actionPoint,
           currentClient?.dogName || 'Dog',
-          'Male'
+          getDogGender()
         );
 
         return {
@@ -552,24 +616,23 @@ function SessionPlanContent() {
                 </button>
               </div>
 
-              {/* Selected Action Points */}
+              {/* Selected Action Points - Editable */}
               {selectedActionPoints.length > 0 && !showActionPoints && (
                 <div className="space-y-3 mb-4">
                   {selectedActionPoints.map((actionPointId, index) => {
-                    const actionPoint = predefinedActionPoints.find(ap => ap.id === actionPointId);
-                    if (!actionPoint) return null;
+                    // Check if we have an editable version, otherwise create one
+                    if (!editableActionPoints[actionPointId]) {
+                      initializeEditableActionPoint(actionPointId);
+                    }
 
-                    const personalizedActionPoint = personalizeActionPoint(
-                      actionPoint,
-                      client?.dogName || 'Dog',
-                      'Male'
-                    );
+                    const editableContent = editableActionPoints[actionPointId];
+                    if (!editableContent) return null;
 
                     return (
                       <div key={actionPointId} className="border border-gray-200 p-4 rounded-md">
-                        <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center justify-between mb-3">
                           <h4 className="font-medium text-gray-900">
-                            Action Point {index + 1}: {personalizedActionPoint.header}
+                            Action Point {index + 1}
                           </h4>
                           <button
                             onClick={() => handleActionPointToggle(actionPointId)}
@@ -578,7 +641,34 @@ function SessionPlanContent() {
                             Remove
                           </button>
                         </div>
-                        <p className="text-gray-700 text-sm">{personalizedActionPoint.details}</p>
+
+                        {/* Editable Header */}
+                        <div className="mb-3">
+                          <label className="block text-xs font-medium text-gray-600 mb-1">
+                            Header
+                          </label>
+                          <input
+                            type="text"
+                            value={editableContent.header}
+                            onChange={(e) => updateEditableActionPoint(actionPointId, 'header', e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-amber-500 focus:border-transparent text-sm"
+                            placeholder="Action point header"
+                          />
+                        </div>
+
+                        {/* Editable Details */}
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">
+                            Details
+                          </label>
+                          <textarea
+                            value={editableContent.details}
+                            onChange={(e) => updateEditableActionPoint(actionPointId, 'details', e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-amber-500 focus:border-transparent text-sm"
+                            placeholder="Action point details"
+                            rows={3}
+                          />
+                        </div>
                       </div>
                     );
                   })}
@@ -595,7 +685,7 @@ function SessionPlanContent() {
                       const personalizedActionPoint = personalizeActionPoint(
                         actionPoint,
                         client?.dogName || 'Dog',
-                        'Male'
+                        getDogGender()
                       );
 
                       return (
