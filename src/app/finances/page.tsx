@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import Header from '@/components/layout/Header';
 import MonthlyBreakdownModal from '@/components/MonthlyBreakdownModal';
-import { ChevronDown, ChevronRight, Calendar, Users, PoundSterling, Target } from 'lucide-react';
+import { ChevronDown, ChevronRight, Calendar, Star, PoundSterling, Target } from 'lucide-react';
 
 interface Finance {
   id: string;
@@ -369,39 +369,57 @@ export default function FinancesPage() {
                             onClick={() => handleFinanceClick(monthFinances[0], monthFinances)} // Open sidepane for month breakdown
                             className="w-full p-3 pl-8 hover:bg-gray-50 transition-colors text-left"
                           >
-                            <div className="flex items-center justify-between">
-                              <h3 className="font-medium text-gray-900 min-w-[80px]">
+                            <div className="flex items-center">
+                              <h3 className="font-medium text-gray-900 min-w-[60px] flex-shrink-0">
                                 {month.substring(0, 3)}
                               </h3>
 
-                              {/* Table-style data */}
-                              <div className="flex items-center space-x-6 flex-1 justify-end">
-                                {/* Sessions */}
-                                <div className="flex flex-col items-center min-w-[60px]">
+                              {/* Table-style data with equal spacing */}
+                              <div className="flex items-center flex-1 justify-between px-4">
+                                {/* Sessions - Always visible */}
+                                <div className="flex flex-col items-center flex-1">
                                   <Calendar size={16} className="text-gray-400 mb-1" />
                                   <span className="text-sm font-medium">£{monthlyBreakdown.sessions.toLocaleString()}</span>
                                 </div>
 
-                                {/* Membership */}
-                                <div className="flex flex-col items-center min-w-[60px]">
-                                  <Users size={16} className="text-gray-400 mb-1" />
+                                {/* Membership - Hidden on mobile */}
+                                <div className="hidden md:flex flex-col items-center flex-1">
+                                  <Star size={16} className="text-gray-400 mb-1" />
                                   <span className="text-sm font-medium">£{monthlyBreakdown.memberships.toLocaleString()}</span>
                                 </div>
 
-                                {/* Expected */}
-                                <div className="flex flex-col items-center min-w-[60px]">
+                                {/* Expected - Always visible */}
+                                <div className="flex flex-col items-center flex-1">
                                   <Target size={16} className="text-gray-400 mb-1" />
                                   <span className="text-sm font-medium">£{monthlyTotals.expected.toLocaleString()}</span>
                                 </div>
 
-                                {/* Actual */}
-                                <div className="flex flex-col items-center min-w-[60px]">
+                                {/* Actual - Always visible */}
+                                <div className="flex flex-col items-center flex-1">
                                   <PoundSterling size={16} className="text-gray-400 mb-1" />
                                   <span className="text-sm font-medium">£{monthlyTotals.actual.toLocaleString()}</span>
                                 </div>
 
-                                <ChevronRight size={16} className="text-gray-400 ml-2" />
+                                {/* Variance - Always visible */}
+                                <div className="flex flex-col items-center flex-1">
+                                  <div className="w-4 h-4 mb-1 flex items-center justify-center">
+                                    <div className={`w-2 h-2 rounded-full ${
+                                      monthlyTotals.actual >= monthlyTotals.expected
+                                        ? 'bg-green-500'
+                                        : 'bg-red-500'
+                                    }`}></div>
+                                  </div>
+                                  <span className={`text-sm font-medium ${
+                                    monthlyTotals.actual >= monthlyTotals.expected
+                                      ? 'text-green-600'
+                                      : 'text-red-600'
+                                  }`}>
+                                    {monthlyTotals.actual >= monthlyTotals.expected ? '+' : ''}£{(monthlyTotals.actual - monthlyTotals.expected).toLocaleString()}
+                                  </span>
+                                </div>
                               </div>
+
+                              <ChevronRight size={16} className="text-gray-400 flex-shrink-0" />
                             </div>
                           </button>
                         </div>

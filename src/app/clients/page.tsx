@@ -167,12 +167,14 @@ export default function ClientsPage() {
             {
               icon: Calendar,
               onClick: handleAddSession,
-              title: 'Add Session'
+              title: 'Add Session',
+              iconOnly: true
             },
             {
               icon: UserPlus,
               onClick: handleAddClient,
-              title: 'Add Client'
+              title: 'Add Client',
+              iconOnly: true
             }
           ]}
           showSearch

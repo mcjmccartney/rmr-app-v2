@@ -128,17 +128,20 @@ export default function SessionsPage() {
             {
               icon: Target,
               onClick: handleActionPoints,
-              title: 'Manage Action Points'
+              title: 'Manage Action Points',
+              iconOnly: true
             },
             {
               icon: Calendar,
               onClick: handleAddSession,
-              title: 'Add Session'
+              title: 'Add Session',
+              iconOnly: true
             },
             {
               icon: UserPlus,
               onClick: handleAddClient,
-              title: 'Add Client'
+              title: 'Add Client',
+              iconOnly: true
             }
           ]}
           showSearch
