@@ -75,19 +75,22 @@ export async function POST(request: NextRequest) {
 
     console.log('Successfully created membership:', data);
 
-    // Update client membership status to true
+    // Update client membership status and active status to true
     const { data: clientData, error: clientError } = await supabase
       .from('clients')
-      .update({ membership: true })
+      .update({
+        membership: true,
+        active: true
+      })
       .eq('email', membershipData.email)
       .select();
 
     if (clientError) {
-      console.error('Error updating client membership status:', clientError);
+      console.error('Error updating client membership and active status:', clientError);
       // Don't fail the webhook if client update fails - membership is still recorded
       console.log('Membership saved but client status not updated');
     } else if (clientData && clientData.length > 0) {
-      console.log('Successfully updated client membership status:', clientData);
+      console.log('Successfully updated client membership and active status:', clientData);
     } else {
       console.log('No client found with email:', membershipData.email);
     }
