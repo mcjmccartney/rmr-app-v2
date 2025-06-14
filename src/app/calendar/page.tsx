@@ -13,7 +13,7 @@ import AddModal from '@/components/AddModal';
 import { Session, Client, BehaviouralBrief, BehaviourQuestionnaire } from '@/types';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek } from 'date-fns';
 import { formatTime, formatDayDate, formatMonthYear, combineDateAndTime } from '@/utils/dateFormatting';
-import { ChevronLeft, ChevronRight, Calendar, UserPlus } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar, UserPlus, X } from 'lucide-react';
 
 export default function CalendarPage() {
   const { state, updateClient } = useApp();
@@ -32,6 +32,9 @@ export default function CalendarPage() {
   const [selectedBehaviouralBrief, setSelectedBehaviouralBrief] = useState<BehaviouralBrief | null>(null);
   const [showBehaviourQuestionnaireModal, setShowBehaviourQuestionnaireModal] = useState(false);
   const [selectedBehaviourQuestionnaire, setSelectedBehaviourQuestionnaire] = useState<BehaviourQuestionnaire | null>(null);
+  const [showMobileDayModal, setShowMobileDayModal] = useState(false);
+  const [selectedDaySessions, setSelectedDaySessions] = useState<Session[]>([]);
+  const [selectedDayDate, setSelectedDayDate] = useState<Date | null>(null);
 
 
   const monthStart = startOfMonth(currentDate);
@@ -177,6 +180,26 @@ export default function CalendarPage() {
     setShowClientModal(true);
   };
 
+  const handleDayClick = (day: Date, sessions: Session[]) => {
+    // On mobile, show modal if there are multiple sessions
+    const isMobile = window.innerWidth < 768;
+
+    if (isMobile && sessions.length > 1) {
+      setSelectedDayDate(day);
+      setSelectedDaySessions(sessions);
+      setShowMobileDayModal(true);
+    } else if (sessions.length === 1) {
+      // Single session, open directly
+      handleSessionClick(sessions[0]);
+    }
+  };
+
+  const handleCloseMobileDayModal = () => {
+    setShowMobileDayModal(false);
+    setSelectedDaySessions([]);
+    setSelectedDayDate(null);
+  };
+
   // Keyboard navigation for months (desktop only)
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -318,9 +341,13 @@ export default function CalendarPage() {
               const isToday = isSameDay(day, new Date());
 
               return (
-                <div key={day.toISOString()} className={`flex flex-col p-1 min-h-0 border-r border-b border-gray-100 last:border-r-0 ${
-                  isToday ? 'ring-2 ring-brand-primary ring-inset' : ''
-                }`}>
+                <div
+                  key={day.toISOString()}
+                  className={`flex flex-col p-1 min-h-0 border-r border-b border-gray-100 last:border-r-0 cursor-pointer ${
+                    isToday ? 'ring-2 ring-brand-primary ring-inset' : ''
+                  }`}
+                  onClick={() => handleDayClick(day, sessions)}
+                >
                   <div className={`text-sm font-medium mb-1 flex-shrink-0 ${
                     isToday
                       ? 'text-brand-primary font-bold'
@@ -495,6 +522,54 @@ export default function CalendarPage() {
         onClose={handleCloseAddModal}
         type={addModalType}
       />
+
+      {/* Mobile Day Modal */}
+      {showMobileDayModal && selectedDayDate && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end justify-center z-50 md:hidden">
+          <div className="bg-white rounded-t-lg w-full max-h-[80vh] overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">
+                {formatDayDate(selectedDayDate.toISOString().split('T')[0])}
+              </h3>
+              <button
+                onClick={handleCloseMobileDayModal}
+                className="p-2 hover:bg-gray-100 rounded-full"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-4 space-y-3 overflow-y-auto">
+              {selectedDaySessions.map(session => {
+                const client = state.clients.find(c => c.id === session.clientId);
+                const isGroupOrRMRLive = session.sessionType === 'Group' || session.sessionType === 'RMR Live';
+                const displayName = client
+                  ? `${client.firstName} ${client.lastName}${client.dogName ? ` w/ ${client.dogName}` : ''}`
+                  : isGroupOrRMRLive
+                  ? session.sessionType
+                  : 'Unknown Client';
+
+                return (
+                  <button
+                    key={session.id}
+                    onClick={() => {
+                      handleCloseMobileDayModal();
+                      handleSessionClick(session);
+                    }}
+                    className="w-full bg-amber-800 text-white p-4 rounded-lg text-left hover:bg-amber-700 transition-colors"
+                  >
+                    <div className="font-medium">
+                      {formatTime(session.bookingTime)} | {displayName}
+                    </div>
+                    <div className="text-amber-100 text-sm mt-1">
+                      {session.sessionType}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

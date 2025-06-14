@@ -43,6 +43,7 @@ function SessionPlanContent() {
   const [selectedActionPoints, setSelectedActionPoints] = useState<string[]>([]);
   const [showActionPoints, setShowActionPoints] = useState(false);
   const [editableActionPoints, setEditableActionPoints] = useState<{[key: string]: {header: string, details: string}}>({});
+  const [actionPointSearch, setActionPointSearch] = useState('');
   const [existingSessionPlan, setExistingSessionPlan] = useState<SessionPlan | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [sessionNumber, setSessionNumber] = useState<number>(1);
@@ -612,7 +613,7 @@ function SessionPlanContent() {
                   onClick={() => setShowActionPoints(!showActionPoints)}
                   className="bg-amber-800 text-white px-4 py-2 rounded-md hover:bg-amber-700 transition-colors text-sm"
                 >
-                  {showActionPoints ? 'Hide Options' : 'Add Action Points'}
+                  {showActionPoints ? 'Edit Action Points' : 'Add Action Points'}
                 </button>
               </div>
 
@@ -679,8 +680,27 @@ function SessionPlanContent() {
               {showActionPoints && (
                 <div className="border border-gray-200 p-4 rounded-md max-h-96 overflow-y-auto mb-6">
                   <h4 className="font-medium mb-3 text-gray-900">Select Action Points:</h4>
+
+                  {/* Search Bar */}
+                  <div className="mb-4">
+                    <input
+                      type="text"
+                      placeholder="Search action points..."
+                      value={actionPointSearch}
+                      onChange={(e) => setActionPointSearch(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-amber-500 focus:border-transparent text-sm"
+                    />
+                  </div>
+
                   <div className="space-y-2">
-                    {predefinedActionPoints.map(actionPoint => {
+                    {predefinedActionPoints
+                      .filter(actionPoint => {
+                        if (!actionPointSearch) return true;
+                        const searchLower = actionPointSearch.toLowerCase();
+                        return actionPoint.header.toLowerCase().includes(searchLower) ||
+                               actionPoint.details.toLowerCase().includes(searchLower);
+                      })
+                      .map(actionPoint => {
                       const isSelected = selectedActionPoints.includes(actionPoint.id);
                       const personalizedActionPoint = personalizeActionPoint(
                         actionPoint,

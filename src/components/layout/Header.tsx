@@ -7,6 +7,8 @@ interface HeaderButton {
   icon: React.ComponentType<{ size?: number }>;
   onClick: () => void;
   title: string;
+  isActive?: boolean;
+  iconOnly?: boolean;
 }
 
 interface HeaderProps {
@@ -65,11 +67,18 @@ export default function Header({
               <button
                 key={index}
                 onClick={button.onClick}
-                className="text-white p-2 rounded-md transition-colors hover:opacity-90"
-                style={{ backgroundColor: '#973b00' }}
+                className={`text-white p-2 rounded-md transition-colors hover:opacity-90 ${
+                  button.isActive ? 'ring-2 ring-white/50' : ''
+                }`}
+                style={{
+                  backgroundColor: button.isActive ? '#e17100' : '#973b00'
+                }}
                 title={button.title}
               >
                 <IconComponent size={20} />
+                {!button.iconOnly && (
+                  <span className="ml-1 text-sm">{button.title}</span>
+                )}
               </button>
             );
           })}

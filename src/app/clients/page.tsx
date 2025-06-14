@@ -10,7 +10,7 @@ import BehaviouralBriefModal from '@/components/modals/BehaviouralBriefModal';
 import BehaviourQuestionnaireModal from '@/components/modals/BehaviourQuestionnaireModal';
 import RMRLogo from '@/components/RMRLogo';
 import { Client, BehaviouralBrief, BehaviourQuestionnaire } from '@/types';
-import { Calendar, UserPlus, Filter, ClipboardList, FileQuestion } from 'lucide-react';
+import { Calendar, UserPlus, Users, UserCheck, ClipboardList, FileQuestion } from 'lucide-react';
 
 export default function ClientsPage() {
   const { state } = useApp();
@@ -24,32 +24,36 @@ export default function ClientsPage() {
   const [selectedBehaviouralBrief, setSelectedBehaviouralBrief] = useState<BehaviouralBrief | null>(null);
   const [showBehaviourQuestionnaireModal, setShowBehaviourQuestionnaireModal] = useState(false);
   const [selectedBehaviourQuestionnaire, setSelectedBehaviourQuestionnaire] = useState<BehaviourQuestionnaire | null>(null);
-  const [clientFilter, setClientFilter] = useState<'all' | 'active' | 'inactive' | 'members' | 'non-members'>('all');
+  const [showMembersOnly, setShowMembersOnly] = useState(false);
+  const [showActiveOnly, setShowActiveOnly] = useState(false);
 
   const filteredClients = state.clients.filter(client => {
     const searchTerm = searchQuery.toLowerCase();
     const matchesSearch = (
       client.firstName?.toLowerCase().includes(searchTerm) ||
       client.lastName?.toLowerCase().includes(searchTerm) ||
-      client.dogName?.toLowerCase().includes(searchTerm)
+      client.dogName?.toLowerCase().includes(searchTerm) ||
+      client.otherDogs?.some(dog => dog.toLowerCase().includes(searchTerm))
     );
 
-    const matchesFilter =
-      clientFilter === 'all' ||
-      (clientFilter === 'active' && client.active) ||
-      (clientFilter === 'inactive' && !client.active) ||
-      (clientFilter === 'members' && client.membership) ||
-      (clientFilter === 'non-members' && !client.membership);
+    // Apply filters - if both are off, show all; if both are on, show clients that match both
+    let matchesFilter = true;
+
+    if (showMembersOnly && showActiveOnly) {
+      matchesFilter = client.membership && client.active;
+    } else if (showMembersOnly) {
+      matchesFilter = client.membership;
+    } else if (showActiveOnly) {
+      matchesFilter = client.active;
+    }
 
     return matchesSearch && matchesFilter;
   });
 
-  // Calculate counts for each filter
-  const allClientsCount = state.clients.length;
-  const activeClientsCount = state.clients.filter(client => client.active).length;
-  const inactiveClientsCount = state.clients.filter(client => !client.active).length;
+  // Calculate counts
+  const totalCount = state.clients.length;
   const membersCount = state.clients.filter(client => client.membership).length;
-  const nonMembersCount = state.clients.filter(client => !client.membership).length;
+  const activeCount = state.clients.filter(client => client.active).length;
 
 
 
@@ -128,20 +132,15 @@ export default function ClientsPage() {
     setShowClientModal(true);
   };
 
-  const handleFilterToggle = () => {
-    const filterOrder: typeof clientFilter[] = ['all', 'active', 'inactive', 'members', 'non-members'];
-    const currentIndex = filterOrder.indexOf(clientFilter);
-    const nextIndex = (currentIndex + 1) % filterOrder.length;
-    setClientFilter(filterOrder[nextIndex]);
-  };
-
-  const getFilterTitle = () => {
-    switch (clientFilter) {
-      case 'active': return `Active Clients (${activeClientsCount})`;
-      case 'inactive': return `Inactive Clients (${inactiveClientsCount})`;
-      case 'members': return `Members Only (${membersCount})`;
-      case 'non-members': return `Non-Members Only (${nonMembersCount})`;
-      default: return `All Clients (${allClientsCount})`;
+  const getDisplayTitle = () => {
+    if (showMembersOnly && showActiveOnly) {
+      return `${filteredClients.length} Active Members`;
+    } else if (showMembersOnly) {
+      return `${filteredClients.length} Members`;
+    } else if (showActiveOnly) {
+      return `${filteredClients.length} Active`;
+    } else {
+      return `${filteredClients.length} Total`;
     }
   };
 
@@ -149,12 +148,21 @@ export default function ClientsPage() {
     <div className="min-h-screen bg-white flex flex-col">
       <div className="bg-amber-800">
         <Header
-          title={`${filteredClients.length} ${clientFilter === 'all' ? 'Total' : clientFilter === 'active' ? 'Active' : clientFilter === 'inactive' ? 'Inactive' : clientFilter === 'members' ? 'Members' : 'Non-Members'}`}
+          title={getDisplayTitle()}
           buttons={[
             {
-              icon: Filter,
-              onClick: handleFilterToggle,
-              title: getFilterTitle()
+              icon: Users,
+              onClick: () => setShowMembersOnly(!showMembersOnly),
+              title: `Members (${membersCount})`,
+              isActive: showMembersOnly,
+              iconOnly: true
+            },
+            {
+              icon: UserCheck,
+              onClick: () => setShowActiveOnly(!showActiveOnly),
+              title: `Active (${activeCount})`,
+              isActive: showActiveOnly,
+              iconOnly: true
             },
             {
               icon: Calendar,
@@ -180,23 +188,23 @@ export default function ClientsPage() {
             <div
               key={client.id}
               onClick={() => handleClientClick(client)}
-              className={`rounded-lg p-4 shadow-sm flex items-center justify-between active:bg-gray-50 transition-colors cursor-pointer ${
-                client.active ? 'bg-white' : 'bg-gray-100 border-l-4 border-gray-400'
+              className={`rounded-lg p-3 shadow-sm flex items-center justify-between active:bg-gray-50 transition-colors cursor-pointer ${
+                client.active ? 'bg-white' : 'bg-gray-100'
               }`}
             >
               <div className="flex items-center space-x-3">
                 {client.membership && (
-                  <RMRLogo size={40} />
+                  <RMRLogo size={32} />
                 )}
                 <div className={client.membership ? '' : 'ml-0'}>
                   <h3 className={`font-medium ${client.active ? 'text-gray-900' : 'text-gray-600'}`}>
                     {client.firstName} {client.lastName}
+                    {client.dogName && (
+                      <span className={`text-sm font-normal ${client.active ? 'text-gray-500' : 'text-gray-400'}`}>
+                        {' '}w/ {client.dogName}
+                      </span>
+                    )}
                   </h3>
-                  {client.dogName && (
-                    <p className={`text-sm ${client.active ? 'text-gray-500' : 'text-gray-400'}`}>
-                      {client.dogName}
-                    </p>
-                  )}
                 </div>
               </div>
 

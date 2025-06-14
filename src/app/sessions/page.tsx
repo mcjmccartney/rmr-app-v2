@@ -12,6 +12,7 @@ import { Session, Client } from '@/types';
 
 import { formatDateTime, formatFullMonthYear } from '@/utils/dateFormatting';
 import { Calendar, UserPlus, ChevronDown, ChevronRight, Target } from 'lucide-react';
+import RMRLogo from '@/components/RMRLogo';
 
 export default function SessionsPage() {
   const { state } = useApp();
@@ -192,11 +193,16 @@ export default function SessionsPage() {
                           className="p-4 border-b border-gray-100 last:border-b-0 active:bg-gray-50 transition-colors cursor-pointer"
                         >
                           <div className="flex items-center justify-between">
-                            <div className="flex-1">
-                              <h3 className="font-medium text-gray-900">{displayName}</h3>
-                              <p className="text-sm text-gray-500">
-                                {formatDateTime(session.bookingDate, session.bookingTime)} · {session.sessionType}
-                              </p>
+                            <div className="flex items-center space-x-3 flex-1">
+                              {client?.membership && (
+                                <RMRLogo size={24} />
+                              )}
+                              <div>
+                                <h3 className="font-medium text-gray-900">{displayName}</h3>
+                                <p className="text-sm text-gray-500">
+                                  {formatDateTime(session.bookingDate, session.bookingTime)} · {session.sessionType}
+                                </p>
+                              </div>
                             </div>
                             <div className="flex items-center space-x-2">
                               {session.sessionPaid ? (

@@ -172,6 +172,25 @@ export default function SessionModal({ session, isOpen, onClose, onEditSession, 
             </div>
           )}
 
+          {client && (
+            <div className="flex justify-between items-center py-4">
+              <span className="text-gray-600 font-medium">Booking Terms</span>
+              <div className="flex items-center space-x-2">
+                {client.booking_terms_signed ? (
+                  <>
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <span className="font-semibold text-green-600">Signed</span>
+                  </>
+                ) : (
+                  <>
+                    <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                    <span className="font-semibold text-red-600">Not Signed</span>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+
           {client?.phone && (
             <div className="flex justify-between items-center py-4">
               <span className="text-gray-600 font-medium">Phone</span>
