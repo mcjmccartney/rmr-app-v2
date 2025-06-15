@@ -32,12 +32,14 @@ export async function POST(request: NextRequest) {
       googleMeetLink: googleMeetLink || 'not provided'
     });
 
+    // Return the updated session data so the frontend can update its state if needed
     return NextResponse.json({
       success: true,
       message: 'Event ID updated successfully',
       sessionId,
       eventId,
-      googleMeetLink: googleMeetLink || null
+      googleMeetLink: googleMeetLink || null,
+      updatedSession // Include the full updated session
     });
 
   } catch (error) {

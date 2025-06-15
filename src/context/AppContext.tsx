@@ -434,16 +434,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
     try {
       console.log('deleteSession called with ID:', id);
 
-      // Get the session first to trigger the deletion webhook
-      const session = state.sessions.find(s => s.id === id);
-      console.log('Found session for deletion:', session ? 'Yes' : 'No', session?.id);
+      // Get the session first from database to ensure we have latest data including Event ID
+      const sessionFromDb = await sessionService.getById(id);
+      console.log('Found session in database for deletion:', sessionFromDb ? 'Yes' : 'No', sessionFromDb?.id);
+      console.log('Session Event ID:', sessionFromDb?.eventId || 'None');
 
-      if (session) {
-        console.log('Triggering deletion webhook for session:', session.id);
+      if (sessionFromDb) {
+        console.log('Triggering deletion webhook for session:', sessionFromDb.id);
         // Trigger deletion webhook before deleting from database
-        await triggerSessionDeletionWebhook(session);
+        await triggerSessionDeletionWebhook(sessionFromDb);
       } else {
-        console.log('No session found in state for ID:', id);
+        console.log('No session found in database for ID:', id);
       }
 
       console.log('Deleting session from database...');
