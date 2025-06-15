@@ -11,6 +11,7 @@ export interface Session {
   sessionPlanId?: string; // Link to session plan
   sessionPaid?: boolean; // Payment status
   paymentConfirmedAt?: string; // When payment was confirmed
+  eventId?: string; // Google Calendar Event ID for deletion
 }
 
 export interface ActionPoint {

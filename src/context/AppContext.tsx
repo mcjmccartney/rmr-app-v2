@@ -299,7 +299,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         hasFilledQuestionnaire,
         // Form URLs with email prefilled
         bookingTermsUrl: `${window.location.origin}/booking-terms?email=${encodeURIComponent(client.email)}`,
-        questionnaireUrl: `${window.location.origin}/behaviour-questionnaire?email=${encodeURIComponent(client.email)}`
+        questionnaireUrl: `${window.location.origin}/behaviour-questionnaire?email=${encodeURIComponent(client.email)}`,
+        // Callback URL for Event ID
+        eventIdCallbackUrl: `${window.location.origin}/api/session/event-id`
       };
 
       console.log('Triggering Make.com webhooks for new session:', webhookData);
@@ -374,9 +376,66 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Trigger Make.com webhook for session deletion
+  const triggerSessionDeletionWebhook = async (session: Session) => {
+    try {
+      // Find the client for this session
+      const client = state.clients.find(c => c.id === session.clientId);
+
+      if (!client || !session.eventId) {
+        console.log('No client found or no Event ID for session, skipping deletion webhook');
+        return;
+      }
+
+      // Prepare session data for Make.com deletion webhook
+      const webhookData = {
+        sessionId: session.id,
+        eventId: session.eventId,
+        clientId: session.clientId,
+        clientName: `${client.firstName} ${client.lastName}`.trim(),
+        clientEmail: client.email,
+        dogName: session.dogName || client.dogName,
+        sessionType: session.sessionType,
+        bookingDate: session.bookingDate,
+        bookingTime: session.bookingTime,
+        notes: session.notes,
+        quote: session.quote
+      };
+
+      console.log('Triggering Make.com deletion webhook for session:', webhookData);
+
+      // Call the Make.com deletion webhook
+      const response = await fetch('https://hook.eu1.make.com/5o6hoq9apeqrbaoqgo65nrmdic64bvds', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(webhookData)
+      });
+
+      if (response.ok) {
+        console.log('Successfully triggered session deletion webhook');
+      } else {
+        console.error('Failed to trigger session deletion webhook:', response.status, response.statusText);
+      }
+
+    } catch (error) {
+      console.error('Error triggering session deletion webhook:', error);
+      // Don't throw error - webhook failure shouldn't prevent session deletion
+    }
+  };
+
   // Delete session from Supabase
   const deleteSession = async (id: string): Promise<void> => {
     try {
+      // Get the session first to trigger the deletion webhook
+      const session = state.sessions.find(s => s.id === id);
+
+      if (session) {
+        // Trigger deletion webhook before deleting from database
+        await triggerSessionDeletionWebhook(session);
+      }
+
       await sessionService.delete(id);
       dispatch({ type: 'DELETE_SESSION', payload: id });
     } catch (error) {
