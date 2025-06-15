@@ -12,6 +12,7 @@ export interface Session {
   sessionPaid?: boolean; // Payment status
   paymentConfirmedAt?: string; // When payment was confirmed
   eventId?: string; // Google Calendar Event ID for deletion
+  googleMeetLink?: string; // Google Meet link from Make.com
 }
 
 export interface ActionPoint {

@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     console.log('Received Event ID update from Make.com:', body);
 
-    const { sessionId, eventId } = body;
+    const { sessionId, eventId, googleMeetLink } = body;
 
     // Validate required fields
     if (!sessionId || !eventId) {
@@ -18,23 +18,32 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Update the session with the Event ID
-    const updatedSession = await sessionService.update(sessionId, {
-      eventId: eventId
-    });
+    // Update the session with the Event ID (and optionally Google Meet link)
+    const updateData: any = { eventId };
+    if (googleMeetLink) {
+      updateData.googleMeetLink = googleMeetLink;
+    }
 
-    console.log('Successfully updated session with Event ID:', updatedSession);
+    const updatedSession = await sessionService.update(sessionId, updateData);
+
+    console.log('Successfully updated session with Event ID:', {
+      sessionId,
+      eventId,
+      googleMeetLink: googleMeetLink || 'not provided'
+    });
 
     return NextResponse.json({
       success: true,
       message: 'Event ID updated successfully',
-      session: updatedSession
+      sessionId,
+      eventId,
+      googleMeetLink: googleMeetLink || null
     });
 
   } catch (error) {
     console.error('Error updating session with Event ID:', error);
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to update Event ID',
         message: error instanceof Error ? error.message : 'Unknown error'
       },

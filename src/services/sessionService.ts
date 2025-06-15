@@ -30,6 +30,7 @@ function dbRowToSession(row: Record<string, any>): Session {
     sessionPaid: row.session_paid || false,
     paymentConfirmedAt: row.payment_confirmed_at,
     eventId: row.event_id,
+    googleMeetLink: row.google_meet_link,
   }
 }
 
@@ -45,6 +46,7 @@ function sessionToDbRow(session: Partial<Session>) {
     session_paid: session.sessionPaid,
     payment_confirmed_at: session.paymentConfirmedAt,
     event_id: session.eventId,
+    google_meet_link: session.googleMeetLink,
   };
 
   // Handle both old and new database formats
