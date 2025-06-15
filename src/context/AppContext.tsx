@@ -382,15 +382,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
       // Find the client for this session
       const client = state.clients.find(c => c.id === session.clientId);
 
-      if (!client || !session.eventId) {
-        console.log('No client found or no Event ID for session, skipping deletion webhook');
+      if (!client) {
+        console.log('No client found for session, skipping deletion webhook');
         return;
       }
 
       // Prepare session data for Make.com deletion webhook
       const webhookData = {
         sessionId: session.id,
-        eventId: session.eventId,
+        eventId: session.eventId || null, // Include even if null for debugging
         clientId: session.clientId,
         clientName: `${client.firstName} ${client.lastName}`.trim(),
         clientEmail: client.email,
@@ -415,8 +415,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       if (response.ok) {
         console.log('Successfully triggered session deletion webhook');
+        const responseText = await response.text();
+        console.log('Webhook response:', responseText);
       } else {
         console.error('Failed to trigger session deletion webhook:', response.status, response.statusText);
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
       }
 
     } catch (error) {
@@ -428,16 +432,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Delete session from Supabase
   const deleteSession = async (id: string): Promise<void> => {
     try {
+      console.log('deleteSession called with ID:', id);
+
       // Get the session first to trigger the deletion webhook
       const session = state.sessions.find(s => s.id === id);
+      console.log('Found session for deletion:', session ? 'Yes' : 'No', session?.id);
 
       if (session) {
+        console.log('Triggering deletion webhook for session:', session.id);
         // Trigger deletion webhook before deleting from database
         await triggerSessionDeletionWebhook(session);
+      } else {
+        console.log('No session found in state for ID:', id);
       }
 
+      console.log('Deleting session from database...');
       await sessionService.delete(id);
       dispatch({ type: 'DELETE_SESSION', payload: id });
+      console.log('Session deleted successfully');
     } catch (error) {
       console.error('Failed to delete session:', error);
       throw error;
