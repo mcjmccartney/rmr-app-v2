@@ -348,13 +348,53 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Create Google Calendar event for session
+  const createCalendarEvent = async (session: Session) => {
+    try {
+      console.log('Creating Google Calendar event for session:', session.id);
+
+      // Call our API endpoint to create the calendar event
+      const response = await fetch('/api/calendar/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          sessionId: session.id
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Successfully created Google Calendar event:', result.eventId);
+
+        // Update the session in state with the event ID
+        const updatedSession = { ...session, eventId: result.eventId };
+        dispatch({ type: 'UPDATE_SESSION', payload: updatedSession });
+
+        return result.eventId;
+      } else {
+        const errorData = await response.json();
+        console.error('Failed to create Google Calendar event:', errorData);
+      }
+
+    } catch (error) {
+      console.error('Error creating Google Calendar event:', error);
+      // Don't throw error - calendar creation failure shouldn't prevent session creation
+    }
+    return null;
+  };
+
   // Create session in Supabase
   const createSession = async (sessionData: Omit<Session, 'id'>): Promise<Session> => {
     try {
       const session = await sessionService.create(sessionData);
       dispatch({ type: 'ADD_SESSION', payload: session });
 
-      // Trigger Make.com webhook after successful creation
+      // Create Google Calendar event after successful session creation
+      await createCalendarEvent(session);
+
+      // Still trigger Make.com webhook for other integrations (booking terms, etc.)
       await triggerSessionWebhook(session);
 
       return session;
@@ -376,64 +416,50 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Trigger Make.com webhook for session deletion
-  const triggerSessionDeletionWebhook = async (session: Session) => {
+  // Delete Google Calendar event directly
+  const deleteCalendarEvent = async (session: Session) => {
     try {
-      // Find the client for this session
-      const client = state.clients.find(c => c.id === session.clientId);
-
-      if (!client || !session.eventId) {
-        console.log('No client found or no Event ID for session, skipping deletion webhook');
+      if (!session.eventId) {
+        console.log('No Event ID for session, skipping calendar deletion');
         return;
       }
 
-      // Prepare session data for Make.com deletion webhook
-      const webhookData = {
-        sessionId: session.id,
-        eventId: session.eventId,
-        clientId: session.clientId,
-        clientName: `${client.firstName} ${client.lastName}`.trim(),
-        clientEmail: client.email,
-        dogName: session.dogName || client.dogName,
-        sessionType: session.sessionType,
-        bookingDate: session.bookingDate,
-        bookingTime: session.bookingTime,
-        notes: session.notes,
-        quote: session.quote
-      };
+      console.log('Deleting Google Calendar event for session:', session.id, 'eventId:', session.eventId);
 
-      console.log('Triggering Make.com deletion webhook for session:', webhookData);
-
-      // Call the Make.com deletion webhook
-      const response = await fetch('https://hook.eu1.make.com/5o6hoq9apeqrbaoqgo65nrmdic64bvds', {
+      // Call our API endpoint to delete the calendar event
+      const response = await fetch('/api/calendar/delete', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(webhookData)
+        body: JSON.stringify({
+          eventId: session.eventId,
+          sessionId: session.id
+        })
       });
 
       if (response.ok) {
-        console.log('Successfully triggered session deletion webhook');
+        console.log('Successfully deleted Google Calendar event');
       } else {
-        console.error('Failed to trigger session deletion webhook:', response.status, response.statusText);
+        const errorData = await response.json();
+        console.error('Failed to delete Google Calendar event:', errorData);
       }
 
     } catch (error) {
-      console.error('Error triggering session deletion webhook:', error);
-      // Don't throw error - webhook failure shouldn't prevent session deletion
+      console.error('Error deleting Google Calendar event:', error);
+      // Don't throw error - calendar deletion failure shouldn't prevent session deletion
     }
   };
 
   // Delete session from Supabase
   const deleteSession = async (id: string): Promise<void> => {
     try {
-      // Get the session first to trigger the deletion webhook
+      // Get the session first to delete the calendar event
       const session = state.sessions.find(s => s.id === id);
 
       if (session) {
-        // Trigger deletion webhook before deleting from database
-        await triggerSessionDeletionWebhook(session);
+        // Delete Google Calendar event before deleting from database
+        await deleteCalendarEvent(session);
       }
 
       await sessionService.delete(id);
