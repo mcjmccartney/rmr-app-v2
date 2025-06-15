@@ -186,15 +186,16 @@ export default function CalendarPage() {
   };
 
   const handleDayClick = (day: Date, sessions: Session[]) => {
-    // On mobile, show modal if there are multiple sessions
-    const isMobile = window.innerWidth < 768;
-
-    if (isMobile && sessions.length > 1) {
+    if (sessions.length >= 3) {
+      // 3 or more sessions, show modal (mobile slide-in or desktop central)
       setSelectedDayDate(day);
       setSelectedDaySessions(sessions);
       setShowMobileDayModal(true);
     } else if (sessions.length === 1) {
       // Single session, open directly
+      handleSessionClick(sessions[0]);
+    } else if (sessions.length === 2) {
+      // Two sessions, open the first one (existing behavior)
       handleSessionClick(sessions[0]);
     }
   };
@@ -528,23 +529,28 @@ export default function CalendarPage() {
         type={addModalType}
       />
 
-      {/* Mobile Day Modal */}
+      {/* Day Sessions Modal - Mobile & Desktop */}
       {showMobileDayModal && selectedDayDate && (
-        <div className="fixed inset-0 z-50 md:hidden">
-          <div className="fixed inset-0 bg-black bg-opacity-50" onClick={handleCloseMobileDayModal}></div>
-          <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-lg max-h-[80vh] overflow-hidden transform transition-transform duration-300 ease-out">
-            <div className="flex items-center justify-between p-4 border-b border-gray-200">
+        <div className="fixed inset-0 z-50">
+          <div className="fixed inset-0 bg-black/50 transition-opacity duration-300" onClick={handleCloseMobileDayModal}></div>
+
+          {/* Mobile: slide up from bottom */}
+          <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl max-h-[80vh] overflow-hidden transform transition-transform duration-300 ease-out md:hidden">
+            <div className="flex justify-center py-3">
+              <div className="w-12 h-1 bg-gray-300 rounded-full" />
+            </div>
+            <div className="flex items-center justify-between px-6 pb-4">
               <h3 className="text-lg font-semibold text-gray-900">
                 {formatDayDate(selectedDayDate.toISOString().split('T')[0])}
               </h3>
               <button
                 onClick={handleCloseMobileDayModal}
-                className="p-2 hover:bg-gray-100 rounded-full"
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
               >
                 <X size={20} />
               </button>
             </div>
-            <div className="p-4 space-y-3 overflow-y-auto">
+            <div className="px-6 pb-6 space-y-3 overflow-y-auto max-h-[calc(80vh-120px)]">
               {selectedDaySessions.map(session => {
                 const client = state.clients.find(c => c.id === session.clientId);
                 const isGroupOrRMRLive = session.sessionType === 'Group' || session.sessionType === 'RMR Live';
@@ -572,6 +578,52 @@ export default function CalendarPage() {
                   </button>
                 );
               })}
+            </div>
+          </div>
+
+          {/* Desktop: central modal */}
+          <div className="hidden md:flex fixed inset-0 items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[80vh] overflow-hidden">
+              <div className="flex items-center justify-between p-6 border-b border-gray-200">
+                <h3 className="text-xl font-semibold text-gray-900">
+                  {formatDayDate(selectedDayDate.toISOString().split('T')[0])}
+                </h3>
+                <button
+                  onClick={handleCloseMobileDayModal}
+                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              <div className="p-6 space-y-3 overflow-y-auto max-h-[calc(80vh-120px)]">
+                {selectedDaySessions.map(session => {
+                  const client = state.clients.find(c => c.id === session.clientId);
+                  const isGroupOrRMRLive = session.sessionType === 'Group' || session.sessionType === 'RMR Live';
+                  const displayName = client
+                    ? `${client.firstName} ${client.lastName}${session.dogName ? ` w/ ${session.dogName}` : client.dogName ? ` w/ ${client.dogName}` : ''}`
+                    : isGroupOrRMRLive
+                    ? session.sessionType
+                    : 'Unknown Client';
+
+                  return (
+                    <button
+                      key={session.id}
+                      onClick={() => {
+                        handleCloseMobileDayModal();
+                        handleSessionClick(session);
+                      }}
+                      className="w-full bg-amber-800 text-white p-4 rounded-lg text-left hover:bg-amber-700 transition-colors"
+                    >
+                      <div className="font-medium">
+                        {formatTime(session.bookingTime)} | {displayName}
+                      </div>
+                      <div className="text-amber-100 text-sm mt-1">
+                        {session.sessionType}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
