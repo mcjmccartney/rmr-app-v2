@@ -204,6 +204,8 @@ export default function CalendarPage() {
     setShowMobileDayModal(false);
     setSelectedDaySessions([]);
     setSelectedDayDate(null);
+    // Clear any selected session to prevent sidepane from showing
+    setSelectedSession(null);
   };
 
   // Keyboard navigation for months (desktop only)
@@ -479,7 +481,7 @@ export default function CalendarPage() {
 
       <SessionModal
         session={selectedSession}
-        isOpen={!!selectedSession && !showEditSessionModal && !showClientModal && !showEditClientModal}
+        isOpen={!!selectedSession && !showEditSessionModal && !showClientModal && !showEditClientModal && !showMobileDayModal}
         onClose={handleCloseModal}
         onEditSession={handleEditSession}
         onEditClient={handleEditClient}
