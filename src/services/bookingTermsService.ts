@@ -68,6 +68,23 @@ export const bookingTermsService = {
     // The booking terms are now tracked in the booking_terms table
   },
 
+  // Update existing booking terms
+  async update(id: string, updates: Partial<BookingTerms>): Promise<BookingTerms> {
+    const { data, error } = await supabase
+      .from('booking_terms')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating booking terms:', error);
+      throw error;
+    }
+
+    return data;
+  },
+
   // Submit booking terms and update client profile
   async submitAndUpdateClient(data: { email: string }): Promise<BookingTerms> {
     // Create booking terms entry

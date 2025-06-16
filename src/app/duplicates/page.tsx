@@ -1,19 +1,24 @@
 'use client';
 
+import { useState } from 'react';
 import { useApp } from '@/context/AppContext';
-import { PotentialDuplicate } from '@/types';
+import { PotentialDuplicate, Client } from '@/types';
 import { ArrowLeft, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import MergeClientModal from '@/components/modals/MergeClientModal';
 
 export default function DuplicatesPage() {
   const router = useRouter();
+  const [showMergeModal, setShowMergeModal] = useState(false);
+  const [mergingDuplicate, setMergingDuplicate] = useState<PotentialDuplicate | null>(null);
 
   // Add error boundary for useApp hook
-  let state, dismissDuplicate;
+  let state, dismissDuplicate, loadClients;
   try {
     const appContext = useApp();
     state = appContext.state;
     dismissDuplicate = appContext.dismissDuplicate;
+    loadClients = appContext.loadClients;
     console.log('App context loaded successfully', { duplicatesCount: state.potentialDuplicates.length });
   } catch (error) {
     console.error('Error loading app context:', error);
@@ -37,6 +42,23 @@ export default function DuplicatesPage() {
     if (window.confirm('Are you sure you want to dismiss this potential duplicate? This action cannot be undone.')) {
       dismissDuplicate(duplicateId);
     }
+  };
+
+  const handleMerge = (duplicate: PotentialDuplicate) => {
+    setMergingDuplicate(duplicate);
+    setShowMergeModal(true);
+  };
+
+  const handleMergeComplete = async (mergedClient: Client) => {
+    // Refresh the clients list and duplicates
+    await loadClients();
+    setShowMergeModal(false);
+    setMergingDuplicate(null);
+  };
+
+  const handleCloseMergeModal = () => {
+    setShowMergeModal(false);
+    setMergingDuplicate(null);
   };
 
   return (
@@ -117,7 +139,7 @@ export default function DuplicatesPage() {
                   {/* Action Buttons */}
                   <div className="mt-6 flex gap-3">
                     <button
-                      onClick={() => alert('Merge functionality coming soon!')}
+                      onClick={() => handleMerge(duplicate)}
                       className="px-6 py-3 text-white font-medium rounded-lg transition-colors"
                       style={{
                         backgroundColor: '#973b00',
@@ -147,6 +169,15 @@ export default function DuplicatesPage() {
           )}
         </div>
       </div>
+
+      {/* Merge Modal */}
+      <MergeClientModal
+        primaryClient={mergingDuplicate?.primaryClient || null}
+        duplicateClient={mergingDuplicate?.duplicateClient || null}
+        isOpen={showMergeModal}
+        onClose={handleCloseMergeModal}
+        onMergeComplete={handleMergeComplete}
+      />
     </div>
   );
 }
