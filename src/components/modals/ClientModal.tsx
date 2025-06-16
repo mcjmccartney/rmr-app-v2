@@ -193,14 +193,17 @@ export default function ClientModal({ client, isOpen, onClose, onEditClient, onV
           <div className="flex justify-between items-center py-4">
             <span className="text-gray-600 font-medium">Booking Terms</span>
             <div className="flex items-center gap-2">
-              {currentClient.booking_terms_signed ? (
+              {currentClient.email && state.bookingTerms.some(bt => bt.email?.toLowerCase() === currentClient.email?.toLowerCase()) ? (
                 <>
                   <span className="text-green-600 text-sm font-medium">✓ Signed</span>
-                  {currentClient.booking_terms_signed_date && (
-                    <span className="text-gray-500 text-xs">
-                      {new Date(currentClient.booking_terms_signed_date).toLocaleDateString('en-GB')}
-                    </span>
-                  )}
+                  {(() => {
+                    const bookingTerm = state.bookingTerms.find(bt => bt.email?.toLowerCase() === currentClient.email?.toLowerCase());
+                    return bookingTerm?.submitted && (
+                      <span className="text-gray-500 text-xs">
+                        {new Date(bookingTerm.submitted).toLocaleDateString('en-GB')}
+                      </span>
+                    );
+                  })()}
                 </>
               ) : (
                 <span className="text-gray-500 text-sm">Not signed</span>

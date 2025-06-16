@@ -21,11 +21,11 @@ export default function BookingTermsPage() {
       setEmail(decodedEmail);
 
       // Check if this email already has booking terms signed
-      const existingClient = state.clients.find(c =>
-        c.email?.toLowerCase() === decodedEmail.toLowerCase() && c.booking_terms_signed
+      const existingBookingTerms = state.bookingTerms.find(bt =>
+        bt.email?.toLowerCase() === decodedEmail.toLowerCase()
       );
 
-      if (existingClient) {
+      if (existingBookingTerms) {
         // Redirect to completion page
         window.location.href = '/booking-terms-completed';
         return;

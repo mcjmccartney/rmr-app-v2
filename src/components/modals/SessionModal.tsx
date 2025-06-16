@@ -176,7 +176,7 @@ export default function SessionModal({ session, isOpen, onClose, onEditSession, 
             <div className="flex justify-between items-center py-4">
               <span className="text-gray-600 font-medium">Booking Terms</span>
               <div className="flex items-center space-x-2">
-                {client.booking_terms_signed ? (
+                {client.email && state.bookingTerms.some(bt => bt.email?.toLowerCase() === client.email?.toLowerCase()) ? (
                   <>
                     <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                     <span className="font-semibold text-green-600">Signed</span>

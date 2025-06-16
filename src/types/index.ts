@@ -131,6 +131,13 @@ export interface Membership {
   amount: number;
 }
 
+export interface BookingTerms {
+  id: string;
+  email: string;
+  submitted: string;
+  created_at?: string;
+}
+
 export interface Client {
   id: string;
   firstName: string;
@@ -166,6 +173,7 @@ export interface AppState {
   sessionPlans: SessionPlan[];
   actionPoints: ActionPoint[];
   memberships: Membership[];
+  bookingTerms: BookingTerms[];
   selectedSession: Session | null;
   selectedClient: Client | null;
   selectedBehaviouralBrief: BehaviouralBrief | null;
@@ -193,6 +201,8 @@ export type AppAction =
   | { type: 'ADD_MEMBERSHIP'; payload: Membership }
   | { type: 'UPDATE_MEMBERSHIP'; payload: Membership }
   | { type: 'DELETE_MEMBERSHIP'; payload: string }
+  | { type: 'SET_BOOKING_TERMS'; payload: BookingTerms[] }
+  | { type: 'ADD_BOOKING_TERMS'; payload: BookingTerms }
   | { type: 'SET_SESSION_PLANS'; payload: SessionPlan[] }
   | { type: 'ADD_SESSION_PLAN'; payload: SessionPlan }
   | { type: 'UPDATE_SESSION_PLAN'; payload: SessionPlan }

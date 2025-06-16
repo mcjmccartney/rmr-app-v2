@@ -1,11 +1,12 @@
 'use client';
 
 import React, { createContext, useContext, useReducer, ReactNode, useEffect } from 'react';
-import { AppState, AppAction, Session, Client, Membership } from '@/types';
+import { AppState, AppAction, Session, Client, Membership, BookingTerms } from '@/types';
 import { clientService } from '@/services/clientService';
 import { sessionService } from '@/services/sessionService';
 import { membershipService } from '@/services/membershipService';
 import { behaviourQuestionnaireService } from '@/services/behaviourQuestionnaireService';
+import { bookingTermsService } from '@/services/bookingTermsService';
 
 const initialState: AppState = {
   sessions: [],
@@ -16,6 +17,7 @@ const initialState: AppState = {
   sessionPlans: [],
   actionPoints: [],
   memberships: [],
+  bookingTerms: [],
   selectedSession: null,
   selectedClient: null,
   selectedBehaviouralBrief: null,
@@ -131,6 +133,12 @@ function appReducer(state: AppState, action: AppAction): AppState {
         memberships: state.memberships.filter(membership => membership.id !== action.payload),
       };
 
+    case 'SET_BOOKING_TERMS':
+      return { ...state, bookingTerms: action.payload };
+
+    case 'ADD_BOOKING_TERMS':
+      return { ...state, bookingTerms: [...state.bookingTerms, action.payload] };
+
     case 'SET_SELECTED_SESSION':
       return { ...state, selectedSession: action.payload };
 
@@ -162,6 +170,7 @@ const AppContext = createContext<{
   loadSessions: () => Promise<void>;
   loadMemberships: () => Promise<void>;
   loadBehaviourQuestionnaires: () => Promise<void>;
+  loadBookingTerms: () => Promise<void>;
   createClient: (client: Omit<Client, 'id'>) => Promise<Client>;
   updateClient: (id: string, updates: Partial<Client>) => Promise<Client>;
   deleteClient: (id: string) => Promise<void>;
@@ -224,6 +233,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Load booking terms from Supabase
+  const loadBookingTerms = async () => {
+    try {
+      console.log('Loading booking terms...');
+      const bookingTerms = await bookingTermsService.getAll();
+      console.log('Loaded booking terms:', bookingTerms.length);
+      dispatch({ type: 'SET_BOOKING_TERMS', payload: bookingTerms });
+    } catch (error) {
+      console.error('Failed to load booking terms:', error);
+    }
+  };
+
   // Create client in Supabase
   const createClient = async (clientData: Omit<Client, 'id'>): Promise<Client> => {
     try {
@@ -270,8 +291,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      // Check if client has already signed booking terms
-      const hasSignedBookingTerms = client.booking_terms_signed || false;
+      // Check if client has already signed booking terms by looking in booking_terms table
+      const hasSignedBookingTerms = state.bookingTerms.some(bt =>
+        bt.email?.toLowerCase() === client.email?.toLowerCase()
+      );
 
       // Check if client has filled questionnaire for this dog
       // Look for questionnaire with matching client email and dog name
@@ -494,6 +517,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     loadSessions();
     loadMemberships();
     loadBehaviourQuestionnaires();
+    loadBookingTerms();
   }, []);
 
   return (
@@ -504,6 +528,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       loadSessions,
       loadMemberships,
       loadBehaviourQuestionnaires,
+      loadBookingTerms,
       createClient,
       updateClient,
       deleteClient,

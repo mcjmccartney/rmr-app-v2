@@ -61,43 +61,11 @@ export const bookingTermsService = {
     return data || [];
   },
 
-  // Update client profile to indicate booking terms signed
+  // Update client profile to indicate booking terms signed (deprecated - now using booking_terms table)
   async updateClientBookingTermsStatus(email: string): Promise<void> {
-    try {
-      // First, check if client exists with this email
-      const { data: client, error: clientError } = await supabase
-        .from('clients')
-        .select('id')
-        .eq('email', email.toLowerCase().trim())
-        .single();
-
-      if (clientError) {
-        if (clientError.code === 'PGRST116') {
-          console.log('No client found with email:', email);
-          return; // Client doesn't exist yet, that's okay
-        }
-        throw clientError;
-      }
-
-      // Update client to indicate booking terms signed
-      const { error: updateError } = await supabase
-        .from('clients')
-        .update({ 
-          booking_terms_signed: true,
-          booking_terms_signed_date: new Date().toISOString()
-        })
-        .eq('id', client.id);
-
-      if (updateError) {
-        console.error('Error updating client booking terms status:', updateError);
-        throw updateError;
-      }
-
-      console.log('Successfully updated client booking terms status for:', email);
-    } catch (error) {
-      console.error('Error in updateClientBookingTermsStatus:', error);
-      // Don't throw error - booking terms submission should succeed even if client update fails
-    }
+    console.log('updateClientBookingTermsStatus called but deprecated - booking terms are now tracked in separate table');
+    // This method is kept for backward compatibility but does nothing
+    // The booking terms are now tracked in the booking_terms table
   },
 
   // Submit booking terms and update client profile

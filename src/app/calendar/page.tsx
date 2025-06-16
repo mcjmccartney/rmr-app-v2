@@ -377,7 +377,8 @@ export default function CalendarPage() {
                         : `${timeOnly} | Unknown Client`;
 
                       // Check if client has both booking terms signed and questionnaire filled for this dog
-                      const hasSignedBookingTerms = client?.booking_terms_signed || false;
+                      const hasSignedBookingTerms = client?.email ?
+                        state.bookingTerms.some(bt => bt.email?.toLowerCase() === client.email?.toLowerCase()) : false;
                       const hasFilledQuestionnaire = client && client.dogName && client.email ?
                         state.behaviourQuestionnaires.some(q =>
                           q.email?.toLowerCase() === client.email?.toLowerCase() &&
@@ -453,7 +454,8 @@ export default function CalendarPage() {
             if (!firstSession || !firstSessionClient) return '#973b00';
 
             // Check if first session client has both booking terms signed and questionnaire filled
-            const hasSignedBookingTerms = firstSessionClient.booking_terms_signed || false;
+            const hasSignedBookingTerms = firstSessionClient.email ?
+              state.bookingTerms.some(bt => bt.email?.toLowerCase() === firstSessionClient.email?.toLowerCase()) : false;
             const hasFilledQuestionnaire = firstSessionClient.dogName && firstSessionClient.email ?
               state.behaviourQuestionnaires.some(q =>
                 q.email?.toLowerCase() === firstSessionClient.email?.toLowerCase() &&
