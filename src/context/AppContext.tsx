@@ -7,6 +7,7 @@ import { sessionService } from '@/services/sessionService';
 import { membershipService } from '@/services/membershipService';
 import { behaviourQuestionnaireService } from '@/services/behaviourQuestionnaireService';
 import { bookingTermsService } from '@/services/bookingTermsService';
+import { DuplicateDetectionService } from '@/services/duplicateDetectionService';
 
 const initialState: AppState = {
   sessions: [],
@@ -18,6 +19,7 @@ const initialState: AppState = {
   actionPoints: [],
   memberships: [],
   bookingTerms: [],
+  potentialDuplicates: [],
   selectedSession: null,
   selectedClient: null,
   selectedBehaviouralBrief: null,
@@ -139,6 +141,15 @@ function appReducer(state: AppState, action: AppAction): AppState {
     case 'ADD_BOOKING_TERMS':
       return { ...state, bookingTerms: [...state.bookingTerms, action.payload] };
 
+    case 'SET_POTENTIAL_DUPLICATES':
+      return { ...state, potentialDuplicates: action.payload };
+
+    case 'REMOVE_POTENTIAL_DUPLICATE':
+      return {
+        ...state,
+        potentialDuplicates: state.potentialDuplicates.filter(dup => dup.id !== action.payload),
+      };
+
     case 'SET_SELECTED_SESSION':
       return { ...state, selectedSession: action.payload };
 
@@ -171,6 +182,8 @@ const AppContext = createContext<{
   loadMemberships: () => Promise<void>;
   loadBehaviourQuestionnaires: () => Promise<void>;
   loadBookingTerms: () => Promise<void>;
+  detectDuplicates: () => void;
+  dismissDuplicate: (duplicateId: string) => void;
   createClient: (client: Omit<Client, 'id'>) => Promise<Client>;
   updateClient: (id: string, updates: Partial<Client>) => Promise<Client>;
   deleteClient: (id: string) => Promise<void>;
@@ -192,6 +205,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const clients = await clientService.getAll();
       console.log('Loaded clients:', clients.length);
       dispatch({ type: 'SET_CLIENTS', payload: clients });
+
+      // Detect duplicates after loading clients
+      setTimeout(() => {
+        const duplicates = DuplicateDetectionService.detectDuplicates(clients);
+        console.log('Found potential duplicates:', duplicates.length);
+        dispatch({ type: 'SET_POTENTIAL_DUPLICATES', payload: duplicates });
+      }, 100);
     } catch (error) {
       console.error('Failed to load clients:', error);
     }
@@ -243,6 +263,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('Failed to load booking terms:', error);
     }
+  };
+
+  // Detect potential duplicate clients
+  const detectDuplicates = () => {
+    try {
+      console.log('Detecting potential duplicate clients...');
+      const duplicates = DuplicateDetectionService.detectDuplicates(state.clients);
+      console.log('Found potential duplicates:', duplicates.length);
+      dispatch({ type: 'SET_POTENTIAL_DUPLICATES', payload: duplicates });
+    } catch (error) {
+      console.error('Failed to detect duplicates:', error);
+    }
+  };
+
+  // Dismiss a potential duplicate
+  const dismissDuplicate = (duplicateId: string) => {
+    dispatch({ type: 'REMOVE_POTENTIAL_DUPLICATE', payload: duplicateId });
   };
 
   // Create client in Supabase
@@ -529,6 +566,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       loadMemberships,
       loadBehaviourQuestionnaires,
       loadBookingTerms,
+      detectDuplicates,
+      dismissDuplicate,
       createClient,
       updateClient,
       deleteClient,

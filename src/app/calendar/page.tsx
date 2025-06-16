@@ -13,7 +13,7 @@ import AddModal from '@/components/AddModal';
 import { Session, Client, BehaviouralBrief, BehaviourQuestionnaire } from '@/types';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek } from 'date-fns';
 import { formatTime, formatDayDate, formatMonthYear, combineDateAndTime } from '@/utils/dateFormatting';
-import { ChevronLeft, ChevronRight, Calendar, UserPlus, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar, UserPlus, X, Users } from 'lucide-react';
 
 export default function CalendarPage() {
   const { state, updateClient } = useApp();
@@ -94,6 +94,10 @@ export default function CalendarPage() {
   const handleAddClient = () => {
     setAddModalType('client');
     setShowAddModal(true);
+  };
+
+  const handleViewDuplicates = () => {
+    router.push('/duplicates');
   };
 
   const handleCloseAddModal = () => {
@@ -310,6 +314,19 @@ export default function CalendarPage() {
 
         {/* Right: Action Buttons */}
         <div className="flex items-center gap-2">
+          {/* Duplicate notification button */}
+          {state.potentialDuplicates.length > 0 && (
+            <button
+              onClick={handleViewDuplicates}
+              className="relative p-2 rounded transition-colors text-white hover:bg-brand-primary-dark"
+              title={`${state.potentialDuplicates.length} potential duplicate clients found`}
+            >
+              <Users size={20} />
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
+                {state.potentialDuplicates.length}
+              </span>
+            </button>
+          )}
           <button
             onClick={handleAddSession}
             className="p-2 rounded transition-colors text-white hover:bg-brand-primary-dark"

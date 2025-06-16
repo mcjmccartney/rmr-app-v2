@@ -138,6 +138,17 @@ export interface BookingTerms {
   created_at?: string;
 }
 
+export interface PotentialDuplicate {
+  id: string;
+  primaryClient: Client;
+  duplicateClient: Client;
+  matchReasons: string[];
+  confidence: 'high' | 'medium' | 'low';
+  dogName: string;
+  suggestedAction: 'merge' | 'review';
+  createdAt: string;
+}
+
 export interface Client {
   id: string;
   firstName: string;
@@ -174,6 +185,7 @@ export interface AppState {
   actionPoints: ActionPoint[];
   memberships: Membership[];
   bookingTerms: BookingTerms[];
+  potentialDuplicates: PotentialDuplicate[];
   selectedSession: Session | null;
   selectedClient: Client | null;
   selectedBehaviouralBrief: BehaviouralBrief | null;
@@ -203,6 +215,8 @@ export type AppAction =
   | { type: 'DELETE_MEMBERSHIP'; payload: string }
   | { type: 'SET_BOOKING_TERMS'; payload: BookingTerms[] }
   | { type: 'ADD_BOOKING_TERMS'; payload: BookingTerms }
+  | { type: 'SET_POTENTIAL_DUPLICATES'; payload: PotentialDuplicate[] }
+  | { type: 'REMOVE_POTENTIAL_DUPLICATE'; payload: string }
   | { type: 'SET_SESSION_PLANS'; payload: SessionPlan[] }
   | { type: 'ADD_SESSION_PLAN'; payload: SessionPlan }
   | { type: 'UPDATE_SESSION_PLAN'; payload: SessionPlan }
