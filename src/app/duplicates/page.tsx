@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { useApp } from '@/context/AppContext';
 import { PotentialDuplicate, Client } from '@/types';
-import { ArrowLeft, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import MergeClientModal from '@/components/modals/MergeClientModal';
 
@@ -49,7 +48,7 @@ export default function DuplicatesPage() {
     setShowMergeModal(true);
   };
 
-  const handleMergeComplete = async (mergedClient: Client) => {
+  const handleMergeComplete = async (_mergedClient: Client) => {
     // Refresh the clients list and duplicates
     await loadClients();
     setShowMergeModal(false);

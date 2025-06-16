@@ -113,7 +113,7 @@ export class ClientMergeService {
       const preview = await this.generateMergePreview(primaryClient, duplicateClient);
       
       // Apply user choices to resolve conflicts
-      let finalMergedData = { ...preview.mergedData.client };
+      const finalMergedData = { ...preview.mergedData.client };
       if (userChoices) {
         Object.keys(userChoices).forEach(field => {
           finalMergedData[field as keyof Client] = userChoices[field];
