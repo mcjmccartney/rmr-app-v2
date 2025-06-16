@@ -1,4 +1,4 @@
-import { Client, Session, BehaviouralBrief, BehaviourQuestionnaire, BookingTerm, Membership } from '@/types';
+import { Client, Session, BehaviouralBrief, BehaviourQuestionnaire, BookingTerms, Membership } from '@/types';
 import { clientService } from './clientService';
 import { sessionService } from './sessionService';
 import { behaviouralBriefService } from './behaviouralBriefService';
@@ -16,7 +16,7 @@ export interface MergePreview {
     formsToTransfer: {
       behaviouralBriefs: BehaviouralBrief[];
       behaviourQuestionnaires: BehaviourQuestionnaire[];
-      bookingTerms: BookingTerm[];
+      bookingTerms: BookingTerms[];
     };
     membershipsToTransfer: Membership[];
   };
