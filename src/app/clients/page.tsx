@@ -277,7 +277,7 @@ export default function ClientsPage() {
                 <div key={count} className="mb-6">
                   {/* Group Header */}
                   <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                    {count} RMR Month{count !== 1 ? 's' : ''}
+                    {count} Month{count !== 1 ? 's' : ''} Since Group Coaching
                   </h3>
 
                   {/* Clients in this group */}
@@ -325,7 +325,7 @@ export default function ClientsPage() {
                                 </div>
                               )}
 
-                              {/* Added to Session Button - inline */}
+                              {/* Group Coaching Button - inline */}
                               {showAddedToSessionButton && (
                                 <button
                                   onClick={(e) => {
@@ -334,7 +334,7 @@ export default function ClientsPage() {
                                   }}
                                   className="py-1.5 px-3 bg-amber-800 text-white rounded-lg hover:bg-amber-700 transition-colors font-medium text-sm"
                                 >
-                                  Added to Session
+                                  Group Coaching
                                 </button>
                               )}
                             </div>
