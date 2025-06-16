@@ -7,6 +7,7 @@ import { sessionService } from '@/services/sessionService';
 import { membershipService } from '@/services/membershipService';
 import { behaviourQuestionnaireService } from '@/services/behaviourQuestionnaireService';
 import { bookingTermsService } from '@/services/bookingTermsService';
+import { sessionPlanService } from '@/services/sessionPlanService';
 import { DuplicateDetectionService } from '@/services/duplicateDetectionService';
 
 const initialState: AppState = {
@@ -141,6 +142,9 @@ function appReducer(state: AppState, action: AppAction): AppState {
     case 'ADD_BOOKING_TERMS':
       return { ...state, bookingTerms: [...state.bookingTerms, action.payload] };
 
+    case 'SET_ACTION_POINTS':
+      return { ...state, actionPoints: action.payload };
+
     case 'SET_POTENTIAL_DUPLICATES':
       return { ...state, potentialDuplicates: action.payload };
 
@@ -182,6 +186,7 @@ const AppContext = createContext<{
   loadMemberships: () => Promise<void>;
   loadBehaviourQuestionnaires: () => Promise<void>;
   loadBookingTerms: () => Promise<void>;
+  loadActionPoints: () => Promise<void>;
   detectDuplicates: () => void;
   dismissDuplicate: (duplicateId: string) => void;
   createClient: (client: Omit<Client, 'id'>) => Promise<Client>;
@@ -272,6 +277,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
       dispatch({ type: 'SET_BOOKING_TERMS', payload: bookingTerms });
     } catch (error) {
       console.error('Failed to load booking terms:', error);
+    }
+  };
+
+  // Load action points from Supabase
+  const loadActionPoints = async () => {
+    try {
+      console.log('Loading action points...');
+      const actionPoints = await sessionPlanService.getAllActionPoints();
+      console.log('Loaded action points:', actionPoints.length);
+      dispatch({ type: 'SET_ACTION_POINTS', payload: actionPoints });
+    } catch (error) {
+      console.error('Failed to load action points:', error);
     }
   };
 
@@ -581,6 +598,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     loadMemberships();
     loadBehaviourQuestionnaires();
     loadBookingTerms();
+    loadActionPoints();
   }, []);
 
   return (
@@ -592,6 +610,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       loadMemberships,
       loadBehaviourQuestionnaires,
       loadBookingTerms,
+      loadActionPoints,
       detectDuplicates,
       dismissDuplicate,
       createClient,

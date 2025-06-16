@@ -20,6 +20,9 @@ function SessionPlanContent() {
   const session = sessionId ? state.sessions.find(s => s.id === sessionId) : null;
   const client = session ? state.clients.find(c => c.id === session.clientId) : null;
 
+  // Use action points from state (loaded from Supabase) or fallback to predefined ones
+  const actionPoints = state.actionPoints.length > 0 ? state.actionPoints : predefinedActionPoints;
+
   // Debug logging for Lisa Gebler issue
   useEffect(() => {
     if (sessionId && session) {
@@ -285,7 +288,7 @@ function SessionPlanContent() {
 
   // Initialize editable action point with personalized content
   const initializeEditableActionPoint = (actionPointId: string) => {
-    const actionPoint = predefinedActionPoints.find(ap => ap.id === actionPointId);
+    const actionPoint = actionPoints.find(ap => ap.id === actionPointId);
     if (!actionPoint) return;
 
     const personalizedActionPoint = personalizeActionPoint(
@@ -418,7 +421,7 @@ function SessionPlanContent() {
         }
 
         // Otherwise use personalized version with correct gender
-        const actionPoint = predefinedActionPoints.find(ap => ap.id === actionPointId);
+        const actionPoint = actionPoints.find(ap => ap.id === actionPointId);
         if (!actionPoint) return null;
 
         const personalizedActionPoint = personalizeActionPoint(
@@ -542,7 +545,7 @@ function SessionPlanContent() {
       </div>
 
       <div className="flex-1 p-4">
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-5xl mx-auto">
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
               <div className="text-gray-500">Loading session plan...</div>
@@ -608,14 +611,27 @@ function SessionPlanContent() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Explanation of Behaviour
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Explanation of Behaviour
+                </label>
+                <span className={`text-xs ${
+                  formData.explanationOfBehaviour.length > 1600 ? 'text-red-500' : 'text-gray-500'
+                }`}>
+                  {formData.explanationOfBehaviour.length}/1600
+                </span>
+              </div>
               <textarea
                 value={formData.explanationOfBehaviour}
-                onChange={(e) => handleInputChange('explanationOfBehaviour', e.target.value)}
+                onChange={(e) => {
+                  if (e.target.value.length <= 1600) {
+                    handleInputChange('explanationOfBehaviour', e.target.value);
+                  }
+                }}
                 className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-800 focus:border-amber-800 resize-none"
-                rows={4}
+                rows={8}
+                maxLength={1600}
+                placeholder="Describe the behaviour patterns, triggers, and context..."
               />
             </div>
 
@@ -740,7 +756,7 @@ function SessionPlanContent() {
                   </div>
 
                   <div className="space-y-2">
-                    {predefinedActionPoints
+                    {actionPoints
                       .filter(actionPoint => {
                         if (!actionPointSearch) return true;
                         const searchLower = actionPointSearch.toLowerCase();

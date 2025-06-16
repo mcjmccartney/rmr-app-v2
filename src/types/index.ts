@@ -215,6 +215,7 @@ export type AppAction =
   | { type: 'DELETE_MEMBERSHIP'; payload: string }
   | { type: 'SET_BOOKING_TERMS'; payload: BookingTerms[] }
   | { type: 'ADD_BOOKING_TERMS'; payload: BookingTerms }
+  | { type: 'SET_ACTION_POINTS'; payload: ActionPoint[] }
   | { type: 'SET_POTENTIAL_DUPLICATES'; payload: PotentialDuplicate[] }
   | { type: 'REMOVE_POTENTIAL_DUPLICATE'; payload: string }
   | { type: 'SET_SESSION_PLANS'; payload: SessionPlan[] }
