@@ -113,20 +113,21 @@ export const sessionPlanService = {
         return 1;
       }
 
-      // Get all sessions for this client ordered by date/time
+      // Get all sessions for this client ordered by date/time (most recent first)
       const { data: clientSessions, error: sessionsError } = await supabase
         .from('sessions')
         .select('id, booking_date, booking_time')
         .eq('client_id', session.client_id)
-        .order('booking_date', { ascending: true })
-        .order('booking_time', { ascending: true });
+        .order('booking_date', { ascending: false })
+        .order('booking_time', { ascending: false });
 
       if (sessionsError || !clientSessions) {
         console.error('Error fetching client sessions:', sessionsError);
         return 1;
       }
 
-      // Find the position of this session in the chronological order
+      // Find the position of this session in the reverse chronological order
+      // Most recent session = Session 1, second most recent = Session 2, etc.
       const sessionIndex = clientSessions.findIndex(s => s.id === sessionId);
       return sessionIndex >= 0 ? sessionIndex + 1 : 1;
 

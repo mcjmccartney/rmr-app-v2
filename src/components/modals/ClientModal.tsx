@@ -268,12 +268,15 @@ export default function ClientModal({ client, isOpen, onClose, onEditClient, onV
                       {Array.isArray(clientSessions) && clientSessions.length > 0 ? (
                         clientSessions.map((session, index) => {
                           if (!session || !session.id) return null;
+                          // Since sessions are sorted by date descending (most recent first),
+                          // the session number should be index + 1 (most recent = Session 1)
+                          const sessionNumber = index + 1;
                           return (
                             <div key={session.id} className="bg-gray-50 p-3 rounded-lg">
                               <div className="flex justify-between items-start">
                                 <div>
                                   <div className="font-medium text-gray-900 text-sm">
-                                    Session {index + 1}
+                                    Session {sessionNumber}
                                   </div>
                                   <div className="text-gray-600 text-xs">
                                     {session.bookingDate ? new Date(session.bookingDate).toLocaleDateString('en-GB') : 'No date'} at {session.bookingTime ? session.bookingTime.substring(0, 5) : 'No time'}
