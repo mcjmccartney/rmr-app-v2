@@ -254,21 +254,108 @@ export default function ClientsPage() {
 
       <div className="px-4 pb-4 bg-gray-50 flex-1">
         {/* Clients List */}
-        <div className="space-y-3 mt-4">
-          {filteredClients.map((client) => {
-            const membershipCount = getMembershipCountSinceReset(client);
-            const showAddedToSessionButton = showMembersOnly && membershipCount >= 6;
+        <div className="mt-4">
+          {showMembersOnly ? (
+            // Grouped view for Members filter
+            (() => {
+              // Group clients by membership count
+              const groupedClients = filteredClients.reduce((groups, client) => {
+                const count = getMembershipCountSinceReset(client);
+                if (!groups[count]) {
+                  groups[count] = [];
+                }
+                groups[count].push(client);
+                return groups;
+              }, {} as { [count: number]: Client[] });
 
-            return (
-              <div
-                key={client.id}
-                className={`rounded-lg p-3 shadow-sm transition-colors ${
-                  client.active ? 'bg-white' : 'bg-gray-100'
-                }`}
-              >
+              // Sort group keys (counts) in descending order
+              const sortedCounts = Object.keys(groupedClients)
+                .map(Number)
+                .sort((a, b) => b - a);
+
+              return sortedCounts.map(count => (
+                <div key={count} className="mb-6">
+                  {/* Group Header */}
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                    {count} RMR Month{count !== 1 ? 's' : ''}
+                  </h3>
+
+                  {/* Clients in this group */}
+                  <div className="space-y-2">
+                    {groupedClients[count].map((client) => {
+                      const showAddedToSessionButton = count >= 6;
+
+                      return (
+                        <div
+                          key={client.id}
+                          className={`rounded-lg p-3 shadow-sm transition-colors ${
+                            client.active ? 'bg-white' : 'bg-gray-100'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div
+                              onClick={() => handleClientClick(client)}
+                              className="flex items-center space-x-3 cursor-pointer flex-1"
+                            >
+                              {client.membership && (
+                                <RMRLogo size={32} />
+                              )}
+                              <div className={client.membership ? '' : 'ml-0'}>
+                                <h3 className={`font-medium ${client.active ? 'text-gray-900' : 'text-gray-600'}`}>
+                                  {client.firstName} {client.lastName}
+                                </h3>
+                                {client.dogName && (
+                                  <p className={`text-sm ${client.active ? 'text-gray-500' : 'text-gray-400'}`}>
+                                    {client.dogName}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="flex items-center space-x-2">
+                              {/* Form indicators */}
+                              {client.behaviouralBriefId && (
+                                <div className="bg-green-100 p-2 rounded-full" title="Has Behavioural Brief">
+                                  <ClipboardList size={16} className="text-green-600" />
+                                </div>
+                              )}
+                              {client.behaviourQuestionnaireId && (
+                                <div className="bg-blue-100 p-2 rounded-full" title="Has Behaviour Questionnaire">
+                                  <FileQuestion size={16} className="text-blue-600" />
+                                </div>
+                              )}
+
+                              {/* Added to Session Button - inline */}
+                              {showAddedToSessionButton && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleAddedToSession(client);
+                                  }}
+                                  className="py-1.5 px-3 bg-amber-800 text-white rounded-lg hover:bg-amber-700 transition-colors font-medium text-sm"
+                                >
+                                  Added to Session
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ));
+            })()
+          ) : (
+            // Standard view for non-Members filter
+            <div className="space-y-3">
+              {filteredClients.map((client) => (
                 <div
+                  key={client.id}
                   onClick={() => handleClientClick(client)}
-                  className="flex items-center justify-between cursor-pointer"
+                  className={`rounded-lg p-3 shadow-sm flex items-center justify-between active:bg-gray-50 transition-colors cursor-pointer ${
+                    client.active ? 'bg-white' : 'bg-gray-100'
+                  }`}
                 >
                   <div className="flex items-center space-x-3">
                     {client.membership && (
@@ -283,11 +370,6 @@ export default function ClientsPage() {
                           </span>
                         )}
                       </h3>
-                      {showMembersOnly && (
-                        <p className="text-sm text-gray-500 mt-1">
-                          {membershipCount} Month{membershipCount !== 1 ? 's' : ''} Since Group Coaching Session
-                        </p>
-                      )}
                     </div>
                   </div>
 
@@ -304,24 +386,9 @@ export default function ClientsPage() {
                     )}
                   </div>
                 </div>
-
-                {/* Added to Session Button */}
-                {showAddedToSessionButton && (
-                  <div className="mt-3 pt-3 border-t border-gray-200">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleAddedToSession(client);
-                      }}
-                      className="w-full py-2 px-4 bg-amber-800 text-white rounded-lg hover:bg-amber-700 transition-colors font-medium"
-                    >
-                      Added to Session
-                    </button>
-                  </div>
-                )}
-              </div>
-            );
-          })}
+              ))}
+            </div>
+          )}
         </div>
 
         {filteredClients.length === 0 && (
