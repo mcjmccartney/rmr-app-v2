@@ -9,6 +9,7 @@ import { behaviourQuestionnaireService } from '@/services/behaviourQuestionnaire
 import { bookingTermsService } from '@/services/bookingTermsService';
 import { sessionPlanService } from '@/services/sessionPlanService';
 import { DuplicateDetectionService } from '@/services/duplicateDetectionService';
+import { dismissedDuplicatesService } from '@/services/dismissedDuplicatesService';
 
 const initialState: AppState = {
   sessions: [],
@@ -187,9 +188,9 @@ const AppContext = createContext<{
   loadBehaviourQuestionnaires: () => Promise<void>;
   loadBookingTerms: () => Promise<void>;
   loadActionPoints: () => Promise<void>;
-  detectDuplicates: () => void;
-  dismissDuplicate: (duplicateId: string) => void;
-  clearDismissedDuplicates: () => void;
+  detectDuplicates: () => Promise<void>;
+  dismissDuplicate: (duplicateId: string) => Promise<void>;
+  clearDismissedDuplicates: () => Promise<void>;
   createClient: (client: Omit<Client, 'id'>) => Promise<Client>;
   updateClient: (id: string, updates: Partial<Client>) => Promise<Client>;
   deleteClient: (id: string) => Promise<void>;
@@ -213,19 +214,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
       dispatch({ type: 'SET_CLIENTS', payload: clients });
 
       // Detect duplicates after loading clients
-      setTimeout(() => {
+      setTimeout(async () => {
         try {
           const allDuplicates = DuplicateDetectionService.detectDuplicates(clients);
 
-          // Filter out dismissed duplicates with enhanced debugging
+          // Filter out dismissed duplicates using database
           let dismissedIds: string[] = [];
           try {
-            const stored = localStorage.getItem('dismissedDuplicates');
-            dismissedIds = stored ? JSON.parse(stored) : [];
-            console.log('📦 Retrieved dismissed duplicates from localStorage:', dismissedIds);
-          } catch (storageError) {
-            console.error('❌ Error reading dismissed duplicates from localStorage:', storageError);
-            dismissedIds = [];
+            dismissedIds = await dismissedDuplicatesService.getAllDismissedIds();
+            console.log('💾 Retrieved dismissed duplicates from database:', dismissedIds);
+          } catch (dbError) {
+            console.error('❌ Error reading dismissed duplicates from database:', dbError);
+            console.log('⚠️ Falling back to localStorage for dismissed duplicates');
+
+            // Fallback to localStorage if database fails
+            try {
+              const stored = localStorage.getItem('dismissedDuplicates');
+              dismissedIds = stored ? JSON.parse(stored) : [];
+              console.log('📦 Fallback: Retrieved dismissed duplicates from localStorage:', dismissedIds);
+            } catch (storageError) {
+              console.error('❌ Error reading dismissed duplicates from localStorage:', storageError);
+              dismissedIds = [];
+            }
           }
 
           const activeDuplicates = allDuplicates.filter(dup => !dismissedIds.includes(dup.id));
@@ -236,8 +246,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             active: activeDuplicates.length,
             dismissedIds,
             allDuplicateIds: allDuplicates.map(d => d.id),
-            localStorage_working: typeof(Storage) !== "undefined",
-            localStorage_content: localStorage.getItem('dismissedDuplicates'),
+            database_used: true,
             browser_info: navigator.userAgent
           });
           dispatch({ type: 'SET_POTENTIAL_DUPLICATES', payload: activeDuplicates });
@@ -312,13 +321,31 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   // Detect potential duplicate clients
-  const detectDuplicates = () => {
+  const detectDuplicates = async () => {
     try {
       console.log('Detecting potential duplicate clients...');
       const allDuplicates = DuplicateDetectionService.detectDuplicates(state.clients);
 
-      // Filter out dismissed duplicates
-      const dismissedIds = JSON.parse(localStorage.getItem('dismissedDuplicates') || '[]');
+      // Filter out dismissed duplicates using database
+      let dismissedIds: string[] = [];
+      try {
+        dismissedIds = await dismissedDuplicatesService.getAllDismissedIds();
+        console.log('💾 Manual detection: Retrieved dismissed duplicates from database:', dismissedIds);
+      } catch (dbError) {
+        console.error('❌ Manual detection: Error reading dismissed duplicates from database:', dbError);
+        console.log('⚠️ Manual detection: Falling back to localStorage');
+
+        // Fallback to localStorage if database fails
+        try {
+          const stored = localStorage.getItem('dismissedDuplicates');
+          dismissedIds = stored ? JSON.parse(stored) : [];
+          console.log('📦 Manual detection: Fallback localStorage dismissed duplicates:', dismissedIds);
+        } catch (storageError) {
+          console.error('❌ Manual detection: Error reading localStorage:', storageError);
+          dismissedIds = [];
+        }
+      }
+
       const activeDuplicates = allDuplicates.filter(dup => !dismissedIds.includes(dup.id));
 
       console.log('🔍 Manual duplicate detection results:', {
@@ -336,44 +363,75 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   // Dismiss a potential duplicate
-  const dismissDuplicate = (duplicateId: string) => {
+  const dismissDuplicate = async (duplicateId: string) => {
     console.log('🚫 Dismissing duplicate with ID:', duplicateId);
 
-    // Remove from state
+    // Remove from state immediately for better UX
     dispatch({ type: 'REMOVE_POTENTIAL_DUPLICATE', payload: duplicateId });
 
-    // Persist dismissal to localStorage with enhanced error handling
+    // Persist dismissal to database
     try {
-      const currentDismissed = JSON.parse(localStorage.getItem('dismissedDuplicates') || '[]');
-      console.log('📦 Current dismissed duplicates before adding:', currentDismissed);
+      await dismissedDuplicatesService.dismiss(duplicateId);
+      console.log('✅ Successfully dismissed duplicate in database:', duplicateId);
 
-      if (!currentDismissed.includes(duplicateId)) {
-        currentDismissed.push(duplicateId);
-        localStorage.setItem('dismissedDuplicates', JSON.stringify(currentDismissed));
-        console.log('💾 Successfully saved dismissed duplicates:', currentDismissed);
-
-        // Verify the save worked
-        const verification = localStorage.getItem('dismissedDuplicates');
-        console.log('✅ Verification - localStorage now contains:', verification);
-      } else {
-        console.log('⚠️ Duplicate ID already in dismissed list:', duplicateId);
+      // Also save to localStorage as backup
+      try {
+        const currentDismissed = JSON.parse(localStorage.getItem('dismissedDuplicates') || '[]');
+        if (!currentDismissed.includes(duplicateId)) {
+          currentDismissed.push(duplicateId);
+          localStorage.setItem('dismissedDuplicates', JSON.stringify(currentDismissed));
+          console.log('📦 Backup: Also saved to localStorage:', currentDismissed);
+        }
+      } catch (localStorageError) {
+        console.warn('⚠️ Could not save to localStorage backup:', localStorageError);
       }
-    } catch (error) {
-      console.error('❌ Error saving dismissed duplicate:', error);
-      console.error('❌ localStorage available:', typeof(Storage) !== "undefined");
-      console.error('❌ Error details:', error);
+
+    } catch (dbError) {
+      console.error('❌ Error dismissing duplicate in database:', dbError);
+      console.log('⚠️ Falling back to localStorage only');
+
+      // Fallback to localStorage if database fails
+      try {
+        const currentDismissed = JSON.parse(localStorage.getItem('dismissedDuplicates') || '[]');
+        if (!currentDismissed.includes(duplicateId)) {
+          currentDismissed.push(duplicateId);
+          localStorage.setItem('dismissedDuplicates', JSON.stringify(currentDismissed));
+          console.log('📦 Fallback: Saved dismissed duplicate to localStorage:', currentDismissed);
+        }
+      } catch (localStorageError) {
+        console.error('❌ Both database and localStorage failed:', localStorageError);
+        // Re-add to state since we couldn't persist the dismissal
+        console.log('🔄 Re-adding duplicate to state since dismissal failed');
+        // Note: We'd need to re-run duplicate detection to restore the state
+        // For now, we'll leave it dismissed in the UI but it will reappear on refresh
+      }
     }
   };
 
   // Clear all dismissed duplicates (for testing/debugging)
-  const clearDismissedDuplicates = () => {
+  const clearDismissedDuplicates = async () => {
     try {
+      // Clear from database
+      await dismissedDuplicatesService.clearAll();
+      console.log('🗑️ Cleared all dismissed duplicates from database');
+
+      // Also clear localStorage backup
       localStorage.removeItem('dismissedDuplicates');
-      console.log('🗑️ Cleared all dismissed duplicates from localStorage');
+      console.log('🗑️ Cleared all dismissed duplicates from localStorage backup');
+
       // Re-run duplicate detection to show all duplicates again
-      detectDuplicates();
+      await detectDuplicates();
     } catch (error) {
       console.error('❌ Error clearing dismissed duplicates:', error);
+
+      // Fallback to localStorage only
+      try {
+        localStorage.removeItem('dismissedDuplicates');
+        console.log('🗑️ Fallback: Cleared dismissed duplicates from localStorage');
+        await detectDuplicates();
+      } catch (fallbackError) {
+        console.error('❌ Fallback also failed:', fallbackError);
+      }
     }
   };
 

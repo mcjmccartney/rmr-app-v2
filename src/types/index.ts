@@ -149,6 +149,13 @@ export interface PotentialDuplicate {
   createdAt: string;
 }
 
+export interface DismissedDuplicate {
+  id: string;
+  duplicateId: string;
+  dismissedAt: string;
+  createdAt?: string;
+}
+
 export interface Client {
   id: string;
   firstName: string;

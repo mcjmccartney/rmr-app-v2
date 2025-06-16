@@ -38,9 +38,14 @@ export default function DuplicatesPage() {
     );
   }
 
-  const handleDismiss = (duplicateId: string) => {
+  const handleDismiss = async (duplicateId: string) => {
     if (window.confirm('Are you sure you want to dismiss this potential duplicate? This action cannot be undone.')) {
-      dismissDuplicate(duplicateId);
+      try {
+        await dismissDuplicate(duplicateId);
+      } catch (error) {
+        console.error('Error dismissing duplicate:', error);
+        alert('Failed to dismiss duplicate. Please try again.');
+      }
     }
   };
 
@@ -93,7 +98,16 @@ export default function DuplicatesPage() {
               Debug localStorage
             </button>
             <button
-              onClick={clearDismissedDuplicates}
+              onClick={async () => {
+                if (window.confirm('Are you sure you want to clear all dismissed duplicates? This will make them all visible again.')) {
+                  try {
+                    await clearDismissedDuplicates();
+                  } catch (error) {
+                    console.error('Error clearing dismissed duplicates:', error);
+                    alert('Failed to clear dismissed duplicates. Please try again.');
+                  }
+                }
+              }}
               className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
             >
               Clear All Dismissed
