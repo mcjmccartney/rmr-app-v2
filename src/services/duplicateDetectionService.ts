@@ -40,8 +40,11 @@ export class DuplicateDetectionService {
               const primaryClient = this.determinePrimaryClient(clientA, clientB);
               const duplicateClient = primaryClient.id === clientA.id ? clientB : clientA;
 
+              // Create stable ID based on client IDs (sorted to ensure consistency)
+              const stableId = `dup-${[primaryClient.id, duplicateClient.id].sort().join('-')}`;
+
               duplicates.push({
-                id: `dup-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                id: stableId,
                 primaryClient,
                 duplicateClient,
                 matchReasons: matchResult.reasons,

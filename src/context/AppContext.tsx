@@ -220,7 +220,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
           const dismissedIds = JSON.parse(localStorage.getItem('dismissedDuplicates') || '[]');
           const activeDuplicates = allDuplicates.filter(dup => !dismissedIds.includes(dup.id));
 
-          console.log('Found potential duplicates:', allDuplicates.length, 'active:', activeDuplicates.length);
+          console.log('🔍 Duplicate detection results:', {
+            total: allDuplicates.length,
+            dismissed: dismissedIds.length,
+            active: activeDuplicates.length,
+            dismissedIds,
+            allDuplicateIds: allDuplicates.map(d => d.id)
+          });
           dispatch({ type: 'SET_POTENTIAL_DUPLICATES', payload: activeDuplicates });
         } catch (error) {
           console.error('Error detecting duplicates:', error);
@@ -302,7 +308,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const dismissedIds = JSON.parse(localStorage.getItem('dismissedDuplicates') || '[]');
       const activeDuplicates = allDuplicates.filter(dup => !dismissedIds.includes(dup.id));
 
-      console.log('Found potential duplicates:', allDuplicates.length, 'active:', activeDuplicates.length);
+      console.log('🔍 Manual duplicate detection results:', {
+        total: allDuplicates.length,
+        dismissed: dismissedIds.length,
+        active: activeDuplicates.length,
+        dismissedIds,
+        allDuplicateIds: allDuplicates.map(d => d.id)
+      });
       dispatch({ type: 'SET_POTENTIAL_DUPLICATES', payload: activeDuplicates });
     } catch (error) {
       console.error('Failed to detect duplicates:', error);
@@ -312,6 +324,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // Dismiss a potential duplicate
   const dismissDuplicate = (duplicateId: string) => {
+    console.log('🚫 Dismissing duplicate with ID:', duplicateId);
+
     // Remove from state
     dispatch({ type: 'REMOVE_POTENTIAL_DUPLICATE', payload: duplicateId });
 
@@ -320,6 +334,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const dismissed = JSON.parse(localStorage.getItem('dismissedDuplicates') || '[]');
       dismissed.push(duplicateId);
       localStorage.setItem('dismissedDuplicates', JSON.stringify(dismissed));
+      console.log('💾 Saved dismissed duplicates:', dismissed);
     } catch (error) {
       console.error('Error saving dismissed duplicate:', error);
     }
