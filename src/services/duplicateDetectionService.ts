@@ -81,37 +81,47 @@ export class DuplicateDetectionService {
     let confidence: 'high' | 'medium' | 'low' = 'low';
     let dogName = '';
 
-    // Skip if either client doesn't have a dog name
-    if (!clientA.dogName || !clientB.dogName) {
-      return { isMatch: false, reasons: [], confidence: 'low', dogName: '' };
-    }
+    // Check for matching criteria - we need at least one strong match
+    let hasStrongMatch = false;
 
-    // 1. Exact dog name matching (required)
-    if (clientA.dogName.toLowerCase().trim() === clientB.dogName.toLowerCase().trim()) {
+    // 1. Exact dog name matching (strong indicator)
+    if (clientA.dogName && clientB.dogName &&
+        clientA.dogName.toLowerCase().trim() === clientB.dogName.toLowerCase().trim()) {
       reasons.push(`Same dog name: ${clientA.dogName}`);
       dogName = clientA.dogName;
       confidence = 'medium';
-    } else {
-      return { isMatch: false, reasons: [], confidence: 'low', dogName: '' };
+      hasStrongMatch = true;
     }
 
-    // 2. Same surname (high confidence indicator)
-    if (clientA.lastName.toLowerCase().trim() === clientB.lastName.toLowerCase().trim()) {
+    // 2. Same surname (strong indicator)
+    if (clientA.lastName && clientB.lastName &&
+        clientA.lastName.toLowerCase().trim() === clientB.lastName.toLowerCase().trim()) {
       reasons.push(`Same surname: ${clientA.lastName}`);
       confidence = 'high';
+      hasStrongMatch = true;
     }
 
-    // 3. Phone number matching (high confidence booster)
+    // 3. Phone number matching (strong indicator)
     if (clientA.phone && clientB.phone) {
       const phoneMatch = this.comparePhoneNumbers(clientA.phone, clientB.phone);
       if (phoneMatch) {
         reasons.push('Same phone number');
         confidence = 'high';
+        hasStrongMatch = true;
       }
     }
 
+    // 4. Email matching (strong indicator)
+    if (clientA.email && clientB.email &&
+        clientA.email.toLowerCase().trim() === clientB.email.toLowerCase().trim()) {
+      reasons.push('Same email address');
+      confidence = 'high';
+      hasStrongMatch = true;
+    }
+
+    // Only consider it a match if we have at least one strong indicator
     return {
-      isMatch: reasons.length > 0,
+      isMatch: hasStrongMatch,
       reasons,
       confidence,
       dogName

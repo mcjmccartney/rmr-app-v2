@@ -61,6 +61,7 @@ export default function MergeClientModal({
         preview.conflicts.forEach(conflict => {
           initialChoices[conflict.field] = conflict.suggestedValue;
         });
+        console.log('🔍 Setting initial user choices:', initialChoices);
         setUserChoices(initialChoices);
       } catch (error) {
         console.error('Error loading merge preview:', error);
@@ -105,10 +106,15 @@ export default function MergeClientModal({
   };
 
   const handleConflictChoice = (field: string, value: any) => {
-    setUserChoices(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    console.log('🔍 Conflict choice changed:', { field, value });
+    setUserChoices(prev => {
+      const newChoices = {
+        ...prev,
+        [field]: value
+      };
+      console.log('🔍 Updated user choices:', newChoices);
+      return newChoices;
+    });
   };
 
   if (!primaryClient || !duplicateClient) return null;
@@ -166,11 +172,23 @@ export default function MergeClientModal({
                   Choose which information to keep when there are differences:
                 </div>
                 
-                {mergePreview.conflicts.map((conflict, index) => (
-                  <div key={index} className="border border-gray-200 rounded-lg p-4">
-                    <div className="font-medium text-gray-900 mb-3 capitalize">
-                      {conflict.field.replace(/([A-Z])/g, ' $1').trim()}
-                    </div>
+                {mergePreview.conflicts.map((conflict, index) => {
+                  // Debug logging for radio button state
+                  console.log('🔍 Rendering conflict:', {
+                    field: conflict.field,
+                    primaryValue: conflict.primaryValue,
+                    duplicateValue: conflict.duplicateValue,
+                    suggestedValue: conflict.suggestedValue,
+                    currentChoice: userChoices[conflict.field],
+                    primaryChecked: userChoices[conflict.field] === conflict.primaryValue,
+                    duplicateChecked: userChoices[conflict.field] === conflict.duplicateValue
+                  });
+
+                  return (
+                    <div key={index} className="border border-gray-200 rounded-lg p-4">
+                      <div className="font-medium text-gray-900 mb-3 capitalize">
+                        {conflict.field.replace(/([A-Z])/g, ' $1').trim()}
+                      </div>
                     
                     <div className="space-y-2">
                       {/* Primary client option */}
@@ -218,7 +236,8 @@ export default function MergeClientModal({
                       </label>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             )}
 
