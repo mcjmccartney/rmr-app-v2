@@ -12,7 +12,7 @@ interface EditClientModalProps {
 }
 
 export default function EditClientModal({ client, isOpen, onClose }: EditClientModalProps) {
-  const { dispatch } = useApp();
+  const { updateClient } = useApp();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -56,12 +56,11 @@ export default function EditClientModal({ client, isOpen, onClose }: EditClientM
     setFormData({ ...formData, otherDogs: newOtherDogs });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!client) return;
 
-    const updatedClient: Client = {
-      ...client,
+    const updates: Partial<Client> = {
       firstName: formData.firstName,
       lastName: formData.lastName,
       email: formData.email || undefined,
@@ -73,8 +72,13 @@ export default function EditClientModal({ client, isOpen, onClose }: EditClientM
       membership: formData.membership
     };
 
-    dispatch({ type: 'UPDATE_CLIENT', payload: updatedClient });
-    onClose();
+    try {
+      await updateClient(client.id, updates);
+      onClose();
+    } catch (error) {
+      console.error('Failed to update client:', error);
+      alert('Failed to update client. Please try again.');
+    }
   };
 
   if (!client) return null;

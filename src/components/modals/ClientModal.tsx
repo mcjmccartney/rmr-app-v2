@@ -16,7 +16,7 @@ interface ClientModalProps {
 }
 
 export default function ClientModal({ client, isOpen, onClose, onEditClient, onViewBehaviouralBrief, onViewBehaviourQuestionnaire }: ClientModalProps) {
-  const { dispatch, state, getMembershipsByClientId, getMembershipsByEmail } = useApp();
+  const { state, updateClient, deleteClient, getMembershipsByClientId, getMembershipsByEmail } = useApp();
   const [activeTab, setActiveTab] = useState<'sessions' | 'memberships'>('sessions');
   const [clientSessions, setClientSessions] = useState<Session[]>([]);
   const [clientMemberships, setClientMemberships] = useState<Membership[]>([]);
@@ -83,29 +83,38 @@ export default function ClientModal({ client, isOpen, onClose, onEditClient, onV
     }
   }, [isOpen]);
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!currentClient) return;
     // Show confirmation dialog
     if (window.confirm('Are you sure you want to delete this client? This action cannot be undone.')) {
-      dispatch({ type: 'DELETE_CLIENT', payload: currentClient.id });
-      onClose();
+      try {
+        await deleteClient(currentClient.id);
+        onClose();
+      } catch (error) {
+        console.error('Failed to delete client:', error);
+        alert('Failed to delete client. Please try again.');
+      }
     }
   };
 
-  const handleToggleActive = () => {
+  const handleToggleActive = async () => {
     if (!currentClient) return;
-    dispatch({
-      type: 'UPDATE_CLIENT',
-      payload: { ...currentClient, active: !currentClient.active }
-    });
+    try {
+      await updateClient(currentClient.id, { active: !currentClient.active });
+    } catch (error) {
+      console.error('Failed to update client active status:', error);
+      alert('Failed to update client status. Please try again.');
+    }
   };
 
-  const handleToggleMembership = () => {
+  const handleToggleMembership = async () => {
     if (!currentClient) return;
-    dispatch({
-      type: 'UPDATE_CLIENT',
-      payload: { ...currentClient, membership: !currentClient.membership }
-    });
+    try {
+      await updateClient(currentClient.id, { membership: !currentClient.membership });
+    } catch (error) {
+      console.error('Failed to update client membership status:', error);
+      alert('Failed to update membership status. Please try again.');
+    }
   };
 
   const handleEditClick = () => {

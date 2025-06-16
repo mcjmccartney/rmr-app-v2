@@ -13,7 +13,7 @@ interface EditSessionModalProps {
 }
 
 export default function EditSessionModal({ session, isOpen, onClose }: EditSessionModalProps) {
-  const { state, dispatch } = useApp();
+  const { state, updateSession } = useApp();
   const [formData, setFormData] = useState({
     clientId: '',
     sessionType: 'In-Person',
@@ -36,14 +36,11 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
     }
   }, [session]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!session) return;
 
-
-
-    const updatedSession: Session = {
-      ...session,
+    const updates: Partial<Session> = {
       clientId: formData.clientId,
       sessionType: formData.sessionType as Session['sessionType'],
       bookingDate: formData.date, // YYYY-MM-DD format
@@ -52,8 +49,13 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
       notes: formData.notes || undefined
     };
 
-    dispatch({ type: 'UPDATE_SESSION', payload: updatedSession });
-    onClose();
+    try {
+      await updateSession(session.id, updates);
+      onClose();
+    } catch (error) {
+      console.error('Failed to update session:', error);
+      alert('Failed to update session. Please try again.');
+    }
   };
 
   if (!session) return null;
