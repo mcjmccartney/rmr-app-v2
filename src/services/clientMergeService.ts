@@ -220,10 +220,10 @@ export class ClientMergeService {
           duplicateValue,
           suggestedValue: this.chooseBetterValue(primaryValue, duplicateValue)
         });
-        mergedData[field] = this.chooseBetterValue(primaryValue, duplicateValue) as any;
+        (mergedData as any)[field] = this.chooseBetterValue(primaryValue, duplicateValue);
       } else if (duplicateValue && !primaryValue) {
         // Use duplicate value if primary is empty
-        mergedData[field] = duplicateValue;
+        (mergedData as any)[field] = duplicateValue;
       }
       // If primary has value and duplicate doesn't, keep primary (no change needed)
     });
