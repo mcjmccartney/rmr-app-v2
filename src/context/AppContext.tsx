@@ -209,9 +209,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
       // Detect duplicates after loading clients
       setTimeout(() => {
         try {
-          const duplicates = DuplicateDetectionService.detectDuplicates(clients);
-          console.log('Found potential duplicates:', duplicates.length);
-          dispatch({ type: 'SET_POTENTIAL_DUPLICATES', payload: duplicates });
+          const allDuplicates = DuplicateDetectionService.detectDuplicates(clients);
+
+          // Filter out dismissed duplicates
+          const dismissedIds = JSON.parse(localStorage.getItem('dismissedDuplicates') || '[]');
+          const activeDuplicates = allDuplicates.filter(dup => !dismissedIds.includes(dup.id));
+
+          console.log('Found potential duplicates:', allDuplicates.length, 'active:', activeDuplicates.length);
+          dispatch({ type: 'SET_POTENTIAL_DUPLICATES', payload: activeDuplicates });
         } catch (error) {
           console.error('Error detecting duplicates:', error);
           dispatch({ type: 'SET_POTENTIAL_DUPLICATES', payload: [] });
@@ -274,9 +279,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const detectDuplicates = () => {
     try {
       console.log('Detecting potential duplicate clients...');
-      const duplicates = DuplicateDetectionService.detectDuplicates(state.clients);
-      console.log('Found potential duplicates:', duplicates.length);
-      dispatch({ type: 'SET_POTENTIAL_DUPLICATES', payload: duplicates });
+      const allDuplicates = DuplicateDetectionService.detectDuplicates(state.clients);
+
+      // Filter out dismissed duplicates
+      const dismissedIds = JSON.parse(localStorage.getItem('dismissedDuplicates') || '[]');
+      const activeDuplicates = allDuplicates.filter(dup => !dismissedIds.includes(dup.id));
+
+      console.log('Found potential duplicates:', allDuplicates.length, 'active:', activeDuplicates.length);
+      dispatch({ type: 'SET_POTENTIAL_DUPLICATES', payload: activeDuplicates });
     } catch (error) {
       console.error('Failed to detect duplicates:', error);
       dispatch({ type: 'SET_POTENTIAL_DUPLICATES', payload: [] });
@@ -285,7 +295,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // Dismiss a potential duplicate
   const dismissDuplicate = (duplicateId: string) => {
+    // Remove from state
     dispatch({ type: 'REMOVE_POTENTIAL_DUPLICATE', payload: duplicateId });
+
+    // Persist dismissal to localStorage
+    try {
+      const dismissed = JSON.parse(localStorage.getItem('dismissedDuplicates') || '[]');
+      dismissed.push(duplicateId);
+      localStorage.setItem('dismissedDuplicates', JSON.stringify(dismissed));
+    } catch (error) {
+      console.error('Error saving dismissed duplicate:', error);
+    }
   };
 
   // Create client in Supabase

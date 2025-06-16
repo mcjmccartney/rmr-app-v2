@@ -36,8 +36,26 @@ export default function MergeClientModal({
       setIsLoading(true);
       try {
         const preview = await clientMergeService.generateMergePreview(primaryClient, duplicateClient);
+        console.log('🔍 Merge Preview Debug:', {
+          primaryClient: {
+            firstName: primaryClient.firstName,
+            lastName: primaryClient.lastName,
+            email: primaryClient.email
+          },
+          duplicateClient: {
+            firstName: duplicateClient.firstName,
+            lastName: duplicateClient.lastName,
+            email: duplicateClient.email
+          },
+          conflicts: preview.conflicts.map(c => ({
+            field: c.field,
+            primaryValue: c.primaryValue,
+            duplicateValue: c.duplicateValue,
+            suggestedValue: c.suggestedValue
+          }))
+        });
         setMergePreview(preview);
-        
+
         // Initialize user choices with suggested values
         const initialChoices: { [field: string]: any } = {};
         preview.conflicts.forEach(conflict => {

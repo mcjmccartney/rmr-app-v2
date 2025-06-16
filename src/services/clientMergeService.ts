@@ -214,6 +214,11 @@ export class ClientMergeService {
 
       if (primaryValue && duplicateValue && primaryValue !== duplicateValue) {
         // Conflict detected
+        console.log(`🔍 Conflict detected for ${field}:`, {
+          primaryValue,
+          duplicateValue,
+          suggestedValue: this.chooseBetterValue(primaryValue, duplicateValue)
+        });
         conflicts.push({
           field,
           primaryValue,
