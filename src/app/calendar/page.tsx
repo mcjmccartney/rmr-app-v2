@@ -97,6 +97,8 @@ export default function CalendarPage() {
   };
 
   const handleViewDuplicates = () => {
+    console.log('handleViewDuplicates clicked');
+    console.log('Navigating to /duplicates');
     router.push('/duplicates');
   };
 
