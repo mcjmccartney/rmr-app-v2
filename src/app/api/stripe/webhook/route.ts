@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { clientEmailAliasService } from '@/services/clientEmailAliasService';
 
 export async function POST(request: NextRequest) {
   try {
@@ -75,24 +76,76 @@ export async function POST(request: NextRequest) {
 
     console.log('Successfully created membership:', data);
 
-    // Update client membership status and active status to true
-    const { data: clientData, error: clientError } = await supabase
-      .from('clients')
-      .update({
-        membership: true,
-        active: true
-      })
-      .eq('email', membershipData.email)
-      .select();
+    // Find client by email (including aliases) and update membership status
+    let clientData = null;
+    let clientError = null;
+
+    try {
+      // First, try to find client by email alias
+      const clientId = await clientEmailAliasService.findClientByEmail(membershipData.email);
+
+      if (clientId) {
+        // Update client using the found client ID
+        const { data: updatedClient, error: updateError } = await supabase
+          .from('clients')
+          .update({
+            membership: true,
+            active: true
+          })
+          .eq('id', clientId)
+          .select();
+
+        clientData = updatedClient;
+        clientError = updateError;
+
+        if (updatedClient && updatedClient.length > 0) {
+          console.log('Successfully updated client via email alias:', {
+            clientId,
+            paymentEmail: membershipData.email,
+            clientEmail: updatedClient[0].email
+          });
+        }
+      } else {
+        // Fallback: try direct email match (for clients not yet in alias system)
+        const { data: directMatch, error: directError } = await supabase
+          .from('clients')
+          .update({
+            membership: true,
+            active: true
+          })
+          .eq('email', membershipData.email)
+          .select();
+
+        clientData = directMatch;
+        clientError = directError;
+
+        if (directMatch && directMatch.length > 0) {
+          console.log('Successfully updated client via direct email match:', membershipData.email);
+
+          // Set up email alias for future payments
+          try {
+            await clientEmailAliasService.setupAliasesAfterMerge(
+              directMatch[0].id,
+              directMatch[0].email,
+              membershipData.email
+            );
+            console.log('Email alias set up for future payments');
+          } catch (aliasError) {
+            console.error('Failed to set up email alias:', aliasError);
+          }
+        } else {
+          console.log('No client found with email:', membershipData.email);
+        }
+      }
+    } catch (error) {
+      console.error('Error finding/updating client:', error);
+      clientError = error;
+    }
 
     if (clientError) {
       console.error('Error updating client membership and active status:', clientError);
       // Don't fail the webhook if client update fails - membership is still recorded
       console.log('Membership saved but client status not updated');
-    } else if (clientData && clientData.length > 0) {
-      console.log('Successfully updated client membership and active status:', clientData);
-    } else {
-      console.log('No client found with email:', membershipData.email);
     }
 
     // Return success response

@@ -119,9 +119,26 @@ export default function MergeClientModal({
                   mergePreview.mergedData.formsToTransfer.bookingTerms.length
                 } forms will be transferred</div>
                 <div>• {mergePreview.mergedData.membershipsToTransfer.length} membership records will be transferred</div>
+                <div>• Both email addresses will be linked for future payments</div>
                 <div>• Duplicate client will be permanently deleted</div>
               </div>
             </div>
+
+            {/* Email Alias Information */}
+            {primaryClient.email && duplicateClient.email &&
+             primaryClient.email.toLowerCase() !== duplicateClient.email.toLowerCase() && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <h3 className="font-medium text-green-900 mb-2">Future Payment Linking</h3>
+                <div className="text-sm text-green-800">
+                  After merging, future membership payments from <strong>both email addresses</strong> will
+                  automatically link to the merged client profile:
+                  <div className="mt-2 space-y-1">
+                    <div>• <strong>{primaryClient.email}</strong> (primary)</div>
+                    <div>• <strong>{duplicateClient.email}</strong> (alias)</div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Conflicts Resolution */}
             {mergePreview.conflicts.length > 0 && (

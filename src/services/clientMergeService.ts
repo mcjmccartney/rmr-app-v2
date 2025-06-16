@@ -5,6 +5,7 @@ import { behaviouralBriefService } from './behaviouralBriefService';
 import { behaviourQuestionnaireService } from './behaviourQuestionnaireService';
 import { bookingTermsService } from './bookingTermsService';
 import { membershipService } from './membershipService';
+import { clientEmailAliasService } from './clientEmailAliasService';
 
 export interface MergePreview {
   primaryClient: Client;
@@ -161,14 +162,24 @@ export class ClientMergeService {
         }
       }
 
-      // Step 5: Delete duplicate client
+      // Step 5: Set up email aliases for future payments
+      if (updatedPrimaryClient.email || duplicateClient.email) {
+        await clientEmailAliasService.setupAliasesAfterMerge(
+          updatedPrimaryClient.id,
+          updatedPrimaryClient.email || '',
+          duplicateClient.email || ''
+        );
+      }
+
+      // Step 6: Delete duplicate client
       await clientService.delete(duplicateClient.id);
 
       console.log('Client merge completed successfully:', {
         mergedClient: updatedPrimaryClient.id,
         transferredSessions,
         transferredForms,
-        transferredMemberships
+        transferredMemberships,
+        emailAliasesSetup: true
       });
 
       return {
