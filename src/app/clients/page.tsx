@@ -13,7 +13,7 @@ import { Client, BehaviouralBrief, BehaviourQuestionnaire, Membership } from '@/
 import { Calendar, UserPlus, Users, UserCheck, ClipboardList, FileQuestion, Star, Edit3 } from 'lucide-react';
 
 export default function ClientsPage() {
-  const { state } = useApp();
+  const { state, updateMembershipStatuses } = useApp();
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [addModalType, setAddModalType] = useState<'session' | 'client'>('client');
@@ -334,7 +334,7 @@ export default function ClientsPage() {
                                   }}
                                   className="py-1.5 px-3 bg-amber-800 text-white rounded-lg hover:bg-amber-700 transition-colors font-medium text-sm"
                                 >
-                                  Group Coaching
+                                  Added
                                 </button>
                               )}
                             </div>

@@ -85,34 +85,6 @@ export default function DuplicatesPage() {
           <p className="text-gray-600">
             {state.potentialDuplicates.length} potential duplicates found
           </p>
-
-          {/* Debug button for testing localStorage */}
-          <div className="mt-4">
-            <button
-              onClick={() => {
-                console.log('🔍 Current localStorage content:', localStorage.getItem('dismissedDuplicates'));
-                console.log('🔍 Parsed dismissed IDs:', JSON.parse(localStorage.getItem('dismissedDuplicates') || '[]'));
-              }}
-              className="mr-2 px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
-            >
-              Debug localStorage
-            </button>
-            <button
-              onClick={async () => {
-                if (window.confirm('Are you sure you want to clear all dismissed duplicates? This will make them all visible again.')) {
-                  try {
-                    await clearDismissedDuplicates();
-                  } catch (error) {
-                    console.error('Error clearing dismissed duplicates:', error);
-                    alert('Failed to clear dismissed duplicates. Please try again.');
-                  }
-                }
-              }}
-              className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
-            >
-              Clear All Dismissed
-            </button>
-          </div>
         </div>
 
         <div className="px-6 pb-6 max-w-4xl mx-auto">

@@ -10,6 +10,7 @@ import { bookingTermsService } from '@/services/bookingTermsService';
 import { sessionPlanService } from '@/services/sessionPlanService';
 import { DuplicateDetectionService } from '@/services/duplicateDetectionService';
 import { dismissedDuplicatesService } from '@/services/dismissedDuplicatesService';
+import { membershipExpirationService } from '@/services/membershipExpirationService';
 
 const initialState: AppState = {
   sessions: [],
@@ -191,6 +192,7 @@ const AppContext = createContext<{
   detectDuplicates: () => Promise<void>;
   dismissDuplicate: (duplicateId: string) => Promise<void>;
   clearDismissedDuplicates: () => Promise<void>;
+  updateMembershipStatuses: () => Promise<void>;
   createClient: (client: Omit<Client, 'id'>) => Promise<Client>;
   updateClient: (id: string, updates: Partial<Client>) => Promise<Client>;
   deleteClient: (id: string) => Promise<void>;
@@ -432,6 +434,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
       } catch (fallbackError) {
         console.error('❌ Fallback also failed:', fallbackError);
       }
+    }
+  };
+
+  // Update membership statuses for all clients
+  const updateMembershipStatuses = async () => {
+    try {
+      console.log('🔄 Starting membership status update...');
+      const result = await membershipExpirationService.updateAllClientMembershipStatuses();
+      console.log(`✅ Membership status update complete: ${result.updated} clients updated`);
+
+      // Reload clients to reflect the updated membership statuses
+      await loadClients();
+    } catch (error) {
+      console.error('❌ Error updating membership statuses:', error);
     }
   };
 
@@ -703,12 +719,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Load initial data on mount
   useEffect(() => {
     console.log('AppContext: Loading initial data...');
-    loadClients();
-    loadSessions();
-    loadMemberships();
-    loadBehaviourQuestionnaires();
-    loadBookingTerms();
-    loadActionPoints();
+    const initializeApp = async () => {
+      await loadClients();
+      await loadSessions();
+      await loadMemberships();
+      await loadBehaviourQuestionnaires();
+      await loadBookingTerms();
+      await loadActionPoints();
+
+      // Update membership statuses after loading all data
+      console.log('🔄 Checking membership statuses...');
+      await updateMembershipStatuses();
+    };
+
+    initializeApp();
   }, []);
 
   return (
@@ -724,6 +748,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       detectDuplicates,
       dismissDuplicate,
       clearDismissedDuplicates,
+      updateMembershipStatuses,
       createClient,
       updateClient,
       deleteClient,
