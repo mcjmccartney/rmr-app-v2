@@ -48,26 +48,16 @@ export class ClientMergeService {
     try {
       // Get all related data for both clients
       const [
-        primarySessions,
         duplicateSessions,
-        primaryBehaviouralBriefs,
         duplicateBehaviouralBriefs,
-        primaryQuestionnaires,
         duplicateQuestionnaires,
-        primaryBookingTerms,
         duplicateBookingTerms,
-        primaryMemberships,
         duplicateMemberships
       ] = await Promise.all([
-        sessionService.getByClientId(primaryClient.id),
         sessionService.getByClientId(duplicateClient.id),
-        behaviouralBriefService.getByClientId(primaryClient.id),
-        behaviouralBriefService.getByClientId(duplicateClient.id),
-        behaviourQuestionnaireService.getByClientId(primaryClient.id),
-        behaviourQuestionnaireService.getByClientId(duplicateClient.id),
-        bookingTermsService.getByEmail(primaryClient.email || ''),
-        bookingTermsService.getByEmail(duplicateClient.email || ''),
-        membershipService.getByEmail(primaryClient.email || ''),
+        behaviouralBriefService.getByEmail(duplicateClient.email || ''),
+        behaviourQuestionnaireService.getByEmail(duplicateClient.email || ''),
+        duplicateClient.email ? [await bookingTermsService.getByEmail(duplicateClient.email)].filter(Boolean) : [],
         membershipService.getByEmail(duplicateClient.email || '')
       ]);
 
@@ -83,7 +73,7 @@ export class ClientMergeService {
           formsToTransfer: {
             behaviouralBriefs: duplicateBehaviouralBriefs,
             behaviourQuestionnaires: duplicateQuestionnaires,
-            bookingTerms: duplicateBookingTerms
+            bookingTerms: duplicateBookingTerms as BookingTerms[]
           },
           membershipsToTransfer: duplicateMemberships
         },
@@ -132,20 +122,20 @@ export class ClientMergeService {
 
       // Step 3: Transfer forms
       let transferredForms = 0;
-      
-      // Transfer behavioural briefs
+
+      // Transfer behavioural briefs (update clientId)
       for (const brief of preview.mergedData.formsToTransfer.behaviouralBriefs) {
         await behaviouralBriefService.update(brief.id, { clientId: primaryClient.id });
         transferredForms++;
       }
 
-      // Transfer behaviour questionnaires
+      // Transfer behaviour questionnaires (update clientId)
       for (const questionnaire of preview.mergedData.formsToTransfer.behaviourQuestionnaires) {
         await behaviourQuestionnaireService.update(questionnaire.id, { clientId: primaryClient.id });
         transferredForms++;
       }
 
-      // Transfer booking terms (update email reference)
+      // Transfer booking terms (update email reference if needed)
       for (const bookingTerm of preview.mergedData.formsToTransfer.bookingTerms) {
         if (updatedPrimaryClient.email && bookingTerm.email !== updatedPrimaryClient.email) {
           await bookingTermsService.update(bookingTerm.id, { email: updatedPrimaryClient.email });
