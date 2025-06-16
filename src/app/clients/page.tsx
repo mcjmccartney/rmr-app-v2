@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useApp } from '@/context/AppContext';
 import Header from '@/components/layout/Header';
 import AddModal from '@/components/AddModal';
@@ -9,7 +9,7 @@ import EditClientModal from '@/components/modals/EditClientModal';
 import BehaviouralBriefModal from '@/components/modals/BehaviouralBriefModal';
 import BehaviourQuestionnaireModal from '@/components/modals/BehaviourQuestionnaireModal';
 import RMRLogo from '@/components/RMRLogo';
-import { Client, BehaviouralBrief, BehaviourQuestionnaire } from '@/types';
+import { Client, BehaviouralBrief, BehaviourQuestionnaire, Membership } from '@/types';
 import { Calendar, UserPlus, Users, UserCheck, ClipboardList, FileQuestion, Star, Edit3 } from 'lucide-react';
 
 export default function ClientsPage() {
@@ -26,6 +26,45 @@ export default function ClientsPage() {
   const [selectedBehaviourQuestionnaire, setSelectedBehaviourQuestionnaire] = useState<BehaviourQuestionnaire | null>(null);
   const [showMembersOnly, setShowMembersOnly] = useState(false);
   const [showActiveOnly, setShowActiveOnly] = useState(false);
+
+  // Membership tracking state - stores reset dates for each client
+  const [membershipResets, setMembershipResets] = useState<{ [clientId: string]: string }>(() => {
+    // Load from localStorage on initialization
+    const saved = localStorage.getItem('membershipResets');
+    return saved ? JSON.parse(saved) : {};
+  });
+
+  // Save membership resets to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('membershipResets', JSON.stringify(membershipResets));
+  }, [membershipResets]);
+
+  // Calculate membership count since reset for a client
+  const getMembershipCountSinceReset = (client: Client): number => {
+    if (!client.email) return 0;
+
+    const resetDate = membershipResets[client.id];
+    const clientMemberships = state.memberships.filter(m =>
+      m.email.toLowerCase() === client.email?.toLowerCase()
+    );
+
+    if (!resetDate) {
+      // No reset date, count all memberships
+      return clientMemberships.length;
+    }
+
+    // Count memberships after reset date
+    return clientMemberships.filter(m => m.date > resetDate).length;
+  };
+
+  // Handle "Added to Session" button click
+  const handleAddedToSession = (client: Client) => {
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+    setMembershipResets(prev => ({
+      ...prev,
+      [client.id]: today
+    }));
+  };
 
   const filteredClients = state.clients.filter(client => {
     const searchTerm = searchQuery.toLowerCase();
@@ -49,7 +88,23 @@ export default function ClientsPage() {
 
     return matchesSearch && matchesFilter;
   }).sort((a, b) => {
-    // Sort by membership first (members first), then by active status, then alphabetically
+    // Special sorting when Members filter is active
+    if (showMembersOnly) {
+      const aCount = getMembershipCountSinceReset(a);
+      const bCount = getMembershipCountSinceReset(b);
+
+      // Sort by membership count descending (highest first)
+      if (aCount !== bCount) {
+        return bCount - aCount;
+      }
+
+      // If same count, sort alphabetically
+      const aName = `${a.firstName || ''} ${a.lastName || ''}`.trim();
+      const bName = `${b.firstName || ''} ${b.lastName || ''}`.trim();
+      return aName.localeCompare(bName);
+    }
+
+    // Default sorting when Members filter is not active
     if (a.membership !== b.membership) {
       return b.membership ? 1 : -1; // Members first
     }
@@ -200,45 +255,73 @@ export default function ClientsPage() {
       <div className="px-4 pb-4 bg-gray-50 flex-1">
         {/* Clients List */}
         <div className="space-y-3 mt-4">
-          {filteredClients.map((client) => (
-            <div
-              key={client.id}
-              onClick={() => handleClientClick(client)}
-              className={`rounded-lg p-3 shadow-sm flex items-center justify-between active:bg-gray-50 transition-colors cursor-pointer ${
-                client.active ? 'bg-white' : 'bg-gray-100'
-              }`}
-            >
-              <div className="flex items-center space-x-3">
-                {client.membership && (
-                  <RMRLogo size={32} />
-                )}
-                <div className={client.membership ? '' : 'ml-0'}>
-                  <h3 className={`font-medium ${client.active ? 'text-gray-900' : 'text-gray-600'}`}>
-                    {client.firstName} {client.lastName}
-                    {client.dogName && (
-                      <span className={`text-sm font-normal ${client.active ? 'text-gray-500' : 'text-gray-400'}`}>
-                        {' '}w/ {client.dogName}
-                      </span>
+          {filteredClients.map((client) => {
+            const membershipCount = getMembershipCountSinceReset(client);
+            const showAddedToSessionButton = showMembersOnly && membershipCount >= 6;
+
+            return (
+              <div
+                key={client.id}
+                className={`rounded-lg p-3 shadow-sm transition-colors ${
+                  client.active ? 'bg-white' : 'bg-gray-100'
+                }`}
+              >
+                <div
+                  onClick={() => handleClientClick(client)}
+                  className="flex items-center justify-between cursor-pointer"
+                >
+                  <div className="flex items-center space-x-3">
+                    {client.membership && (
+                      <RMRLogo size={32} />
                     )}
-                  </h3>
+                    <div className={client.membership ? '' : 'ml-0'}>
+                      <h3 className={`font-medium ${client.active ? 'text-gray-900' : 'text-gray-600'}`}>
+                        {client.firstName} {client.lastName}
+                        {client.dogName && (
+                          <span className={`text-sm font-normal ${client.active ? 'text-gray-500' : 'text-gray-400'}`}>
+                            {' '}w/ {client.dogName}
+                          </span>
+                        )}
+                      </h3>
+                      {showMembersOnly && (
+                        <p className="text-sm text-gray-500 mt-1">
+                          {membershipCount} Month{membershipCount !== 1 ? 's' : ''} Since Group Coaching Session
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    {client.behaviouralBriefId && (
+                      <div className="bg-green-100 p-2 rounded-full" title="Has Behavioural Brief">
+                        <ClipboardList size={16} className="text-green-600" />
+                      </div>
+                    )}
+                    {client.behaviourQuestionnaireId && (
+                      <div className="bg-blue-100 p-2 rounded-full" title="Has Behaviour Questionnaire">
+                        <FileQuestion size={16} className="text-blue-600" />
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
 
-              <div className="flex items-center space-x-2">
-                {client.behaviouralBriefId && (
-                  <div className="bg-green-100 p-2 rounded-full" title="Has Behavioural Brief">
-                    <ClipboardList size={16} className="text-green-600" />
+                {/* Added to Session Button */}
+                {showAddedToSessionButton && (
+                  <div className="mt-3 pt-3 border-t border-gray-200">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleAddedToSession(client);
+                      }}
+                      className="w-full py-2 px-4 bg-amber-800 text-white rounded-lg hover:bg-amber-700 transition-colors font-medium"
+                    >
+                      Added to Session
+                    </button>
                   </div>
                 )}
-                {client.behaviourQuestionnaireId && (
-                  <div className="bg-blue-100 p-2 rounded-full" title="Has Behaviour Questionnaire">
-                    <FileQuestion size={16} className="text-blue-600" />
-                  </div>
-                )}
               </div>
-
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {filteredClients.length === 0 && (
