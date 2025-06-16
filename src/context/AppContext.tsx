@@ -189,6 +189,7 @@ const AppContext = createContext<{
   loadActionPoints: () => Promise<void>;
   detectDuplicates: () => void;
   dismissDuplicate: (duplicateId: string) => void;
+  clearDismissedDuplicates: () => void;
   createClient: (client: Omit<Client, 'id'>) => Promise<Client>;
   updateClient: (id: string, updates: Partial<Client>) => Promise<Client>;
   deleteClient: (id: string) => Promise<void>;
@@ -216,8 +217,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
         try {
           const allDuplicates = DuplicateDetectionService.detectDuplicates(clients);
 
-          // Filter out dismissed duplicates
-          const dismissedIds = JSON.parse(localStorage.getItem('dismissedDuplicates') || '[]');
+          // Filter out dismissed duplicates with enhanced debugging
+          let dismissedIds: string[] = [];
+          try {
+            const stored = localStorage.getItem('dismissedDuplicates');
+            dismissedIds = stored ? JSON.parse(stored) : [];
+            console.log('📦 Retrieved dismissed duplicates from localStorage:', dismissedIds);
+          } catch (storageError) {
+            console.error('❌ Error reading dismissed duplicates from localStorage:', storageError);
+            dismissedIds = [];
+          }
+
           const activeDuplicates = allDuplicates.filter(dup => !dismissedIds.includes(dup.id));
 
           console.log('🔍 Duplicate detection results:', {
@@ -225,7 +235,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
             dismissed: dismissedIds.length,
             active: activeDuplicates.length,
             dismissedIds,
-            allDuplicateIds: allDuplicates.map(d => d.id)
+            allDuplicateIds: allDuplicates.map(d => d.id),
+            localStorage_working: typeof(Storage) !== "undefined",
+            localStorage_content: localStorage.getItem('dismissedDuplicates'),
+            browser_info: navigator.userAgent
           });
           dispatch({ type: 'SET_POTENTIAL_DUPLICATES', payload: activeDuplicates });
         } catch (error) {
@@ -329,14 +342,38 @@ export function AppProvider({ children }: { children: ReactNode }) {
     // Remove from state
     dispatch({ type: 'REMOVE_POTENTIAL_DUPLICATE', payload: duplicateId });
 
-    // Persist dismissal to localStorage
+    // Persist dismissal to localStorage with enhanced error handling
     try {
-      const dismissed = JSON.parse(localStorage.getItem('dismissedDuplicates') || '[]');
-      dismissed.push(duplicateId);
-      localStorage.setItem('dismissedDuplicates', JSON.stringify(dismissed));
-      console.log('💾 Saved dismissed duplicates:', dismissed);
+      const currentDismissed = JSON.parse(localStorage.getItem('dismissedDuplicates') || '[]');
+      console.log('📦 Current dismissed duplicates before adding:', currentDismissed);
+
+      if (!currentDismissed.includes(duplicateId)) {
+        currentDismissed.push(duplicateId);
+        localStorage.setItem('dismissedDuplicates', JSON.stringify(currentDismissed));
+        console.log('💾 Successfully saved dismissed duplicates:', currentDismissed);
+
+        // Verify the save worked
+        const verification = localStorage.getItem('dismissedDuplicates');
+        console.log('✅ Verification - localStorage now contains:', verification);
+      } else {
+        console.log('⚠️ Duplicate ID already in dismissed list:', duplicateId);
+      }
     } catch (error) {
-      console.error('Error saving dismissed duplicate:', error);
+      console.error('❌ Error saving dismissed duplicate:', error);
+      console.error('❌ localStorage available:', typeof(Storage) !== "undefined");
+      console.error('❌ Error details:', error);
+    }
+  };
+
+  // Clear all dismissed duplicates (for testing/debugging)
+  const clearDismissedDuplicates = () => {
+    try {
+      localStorage.removeItem('dismissedDuplicates');
+      console.log('🗑️ Cleared all dismissed duplicates from localStorage');
+      // Re-run duplicate detection to show all duplicates again
+      detectDuplicates();
+    } catch (error) {
+      console.error('❌ Error clearing dismissed duplicates:', error);
     }
   };
 
@@ -628,6 +665,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       loadActionPoints,
       detectDuplicates,
       dismissDuplicate,
+      clearDismissedDuplicates,
       createClient,
       updateClient,
       deleteClient,

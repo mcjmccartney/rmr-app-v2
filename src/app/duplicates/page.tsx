@@ -12,12 +12,13 @@ export default function DuplicatesPage() {
   const [mergingDuplicate, setMergingDuplicate] = useState<PotentialDuplicate | null>(null);
 
   // Add error boundary for useApp hook
-  let state, dismissDuplicate, loadClients;
+  let state, dismissDuplicate, loadClients, clearDismissedDuplicates;
   try {
     const appContext = useApp();
     state = appContext.state;
     dismissDuplicate = appContext.dismissDuplicate;
     loadClients = appContext.loadClients;
+    clearDismissedDuplicates = appContext.clearDismissedDuplicates;
     console.log('App context loaded successfully', { duplicatesCount: state.potentialDuplicates.length });
   } catch (error) {
     console.error('Error loading app context:', error);
@@ -79,6 +80,25 @@ export default function DuplicatesPage() {
           <p className="text-gray-600">
             {state.potentialDuplicates.length} potential duplicates found
           </p>
+
+          {/* Debug button for testing localStorage */}
+          <div className="mt-4">
+            <button
+              onClick={() => {
+                console.log('🔍 Current localStorage content:', localStorage.getItem('dismissedDuplicates'));
+                console.log('🔍 Parsed dismissed IDs:', JSON.parse(localStorage.getItem('dismissedDuplicates') || '[]'));
+              }}
+              className="mr-2 px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
+            >
+              Debug localStorage
+            </button>
+            <button
+              onClick={clearDismissedDuplicates}
+              className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
+            >
+              Clear All Dismissed
+            </button>
+          </div>
         </div>
 
         <div className="px-6 pb-6 max-w-4xl mx-auto">
