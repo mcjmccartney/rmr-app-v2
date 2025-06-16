@@ -351,28 +351,54 @@ export default function CalendarPage() {
 
         {/* Calendar Grid - Fills remaining space */}
         <div className="flex-1 px-4 py-3 flex flex-col min-h-0 overflow-hidden">
-          <div className="grid grid-cols-7 gap-1 mb-3 flex-shrink-0">
-            {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
-              <div key={day} className="text-center text-sm font-medium text-gray-500 py-3">
-                {day}
-              </div>
-            ))}
+          {/* Dynamic Header Row */}
+          <div className="flex gap-1 mb-3 flex-shrink-0">
+            {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, index) => {
+              // Check if this day of week has any sessions in the current month
+              const dayOfWeek = index; // 0 = Monday, 6 = Sunday
+              const hasSessions = daysInMonth.some(date => {
+                const dayIndex = (date.getDay() + 6) % 7; // Convert Sunday=0 to Monday=0 format
+                return dayIndex === dayOfWeek && getSessionsForDay(date).length > 0;
+              });
+
+              // Saturday (5) and Sunday (6) get narrow width unless they have sessions
+              const isWeekend = index >= 5;
+              const shouldBeNarrow = isWeekend && !hasSessions;
+
+              return (
+                <div
+                  key={day}
+                  className={`text-center text-sm font-medium text-gray-500 py-3 ${
+                    shouldBeNarrow ? 'w-12 flex-shrink-0' : 'flex-1'
+                  }`}
+                >
+                  {day}
+                </div>
+              );
+            })}
           </div>
 
-          <div className="grid grid-cols-7 gap-1 flex-1 min-h-0 auto-rows-fr">
-            {daysInMonth.map(day => {
+          {/* Dynamic Calendar Grid */}
+          <div className="flex gap-1 flex-1 min-h-0">
+            {daysInMonth.map((day, dayIndex) => {
               const sessions = getSessionsForDay(day);
               const dayNumber = format(day, 'd');
               const isCurrentMonth = isSameDay(day, currentDate) ||
                 (day >= monthStart && day <= monthEnd);
               const isToday = isSameDay(day, new Date());
 
+              // Determine if this day should have narrow width
+              const dayOfWeek = (day.getDay() + 6) % 7; // Convert to Monday=0 format
+              const isWeekend = dayOfWeek >= 5; // Saturday or Sunday
+              const hasSessions = sessions.length > 0;
+              const shouldBeNarrow = isWeekend && !hasSessions;
+
               return (
                 <div
                   key={day.toISOString()}
                   className={`flex flex-col p-1 min-h-0 border-r border-b border-gray-100 last:border-r-0 cursor-pointer ${
                     isToday ? 'ring-2 ring-brand-primary ring-inset' : ''
-                  }`}
+                  } ${shouldBeNarrow ? 'w-12 flex-shrink-0' : 'flex-1'}`}
                   onClick={() => handleDayClick(day, sessions)}
                 >
                   <div className={`text-sm font-medium mb-1 flex-shrink-0 ${
@@ -382,8 +408,12 @@ export default function CalendarPage() {
                         ? 'text-gray-900'
                         : 'text-gray-400'
                   }`}>{dayNumber}</div>
-                  <div className="space-y-1 flex-1 min-h-0 overflow-hidden">
-                    {sessions.slice(0, 2).map(session => {
+                  <div className={`space-y-1 flex-1 min-h-0 ${
+                    // Desktop: scrollable with custom scrollbar, Mobile: overflow hidden
+                    'md:overflow-y-auto calendar-day-scroll overflow-hidden'
+                  }`}>
+                    {/* Show all sessions - CSS will handle mobile vs desktop display */}
+                    {sessions.map((session, sessionIndex) => {
                       const client = state.clients.find(c => c.id === session.clientId);
                       const timeOnly = formatTime(session.bookingTime);
 
@@ -441,7 +471,10 @@ export default function CalendarPage() {
                         <button
                           key={session.id}
                           onClick={() => handleSessionClick(session)}
-                          className={buttonClasses}
+                          className={`${buttonClasses} ${
+                            // Hide sessions beyond first 2 on mobile
+                            sessionIndex >= 2 ? 'hidden md:block' : ''
+                          }`}
                           style={buttonStyle}
                         >
                           {/* Show only time on mobile, full text on desktop */}
@@ -450,8 +483,9 @@ export default function CalendarPage() {
                         </button>
                       );
                     })}
+                    {/* Only show "+X more" on mobile */}
                     {sessions.length > 2 && (
-                      <div className="text-xs text-amber-800 font-medium flex-shrink-0">
+                      <div className="text-xs text-amber-800 font-medium flex-shrink-0 md:hidden">
                         +{sessions.length - 2} more
                       </div>
                     )}
