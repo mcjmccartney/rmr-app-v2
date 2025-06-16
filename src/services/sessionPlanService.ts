@@ -127,9 +127,10 @@ export const sessionPlanService = {
       }
 
       // Find the position of this session in the reverse chronological order
-      // Most recent session = Session 1, second most recent = Session 2, etc.
+      // Sessions are displayed newest first, but numbered chronologically
+      // So oldest session = Session 1, newest = Session N
       const sessionIndex = clientSessions.findIndex(s => s.id === sessionId);
-      return sessionIndex >= 0 ? sessionIndex + 1 : 1;
+      return sessionIndex >= 0 ? clientSessions.length - sessionIndex : 1;
 
     } catch (error) {
       console.error('Error calculating session number:', error);

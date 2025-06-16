@@ -268,9 +268,10 @@ export default function ClientModal({ client, isOpen, onClose, onEditClient, onV
                       {Array.isArray(clientSessions) && clientSessions.length > 0 ? (
                         clientSessions.map((session, index) => {
                           if (!session || !session.id) return null;
-                          // Since sessions are sorted by date descending (most recent first),
-                          // the session number should be index + 1 (most recent = Session 1)
-                          const sessionNumber = index + 1;
+                          // Sessions are sorted by date descending (most recent first),
+                          // but session numbers should be chronological (oldest = Session 1)
+                          // So we reverse the numbering: total sessions - current index
+                          const sessionNumber = clientSessions.length - index;
                           return (
                             <div key={session.id} className="bg-gray-50 p-3 rounded-lg">
                               <div className="flex justify-between items-start">
