@@ -4,8 +4,32 @@ import { useApp } from '@/context/AppContext';
 import { useRouter } from 'next/navigation';
 
 export default function DuplicatesPage() {
-  const { state, dismissDuplicate } = useApp();
   const router = useRouter();
+
+  // Add error boundary for useApp hook
+  let state, dismissDuplicate;
+  try {
+    const appContext = useApp();
+    state = appContext.state;
+    dismissDuplicate = appContext.dismissDuplicate;
+    console.log('App context loaded successfully', { duplicatesCount: state.potentialDuplicates.length });
+  } catch (error) {
+    console.error('Error loading app context:', error);
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-xl font-semibold text-gray-900 mb-2">Error Loading Page</h1>
+          <p className="text-gray-600">Unable to load duplicate detection data</p>
+          <button
+            onClick={() => router.back()}
+            className="mt-4 px-4 py-2 bg-amber-600 text-white rounded hover:bg-amber-700"
+          >
+            Go Back
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const handleDismiss = (duplicateId: string) => {
     if (window.confirm('Are you sure you want to dismiss this potential duplicate? This action cannot be undone.')) {

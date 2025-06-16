@@ -208,9 +208,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       // Detect duplicates after loading clients
       setTimeout(() => {
-        const duplicates = DuplicateDetectionService.detectDuplicates(clients);
-        console.log('Found potential duplicates:', duplicates.length);
-        dispatch({ type: 'SET_POTENTIAL_DUPLICATES', payload: duplicates });
+        try {
+          const duplicates = DuplicateDetectionService.detectDuplicates(clients);
+          console.log('Found potential duplicates:', duplicates.length);
+          dispatch({ type: 'SET_POTENTIAL_DUPLICATES', payload: duplicates });
+        } catch (error) {
+          console.error('Error detecting duplicates:', error);
+          dispatch({ type: 'SET_POTENTIAL_DUPLICATES', payload: [] });
+        }
       }, 100);
     } catch (error) {
       console.error('Failed to load clients:', error);
@@ -274,6 +279,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       dispatch({ type: 'SET_POTENTIAL_DUPLICATES', payload: duplicates });
     } catch (error) {
       console.error('Failed to detect duplicates:', error);
+      dispatch({ type: 'SET_POTENTIAL_DUPLICATES', payload: [] });
     }
   };
 

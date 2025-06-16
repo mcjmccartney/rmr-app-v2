@@ -5,41 +5,64 @@ export class DuplicateDetectionService {
    * Detect potential duplicate clients based on various matching criteria
    */
   static detectDuplicates(clients: Client[]): PotentialDuplicate[] {
-    const duplicates: PotentialDuplicate[] = [];
-    const processedPairs = new Set<string>();
+    try {
+      console.log('Starting duplicate detection for', clients.length, 'clients');
+      const duplicates: PotentialDuplicate[] = [];
+      const processedPairs = new Set<string>();
 
-    for (let i = 0; i < clients.length; i++) {
-      for (let j = i + 1; j < clients.length; j++) {
-        const clientA = clients[i];
-        const clientB = clients[j];
-        
-        // Create a unique pair identifier to avoid processing the same pair twice
-        const pairId = [clientA.id, clientB.id].sort().join('-');
-        if (processedPairs.has(pairId)) continue;
-        processedPairs.add(pairId);
+      // Validate input
+      if (!Array.isArray(clients)) {
+        console.warn('Invalid clients array provided to detectDuplicates');
+        return [];
+      }
 
-        const matchResult = this.analyzeMatch(clientA, clientB);
-        
-        if (matchResult.isMatch) {
-          // Determine which client should be primary (more sessions, earlier creation, etc.)
-          const primaryClient = this.determinePrimaryClient(clientA, clientB);
-          const duplicateClient = primaryClient.id === clientA.id ? clientB : clientA;
+      for (let i = 0; i < clients.length; i++) {
+        for (let j = i + 1; j < clients.length; j++) {
+          try {
+            const clientA = clients[i];
+            const clientB = clients[j];
 
-          duplicates.push({
-            id: `dup-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-            primaryClient,
-            duplicateClient,
-            matchReasons: matchResult.reasons,
-            confidence: matchResult.confidence,
-            dogName: matchResult.dogName,
-            suggestedAction: matchResult.confidence === 'high' ? 'merge' : 'review',
-            createdAt: new Date().toISOString()
-          });
+            // Validate client objects
+            if (!clientA || !clientB || !clientA.id || !clientB.id) {
+              console.warn('Invalid client objects found:', { clientA: !!clientA, clientB: !!clientB });
+              continue;
+            }
+
+            // Create a unique pair identifier to avoid processing the same pair twice
+            const pairId = [clientA.id, clientB.id].sort().join('-');
+            if (processedPairs.has(pairId)) continue;
+            processedPairs.add(pairId);
+
+            const matchResult = this.analyzeMatch(clientA, clientB);
+
+            if (matchResult.isMatch) {
+              // Determine which client should be primary (more sessions, earlier creation, etc.)
+              const primaryClient = this.determinePrimaryClient(clientA, clientB);
+              const duplicateClient = primaryClient.id === clientA.id ? clientB : clientA;
+
+              duplicates.push({
+                id: `dup-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                primaryClient,
+                duplicateClient,
+                matchReasons: matchResult.reasons,
+                confidence: matchResult.confidence,
+                dogName: matchResult.dogName,
+                suggestedAction: matchResult.confidence === 'high' ? 'merge' : 'review',
+                createdAt: new Date().toISOString()
+              });
+            }
+          } catch (pairError) {
+            console.error('Error processing client pair:', pairError, { i, j });
+          }
         }
       }
-    }
 
-    return duplicates;
+      console.log('Duplicate detection completed. Found', duplicates.length, 'potential duplicates');
+      return duplicates;
+    } catch (error) {
+      console.error('Error in detectDuplicates:', error);
+      return [];
+    }
   }
 
   /**
