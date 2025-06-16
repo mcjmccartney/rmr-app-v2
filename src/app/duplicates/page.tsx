@@ -40,7 +40,7 @@ export default function DuplicatesPage() {
   };
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#ebeadf' }}>
+    <div className="min-h-screen bg-white">
       <div className="px-6 py-6">
         <div className="flex items-center justify-between mb-8">
           <button
@@ -71,34 +71,75 @@ export default function DuplicatesPage() {
           ) : (
             <div className="space-y-6">
               {state.potentialDuplicates.map((duplicate) => (
-                <div key={duplicate.id} className="bg-white rounded-lg border border-gray-200 p-6">
+                <div
+                  key={duplicate.id}
+                  className="bg-white p-6"
+                  style={{
+                    border: '2px solid #e5e7eb',
+                    borderRadius: '12px',
+                    boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)'
+                  }}
+                >
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-medium text-gray-900">
                       {duplicate.dogName}
                     </h3>
-                    <button
-                      onClick={() => handleDismiss(duplicate.id)}
-                      className="text-gray-400 hover:text-gray-600"
-                    >
-                      ✕
-                    </button>
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                      duplicate.confidence === 'high' ? 'bg-red-50 text-red-700' : 'bg-amber-50 text-amber-700'
+                    }`}>
+                      {duplicate.confidence.toUpperCase()} CONFIDENCE
+                    </span>
                   </div>
                   <div className="grid md:grid-cols-2 gap-6">
                     <div>
                       <h4 className="font-medium text-gray-900 mb-2">Primary Client</h4>
-                      <p>{duplicate.primaryClient.firstName} {duplicate.primaryClient.lastName}</p>
+                      <p className="font-medium">{duplicate.primaryClient.firstName} {duplicate.primaryClient.lastName}</p>
                       <p className="text-sm text-gray-600">{duplicate.primaryClient.email}</p>
+                      {duplicate.primaryClient.phone && (
+                        <p className="text-sm text-gray-600">{duplicate.primaryClient.phone}</p>
+                      )}
                     </div>
                     <div>
                       <h4 className="font-medium text-gray-900 mb-2">Potential Duplicate</h4>
-                      <p>{duplicate.duplicateClient.firstName} {duplicate.duplicateClient.lastName}</p>
+                      <p className="font-medium">{duplicate.duplicateClient.firstName} {duplicate.duplicateClient.lastName}</p>
                       <p className="text-sm text-gray-600">{duplicate.duplicateClient.email}</p>
+                      {duplicate.duplicateClient.phone && (
+                        <p className="text-sm text-gray-600">{duplicate.duplicateClient.phone}</p>
+                      )}
                     </div>
                   </div>
                   <div className="mt-4">
                     <p className="text-sm text-gray-600">
                       Match reasons: {duplicate.matchReasons.join(', ')}
                     </p>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="mt-6 flex gap-3">
+                    <button
+                      onClick={() => alert('Merge functionality coming soon!')}
+                      className="px-6 py-3 text-white font-medium rounded-lg transition-colors"
+                      style={{
+                        backgroundColor: '#973b00',
+                        borderRadius: '8px'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#7a2f00'}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#973b00'}
+                    >
+                      Merge Clients
+                    </button>
+                    <button
+                      onClick={() => handleDismiss(duplicate.id)}
+                      className="px-6 py-3 text-white font-medium rounded-lg transition-colors"
+                      style={{
+                        backgroundColor: '#973b00',
+                        borderRadius: '8px'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#7a2f00'}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#973b00'}
+                    >
+                      Cancel
+                    </button>
                   </div>
                 </div>
               ))}
