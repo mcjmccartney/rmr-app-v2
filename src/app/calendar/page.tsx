@@ -13,7 +13,7 @@ import AddModal from '@/components/AddModal';
 import { Session, Client, BehaviouralBrief, BehaviourQuestionnaire } from '@/types';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek } from 'date-fns';
 import { formatTime, formatDayDate, formatMonthYear, combineDateAndTime } from '@/utils/dateFormatting';
-import { ChevronLeft, ChevronRight, Calendar, UserPlus, X, Users } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar, UserPlus, X, Users, CalendarDays } from 'lucide-react';
 
 export default function CalendarPage() {
   const { state, updateClient } = useApp();
@@ -35,6 +35,7 @@ export default function CalendarPage() {
   const [showMobileDayModal, setShowMobileDayModal] = useState(false);
   const [selectedDaySessions, setSelectedDaySessions] = useState<Session[]>([]);
   const [selectedDayDate, setSelectedDayDate] = useState<Date | null>(null);
+  const [hideWeekends, setHideWeekends] = useState(false);
 
 
   const monthStart = startOfMonth(currentDate);
@@ -316,6 +317,17 @@ export default function CalendarPage() {
 
         {/* Right: Action Buttons */}
         <div className="flex items-center gap-2">
+          {/* Weekend toggle button */}
+          <button
+            onClick={() => setHideWeekends(!hideWeekends)}
+            className={`p-2 rounded transition-colors text-white hover:bg-brand-primary-dark ${
+              hideWeekends ? 'bg-brand-primary-dark' : ''
+            }`}
+            title={hideWeekends ? 'Show weekends' : 'Hide weekends'}
+          >
+            <CalendarDays size={20} />
+          </button>
+
           {/* Duplicate notification button */}
           {state.potentialDuplicates.length > 0 && (
             <button
@@ -351,23 +363,31 @@ export default function CalendarPage() {
 
         {/* Calendar Grid - Fills remaining space */}
         <div className="flex-1 px-4 py-3 flex flex-col min-h-0 overflow-hidden">
-          <div className="grid grid-cols-7 gap-1 mb-3 flex-shrink-0">
-            {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
-              <div key={day} className="text-center text-sm font-medium text-gray-500 py-3">
-                {day}
-              </div>
-            ))}
+          <div className={`grid gap-1 mb-3 flex-shrink-0 ${hideWeekends ? 'grid-cols-5' : 'grid-cols-7'}`}>
+            {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+              .filter((_, index) => !hideWeekends || index < 5)
+              .map(day => (
+                <div key={day} className="text-center text-sm font-medium text-gray-500 py-3">
+                  {day}
+                </div>
+              ))}
           </div>
 
-          <div className="grid grid-cols-7 gap-1 flex-1 min-h-0 auto-rows-fr">
-            {daysInMonth.map(day => {
-              const sessions = getSessionsForDay(day);
-              const dayNumber = format(day, 'd');
-              const isCurrentMonth = isSameDay(day, currentDate) ||
-                (day >= monthStart && day <= monthEnd);
-              const isToday = isSameDay(day, new Date());
+          <div className={`grid gap-1 flex-1 min-h-0 auto-rows-fr ${hideWeekends ? 'grid-cols-5' : 'grid-cols-7'}`}>
+            {daysInMonth
+              .filter(day => {
+                if (!hideWeekends) return true;
+                const dayOfWeek = (day.getDay() + 6) % 7; // Convert to Monday=0 format
+                return dayOfWeek < 5; // Only show Monday-Friday (0-4)
+              })
+              .map(day => {
+                const sessions = getSessionsForDay(day);
+                const dayNumber = format(day, 'd');
+                const isCurrentMonth = isSameDay(day, currentDate) ||
+                  (day >= monthStart && day <= monthEnd);
+                const isToday = isSameDay(day, new Date());
 
-              return (
+                return (
                 <div
                   key={day.toISOString()}
                   className={`flex flex-col p-1 min-h-0 border-r border-b border-gray-100 last:border-r-0 cursor-pointer ${
