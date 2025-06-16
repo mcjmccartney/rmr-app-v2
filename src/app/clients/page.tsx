@@ -10,7 +10,7 @@ import BehaviouralBriefModal from '@/components/modals/BehaviouralBriefModal';
 import BehaviourQuestionnaireModal from '@/components/modals/BehaviourQuestionnaireModal';
 import RMRLogo from '@/components/RMRLogo';
 import { Client, BehaviouralBrief, BehaviourQuestionnaire } from '@/types';
-import { Calendar, UserPlus, Users, UserCheck, ClipboardList, FileQuestion } from 'lucide-react';
+import { Calendar, UserPlus, Users, UserCheck, ClipboardList, FileQuestion, Star, Edit3 } from 'lucide-react';
 
 export default function ClientsPage() {
   const { state } = useApp();
@@ -165,7 +165,7 @@ export default function ClientsPage() {
           title={getDisplayTitle()}
           buttons={[
             {
-              icon: Users,
+              icon: Star,
               onClick: () => setShowMembersOnly(!showMembersOnly),
               title: `Members (${membersCount})`,
               isActive: showMembersOnly,
@@ -179,7 +179,7 @@ export default function ClientsPage() {
               iconOnly: true
             },
             {
-              icon: Calendar,
+              icon: Edit3,
               onClick: handleAddSession,
               title: 'Add Session',
               iconOnly: true

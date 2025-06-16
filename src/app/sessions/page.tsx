@@ -11,8 +11,7 @@ import AddModal from '@/components/AddModal';
 import { Session, Client } from '@/types';
 
 import { formatDateTime, formatFullMonthYear } from '@/utils/dateFormatting';
-import { Calendar, UserPlus, ChevronDown, ChevronRight, Target } from 'lucide-react';
-import RMRLogo from '@/components/RMRLogo';
+import { Calendar, UserPlus, ChevronDown, ChevronRight, Target, Edit3 } from 'lucide-react';
 
 export default function SessionsPage() {
   const { state } = useApp();
@@ -132,7 +131,7 @@ export default function SessionsPage() {
               iconOnly: true
             },
             {
-              icon: Calendar,
+              icon: Edit3,
               onClick: handleAddSession,
               title: 'Add Session',
               iconOnly: true
@@ -202,9 +201,6 @@ export default function SessionsPage() {
                         >
                           <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-3 flex-1">
-                              {client?.membership && (
-                                <RMRLogo size={32} />
-                              )}
                               <div>
                                 <h3 className="font-medium text-gray-900">{displayName}</h3>
                                 <p className="text-sm text-gray-500">

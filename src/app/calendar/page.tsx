@@ -13,7 +13,7 @@ import AddModal from '@/components/AddModal';
 import { Session, Client, BehaviouralBrief, BehaviourQuestionnaire } from '@/types';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek } from 'date-fns';
 import { formatTime, formatDayDate, formatMonthYear, combineDateAndTime } from '@/utils/dateFormatting';
-import { ChevronLeft, ChevronRight, Calendar, UserPlus, X, Users, CalendarDays } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar, UserPlus, X, Users, CalendarDays, Edit3 } from 'lucide-react';
 
 export default function CalendarPage() {
   const { state, updateClient } = useApp();
@@ -346,7 +346,7 @@ export default function CalendarPage() {
             className="p-2 rounded transition-colors text-white hover:bg-brand-primary-dark"
             title="Add Session"
           >
-            <Calendar size={20} />
+            <Edit3 size={20} />
           </button>
           <button
             onClick={handleAddClient}
