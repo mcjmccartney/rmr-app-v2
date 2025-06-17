@@ -60,6 +60,58 @@ export const sessionPlanService = {
     return data?.map(dbRowToActionPoint) || [];
   },
 
+  // Create new action point
+  async createActionPoint(actionPoint: Omit<ActionPoint, 'id'>): Promise<ActionPoint> {
+    const { data, error } = await supabase
+      .from('action_points')
+      .insert({
+        header: actionPoint.header,
+        details: actionPoint.details
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating action point:', error);
+      throw error;
+    }
+
+    return dbRowToActionPoint(data);
+  },
+
+  // Update existing action point
+  async updateActionPoint(id: string, updates: Partial<ActionPoint>): Promise<ActionPoint> {
+    const { data, error } = await supabase
+      .from('action_points')
+      .update({
+        header: updates.header,
+        details: updates.details
+      })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating action point:', error);
+      throw error;
+    }
+
+    return dbRowToActionPoint(data);
+  },
+
+  // Delete action point
+  async deleteActionPoint(id: string): Promise<void> {
+    const { error } = await supabase
+      .from('action_points')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error deleting action point:', error);
+      throw error;
+    }
+  },
+
   // Get session plan by session ID
   async getBySessionId(sessionId: string): Promise<SessionPlan | null> {
     const { data, error } = await supabase

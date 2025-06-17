@@ -4,16 +4,20 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Plus, Edit2, Trash2, Save, X } from 'lucide-react';
 import { ActionPoint } from '@/types';
-import { predefinedActionPoints } from '@/data/actionPoints';
+import { useApp } from '@/context/AppContext';
 import { useEnterKeyHandler } from '@/hooks/useEnterKeyHandler';
 
 export default function ActionPointsPage() {
   const router = useRouter();
-  const [actionPoints, setActionPoints] = useState<ActionPoint[]>(predefinedActionPoints);
+  const { state, createActionPoint, updateActionPoint, deleteActionPoint } = useApp();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ header: '', details: '' });
   const [showAddForm, setShowAddForm] = useState(false);
   const [addForm, setAddForm] = useState({ header: '', details: '' });
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Use action points from app state (loaded from Supabase)
+  const actionPoints = state.actionPoints;
 
   const handleBack = () => {
     router.push('/calendar');
@@ -24,17 +28,23 @@ export default function ActionPointsPage() {
     setEditForm({ header: actionPoint.header, details: actionPoint.details });
   };
 
-  const handleSaveEdit = () => {
-    if (!editingId) return;
+  const handleSaveEdit = async () => {
+    if (!editingId || isLoading) return;
 
-    setActionPoints(prev => prev.map(ap =>
-      ap.id === editingId
-        ? { ...ap, header: editForm.header, details: editForm.details }
-        : ap
-    ));
-
-    setEditingId(null);
-    setEditForm({ header: '', details: '' });
+    setIsLoading(true);
+    try {
+      await updateActionPoint(editingId, {
+        header: editForm.header,
+        details: editForm.details
+      });
+      setEditingId(null);
+      setEditForm({ header: '', details: '' });
+    } catch (error) {
+      console.error('Error updating action point:', error);
+      alert('Failed to update action point. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Add Enter key support for Save button when editing
@@ -49,24 +59,37 @@ export default function ActionPointsPage() {
     setEditForm({ header: '', details: '' });
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this action point?')) {
-      setActionPoints(prev => prev.filter(ap => ap.id !== id));
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this action point?') || isLoading) return;
+
+    setIsLoading(true);
+    try {
+      await deleteActionPoint(id);
+    } catch (error) {
+      console.error('Error deleting action point:', error);
+      alert('Failed to delete action point. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleAdd = () => {
-    if (!addForm.header.trim() || !addForm.details.trim()) return;
-    
-    const newActionPoint: ActionPoint = {
-      id: Date.now().toString(),
-      header: addForm.header,
-      details: addForm.details
-    };
-    
-    setActionPoints(prev => [...prev, newActionPoint]);
-    setAddForm({ header: '', details: '' });
-    setShowAddForm(false);
+  const handleAdd = async () => {
+    if (!addForm.header.trim() || !addForm.details.trim() || isLoading) return;
+
+    setIsLoading(true);
+    try {
+      await createActionPoint({
+        header: addForm.header,
+        details: addForm.details
+      });
+      setAddForm({ header: '', details: '' });
+      setShowAddForm(false);
+    } catch (error) {
+      console.error('Error creating action point:', error);
+      alert('Failed to create action point. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleCancelAdd = () => {
@@ -138,11 +161,12 @@ export default function ActionPointsPage() {
                   <div className="flex gap-3">
                     <button
                       onClick={handleAdd}
-                      className="flex items-center gap-2 px-4 py-2 text-white rounded-md hover:opacity-90 transition-colors"
+                      disabled={isLoading}
+                      className="flex items-center gap-2 px-4 py-2 text-white rounded-md hover:opacity-90 transition-colors disabled:opacity-50"
                       style={{ backgroundColor: '#973b00' }}
                     >
                       <Save size={16} />
-                      Save
+                      {isLoading ? 'Saving...' : 'Save'}
                     </button>
                     <button
                       onClick={handleCancelAdd}
@@ -187,11 +211,12 @@ export default function ActionPointsPage() {
                         <div className="flex gap-3">
                           <button
                             onClick={handleSaveEdit}
-                            className="flex items-center gap-2 px-4 py-2 text-white rounded-md hover:opacity-90 transition-colors"
+                            disabled={isLoading}
+                            className="flex items-center gap-2 px-4 py-2 text-white rounded-md hover:opacity-90 transition-colors disabled:opacity-50"
                             style={{ backgroundColor: '#973b00' }}
                           >
                             <Save size={16} />
-                            Save
+                            {isLoading ? 'Saving...' : 'Save'}
                           </button>
                           <button
                             onClick={handleCancelEdit}
@@ -217,7 +242,8 @@ export default function ActionPointsPage() {
                             </button>
                             <button
                               onClick={() => handleDelete(actionPoint.id)}
-                              className="p-2 text-gray-400 hover:text-red-600 transition-colors"
+                              disabled={isLoading}
+                              className="p-2 text-gray-400 hover:text-red-600 transition-colors disabled:opacity-50"
                               title="Delete"
                             >
                               <Trash2 size={18} />

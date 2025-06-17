@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useReducer, ReactNode, useEffect } from 'react';
-import { AppState, AppAction, Session, Client, Membership, BookingTerms } from '@/types';
+import { AppState, AppAction, Session, Client, Membership, BookingTerms, ActionPoint } from '@/types';
 import { clientService } from '@/services/clientService';
 import { sessionService } from '@/services/sessionService';
 import { membershipService } from '@/services/membershipService';
@@ -148,6 +148,23 @@ function appReducer(state: AppState, action: AppAction): AppState {
     case 'SET_ACTION_POINTS':
       return { ...state, actionPoints: action.payload };
 
+    case 'ADD_ACTION_POINT':
+      return { ...state, actionPoints: [...state.actionPoints, action.payload] };
+
+    case 'UPDATE_ACTION_POINT':
+      return {
+        ...state,
+        actionPoints: state.actionPoints.map(actionPoint =>
+          actionPoint.id === action.payload.id ? action.payload : actionPoint
+        ),
+      };
+
+    case 'DELETE_ACTION_POINT':
+      return {
+        ...state,
+        actionPoints: state.actionPoints.filter(actionPoint => actionPoint.id !== action.payload),
+      };
+
     case 'SET_POTENTIAL_DUPLICATES':
       return { ...state, potentialDuplicates: action.payload };
 
@@ -190,6 +207,9 @@ const AppContext = createContext<{
   loadBehaviourQuestionnaires: () => Promise<void>;
   loadBookingTerms: () => Promise<void>;
   loadActionPoints: () => Promise<void>;
+  createActionPoint: (actionPoint: Omit<ActionPoint, 'id'>) => Promise<ActionPoint>;
+  updateActionPoint: (id: string, updates: Partial<ActionPoint>) => Promise<ActionPoint>;
+  deleteActionPoint: (id: string) => Promise<void>;
   detectDuplicates: () => Promise<void>;
   dismissDuplicate: (duplicateId: string) => Promise<void>;
   clearDismissedDuplicates: () => Promise<void>;
@@ -332,6 +352,41 @@ export function AppProvider({ children }: { children: ReactNode }) {
       dispatch({ type: 'SET_ACTION_POINTS', payload: actionPoints });
     } catch (error) {
       console.error('Failed to load action points:', error);
+    }
+  };
+
+  // Create action point in Supabase
+  const createActionPoint = async (actionPointData: Omit<ActionPoint, 'id'>): Promise<ActionPoint> => {
+    try {
+      const actionPoint = await sessionPlanService.createActionPoint(actionPointData);
+      dispatch({ type: 'ADD_ACTION_POINT', payload: actionPoint });
+      return actionPoint;
+    } catch (error) {
+      console.error('Failed to create action point:', error);
+      throw error;
+    }
+  };
+
+  // Update action point in Supabase
+  const updateActionPoint = async (id: string, updates: Partial<ActionPoint>): Promise<ActionPoint> => {
+    try {
+      const actionPoint = await sessionPlanService.updateActionPoint(id, updates);
+      dispatch({ type: 'UPDATE_ACTION_POINT', payload: actionPoint });
+      return actionPoint;
+    } catch (error) {
+      console.error('Failed to update action point:', error);
+      throw error;
+    }
+  };
+
+  // Delete action point from Supabase
+  const deleteActionPoint = async (id: string): Promise<void> => {
+    try {
+      await sessionPlanService.deleteActionPoint(id);
+      dispatch({ type: 'DELETE_ACTION_POINT', payload: id });
+    } catch (error) {
+      console.error('Failed to delete action point:', error);
+      throw error;
     }
   };
 
@@ -759,6 +814,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       loadBehaviourQuestionnaires,
       loadBookingTerms,
       loadActionPoints,
+      createActionPoint,
+      updateActionPoint,
+      deleteActionPoint,
       detectDuplicates,
       dismissDuplicate,
       clearDismissedDuplicates,
