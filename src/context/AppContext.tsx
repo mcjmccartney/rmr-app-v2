@@ -5,6 +5,7 @@ import { AppState, AppAction, Session, Client, Membership, BookingTerms } from '
 import { clientService } from '@/services/clientService';
 import { sessionService } from '@/services/sessionService';
 import { membershipService } from '@/services/membershipService';
+import { behaviouralBriefService } from '@/services/behaviouralBriefService';
 import { behaviourQuestionnaireService } from '@/services/behaviourQuestionnaireService';
 import { bookingTermsService } from '@/services/bookingTermsService';
 import { sessionPlanService } from '@/services/sessionPlanService';
@@ -283,6 +284,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
       dispatch({ type: 'SET_MEMBERSHIPS', payload: memberships });
     } catch (error) {
       console.error('Failed to load memberships:', error);
+    }
+  };
+
+  // Load behavioural briefs from Supabase
+  const loadBehaviouralBriefs = async () => {
+    try {
+      console.log('Loading behavioural briefs...');
+      const briefs = await behaviouralBriefService.getAll();
+      console.log('Loaded behavioural briefs:', briefs.length);
+      dispatch({ type: 'SET_BEHAVIOURAL_BRIEFS', payload: briefs });
+    } catch (error) {
+      console.error('Failed to load behavioural briefs:', error);
     }
   };
 
@@ -723,6 +736,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       await loadClients();
       await loadSessions();
       await loadMemberships();
+      await loadBehaviouralBriefs();
       await loadBehaviourQuestionnaires();
       await loadBookingTerms();
       await loadActionPoints();

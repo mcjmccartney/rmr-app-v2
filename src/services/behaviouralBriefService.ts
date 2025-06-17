@@ -5,7 +5,8 @@ import { BehaviouralBrief } from '@/types';
 function dbRowToBehaviouralBrief(row: Record<string, any>): BehaviouralBrief {
   return {
     id: row.id,
-    clientId: row.client_id,
+    clientId: row.client_id || '', // Legacy field for backward compatibility
+    client_id: row.client_id, // New foreign key field from SQL scripts
     ownerFirstName: row.owner_first_name,
     ownerLastName: row.owner_last_name,
     email: row.email,
