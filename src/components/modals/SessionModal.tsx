@@ -27,14 +27,19 @@ export default function SessionModal({ session, isOpen, onClose, onEditSession, 
   const client = state.clients.find(c => c.id === session.clientId);
 
   // Find behavioural brief and questionnaire for this client
-  const behaviouralBrief = client?.behaviouralBriefId ?
-    state.behaviouralBriefs.find(b => b.id === client.behaviouralBriefId) : null;
+  const behaviouralBrief = client
+    ? state.behaviouralBriefs.find(b => b.client_id === client.id) ||
+      (client.behaviouralBriefId ? state.behaviouralBriefs.find(b => b.id === client.behaviouralBriefId) : null)
+    : null;
 
-  const behaviourQuestionnaire = client && client.email && client.dogName ?
-    state.behaviourQuestionnaires.find(q =>
-      q.email?.toLowerCase() === client.email?.toLowerCase() &&
-      q.dogName?.toLowerCase() === client.dogName?.toLowerCase()
-    ) : null;
+  const behaviourQuestionnaire = client
+    ? state.behaviourQuestionnaires.find(q => q.client_id === client.id) ||
+      (client.behaviourQuestionnaireId ? state.behaviourQuestionnaires.find(q => q.id === client.behaviourQuestionnaireId) : null) ||
+      (client.email && client.dogName ? state.behaviourQuestionnaires.find(q =>
+        q.email?.toLowerCase() === client.email?.toLowerCase() &&
+        q.dogName?.toLowerCase() === client.dogName?.toLowerCase()
+      ) : null)
+    : null;
 
   const handleDelete = async () => {
     // Show confirmation dialog

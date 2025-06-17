@@ -26,14 +26,16 @@ export default function ClientModal({ client, isOpen, onClose, onEditClient, onV
   // Get the fresh client data from state to ensure we have the latest updates
   const currentClient = client ? (state.clients.find(c => c.id === client.id) || client) : null;
 
-  // Find the behavioural brief for this client - with complete null safety
-  const behaviouralBrief = (currentClient && currentClient.behaviouralBriefId)
-    ? state.behaviouralBriefs.find(b => b.id === currentClient.behaviouralBriefId)
+  // Find the behavioural brief for this client - look for briefs with matching client_id
+  const behaviouralBrief = currentClient
+    ? state.behaviouralBriefs.find(b => b.client_id === currentClient.id) ||
+      (currentClient.behaviouralBriefId ? state.behaviouralBriefs.find(b => b.id === currentClient.behaviouralBriefId) : null)
     : null;
 
-  // Find the behaviour questionnaire for this client - with complete null safety
-  const behaviourQuestionnaire = (currentClient && currentClient.behaviourQuestionnaireId)
-    ? state.behaviourQuestionnaires.find(q => q.id === currentClient.behaviourQuestionnaireId)
+  // Find the behaviour questionnaire for this client - look for questionnaires with matching client_id
+  const behaviourQuestionnaire = currentClient
+    ? state.behaviourQuestionnaires.find(q => q.client_id === currentClient.id) ||
+      (currentClient.behaviourQuestionnaireId ? state.behaviourQuestionnaires.find(q => q.id === currentClient.behaviourQuestionnaireId) : null)
     : null;
 
   // Load client sessions and membership data when modal opens
@@ -221,6 +223,35 @@ export default function ClientModal({ client, isOpen, onClose, onEditClient, onV
           </div>
         </div>
 
+        {/* Behavioural Brief and Behaviour Questionnaire Buttons */}
+        {(behaviouralBrief || behaviourQuestionnaire) && (
+          <div className="space-y-3">
+            {behaviouralBrief && onViewBehaviouralBrief && (
+              <button
+                onClick={() => onViewBehaviouralBrief(behaviouralBrief.id)}
+                className="w-full text-white py-3 px-4 rounded-lg font-medium transition-colors"
+                style={{ backgroundColor: '#4f6749' }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3d5237'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#4f6749'}
+              >
+                View Behavioural Brief
+              </button>
+            )}
+
+            {behaviourQuestionnaire && onViewBehaviourQuestionnaire && (
+              <button
+                onClick={() => onViewBehaviourQuestionnaire(behaviourQuestionnaire.id)}
+                className="w-full text-white py-3 px-4 rounded-lg font-medium transition-colors"
+                style={{ backgroundColor: '#4f6749' }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3d5237'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#4f6749'}
+              >
+                View Behaviour Questionnaire
+              </button>
+            )}
+          </div>
+        )}
+
         {/* Collapsible Tab View for Sessions and Membership */}
         <div className="space-y-4">
           {/* Tab Buttons */}
@@ -344,31 +375,7 @@ export default function ClientModal({ client, isOpen, onClose, onEditClient, onV
           )}
         </div>
 
-        {/* Behavioural Brief Button */}
-        {behaviouralBrief && onViewBehaviouralBrief && (
-          <button
-            onClick={() => onViewBehaviouralBrief(behaviouralBrief.id)}
-            className="w-full text-white py-3 px-4 rounded-lg font-medium transition-colors"
-            style={{ backgroundColor: '#4f6749' }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3d5237'}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#4f6749'}
-          >
-            View Behavioural Brief
-          </button>
-        )}
 
-        {/* Behaviour Questionnaire Button */}
-        {behaviourQuestionnaire && onViewBehaviourQuestionnaire && (
-          <button
-            onClick={() => onViewBehaviourQuestionnaire(behaviourQuestionnaire.id)}
-            className="w-full text-white py-3 px-4 rounded-lg font-medium transition-colors"
-            style={{ backgroundColor: '#4f6749' }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3d5237'}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#4f6749'}
-          >
-            View Behaviour Questionnaire
-          </button>
-        )}
 
         {/* Edit Button */}
         <button
