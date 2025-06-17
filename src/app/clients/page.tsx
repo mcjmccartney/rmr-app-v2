@@ -11,6 +11,7 @@ import BehaviourQuestionnaireModal from '@/components/modals/BehaviourQuestionna
 import RMRLogo from '@/components/RMRLogo';
 import { Client, BehaviouralBrief, BehaviourQuestionnaire, Membership } from '@/types';
 import { Calendar, UserPlus, Users, UserCheck, ClipboardList, FileQuestion, Star, Edit3 } from 'lucide-react';
+import { groupCoachingResetService } from '@/services/groupCoachingResetService';
 
 export default function ClientsPage() {
   const { state, updateMembershipStatuses } = useApp();
@@ -27,17 +28,58 @@ export default function ClientsPage() {
   const [showMembersOnly, setShowMembersOnly] = useState(false);
   const [showActiveOnly, setShowActiveOnly] = useState(false);
 
-  // Membership tracking state - stores reset dates for each client
-  const [membershipResets, setMembershipResets] = useState<{ [clientId: string]: string }>(() => {
-    // Load from localStorage on initialization
-    const saved = localStorage.getItem('membershipResets');
-    return saved ? JSON.parse(saved) : {};
-  });
+  // Membership tracking state - stores reset dates for each client (now from database)
+  const [membershipResets, setMembershipResets] = useState<{ [clientId: string]: string }>({});
+  const [resetsLoaded, setResetsLoaded] = useState(false);
 
-  // Save membership resets to localStorage whenever it changes
+  // Load membership resets from database on component mount
   useEffect(() => {
-    localStorage.setItem('membershipResets', JSON.stringify(membershipResets));
-  }, [membershipResets]);
+    const loadResets = async () => {
+      try {
+        // First, try to migrate any existing localStorage data
+        const localStorageData = localStorage.getItem('membershipResets');
+        if (localStorageData) {
+          const parsedData = JSON.parse(localStorageData);
+          console.log('📦 Found localStorage data, migrating to database:', parsedData);
+
+          try {
+            await groupCoachingResetService.migrateFromLocalStorage(parsedData);
+            // Clear localStorage after successful migration
+            localStorage.removeItem('membershipResets');
+            console.log('✅ Migration complete, localStorage cleared');
+          } catch (migrationError) {
+            console.warn('⚠️ Migration failed, keeping localStorage data:', migrationError);
+          }
+        }
+
+        // Load all resets from database
+        const allResets = await groupCoachingResetService.getAllResets();
+        const resetMap: { [clientId: string]: string } = {};
+
+        // Create a map of clientId -> most recent reset date
+        allResets.forEach(reset => {
+          if (!resetMap[reset.clientId] || reset.resetDate > resetMap[reset.clientId]) {
+            resetMap[reset.clientId] = reset.resetDate;
+          }
+        });
+
+        setMembershipResets(resetMap);
+        setResetsLoaded(true);
+        console.log('💾 Loaded group coaching resets from database:', resetMap);
+      } catch (error) {
+        console.error('❌ Error loading group coaching resets:', error);
+        // Fallback to localStorage if database fails
+        const localStorageData = localStorage.getItem('membershipResets');
+        if (localStorageData) {
+          setMembershipResets(JSON.parse(localStorageData));
+          console.log('📦 Fallback: Using localStorage data');
+        }
+        setResetsLoaded(true);
+      }
+    };
+
+    loadResets();
+  }, []);
 
   // Calculate membership count since reset for a client
   const getMembershipCountSinceReset = (client: Client): number => {
@@ -58,12 +100,24 @@ export default function ClientsPage() {
   };
 
   // Handle "Added to Session" button click
-  const handleAddedToSession = (client: Client) => {
-    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
-    setMembershipResets(prev => ({
-      ...prev,
-      [client.id]: today
-    }));
+  const handleAddedToSession = async (client: Client) => {
+    try {
+      const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+
+      // Save to database
+      await groupCoachingResetService.addReset(client.id, today);
+
+      // Update local state
+      setMembershipResets(prev => ({
+        ...prev,
+        [client.id]: today
+      }));
+
+      console.log(`✅ Reset group coaching count for ${client.firstName} ${client.lastName}`);
+    } catch (error) {
+      console.error('❌ Error resetting group coaching count:', error);
+      alert('Failed to reset group coaching count. Please try again.');
+    }
   };
 
   const filteredClients = state.clients.filter(client => {

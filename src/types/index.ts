@@ -156,6 +156,14 @@ export interface DismissedDuplicate {
   createdAt?: string;
 }
 
+export interface GroupCoachingReset {
+  id: string;
+  clientId: string;
+  resetDate: string; // YYYY-MM-DD format
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface Client {
   id: string;
   firstName: string;
