@@ -12,7 +12,7 @@ export interface PaymentLinkConfig {
 
 // Your specific Monzo payment links for different session types
 const PAYMENT_CONFIG: PaymentLinkConfig = {
-  appBaseUrl: process.env.NEXT_PUBLIC_APP_URL || 'https://your-app-domain.com',
+  appBaseUrl: process.env.NEXT_PUBLIC_APP_URL || 'https://raising-my-rescue.vercel.app',
   monzoLinks: {
     'Online Catchup': {
       member: 'https://monzo.com/pay/r/raising-my-rescue_qeDXP5wJpnqGln',
@@ -67,11 +67,11 @@ export const paymentService = {
       ? sessionTypeLinks.member
       : sessionTypeLinks.nonMember;
 
-    // Create the confirmation URL that the client will visit after payment
-    const confirmationUrl = `${PAYMENT_CONFIG.appBaseUrl}/payment-confirmed/${session.id}`;
+    // Create a shorter, more reliable confirmation URL using query parameters
+    const confirmationUrl = `${PAYMENT_CONFIG.appBaseUrl}/pay-confirm?id=${session.id}`;
 
     // Create a description that includes the session ID for reference
-    const description = `RMR-${session.sessionType}-${session.id.substring(0, 8)}`;
+    const description = `RMR-${session.sessionType}-${session.id}`;
 
     // Build the Monzo payment link with parameters
     const paymentUrl = new URL(baseMonzoLink);

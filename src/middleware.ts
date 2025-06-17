@@ -60,15 +60,22 @@ export async function middleware(req: NextRequest) {
   } = await supabase.auth.getSession()
 
   // Public routes that don't require authentication
-  const publicRoutes = ['/login', '/behavioural-brief', '/behaviour-questionnaire'];
+  const publicRoutes = ['/login', '/behavioural-brief', '/behaviour-questionnaire', '/pay-confirm', '/payment-confirmed', '/payment-error'];
 
   // Debug logging
   console.log('Middleware - Path:', req.nextUrl.pathname);
   console.log('Middleware - Session exists:', !!session);
-  console.log('Middleware - Is public route:', publicRoutes.includes(req.nextUrl.pathname));
+
+  // Check if current path is public (including dynamic routes)
+  const isPublicRoute = publicRoutes.some(route => {
+    if (route === req.nextUrl.pathname) return true;
+    // Handle dynamic routes like /payment-confirmed/[sessionId]
+    if (route === '/payment-confirmed' && req.nextUrl.pathname.startsWith('/payment-confirmed/')) return true;
+    return false;
+  });
 
   // If user is not signed in and the current path is not a public route, redirect to /login
-  if (!session && !publicRoutes.includes(req.nextUrl.pathname)) {
+  if (!session && !isPublicRoute) {
     console.log('Middleware - Redirecting to login');
     return NextResponse.redirect(new URL('/login', req.url))
   }
