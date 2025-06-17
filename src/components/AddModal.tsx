@@ -302,20 +302,15 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Dog
           </label>
-          <select
+          <CustomDropdown
             value={formData.dogName}
-            onChange={(e) => setFormData({ ...formData, dogName: e.target.value })}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-            required
-          >
-            <option value="">Select a dog</option>
-            {selectedClient.dogName && (
-              <option value={selectedClient.dogName}>{selectedClient.dogName} (Primary)</option>
-            )}
-            {selectedClient.otherDogs?.map((dog, index) => (
-              <option key={index} value={dog}>{dog}</option>
-            ))}
-          </select>
+            onChange={(value) => setFormData({ ...formData, dogName: value })}
+            options={[
+              ...(selectedClient.dogName ? [{ value: selectedClient.dogName, label: `${selectedClient.dogName} (Primary)` }] : []),
+              ...(selectedClient.otherDogs?.map(dog => ({ value: dog, label: dog })) || [])
+            ]}
+            placeholder="Select a dog"
+          />
         </div>
       )}
 

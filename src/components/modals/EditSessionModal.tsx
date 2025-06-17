@@ -114,19 +114,15 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
           <label className="block text-gray-700 text-sm font-medium mb-2">
             Client
           </label>
-          <select
+          <CustomDropdown
             value={formData.clientId}
-            onChange={(e) => setFormData({ ...formData, clientId: e.target.value })}
-            className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-            required
-          >
-            <option value="">Select a client</option>
-            {state.clients.map((client) => (
-              <option key={client.id} value={client.id}>
-                {client.firstName} {client.lastName}{client.dogName ? ` w/ ${client.dogName}` : ''}
-              </option>
-            ))}
-          </select>
+            onChange={(value) => setFormData({ ...formData, clientId: value })}
+            options={state.clients.map((client) => ({
+              value: client.id,
+              label: `${client.firstName} ${client.lastName}${client.dogName ? ` w/ ${client.dogName}` : ''}`
+            }))}
+            placeholder="Select a client"
+          />
         </div>
 
         <div>
