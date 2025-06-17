@@ -14,9 +14,10 @@ import { Session, Client, BehaviouralBrief, BehaviourQuestionnaire } from '@/typ
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek } from 'date-fns';
 import { formatTime, formatDayDate, formatMonthYear, combineDateAndTime } from '@/utils/dateFormatting';
 import { ChevronLeft, ChevronRight, Calendar, UserPlus, X, Users, CalendarDays, Edit3 } from 'lucide-react';
+import PullToRefresh from '@/components/ui/PullToRefresh';
 
 export default function CalendarPage() {
-  const { state, updateClient } = useApp();
+  const { state, updateClient, refreshData } = useApp();
   const router = useRouter();
 
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -288,6 +289,14 @@ export default function CalendarPage() {
   const firstSession = upcomingSessions[0];
   const firstSessionClient = firstSession ? state.clients.find(c => c.id === firstSession.clientId) : null;
 
+  const handleRefresh = async () => {
+    try {
+      await refreshData();
+    } catch (error) {
+      console.error('Failed to refresh data:', error);
+    }
+  };
+
   return (
     <div
       id="calendar-container"
@@ -359,7 +368,7 @@ export default function CalendarPage() {
       </div>
 
       {/* Calendar Section - Flex-1 to take remaining space */}
-      <div className="bg-white flex flex-col flex-1 overflow-hidden">
+      <PullToRefresh onRefresh={handleRefresh} className="bg-white flex flex-col flex-1 overflow-hidden">
 
         {/* Calendar Grid - Fills remaining space */}
         <div className="flex-1 px-4 py-3 flex flex-col min-h-0 overflow-hidden">
@@ -492,7 +501,7 @@ export default function CalendarPage() {
             })}
           </div>
         </div>
-      </div>
+      </PullToRefresh>
 
       {/* Up Next Section - Fixed at bottom */}
       <button

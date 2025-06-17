@@ -54,52 +54,7 @@ export default function SessionModal({ session, isOpen, onClose, onEditSession, 
     }
   };
 
-  const handleGeneratePaymentLink = () => {
-    if (!client) {
-      alert('Client information is required to generate payment link');
-      return;
-    }
 
-    try {
-      const paymentLink = paymentService.getPaymentUrl(session, client);
-
-      // Copy to clipboard
-      navigator.clipboard.writeText(paymentLink).then(() => {
-        alert('Payment link copied to clipboard!');
-      }).catch(() => {
-        // Fallback: show the link in an alert
-        alert(`Payment link: ${paymentLink}`);
-      });
-    } catch (error) {
-      console.error('Error generating payment link:', error);
-      alert('Failed to generate payment link. Please try again.');
-    }
-  };
-
-  const handleGeneratePaymentInstructions = () => {
-    if (!client) {
-      alert('Client information is required to generate payment instructions');
-      return;
-    }
-
-    try {
-      const instructions = paymentService.generatePaymentInstructions(session, client);
-
-      // Copy to clipboard
-      navigator.clipboard.writeText(instructions).then(() => {
-        alert('Payment instructions copied to clipboard!');
-      }).catch(() => {
-        // Fallback: show in a new window
-        const newWindow = window.open('', '_blank');
-        if (newWindow) {
-          newWindow.document.write(`<pre>${instructions}</pre>`);
-        }
-      });
-    } catch (error) {
-      console.error('Error generating payment instructions:', error);
-      alert('Failed to generate payment instructions. Please try again.');
-    }
-  };
 
   const handleMarkAsPaid = async () => {
     if (window.confirm('Mark this session as paid?')) {
@@ -110,6 +65,9 @@ export default function SessionModal({ session, isOpen, onClose, onEditSession, 
           paymentConfirmedAt: updatedSession.paymentConfirmedAt
         });
         alert('Session marked as paid!');
+        onClose(); // Close the modal
+        // Refresh the page to show updated payment status
+        window.location.reload();
       } catch (error) {
         console.error('Error marking session as paid:', error);
         alert('Failed to mark session as paid. Please try again.');
@@ -254,29 +212,9 @@ export default function SessionModal({ session, isOpen, onClose, onEditSession, 
           </div>
         )}
 
-        {/* Payment Buttons */}
+        {/* Payment Button */}
         {client && !session.sessionPaid && (
-          <div className="space-y-3 pb-3 border-b border-gray-200">
-            <div className="flex gap-3">
-              <button
-                onClick={handleGeneratePaymentLink}
-                className="flex-1 text-white py-3 px-4 rounded-lg font-medium transition-colors"
-                style={{ backgroundColor: '#973b00' }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#7a2f00'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#973b00'}
-              >
-                Copy Payment Link
-              </button>
-              <button
-                onClick={handleGeneratePaymentInstructions}
-                className="flex-1 text-white py-3 px-4 rounded-lg font-medium transition-colors"
-                style={{ backgroundColor: '#973b00' }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#7a2f00'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#973b00'}
-              >
-                Copy Instructions
-              </button>
-            </div>
+          <div className="pb-3 border-b border-gray-200">
             <button
               onClick={handleMarkAsPaid}
               className="w-full text-white py-3 px-4 rounded-lg font-medium transition-colors"

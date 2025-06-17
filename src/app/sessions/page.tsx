@@ -12,9 +12,10 @@ import { Session, Client } from '@/types';
 
 import { formatDateTime, formatFullMonthYear } from '@/utils/dateFormatting';
 import { Calendar, UserPlus, ChevronDown, ChevronRight, Target, Edit3 } from 'lucide-react';
+import PullToRefresh from '@/components/ui/PullToRefresh';
 
 export default function SessionsPage() {
-  const { state } = useApp();
+  const { state, refreshData } = useApp();
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
@@ -118,6 +119,14 @@ export default function SessionsPage() {
     return sessions.reduce((total, session) => total + session.quote, 0);
   };
 
+  const handleRefresh = async () => {
+    try {
+      await refreshData();
+    } catch (error) {
+      console.error('Failed to refresh data:', error);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-white flex flex-col">
       <div className="bg-amber-800">
@@ -149,7 +158,8 @@ export default function SessionsPage() {
         />
       </div>
 
-      <div className="px-4 pb-4 bg-gray-50 flex-1">
+      <PullToRefresh onRefresh={handleRefresh} className="flex-1">
+        <div className="px-4 pb-4 bg-gray-50 min-h-full">
         {/* Monthly Accordions */}
         <div className="space-y-3 mt-4">
           {sortedMonths.map((monthKey) => {
@@ -232,7 +242,8 @@ export default function SessionsPage() {
             );
           })}
         </div>
-      </div>
+        </div>
+      </PullToRefresh>
 
       <SessionModal
         session={selectedSession}
