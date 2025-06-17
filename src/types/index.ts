@@ -233,13 +233,15 @@ export type AppAction =
   | { type: 'SET_BOOKING_TERMS'; payload: BookingTerms[] }
   | { type: 'ADD_BOOKING_TERMS'; payload: BookingTerms }
   | { type: 'SET_ACTION_POINTS'; payload: ActionPoint[] }
+  | { type: 'ADD_ACTION_POINT'; payload: ActionPoint }
+  | { type: 'UPDATE_ACTION_POINT'; payload: ActionPoint }
+  | { type: 'DELETE_ACTION_POINT'; payload: string }
   | { type: 'SET_POTENTIAL_DUPLICATES'; payload: PotentialDuplicate[] }
   | { type: 'REMOVE_POTENTIAL_DUPLICATE'; payload: string }
   | { type: 'SET_SESSION_PLANS'; payload: SessionPlan[] }
   | { type: 'ADD_SESSION_PLAN'; payload: SessionPlan }
   | { type: 'UPDATE_SESSION_PLAN'; payload: SessionPlan }
   | { type: 'DELETE_SESSION_PLAN'; payload: string }
-  | { type: 'SET_ACTION_POINTS'; payload: ActionPoint[] }
   | { type: 'ADD_BEHAVIOUR_QUESTIONNAIRE'; payload: BehaviourQuestionnaire }
   | { type: 'UPDATE_BEHAVIOUR_QUESTIONNAIRE'; payload: BehaviourQuestionnaire }
   | { type: 'DELETE_BEHAVIOUR_QUESTIONNAIRE'; payload: string }
