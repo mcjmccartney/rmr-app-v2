@@ -1,5 +1,6 @@
 -- Simple Behavioural Briefs Update Script
 -- Fixed version without SQL errors
+-- Use proper SQL comment syntax (-- for single line comments)
 
 -- Step 1: Add client_id column if it doesn't exist
 ALTER TABLE behavioural_briefs 

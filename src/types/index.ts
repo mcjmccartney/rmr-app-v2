@@ -39,6 +39,7 @@ export interface SessionPlan {
 export interface BehaviouralBrief {
   id: string;
   clientId: string;
+  client_id?: string; // New foreign key field added by SQL scripts
   // Contact Information
   ownerFirstName: string;
   ownerLastName: string;
@@ -58,6 +59,7 @@ export interface BehaviouralBrief {
 export interface BehaviourQuestionnaire {
   id: string;
   clientId: string;
+  client_id?: string; // New foreign key field added by SQL scripts
   // Owner Information
   ownerFirstName: string;
   ownerLastName: string;
