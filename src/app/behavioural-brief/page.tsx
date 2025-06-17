@@ -89,8 +89,8 @@ export default function BehaviouralBriefPage() {
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Contact Information Section */}
               <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-400">
-                  CONTACT INFORMATION
+                <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">
+                  Contact Information
                 </h2>
                 
                 <div className="space-y-4">
@@ -175,8 +175,8 @@ export default function BehaviouralBriefPage() {
 
               {/* Dog Information Section */}
               <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-2 pb-2 border-b border-gray-400">
-                  DOG INFORMATION
+                <h2 className="text-lg font-semibold text-gray-900 mb-2 pb-2 border-b border-gray-200">
+                  Dog Information
                 </h2>
                 <p className="text-sm text-gray-600 mb-4">
                   If you are inquiring about more than one dog please complete an additional form.

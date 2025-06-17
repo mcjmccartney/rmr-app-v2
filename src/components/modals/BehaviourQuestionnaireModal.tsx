@@ -117,9 +117,9 @@ export default function BehaviourQuestionnaireModal({ behaviourQuestionnaire, is
 
         {/* Behavior Information */}
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-3 pb-2 border-b border-gray-200">
+          <div className="text-white text-lg font-bold p-3 mb-3 rounded-lg" style={{ backgroundColor: '#973b00' }}>
             Behavior Information
-          </h3>
+          </div>
           <div className="space-y-4">
             {behaviourQuestionnaire.mainHelp && (
               <div>
@@ -207,9 +207,9 @@ export default function BehaviourQuestionnaireModal({ behaviourQuestionnaire, is
         {/* Health & Veterinary */}
         {(behaviourQuestionnaire.medicalHistory || behaviourQuestionnaire.vetAdvice) && (
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-3 pb-2 border-b border-gray-200">
+            <div className="text-white text-lg font-bold p-3 mb-3 rounded-lg" style={{ backgroundColor: '#973b00' }}>
               Health & Veterinary
-            </h3>
+            </div>
             <div className="space-y-3">
               {behaviourQuestionnaire.medicalHistory && (
                 <div>
@@ -234,9 +234,9 @@ export default function BehaviourQuestionnaireModal({ behaviourQuestionnaire, is
         {/* Background */}
         {(behaviourQuestionnaire.whereGotDog || behaviourQuestionnaire.rescueBackground || behaviourQuestionnaire.ageWhenGot) && (
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-3 pb-2 border-b border-gray-200">
+            <div className="text-white text-lg font-bold p-3 mb-3 rounded-lg" style={{ backgroundColor: '#973b00' }}>
               Background
-            </h3>
+            </div>
             <div className="space-y-3">
               {behaviourQuestionnaire.whereGotDog && (
                 <div className="flex justify-between items-center">
@@ -264,9 +264,9 @@ export default function BehaviourQuestionnaireModal({ behaviourQuestionnaire, is
 
         {/* Diet & Feeding - Expanded */}
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-3 pb-2 border-b border-gray-200">
+          <div className="text-white text-lg font-bold p-3 mb-3 rounded-lg" style={{ backgroundColor: '#973b00' }}>
             Diet & Feeding
-          </h3>
+          </div>
           <div className="space-y-3">
             <div className="flex justify-between items-center">
               <span className="text-gray-600">Food Motivation (1-10)</span>
@@ -310,9 +310,9 @@ export default function BehaviourQuestionnaireModal({ behaviourQuestionnaire, is
         {/* Routines */}
         {(behaviourQuestionnaire.typesOfPlay || behaviourQuestionnaire.affectionate || behaviourQuestionnaire.exercise || behaviourQuestionnaire.useMuzzle || behaviourQuestionnaire.familiarPeople || behaviourQuestionnaire.unfamiliarPeople || behaviourQuestionnaire.housetrained || behaviourQuestionnaire.likesToDo) && (
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-3 pb-2 border-b border-gray-200">
+            <div className="text-white text-lg font-bold p-3 mb-3 rounded-lg" style={{ backgroundColor: '#973b00' }}>
               Routines
-            </h3>
+            </div>
             <div className="space-y-3">
               {behaviourQuestionnaire.typesOfPlay && (
                 <div>
@@ -385,9 +385,9 @@ export default function BehaviourQuestionnaireModal({ behaviourQuestionnaire, is
         {/* Temperament */}
         {(behaviourQuestionnaire.likeAboutDog || behaviourQuestionnaire.mostChallenging) && (
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-3 pb-2 border-b border-gray-200">
+            <div className="text-white text-lg font-bold p-3 mb-3 rounded-lg" style={{ backgroundColor: '#973b00' }}>
               Temperament
-            </h3>
+            </div>
             <div className="space-y-3">
               {behaviourQuestionnaire.likeAboutDog && (
                 <div>
@@ -412,9 +412,9 @@ export default function BehaviourQuestionnaireModal({ behaviourQuestionnaire, is
         {/* Training */}
         {(behaviourQuestionnaire.howGood || behaviourQuestionnaire.favouriteRewards || behaviourQuestionnaire.howBad || behaviourQuestionnaire.effectOfBad || behaviourQuestionnaire.professionalTraining) && (
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-3 pb-2 border-b border-gray-200">
+            <div className="text-white text-lg font-bold p-3 mb-3 rounded-lg" style={{ backgroundColor: '#973b00' }}>
               Training
-            </h3>
+            </div>
             <div className="space-y-3">
               {behaviourQuestionnaire.howGood && (
                 <div>
@@ -462,9 +462,9 @@ export default function BehaviourQuestionnaireModal({ behaviourQuestionnaire, is
 
         {/* Sociability */}
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-3 pb-2 border-b border-gray-200">
+          <div className="text-white text-lg font-bold p-3 mb-3 rounded-lg" style={{ backgroundColor: '#973b00' }}>
             Sociability
-          </h3>
+          </div>
           <div className="space-y-3">
             <div className="flex justify-between items-center">
               <span className="text-gray-600">With Dogs</span>
@@ -480,9 +480,9 @@ export default function BehaviourQuestionnaireModal({ behaviourQuestionnaire, is
         {/* Additional Information */}
         {behaviourQuestionnaire.anythingElseToKnow && (
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-3 pb-2 border-b border-gray-200">
+            <div className="text-white text-lg font-bold p-3 mb-3 rounded-lg" style={{ backgroundColor: '#973b00' }}>
               Additional Information
-            </h3>
+            </div>
             <div className="bg-gray-50 p-4 rounded-lg">
               <p className="text-gray-700 whitespace-pre-wrap">{behaviourQuestionnaire.anythingElseToKnow}</p>
             </div>
@@ -492,9 +492,9 @@ export default function BehaviourQuestionnaireModal({ behaviourQuestionnaire, is
         {/* Training Time */}
         {behaviourQuestionnaire.timePerWeek && (
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-3 pb-2 border-b border-gray-200">
+            <div className="text-white text-lg font-bold p-3 mb-3 rounded-lg" style={{ backgroundColor: '#973b00' }}>
               Training Commitment
-            </h3>
+            </div>
             <div className="flex justify-between items-center">
               <span className="text-gray-600">Time per week available</span>
               <span className="font-medium text-gray-900">{behaviourQuestionnaire.timePerWeek}</span>

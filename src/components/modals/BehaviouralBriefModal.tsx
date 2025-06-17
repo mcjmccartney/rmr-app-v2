@@ -100,9 +100,9 @@ export default function BehaviouralBriefModal({ behaviouralBrief, isOpen, onClos
 
         {/* Life with Dog */}
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-3 pb-2 border-b border-gray-200">
+          <div className="text-white text-lg font-bold p-3 mb-3 rounded-lg" style={{ backgroundColor: '#973b00' }}>
             Life with Dog
-          </h3>
+          </div>
           <div className="bg-gray-50 p-4 rounded-lg">
             <p className="text-gray-700 whitespace-pre-wrap">{behaviouralBrief.lifeWithDog}</p>
           </div>
@@ -110,9 +110,9 @@ export default function BehaviouralBriefModal({ behaviouralBrief, isOpen, onClos
 
         {/* Best Outcome */}
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-3 pb-2 border-b border-gray-200">
+          <div className="text-white text-lg font-bold p-3 mb-3 rounded-lg" style={{ backgroundColor: '#973b00' }}>
             Desired Outcome
-          </h3>
+          </div>
           <div className="bg-gray-50 p-4 rounded-lg">
             <p className="text-gray-700 whitespace-pre-wrap">{behaviouralBrief.bestOutcome}</p>
           </div>

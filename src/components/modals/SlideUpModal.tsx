@@ -87,7 +87,7 @@ export default function SlideUpModal({ isOpen, onClose, title, children }: Slide
         </div>
 
         {/* Content */}
-        <div className="px-6 pb-6 overflow-y-auto max-h-[calc(85vh-120px)]">
+        <div className="px-6 pb-6 overflow-y-auto max-h-[calc(85vh-120px)]" style={{ paddingBottom: '100px' }}>
           {children}
         </div>
       </div>
@@ -110,7 +110,7 @@ export default function SlideUpModal({ isOpen, onClose, title, children }: Slide
         </div>
 
         {/* Content */}
-        <div className="px-6 py-6 overflow-y-auto h-full pb-20">
+        <div className="px-6 py-6 overflow-y-auto" style={{ height: 'calc(100vh - 80px)', paddingBottom: '100px' }}>
           {children}
         </div>
       </div>
