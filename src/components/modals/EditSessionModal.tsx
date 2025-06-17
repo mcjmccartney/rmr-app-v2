@@ -32,16 +32,27 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
 
   // Helper functions for time handling
   const getHourFromTime = (time: string) => {
-    return time ? time.split(':')[0] : '';
+    if (!time) return '';
+    const parts = time.split(':');
+    return parts[0] || '';
   };
 
   const getMinuteFromTime = (time: string) => {
-    return time ? time.split(':')[1] : '';
+    if (!time) return '';
+    const parts = time.split(':');
+    return parts[1] || '';
   };
 
   const updateTime = (hour: string, minute: string) => {
-    if (hour && minute) {
-      setFormData({ ...formData, time: `${hour}:${minute}` });
+    if (hour !== '' && minute !== '') {
+      const newTime = `${hour}:${minute}`;
+      setFormData({ ...formData, time: newTime });
+    } else if (hour !== '' || minute !== '') {
+      // If only one is selected, still update to show partial selection
+      const currentHour = hour !== '' ? hour : '00';
+      const currentMinute = minute !== '' ? minute : '00';
+      const newTime = `${currentHour}:${currentMinute}`;
+      setFormData({ ...formData, time: newTime });
     }
   };
 

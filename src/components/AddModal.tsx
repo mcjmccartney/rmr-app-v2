@@ -143,16 +143,30 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
 
   // Helper functions for time handling
   const getHourFromTime = (time: string) => {
-    return time ? time.split(':')[0] : '';
+    if (!time) return '';
+    const parts = time.split(':');
+    return parts[0] || '';
   };
 
   const getMinuteFromTime = (time: string) => {
-    return time ? time.split(':')[1] : '';
+    if (!time) return '';
+    const parts = time.split(':');
+    return parts[1] || '';
   };
 
   const updateTime = (hour: string, minute: string) => {
-    if (hour && minute) {
-      setFormData({ ...formData, time: `${hour}:${minute}` });
+    console.log('updateTime called with:', { hour, minute, currentTime: formData.time });
+    if (hour !== '' && minute !== '') {
+      const newTime = `${hour}:${minute}`;
+      console.log('Setting new time:', newTime);
+      setFormData({ ...formData, time: newTime });
+    } else if (hour !== '' || minute !== '') {
+      // If only one is selected, still update to show partial selection
+      const currentHour = hour !== '' ? hour : '00';
+      const currentMinute = minute !== '' ? minute : '00';
+      const newTime = `${currentHour}:${currentMinute}`;
+      console.log('Setting partial time:', newTime);
+      setFormData({ ...formData, time: newTime });
     }
   };
 
@@ -328,7 +342,10 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
             </label>
             <CustomDropdown
               value={getHourFromTime(formData.time)}
-              onChange={(hour) => updateTime(hour, getMinuteFromTime(formData.time))}
+              onChange={(hour) => {
+                console.log('Hour changed to:', hour);
+                updateTime(hour, getMinuteFromTime(formData.time));
+              }}
               options={hourOptions}
               placeholder="00"
             />
@@ -339,7 +356,10 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
             </label>
             <CustomDropdown
               value={getMinuteFromTime(formData.time)}
-              onChange={(minute) => updateTime(getHourFromTime(formData.time), minute)}
+              onChange={(minute) => {
+                console.log('Minute changed to:', minute);
+                updateTime(getHourFromTime(formData.time), minute);
+              }}
               options={minuteOptions}
               placeholder="00"
             />
