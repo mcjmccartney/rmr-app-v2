@@ -85,7 +85,7 @@ export default function AddModal({ isOpen, onClose, type }: AddModalProps) {
         </div>
 
         {/* Content */}
-        <div className="p-6 overflow-y-auto" style={{ maxHeight: 'calc(90vh - 80px)' }}>
+        <div className="p-6 overflow-y-auto" style={{ maxHeight: 'calc(90vh - 80px)', paddingBottom: '120px' }}>
           {type === 'session' ? (
             <SessionForm onSubmit={handleClose} />
           ) : (
@@ -96,12 +96,12 @@ export default function AddModal({ isOpen, onClose, type }: AddModalProps) {
 
       {/* Desktop: slide in from right */}
       <div
-        className={`fixed top-0 right-0 bottom-0 w-96 bg-white shadow-2xl transition-transform duration-300 ease-out overflow-hidden hidden md:block ${
+        className={`fixed top-0 right-0 bottom-0 w-96 bg-white shadow-2xl transition-transform duration-300 ease-out hidden md:flex md:flex-col ${
           isAnimating ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
           <h2 className="text-xl font-semibold">
             {type === 'session' ? 'Add Session' : 'Add Client'}
           </h2>
@@ -114,7 +114,7 @@ export default function AddModal({ isOpen, onClose, type }: AddModalProps) {
         </div>
 
         {/* Content */}
-        <div className="p-6 overflow-y-auto h-full">
+        <div className="flex-1 p-6 overflow-y-auto" style={{ paddingBottom: '120px' }}>
           {type === 'session' ? (
             <SessionForm onSubmit={handleClose} />
           ) : (
