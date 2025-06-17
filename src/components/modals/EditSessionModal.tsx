@@ -6,6 +6,7 @@ import { useApp } from '@/context/AppContext';
 import SlideUpModal from './SlideUpModal';
 import CustomDropdown from '@/components/ui/CustomDropdown';
 import CustomDatePicker from '@/components/ui/CustomDatePicker';
+import SearchableDropdown from '@/components/ui/SearchableDropdown';
 import { generateHourOptions, generateMinuteOptions, sessionTypeOptions } from '@/utils/timeOptions';
 
 
@@ -114,7 +115,7 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
           <label className="block text-gray-700 text-sm font-medium mb-2">
             Client
           </label>
-          <CustomDropdown
+          <SearchableDropdown
             value={formData.clientId}
             onChange={(value) => setFormData({ ...formData, clientId: value })}
             options={state.clients.map((client) => ({
@@ -122,6 +123,7 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
               label: `${client.firstName} ${client.lastName}${client.dogName ? ` w/ ${client.dogName}` : ''}`
             }))}
             placeholder="Select a client"
+            searchPlaceholder="Search clients..."
           />
         </div>
 

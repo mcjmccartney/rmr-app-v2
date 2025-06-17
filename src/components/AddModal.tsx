@@ -8,6 +8,7 @@ import { Session, Client } from '@/types';
 import { calculateQuote } from '@/utils/pricing';
 import CustomDropdown from '@/components/ui/CustomDropdown';
 import CustomDatePicker from '@/components/ui/CustomDatePicker';
+import SearchableDropdown from '@/components/ui/SearchableDropdown';
 import { generateHourOptions, generateMinuteOptions, sessionTypeOptions } from '@/utils/timeOptions';
 
 
@@ -181,14 +182,10 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
   };
 
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
-  const [clientSearch, setClientSearch] = useState('');
-  const [showClientDropdown, setShowClientDropdown] = useState(false);
 
   const handleClientChange = (clientId: string) => {
     const client = state.clients.find(c => c.id === clientId);
     setSelectedClient(client || null);
-    setClientSearch(client ? `${client.firstName} ${client.lastName}${client.dogName ? ` w/ ${client.dogName}` : ''}` : '');
-    setShowClientDropdown(false);
 
     // Set default dog name to primary dog if available
     const defaultDogName = client?.dogName || '';
@@ -200,17 +197,6 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
       quote: calculateQuote(formData.sessionType, client?.membership || false)
     });
   };
-
-  const filteredClients = state.clients.filter(client => {
-    if (!clientSearch) return true;
-    const searchTerm = clientSearch.toLowerCase();
-    return (
-      client.firstName?.toLowerCase().includes(searchTerm) ||
-      client.lastName?.toLowerCase().includes(searchTerm) ||
-      client.dogName?.toLowerCase().includes(searchTerm) ||
-      client.otherDogs?.some(dog => dog.toLowerCase().includes(searchTerm))
-    );
-  });
 
   const handleSessionTypeChange = (sessionType: Session['sessionType']) => {
     setFormData({
@@ -243,57 +229,20 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="relative">
+      <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Client
         </label>
-        <input
-          type="text"
-          value={clientSearch}
-          onChange={(e) => {
-            setClientSearch(e.target.value);
-            setShowClientDropdown(true);
-            if (!e.target.value) {
-              setSelectedClient(null);
-              setFormData({ ...formData, clientId: '' });
-            }
-          }}
-          onFocus={() => setShowClientDropdown(true)}
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-          placeholder="Search for a client..."
-          required
+        <SearchableDropdown
+          value={formData.clientId}
+          onChange={handleClientChange}
+          options={state.clients.map((client) => ({
+            value: client.id,
+            label: `${client.firstName} ${client.lastName}${client.dogName ? ` w/ ${client.dogName}` : ''}`
+          }))}
+          placeholder="Select a client"
+          searchPlaceholder="Search clients..."
         />
-
-        {showClientDropdown && clientSearch && filteredClients.length > 0 && (
-          <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-            {filteredClients.map(client => (
-              <button
-                key={client.id}
-                type="button"
-                onClick={() => handleClientChange(client.id)}
-                className="w-full text-left px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
-              >
-                <div className="font-medium">
-                  {client.firstName} {client.lastName}
-                  {client.dogName && (
-                    <span className="font-normal text-gray-600"> w/ {client.dogName}</span>
-                  )}
-                </div>
-                {client.otherDogs && client.otherDogs.length > 0 && (
-                  <div className="text-sm text-gray-500">
-                    Other dogs: {client.otherDogs.join(', ')}
-                  </div>
-                )}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {showClientDropdown && clientSearch && filteredClients.length === 0 && (
-          <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg p-4 text-gray-500 text-center">
-            No clients found
-          </div>
-        )}
       </div>
 
       {/* Dog Selection - Only show if client has multiple dogs */}
