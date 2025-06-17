@@ -6,6 +6,9 @@ import { useModal } from '@/context/ModalContext';
 import { useApp } from '@/context/AppContext';
 import { Session, Client } from '@/types';
 import { calculateQuote } from '@/utils/pricing';
+import CustomDropdown from '@/components/ui/CustomDropdown';
+import CustomDatePicker from '@/components/ui/CustomDatePicker';
+import { generateTimeOptions, sessionTypeOptions } from '@/utils/timeOptions';
 
 
 interface AddModalProps {
@@ -133,6 +136,9 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
     notes: '',
     quote: 0
   });
+
+  // Generate time options
+  const timeOptions = generateTimeOptions();
 
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [clientSearch, setClientSearch] = useState('');
@@ -277,20 +283,12 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Session Type
         </label>
-        <select
+        <CustomDropdown
           value={formData.sessionType}
-          onChange={(e) => handleSessionTypeChange(e.target.value as Session['sessionType'])}
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-        >
-          <option value="In-Person">In-Person</option>
-          <option value="Online">Online</option>
-          <option value="Training">Training</option>
-          <option value="Online Catchup">Online Catchup</option>
-          <option value="Group">Group</option>
-          <option value="RMR Live">RMR Live</option>
-          <option value="Phone Call">Phone Call</option>
-          <option value="Coaching">Coaching</option>
-        </select>
+          onChange={(value) => handleSessionTypeChange(value as Session['sessionType'])}
+          options={sessionTypeOptions}
+          placeholder="Select session type"
+        />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -298,12 +296,9 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Date
           </label>
-          <input
-            type="date"
+          <CustomDatePicker
             value={formData.date}
-            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-            required
+            onChange={(value) => setFormData({ ...formData, date: value })}
           />
         </div>
 
@@ -311,12 +306,11 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Time
           </label>
-          <input
-            type="time"
+          <CustomDropdown
             value={formData.time}
-            onChange={(e) => setFormData({ ...formData, time: e.target.value })}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-            required
+            onChange={(value) => setFormData({ ...formData, time: value })}
+            options={timeOptions}
+            placeholder="Select time"
           />
         </div>
       </div>

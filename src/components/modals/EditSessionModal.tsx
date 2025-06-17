@@ -4,6 +4,9 @@ import { useState, useEffect } from 'react';
 import { Session } from '@/types';
 import { useApp } from '@/context/AppContext';
 import SlideUpModal from './SlideUpModal';
+import CustomDropdown from '@/components/ui/CustomDropdown';
+import CustomDatePicker from '@/components/ui/CustomDatePicker';
+import { generateTimeOptions, sessionTypeOptions } from '@/utils/timeOptions';
 
 
 interface EditSessionModalProps {
@@ -22,6 +25,9 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
     quote: '',
     notes: ''
   });
+
+  // Generate time options
+  const timeOptions = generateTimeOptions();
 
   useEffect(() => {
     if (session) {
@@ -90,20 +96,12 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
           <label className="block text-gray-700 text-sm font-medium mb-2">
             Session Type
           </label>
-          <select
+          <CustomDropdown
             value={formData.sessionType}
-            onChange={(e) => setFormData({ ...formData, sessionType: e.target.value })}
-            className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-          >
-            <option value="In-Person">In-Person</option>
-            <option value="Online">Online</option>
-            <option value="Training">Training</option>
-            <option value="Online Catchup">Online Catchup</option>
-            <option value="Group">Group</option>
-            <option value="RMR Live">RMR Live</option>
-            <option value="Phone Call">Phone Call</option>
-            <option value="Coaching">Coaching</option>
-          </select>
+            onChange={(value) => setFormData({ ...formData, sessionType: value })}
+            options={sessionTypeOptions}
+            placeholder="Select session type"
+          />
         </div>
 
         <div className="grid grid-cols-2 gap-4">
@@ -111,24 +109,20 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
             <label className="block text-gray-700 text-sm font-medium mb-2">
               Date
             </label>
-            <input
-              type="date"
+            <CustomDatePicker
               value={formData.date}
-              onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-              required
+              onChange={(value) => setFormData({ ...formData, date: value })}
             />
           </div>
           <div>
             <label className="block text-gray-700 text-sm font-medium mb-2">
               Time
             </label>
-            <input
-              type="time"
+            <CustomDropdown
               value={formData.time}
-              onChange={(e) => setFormData({ ...formData, time: e.target.value })}
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-              required
+              onChange={(value) => setFormData({ ...formData, time: value })}
+              options={timeOptions}
+              placeholder="Select time"
             />
           </div>
         </div>
