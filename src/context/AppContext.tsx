@@ -214,7 +214,6 @@ const AppContext = createContext<{
   dismissDuplicate: (duplicateId: string) => Promise<void>;
   clearDismissedDuplicates: () => Promise<void>;
   updateMembershipStatuses: () => Promise<void>;
-  refreshData: () => Promise<void>;
   createClient: (client: Omit<Client, 'id'>) => Promise<Client>;
   updateClient: (id: string, updates: Partial<Client>) => Promise<Client>;
   deleteClient: (id: string) => Promise<void>;
@@ -520,29 +519,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Refresh all data
-  const refreshData = async () => {
-    try {
-      console.log('🔄 Refreshing all data...');
-      await Promise.all([
-        loadClients(),
-        loadSessions(),
-        loadMemberships(),
-        loadBehaviouralBriefs(),
-        loadBehaviourQuestionnaires(),
-        loadBookingTerms(),
-        loadActionPoints()
-      ]);
-
-      // Update membership statuses after loading all data
-      await updateMembershipStatuses();
-      console.log('✅ Data refresh completed');
-    } catch (error) {
-      console.error('❌ Error refreshing data:', error);
-      throw error;
-    }
-  };
-
   // Create client in Supabase
   const createClient = async (clientData: Omit<Client, 'id'>): Promise<Client> => {
     try {
@@ -845,7 +821,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       dismissDuplicate,
       clearDismissedDuplicates,
       updateMembershipStatuses,
-      refreshData,
       createClient,
       updateClient,
       deleteClient,
