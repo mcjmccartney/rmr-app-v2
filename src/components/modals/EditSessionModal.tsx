@@ -34,13 +34,23 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
   const getHourFromTime = (time: string) => {
     if (!time) return '';
     const parts = time.split(':');
-    return parts[0] || '';
+    const hour = parts[0] || '';
+    // Ensure it's a valid hour option (00-23)
+    const hourNum = parseInt(hour, 10);
+    if (isNaN(hourNum) || hourNum < 0 || hourNum > 23) return '';
+    return hour.padStart(2, '0');
   };
 
   const getMinuteFromTime = (time: string) => {
     if (!time) return '';
     const parts = time.split(':');
-    return parts[1] || '';
+    const minute = parts[1] || '';
+    // Ensure it's a valid minute option (00, 05, 10, etc.)
+    const minuteNum = parseInt(minute, 10);
+    if (isNaN(minuteNum) || minuteNum < 0 || minuteNum > 59) return '';
+    // Round to nearest 5-minute increment
+    const roundedMinute = Math.round(minuteNum / 5) * 5;
+    return roundedMinute.toString().padStart(2, '0');
   };
 
   const updateTime = (hour: string, minute: string) => {
