@@ -85,7 +85,7 @@ export default function AddModal({ isOpen, onClose, type }: AddModalProps) {
         </div>
 
         {/* Content */}
-        <div className="p-6 overflow-y-auto" style={{ maxHeight: 'calc(90vh - 80px)', paddingBottom: '120px' }}>
+        <div className="p-6 overflow-y-auto" style={{ maxHeight: 'calc(90vh - 80px)' }}>
           {type === 'session' ? (
             <SessionForm onSubmit={handleClose} />
           ) : (
@@ -114,7 +114,7 @@ export default function AddModal({ isOpen, onClose, type }: AddModalProps) {
         </div>
 
         {/* Content */}
-        <div className="flex-1 p-6 overflow-y-auto" style={{ paddingBottom: '120px' }}>
+        <div className="flex-1 p-6 overflow-y-auto">
           {type === 'session' ? (
             <SessionForm onSubmit={handleClose} />
           ) : (
