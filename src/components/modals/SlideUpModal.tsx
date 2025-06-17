@@ -94,12 +94,12 @@ export default function SlideUpModal({ isOpen, onClose, title, children }: Slide
 
       {/* Desktop: slide in from right */}
       <div
-        className={`fixed top-0 right-0 bottom-0 w-96 bg-white text-black shadow-2xl transition-transform duration-300 ease-out hidden md:block ${
+        className={`fixed top-0 right-0 bottom-0 w-96 bg-white text-black shadow-2xl transition-transform duration-300 ease-out hidden md:flex md:flex-col ${
           isAnimating ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 flex-shrink-0">
           <h2 className="text-lg font-semibold">{title}</h2>
           <button
             onClick={handleClose}
@@ -110,7 +110,7 @@ export default function SlideUpModal({ isOpen, onClose, title, children }: Slide
         </div>
 
         {/* Content */}
-        <div className="px-6 py-6 overflow-y-auto" style={{ height: 'calc(100vh - 80px)', paddingBottom: '100px' }}>
+        <div className="flex-1 px-6 py-6 overflow-y-auto" style={{ paddingBottom: '120px' }}>
           {children}
         </div>
       </div>
