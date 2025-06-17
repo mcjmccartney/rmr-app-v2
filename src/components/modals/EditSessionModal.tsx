@@ -6,7 +6,7 @@ import { useApp } from '@/context/AppContext';
 import SlideUpModal from './SlideUpModal';
 import CustomDropdown from '@/components/ui/CustomDropdown';
 import CustomDatePicker from '@/components/ui/CustomDatePicker';
-import { generateTimeOptions, sessionTypeOptions } from '@/utils/timeOptions';
+import { generateHourOptions, generateMinuteOptions, sessionTypeOptions } from '@/utils/timeOptions';
 
 
 interface EditSessionModalProps {
@@ -27,7 +27,23 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
   });
 
   // Generate time options
-  const timeOptions = generateTimeOptions();
+  const hourOptions = generateHourOptions();
+  const minuteOptions = generateMinuteOptions();
+
+  // Helper functions for time handling
+  const getHourFromTime = (time: string) => {
+    return time ? time.split(':')[0] : '';
+  };
+
+  const getMinuteFromTime = (time: string) => {
+    return time ? time.split(':')[1] : '';
+  };
+
+  const updateTime = (hour: string, minute: string) => {
+    if (hour && minute) {
+      setFormData({ ...formData, time: `${hour}:${minute}` });
+    }
+  };
 
   useEffect(() => {
     if (session) {
@@ -104,26 +120,43 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-gray-700 text-sm font-medium mb-2">
-              Date
-            </label>
-            <CustomDatePicker
-              value={formData.date}
-              onChange={(value) => setFormData({ ...formData, date: value })}
-            />
-          </div>
-          <div>
-            <label className="block text-gray-700 text-sm font-medium mb-2">
-              Time
-            </label>
-            <CustomDropdown
-              value={formData.time}
-              onChange={(value) => setFormData({ ...formData, time: value })}
-              options={timeOptions}
-              placeholder="Select time"
-            />
+        <div>
+          <label className="block text-gray-700 text-sm font-medium mb-2">
+            Date
+          </label>
+          <CustomDatePicker
+            value={formData.date}
+            onChange={(value) => setFormData({ ...formData, date: value })}
+          />
+        </div>
+
+        <div>
+          <label className="block text-gray-700 text-sm font-medium mb-2">
+            Time
+          </label>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1">
+                Hour
+              </label>
+              <CustomDropdown
+                value={getHourFromTime(formData.time)}
+                onChange={(hour) => updateTime(hour, getMinuteFromTime(formData.time))}
+                options={hourOptions}
+                placeholder="00"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1">
+                Minutes
+              </label>
+              <CustomDropdown
+                value={getMinuteFromTime(formData.time)}
+                onChange={(minute) => updateTime(getHourFromTime(formData.time), minute)}
+                options={minuteOptions}
+                placeholder="00"
+              />
+            </div>
           </div>
         </div>
 
