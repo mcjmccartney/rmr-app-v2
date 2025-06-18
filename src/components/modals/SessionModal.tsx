@@ -64,7 +64,6 @@ export default function SessionModal({ session, isOpen, onClose, onEditSession, 
           sessionPaid: true,
           paymentConfirmedAt: updatedSession.paymentConfirmedAt
         });
-        alert('Session marked as paid!');
         onClose(); // Close the modal
         // Refresh the page to show updated payment status
         window.location.reload();

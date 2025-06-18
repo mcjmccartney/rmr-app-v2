@@ -452,14 +452,26 @@ export default function CalendarPage() {
                         }
                       }
 
-                      // Use amber color if both conditions are met, otherwise use default amber-800
+                      // Priority: Paid sessions (#4f6749) > Fully completed (#e17100) > Default (amber-800)
                       const isFullyCompleted = hasSignedBookingTerms && hasFilledQuestionnaire;
-                      const buttonStyle = isFullyCompleted ? {
-                        backgroundColor: '#e17100'
-                      } : {};
-                      const buttonClasses = isFullyCompleted
-                        ? "w-full text-white text-xs px-2 py-1 rounded text-left transition-colors flex-shrink-0 hover:opacity-80"
-                        : "w-full bg-amber-800 text-white text-xs px-2 py-1 rounded text-left hover:bg-amber-700 transition-colors flex-shrink-0";
+                      const isPaid = session.sessionPaid;
+
+                      let buttonStyle = {};
+                      let buttonClasses = "";
+
+                      if (isPaid) {
+                        // Paid sessions get green background
+                        buttonStyle = { backgroundColor: '#4f6749' };
+                        buttonClasses = "w-full text-white text-xs px-2 py-1 rounded text-left transition-colors flex-shrink-0 hover:opacity-80";
+                      } else if (isFullyCompleted) {
+                        // Fully completed (terms + questionnaire) get amber background
+                        buttonStyle = { backgroundColor: '#e17100' };
+                        buttonClasses = "w-full text-white text-xs px-2 py-1 rounded text-left transition-colors flex-shrink-0 hover:opacity-80";
+                      } else {
+                        // Default amber-800 background
+                        buttonStyle = {};
+                        buttonClasses = "w-full bg-amber-800 text-white text-xs px-2 py-1 rounded text-left hover:bg-amber-700 transition-colors flex-shrink-0";
+                      }
 
                       return (
                         <button
@@ -614,6 +626,13 @@ export default function CalendarPage() {
                   ? session.sessionType
                   : 'Unknown Client';
 
+                // Determine button style based on payment status
+                const isPaid = session.sessionPaid;
+                const buttonClass = isPaid
+                  ? "w-full text-white p-4 rounded-lg text-left transition-colors hover:opacity-80"
+                  : "w-full bg-amber-800 text-white p-4 rounded-lg text-left hover:bg-amber-700 transition-colors";
+                const buttonStyle = isPaid ? { backgroundColor: '#4f6749' } : {};
+
                 return (
                   <button
                     key={session.id}
@@ -621,7 +640,8 @@ export default function CalendarPage() {
                       handleCloseMobileDayModal();
                       handleSessionClick(session);
                     }}
-                    className="w-full bg-amber-800 text-white p-4 rounded-lg text-left hover:bg-amber-700 transition-colors"
+                    className={buttonClass}
+                    style={buttonStyle}
                   >
                     <div className="font-medium">
                       {formatTime(session.bookingTime)} | {displayName}
@@ -659,6 +679,13 @@ export default function CalendarPage() {
                     ? session.sessionType
                     : 'Unknown Client';
 
+                  // Determine button style based on payment status
+                  const isPaid = session.sessionPaid;
+                  const buttonClass = isPaid
+                    ? "w-full text-white p-4 rounded-lg text-left transition-colors hover:opacity-80"
+                    : "w-full bg-amber-800 text-white p-4 rounded-lg text-left hover:bg-amber-700 transition-colors";
+                  const buttonStyle = isPaid ? { backgroundColor: '#4f6749' } : {};
+
                   return (
                     <button
                       key={session.id}
@@ -666,7 +693,8 @@ export default function CalendarPage() {
                         handleCloseMobileDayModal();
                         handleSessionClick(session);
                       }}
-                      className="w-full bg-amber-800 text-white p-4 rounded-lg text-left hover:bg-amber-700 transition-colors"
+                      className={buttonClass}
+                      style={buttonStyle}
                     >
                       <div className="font-medium">
                         {formatTime(session.bookingTime)} | {displayName}
