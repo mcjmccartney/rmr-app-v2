@@ -633,7 +633,6 @@ export default function CalendarPage() {
                   : 'Unknown Client';
 
                 // Determine button style - priority: session plan sent (black) > paid + terms + questionnaire (green) > default
-                const client = state.clients.find(c => c.id === session.clientId);
                 const hasSignedBookingTerms = client?.email ?
                   state.bookingTerms.some(bt => bt.email?.toLowerCase() === client.email?.toLowerCase()) : false;
                 const hasFilledQuestionnaire = client && client.dogName && client.email ?
@@ -706,7 +705,6 @@ export default function CalendarPage() {
                     : 'Unknown Client';
 
                   // Determine button style - priority: session plan sent (black) > paid + terms + questionnaire (green) > default
-                  const client = state.clients.find(c => c.id === session.clientId);
                   const hasSignedBookingTerms = client?.email ?
                     state.bookingTerms.some(bt => bt.email?.toLowerCase() === client.email?.toLowerCase()) : false;
                   const hasFilledQuestionnaire = client && client.dogName && client.email ?
