@@ -452,19 +452,20 @@ export default function CalendarPage() {
                         }
                       }
 
-                      // Priority: Paid sessions (#4f6749) > Fully completed (#e17100) > Default (amber-800)
+                      // Priority: Paid + Terms + Questionnaire (#4f6749) > Terms + Questionnaire (#e17100) > Default (amber-800)
                       const isFullyCompleted = hasSignedBookingTerms && hasFilledQuestionnaire;
                       const isPaid = session.sessionPaid;
+                      const isCompletelyFinished = isPaid && isFullyCompleted; // All three conditions
 
                       let buttonStyle = {};
                       let buttonClasses = "";
 
-                      if (isPaid) {
-                        // Paid sessions get green background
+                      if (isCompletelyFinished) {
+                        // Paid + Terms + Questionnaire = green background
                         buttonStyle = { backgroundColor: '#4f6749' };
                         buttonClasses = "w-full text-white text-xs px-2 py-1 rounded text-left transition-colors flex-shrink-0 hover:opacity-80";
                       } else if (isFullyCompleted) {
-                        // Fully completed (terms + questionnaire) get amber background
+                        // Terms + Questionnaire (but not paid) = amber background
                         buttonStyle = { backgroundColor: '#e17100' };
                         buttonClasses = "w-full text-white text-xs px-2 py-1 rounded text-left transition-colors flex-shrink-0 hover:opacity-80";
                       } else {
@@ -626,12 +627,22 @@ export default function CalendarPage() {
                   ? session.sessionType
                   : 'Unknown Client';
 
-                // Determine button style based on payment status
+                // Determine button style - green only if paid + terms + questionnaire
+                const client = state.clients.find(c => c.id === session.clientId);
+                const hasSignedBookingTerms = client?.email ?
+                  state.bookingTerms.some(bt => bt.email?.toLowerCase() === client.email?.toLowerCase()) : false;
+                const hasFilledQuestionnaire = client && client.dogName && client.email ?
+                  state.behaviourQuestionnaires.some(q =>
+                    q.email?.toLowerCase() === client.email?.toLowerCase() &&
+                    q.dogName?.toLowerCase() === client.dogName?.toLowerCase()
+                  ) : false;
                 const isPaid = session.sessionPaid;
-                const buttonClass = isPaid
+                const isCompletelyFinished = isPaid && hasSignedBookingTerms && hasFilledQuestionnaire;
+
+                const buttonClass = isCompletelyFinished
                   ? "w-full text-white p-4 rounded-lg text-left transition-colors hover:opacity-80"
                   : "w-full bg-amber-800 text-white p-4 rounded-lg text-left hover:bg-amber-700 transition-colors";
-                const buttonStyle = isPaid ? { backgroundColor: '#4f6749' } : {};
+                const buttonStyle = isCompletelyFinished ? { backgroundColor: '#4f6749' } : {};
 
                 return (
                   <button
@@ -679,12 +690,22 @@ export default function CalendarPage() {
                     ? session.sessionType
                     : 'Unknown Client';
 
-                  // Determine button style based on payment status
+                  // Determine button style - green only if paid + terms + questionnaire
+                  const client = state.clients.find(c => c.id === session.clientId);
+                  const hasSignedBookingTerms = client?.email ?
+                    state.bookingTerms.some(bt => bt.email?.toLowerCase() === client.email?.toLowerCase()) : false;
+                  const hasFilledQuestionnaire = client && client.dogName && client.email ?
+                    state.behaviourQuestionnaires.some(q =>
+                      q.email?.toLowerCase() === client.email?.toLowerCase() &&
+                      q.dogName?.toLowerCase() === client.dogName?.toLowerCase()
+                    ) : false;
                   const isPaid = session.sessionPaid;
-                  const buttonClass = isPaid
+                  const isCompletelyFinished = isPaid && hasSignedBookingTerms && hasFilledQuestionnaire;
+
+                  const buttonClass = isCompletelyFinished
                     ? "w-full text-white p-4 rounded-lg text-left transition-colors hover:opacity-80"
                     : "w-full bg-amber-800 text-white p-4 rounded-lg text-left hover:bg-amber-700 transition-colors";
-                  const buttonStyle = isPaid ? { backgroundColor: '#4f6749' } : {};
+                  const buttonStyle = isCompletelyFinished ? { backgroundColor: '#4f6749' } : {};
 
                   return (
                     <button

@@ -72,6 +72,21 @@ export default function SessionModal({ session, isOpen, onClose, onEditSession, 
     }
   };
 
+  const handleMarkAsUnpaid = async () => {
+    try {
+      await updateSession(session.id, {
+        sessionPaid: false,
+        paymentConfirmedAt: null
+      });
+      onClose(); // Close the modal
+      // Refresh the page to show updated payment status
+      window.location.reload();
+    } catch (error) {
+      console.error('Error marking session as unpaid:', error);
+      alert('Failed to mark session as unpaid. Please try again.');
+    }
+  };
+
   // For Group and RMR Live sessions, show session type instead of "Unknown Client"
   const isGroupOrRMRLive = session.sessionType === 'Group' || session.sessionType === 'RMR Live';
   const displayName = client
@@ -209,18 +224,30 @@ export default function SessionModal({ session, isOpen, onClose, onEditSession, 
           </div>
         )}
 
-        {/* Payment Button */}
-        {client && !session.sessionPaid && (
+        {/* Payment Buttons */}
+        {client && (
           <div className="pb-3 border-b border-gray-200">
-            <button
-              onClick={handleMarkAsPaid}
-              className="w-full text-white py-3 px-4 rounded-lg font-medium transition-colors"
-              style={{ backgroundColor: '#4f6749' }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3d5237'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#4f6749'}
-            >
-              Mark as Paid
-            </button>
+            {!session.sessionPaid ? (
+              <button
+                onClick={handleMarkAsPaid}
+                className="w-full text-white py-3 px-4 rounded-lg font-medium transition-colors"
+                style={{ backgroundColor: '#4f6749' }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3d5237'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#4f6749'}
+              >
+                Mark as Paid
+              </button>
+            ) : (
+              <button
+                onClick={handleMarkAsUnpaid}
+                className="w-full text-white py-3 px-4 rounded-lg font-medium transition-colors"
+                style={{ backgroundColor: '#973b00' }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#7a2f00'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#973b00'}
+              >
+                Mark as Unpaid
+              </button>
+            )}
           </div>
         )}
 
