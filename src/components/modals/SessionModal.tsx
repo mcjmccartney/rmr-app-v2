@@ -87,6 +87,34 @@ export default function SessionModal({ session, isOpen, onClose, onEditSession, 
     }
   };
 
+  const handleSessionPlanSent = async () => {
+    try {
+      await updateSession(session.id, {
+        sessionPlanSent: true
+      });
+      onClose(); // Close the modal
+      // Refresh the page to show updated session plan status
+      window.location.reload();
+    } catch (error) {
+      console.error('Error marking session plan as sent:', error);
+      alert('Failed to mark session plan as sent. Please try again.');
+    }
+  };
+
+  const handleSessionPlanUnsent = async () => {
+    try {
+      await updateSession(session.id, {
+        sessionPlanSent: false
+      });
+      onClose(); // Close the modal
+      // Refresh the page to show updated session plan status
+      window.location.reload();
+    } catch (error) {
+      console.error('Error marking session plan as unsent:', error);
+      alert('Failed to mark session plan as unsent. Please try again.');
+    }
+  };
+
   // For Group and RMR Live sessions, show session type instead of "Unknown Client"
   const isGroupOrRMRLive = session.sessionType === 'Group' || session.sessionType === 'RMR Live';
   const displayName = client
@@ -246,6 +274,33 @@ export default function SessionModal({ session, isOpen, onClose, onEditSession, 
                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#973b00'}
               >
                 Mark as Unpaid
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Session Plan Buttons */}
+        {client && (
+          <div className="pb-3 border-b border-gray-200">
+            {!session.sessionPlanSent ? (
+              <button
+                onClick={handleSessionPlanSent}
+                className="w-full text-white py-3 px-4 rounded-lg font-medium transition-colors"
+                style={{ backgroundColor: '#000000' }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#333333'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#000000'}
+              >
+                Session Plan Sent
+              </button>
+            ) : (
+              <button
+                onClick={handleSessionPlanUnsent}
+                className="w-full text-white py-3 px-4 rounded-lg font-medium transition-colors"
+                style={{ backgroundColor: '#973b00' }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#7a2f00'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#973b00'}
+              >
+                Session Plan Unsent
               </button>
             )}
           </div>

@@ -452,15 +452,20 @@ export default function CalendarPage() {
                         }
                       }
 
-                      // Priority: Paid + Terms + Questionnaire (#4f6749) > Terms + Questionnaire (#e17100) > Default (amber-800)
+                      // Priority: Session Plan Sent (black) > Paid + Terms + Questionnaire (green) > Terms + Questionnaire (amber) > Default (amber-800)
                       const isFullyCompleted = hasSignedBookingTerms && hasFilledQuestionnaire;
                       const isPaid = session.sessionPaid;
                       const isCompletelyFinished = isPaid && isFullyCompleted; // All three conditions
+                      const isSessionPlanSent = session.sessionPlanSent;
 
                       let buttonStyle = {};
                       let buttonClasses = "";
 
-                      if (isCompletelyFinished) {
+                      if (isSessionPlanSent) {
+                        // Session plan sent = black background (highest priority)
+                        buttonStyle = { backgroundColor: '#000000' };
+                        buttonClasses = "w-full text-white text-xs px-2 py-1 rounded text-left transition-colors flex-shrink-0 hover:opacity-80";
+                      } else if (isCompletelyFinished) {
                         // Paid + Terms + Questionnaire = green background
                         buttonStyle = { backgroundColor: '#4f6749' };
                         buttonClasses = "w-full text-white text-xs px-2 py-1 rounded text-left transition-colors flex-shrink-0 hover:opacity-80";
@@ -627,7 +632,7 @@ export default function CalendarPage() {
                   ? session.sessionType
                   : 'Unknown Client';
 
-                // Determine button style - green only if paid + terms + questionnaire
+                // Determine button style - priority: session plan sent (black) > paid + terms + questionnaire (green) > default
                 const client = state.clients.find(c => c.id === session.clientId);
                 const hasSignedBookingTerms = client?.email ?
                   state.bookingTerms.some(bt => bt.email?.toLowerCase() === client.email?.toLowerCase()) : false;
@@ -638,11 +643,21 @@ export default function CalendarPage() {
                   ) : false;
                 const isPaid = session.sessionPaid;
                 const isCompletelyFinished = isPaid && hasSignedBookingTerms && hasFilledQuestionnaire;
+                const isSessionPlanSent = session.sessionPlanSent;
 
-                const buttonClass = isCompletelyFinished
-                  ? "w-full text-white p-4 rounded-lg text-left transition-colors hover:opacity-80"
-                  : "w-full bg-amber-800 text-white p-4 rounded-lg text-left hover:bg-amber-700 transition-colors";
-                const buttonStyle = isCompletelyFinished ? { backgroundColor: '#4f6749' } : {};
+                let buttonClass = "";
+                let buttonStyle = {};
+
+                if (isSessionPlanSent) {
+                  buttonClass = "w-full text-white p-4 rounded-lg text-left transition-colors hover:opacity-80";
+                  buttonStyle = { backgroundColor: '#000000' };
+                } else if (isCompletelyFinished) {
+                  buttonClass = "w-full text-white p-4 rounded-lg text-left transition-colors hover:opacity-80";
+                  buttonStyle = { backgroundColor: '#4f6749' };
+                } else {
+                  buttonClass = "w-full bg-amber-800 text-white p-4 rounded-lg text-left hover:bg-amber-700 transition-colors";
+                  buttonStyle = {};
+                }
 
                 return (
                   <button
@@ -690,7 +705,7 @@ export default function CalendarPage() {
                     ? session.sessionType
                     : 'Unknown Client';
 
-                  // Determine button style - green only if paid + terms + questionnaire
+                  // Determine button style - priority: session plan sent (black) > paid + terms + questionnaire (green) > default
                   const client = state.clients.find(c => c.id === session.clientId);
                   const hasSignedBookingTerms = client?.email ?
                     state.bookingTerms.some(bt => bt.email?.toLowerCase() === client.email?.toLowerCase()) : false;
@@ -701,11 +716,21 @@ export default function CalendarPage() {
                     ) : false;
                   const isPaid = session.sessionPaid;
                   const isCompletelyFinished = isPaid && hasSignedBookingTerms && hasFilledQuestionnaire;
+                  const isSessionPlanSent = session.sessionPlanSent;
 
-                  const buttonClass = isCompletelyFinished
-                    ? "w-full text-white p-4 rounded-lg text-left transition-colors hover:opacity-80"
-                    : "w-full bg-amber-800 text-white p-4 rounded-lg text-left hover:bg-amber-700 transition-colors";
-                  const buttonStyle = isCompletelyFinished ? { backgroundColor: '#4f6749' } : {};
+                  let buttonClass = "";
+                  let buttonStyle = {};
+
+                  if (isSessionPlanSent) {
+                    buttonClass = "w-full text-white p-4 rounded-lg text-left transition-colors hover:opacity-80";
+                    buttonStyle = { backgroundColor: '#000000' };
+                  } else if (isCompletelyFinished) {
+                    buttonClass = "w-full text-white p-4 rounded-lg text-left transition-colors hover:opacity-80";
+                    buttonStyle = { backgroundColor: '#4f6749' };
+                  } else {
+                    buttonClass = "w-full bg-amber-800 text-white p-4 rounded-lg text-left hover:bg-amber-700 transition-colors";
+                    buttonStyle = {};
+                  }
 
                   return (
                     <button

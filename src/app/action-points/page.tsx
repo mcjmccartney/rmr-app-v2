@@ -153,7 +153,7 @@ export default function ActionPointsPage() {
                     <textarea
                       value={addForm.details}
                       onChange={(e) => setAddForm({ ...addForm, details: e.target.value })}
-                      rows={4}
+                      rows={8}
                       className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-800 focus:border-amber-800 resize-none"
                       placeholder="Enter action point details (use [Dog Name], [he/she], [him/her] for personalization)"
                     />
@@ -204,7 +204,7 @@ export default function ActionPointsPage() {
                           <textarea
                             value={editForm.details}
                             onChange={(e) => setEditForm({ ...editForm, details: e.target.value })}
-                            rows={4}
+                            rows={8}
                             className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-800 focus:border-amber-800 resize-none"
                           />
                         </div>
