@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { SessionPlan, ActionPoint, Session, Client } from '@/types';
 import { personalizeActionPoint } from '@/data/actionPoints';
 import { X, Download, Edit3 } from 'lucide-react';
+import { useApp } from '@/context/AppContext';
 
 interface SessionPlanPreviewProps {
   sessionPlan: SessionPlan;
@@ -37,14 +38,27 @@ export default function SessionPlanPreview({
   onClose,
   onSavePDF
 }: SessionPlanPreviewProps) {
+  const { state } = useApp();
   const dogName = client.dogName || 'Unknown Dog';
   const sessionNumber = sessionPlan.sessionNumber || 1;
   const ownerName = `${client.firstName} ${client.lastName}`;
 
+  // Get dog's gender from questionnaire for proper pronoun replacement
+  const getDogGender = (): 'Male' | 'Female' => {
+    if (!client?.email || !client?.dogName) return 'Male';
+
+    const questionnaire = state.behaviourQuestionnaires.find(q =>
+      q.email?.toLowerCase() === client.email?.toLowerCase() &&
+      q.dogName?.toLowerCase() === client.dogName?.toLowerCase()
+    );
+
+    return questionnaire?.sex || 'Male';
+  };
+
   // Get selected action points and personalize them
   const selectedActionPoints = actionPoints
     .filter(ap => sessionPlan.actionPoints.includes(ap.id))
-    .map(ap => personalizeActionPoint(ap, dogName, 'Male'));
+    .map(ap => personalizeActionPoint(ap, dogName, getDogGender()));
 
   const [editableContent, setEditableContent] = useState<EditableContent>({
     title: `Session Plan - ${dogName} - Session ${sessionNumber}`,

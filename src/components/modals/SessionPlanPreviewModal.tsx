@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import SlideUpModal from './SlideUpModal';
 import { predefinedActionPoints, personalizeActionPoint } from '@/data/actionPoints';
+import { useApp } from '@/context/AppContext';
 
 interface SessionPlanPreviewModalProps {
   isOpen: boolean;
@@ -29,8 +30,20 @@ export default function SessionPlanPreviewModal({
   sessionPlan, 
   onSave 
 }: SessionPlanPreviewModalProps) {
+  const { state } = useApp();
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState('');
+
+  // Get dog's gender from questionnaire for proper pronoun replacement
+  const getDogGender = (dogName: string): 'Male' | 'Female' => {
+    if (!dogName) return 'Male';
+
+    const questionnaire = state.behaviourQuestionnaires.find(q =>
+      q.dogName?.toLowerCase() === dogName.toLowerCase()
+    );
+
+    return questionnaire?.sex || 'Male';
+  };
 
   // Generate the document content
   const generateDocumentContent = () => {
@@ -40,9 +53,9 @@ export default function SessionPlanPreviewModal({
         if (!actionPoint) return '';
         
         const personalizedActionPoint = personalizeActionPoint(
-          actionPoint, 
-          sessionPlan.dogName, 
-          'Male'
+          actionPoint,
+          sessionPlan.dogName,
+          getDogGender(sessionPlan.dogName)
         );
         
         return `Action Point ${index + 1}: ${personalizedActionPoint.header}\n${personalizedActionPoint.details}`;
