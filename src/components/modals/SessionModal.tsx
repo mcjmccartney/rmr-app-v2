@@ -76,7 +76,7 @@ export default function SessionModal({ session, isOpen, onClose, onEditSession, 
     try {
       await updateSession(session.id, {
         sessionPaid: false,
-        paymentConfirmedAt: null
+        paymentConfirmedAt: undefined
       });
       onClose(); // Close the modal
       // Refresh the page to show updated payment status
