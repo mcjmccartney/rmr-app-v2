@@ -57,20 +57,18 @@ export default function SessionModal({ session, isOpen, onClose, onEditSession, 
 
 
   const handleMarkAsPaid = async () => {
-    if (window.confirm('Mark this session as paid?')) {
-      try {
-        const updatedSession = await sessionService.markAsPaid(session.id);
-        await updateSession(session.id, {
-          sessionPaid: true,
-          paymentConfirmedAt: updatedSession.paymentConfirmedAt
-        });
-        onClose(); // Close the modal
-        // Refresh the page to show updated payment status
-        window.location.reload();
-      } catch (error) {
-        console.error('Error marking session as paid:', error);
-        alert('Failed to mark session as paid. Please try again.');
-      }
+    try {
+      const updatedSession = await sessionService.markAsPaid(session.id);
+      await updateSession(session.id, {
+        sessionPaid: true,
+        paymentConfirmedAt: updatedSession.paymentConfirmedAt
+      });
+      onClose(); // Close the modal
+      // Refresh the page to show updated payment status
+      window.location.reload();
+    } catch (error) {
+      console.error('Error marking session as paid:', error);
+      alert('Failed to mark session as paid. Please try again.');
     }
   };
 
