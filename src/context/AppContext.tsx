@@ -659,18 +659,47 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       if (client) {
         try {
-          // Create Google Calendar event directly
-          const { googleCalendarService } = await import('@/services/googleCalendarService');
-          const eventId = await googleCalendarService.createEvent(session, client);
+          // Create Google Calendar event via API route
+          const calendarResponse = await fetch('/api/calendar/create', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              sessionId: session.id,
+              clientName: `${client.firstName} ${client.lastName}`.trim(),
+              clientEmail: client.email,
+              dogName: session.dogName || client.dogName,
+              sessionType: session.sessionType,
+              bookingDate: session.bookingDate,
+              bookingTime: session.bookingTime,
+              notes: session.notes,
+              quote: session.quote
+            })
+          });
 
-          // Update session with eventId
-          const updatedSession = await sessionService.update(session.id, { eventId });
-          dispatch({ type: 'UPDATE_SESSION', payload: updatedSession });
+          if (calendarResponse.ok) {
+            const calendarData = await calendarResponse.json();
+            const eventId = calendarData.eventId;
 
-          // Still trigger the booking terms email webhook (not calendar related)
-          await triggerSessionWebhook(updatedSession);
+            // Update session with eventId
+            const updatedSession = await sessionService.update(session.id, { eventId });
+            dispatch({ type: 'UPDATE_SESSION', payload: updatedSession });
 
-          return updatedSession;
+            // Still trigger the booking terms email webhook (not calendar related)
+            await triggerSessionWebhook(updatedSession);
+
+            return updatedSession;
+          } else {
+            console.error('Failed to create calendar event via API');
+            // Session is still created, just without calendar event
+            dispatch({ type: 'ADD_SESSION', payload: session });
+
+            // Still trigger the booking terms email webhook
+            await triggerSessionWebhook(session);
+
+            return session;
+          }
         } catch (calendarError) {
           console.error('Failed to create calendar event:', calendarError);
           // Session is still created, just without calendar event
@@ -722,11 +751,30 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       console.log('Updating Google Calendar event for session:', session.id);
 
-      // Update Google Calendar event directly
-      const { googleCalendarService } = await import('@/services/googleCalendarService');
-      await googleCalendarService.updateEvent(session.eventId, session, client);
+      // Update Google Calendar event via API route
+      const calendarResponse = await fetch('/api/calendar/update', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          eventId: session.eventId,
+          clientName: `${client.firstName} ${client.lastName}`.trim(),
+          clientEmail: client.email,
+          dogName: session.dogName || client.dogName,
+          sessionType: session.sessionType,
+          bookingDate: session.bookingDate,
+          bookingTime: session.bookingTime,
+          notes: session.notes,
+          quote: session.quote
+        })
+      });
 
-      console.log('Successfully updated calendar event');
+      if (calendarResponse.ok) {
+        console.log('Successfully updated calendar event');
+      } else {
+        console.error('Failed to update calendar event via API');
+      }
 
     } catch (error) {
       console.error('Error updating Google Calendar event:', error);
@@ -744,11 +792,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       console.log('Deleting Google Calendar event for session:', session.id);
 
-      // Delete Google Calendar event directly
-      const { googleCalendarService } = await import('@/services/googleCalendarService');
-      await googleCalendarService.deleteEvent(session.eventId);
+      // Delete Google Calendar event via API route
+      const calendarResponse = await fetch('/api/calendar/delete', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          eventId: session.eventId
+        })
+      });
 
-      console.log('Successfully deleted calendar event');
+      if (calendarResponse.ok) {
+        console.log('Successfully deleted calendar event');
+      } else {
+        console.error('Failed to delete calendar event via API');
+        throw new Error('Failed to delete calendar event');
+      }
 
     } catch (error) {
       console.error('Error deleting Google Calendar event:', error);
