@@ -797,11 +797,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
         console.error('Failed to trigger session deletion webhook:', response.status, response.statusText);
         const errorText = await response.text();
         console.error('Error response:', errorText);
+        // Throw error so deleteSession can handle it
+        throw new Error(`Webhook failed with status ${response.status}: ${response.statusText}`);
       }
 
     } catch (error) {
       console.error('Error triggering session deletion webhook:', error);
-      // Don't throw error - webhook failure shouldn't prevent session deletion
+      // Throw error so deleteSession can handle it and ask user for confirmation
+      throw error;
     }
   };
 
@@ -817,8 +820,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       if (sessionFromDb) {
         console.log('Triggering deletion webhook for session:', sessionFromDb.id);
-        // Trigger deletion webhook before deleting from database
-        await triggerSessionDeletionWebhook(sessionFromDb);
+        // Trigger deletion webhook and wait for it to complete before deleting from database
+        try {
+          await triggerSessionDeletionWebhook(sessionFromDb);
+          console.log('Deletion webhook completed successfully');
+        } catch (webhookError) {
+          console.error('Deletion webhook failed:', webhookError);
+          // Ask user if they want to proceed despite webhook failure
+          const proceed = window.confirm(
+            'The calendar deletion webhook failed. The session will still be deleted from the app, but the calendar event may remain. Do you want to proceed with deleting the session?'
+          );
+          if (!proceed) {
+            console.log('User cancelled deletion due to webhook failure');
+            return; // Don't delete if user cancels
+          }
+        }
       } else {
         console.log('No session found in database for ID:', id);
       }
