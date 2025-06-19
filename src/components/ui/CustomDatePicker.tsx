@@ -64,18 +64,21 @@ export default function CustomDatePicker({
     const daysInMonth = lastDay.getDate();
     const startingDayOfWeek = firstDay.getDay();
 
+    // Convert Sunday (0) to be 7, so Monday (1) becomes 0
+    const mondayBasedStartDay = startingDayOfWeek === 0 ? 6 : startingDayOfWeek - 1;
+
     const days = [];
-    
+
     // Add empty cells for days before the first day of the month
-    for (let i = 0; i < startingDayOfWeek; i++) {
+    for (let i = 0; i < mondayBasedStartDay; i++) {
       days.push(null);
     }
-    
+
     // Add days of the month
     for (let day = 1; day <= daysInMonth; day++) {
       days.push(new Date(year, month, day));
     }
-    
+
     return days;
   };
 
@@ -116,7 +119,7 @@ export default function CustomDatePicker({
     'July', 'August', 'September', 'October', 'November', 'December'
   ];
 
-  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
   return (
     <div className={`relative ${className}`} ref={dropdownRef}>

@@ -6,7 +6,7 @@ export const calculateQuote = (sessionType: Session['sessionType'], isMember: bo
     case 'Training':
       return isMember ? 50 : 60;
     case 'In-Person':
-      return isMember ? 95 : 75;
+      return isMember ? 75 : 95;
     case 'Online Catchup':
       return 30;
     case 'Group':
