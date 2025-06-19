@@ -676,7 +676,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Trigger Make.com webhook for session update (same as creation - includes emails)
+  // Trigger Make.com webhook for session update when date/time changes
   const triggerSessionUpdateWebhook = async (session: Session) => {
     try {
       // Find the client for this session
@@ -687,19 +687,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      // Check if client has already signed booking terms by looking in booking_terms table
-      const hasSignedBookingTerms = state.bookingTerms.some(bt =>
-        bt.email?.toLowerCase() === client.email?.toLowerCase()
-      );
-
-      // Check if client has filled behaviour questionnaire
-      const hasFilledQuestionnaire = client && client.dogName && client.email ?
-        state.behaviourQuestionnaires.some(q =>
-          q.email?.toLowerCase() === client.email?.toLowerCase() &&
-          q.dogName?.toLowerCase() === client.dogName?.toLowerCase()
-        ) : false;
-
-      // Prepare session data for Make.com webhook (same as creation)
+      // Prepare session data for Make.com webhook
       const webhookData = {
         sessionId: session.id,
         clientId: session.clientId,
@@ -712,56 +700,33 @@ export function AppProvider({ children }: { children: ReactNode }) {
         notes: session.notes,
         quote: session.quote,
         createdAt: new Date().toISOString(),
-        // Include booking terms and questionnaire status
-        hasSignedBookingTerms,
-        hasFilledQuestionnaire,
-        // URLs for forms
-        bookingTermsUrl: `${window.location.origin}/booking-terms?email=${encodeURIComponent(client.email)}`,
-        questionnaireUrl: `${window.location.origin}/behaviour-questionnaire?email=${encodeURIComponent(client.email)}`,
         // Callback URL for Event ID
         eventIdCallbackUrl: `${window.location.origin}/api/session/event-id`
       };
 
-      console.log('Triggering Make.com webhooks for session update (includes emails):', webhookData);
+      console.log('Triggering Make.com webhook for session update:', webhookData);
 
-      // Send to both webhooks in parallel (same as session creation)
-      const webhookPromises = [
-        // Original session webhook
-        fetch('https://hook.eu1.make.com/lipggo8kcd8kwq2vp6j6mr3gnxbx12h7', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(webhookData)
-        }),
-        // New booking terms email webhook
-        fetch('https://hook.eu1.make.com/yaoalfe77uqtw4xv9fbh5atf4okq14wm', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(webhookData)
-        })
-      ];
-
-      const responses = await Promise.allSettled(webhookPromises);
-
-      // Log results
-      responses.forEach((result, index) => {
-        const webhookName = index === 0 ? 'session webhook' : 'booking terms email webhook';
-        if (result.status === 'fulfilled' && result.value.ok) {
-          console.log(`Successfully triggered ${webhookName} for session update`);
-        } else {
-          console.error(`Failed to trigger ${webhookName} for session update:`,
-            result.status === 'fulfilled' ?
-              `${result.value.status} ${result.value.statusText}` :
-              result.reason
-          );
-        }
+      // Call the specified webhook
+      const response = await fetch('https://hook.eu1.make.com/lipggo8kcd8kwq2vp6j6mr3gnxbx12h7', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(webhookData)
       });
 
+      if (response.ok) {
+        console.log('Successfully triggered session update webhook');
+        const responseText = await response.text();
+        console.log('Webhook response:', responseText);
+      } else {
+        console.error('Failed to trigger session update webhook:', response.status, response.statusText);
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
+      }
+
     } catch (error) {
-      console.error('Error triggering Make.com session update webhooks:', error);
+      console.error('Error triggering Make.com session update webhook:', error);
       // Don't throw error - webhook failure shouldn't prevent session update
     }
   };
