@@ -725,10 +725,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         eventIdCallbackUrl: `${window.location.origin}/api/session/event-id`
       };
 
-      console.log('Triggering Make.com webhooks for session update:', webhookData);
+      console.log('Triggering Make.com webhook for session update (date/time changed):', webhookData);
 
-      // Call the first webhook
-      const response1 = await fetch('https://hook.eu1.make.com/yaoalfe77uqtw4xv9fbh5atf4okq14wm', {
+      // Only call the final webhook for session updates when date/time changes
+      const response = await fetch('https://hook.eu1.make.com/osd1yw9dbusym6ury9o8rg1679vzi2ju', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -736,33 +736,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify(webhookData)
       });
 
-      if (response1.ok) {
-        console.log('Successfully triggered first session update webhook');
-        const responseText = await response1.text();
-        console.log('First webhook response:', responseText);
+      if (response.ok) {
+        console.log('Successfully triggered session update webhook');
+        const responseText = await response.text();
+        console.log('Session update webhook response:', responseText);
       } else {
-        console.error('Failed to trigger first session update webhook:', response1.status, response1.statusText);
-        const errorText = await response1.text();
-        console.error('First webhook error response:', errorText);
-      }
-
-      // Call the second webhook as the final trigger
-      const response2 = await fetch('https://hook.eu1.make.com/osd1yw9dbusym6ury9o8rg1679vzi2ju', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(webhookData)
-      });
-
-      if (response2.ok) {
-        console.log('Successfully triggered final session update webhook');
-        const responseText = await response2.text();
-        console.log('Final webhook response:', responseText);
-      } else {
-        console.error('Failed to trigger final session update webhook:', response2.status, response2.statusText);
-        const errorText = await response2.text();
-        console.error('Final webhook error response:', errorText);
+        console.error('Failed to trigger session update webhook:', response.status, response.statusText);
+        const errorText = await response.text();
+        console.error('Session update webhook error response:', errorText);
       }
 
     } catch (error) {

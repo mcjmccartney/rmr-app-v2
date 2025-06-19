@@ -102,13 +102,13 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
       // Always update the session first
       const updatedSession = await updateSession(session.id, updates);
 
-      // If date/time changed, trigger the webhook
+      // If date/time changed, trigger the update webhook
       if (dateTimeChanged) {
-        console.log('Date/time changed, triggering webhook');
+        console.log('Date/time changed, triggering session update webhook');
         await triggerSessionUpdateWebhook(updatedSession);
-        console.log('Webhook triggered for session update');
+        console.log('Session update webhook triggered');
       } else {
-        console.log('No date/time changes, no webhook triggered');
+        console.log('No date/time changes, no webhooks triggered');
       }
 
       onClose();
