@@ -695,29 +695,44 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       console.log('Updating Google Calendar event for session:', session.id);
 
-      // Update Google Calendar event via API route
-      const calendarResponse = await fetch('/api/calendar/update', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          eventId: session.eventId,
-          clientName: `${client.firstName} ${client.lastName}`.trim(),
-          clientEmail: client.email,
-          dogName: session.dogName || client.dogName,
-          sessionType: session.sessionType,
-          bookingDate: session.bookingDate,
-          bookingTime: session.bookingTime,
-          notes: session.notes,
-          quote: session.quote
-        })
-      });
+      // Update Google Calendar event via API route with timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
-      if (calendarResponse.ok) {
-        console.log('Successfully updated calendar event');
-      } else {
-        console.error('Failed to update calendar event via API');
+      try {
+        const calendarResponse = await fetch('/api/calendar/update', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            eventId: session.eventId,
+            clientName: `${client.firstName} ${client.lastName}`.trim(),
+            clientEmail: client.email,
+            dogName: session.dogName || client.dogName,
+            sessionType: session.sessionType,
+            bookingDate: session.bookingDate,
+            bookingTime: session.bookingTime,
+            notes: session.notes,
+            quote: session.quote
+          }),
+          signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (calendarResponse.ok) {
+          console.log('Successfully updated calendar event');
+        } else {
+          console.error('Failed to update calendar event via API:', calendarResponse.status);
+        }
+      } catch (fetchError) {
+        clearTimeout(timeoutId);
+        if (fetchError instanceof Error && fetchError.name === 'AbortError') {
+          console.error('Calendar update request timed out');
+        } else {
+          console.error('Calendar update request failed:', fetchError);
+        }
       }
 
     } catch (error) {
@@ -736,22 +751,39 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       console.log('Deleting Google Calendar event for session:', session.id);
 
-      // Delete Google Calendar event via API route
-      const calendarResponse = await fetch('/api/calendar/delete', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          eventId: session.eventId
-        })
-      });
+      // Delete Google Calendar event via API route with timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
-      if (calendarResponse.ok) {
-        console.log('Successfully deleted calendar event');
-      } else {
-        console.error('Failed to delete calendar event via API');
-        throw new Error('Failed to delete calendar event');
+      try {
+        const calendarResponse = await fetch('/api/calendar/delete', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            eventId: session.eventId
+          }),
+          signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (calendarResponse.ok) {
+          console.log('Successfully deleted calendar event');
+        } else {
+          console.error('Failed to delete calendar event via API:', calendarResponse.status);
+          throw new Error('Failed to delete calendar event');
+        }
+      } catch (fetchError) {
+        clearTimeout(timeoutId);
+        if (fetchError instanceof Error && fetchError.name === 'AbortError') {
+          console.error('Calendar delete request timed out');
+          throw new Error('Calendar delete request timed out');
+        } else {
+          console.error('Calendar delete request failed:', fetchError);
+          throw fetchError;
+        }
       }
 
     } catch (error) {
