@@ -699,7 +699,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           q.dogName?.toLowerCase() === client.dogName?.toLowerCase()
         ) : false;
 
-      // Prepare session data for Make.com webhook
+      // Prepare session data for Make.com webhook (match new session format)
       const webhookData = {
         sessionId: session.id,
         clientId: session.clientId,
@@ -713,8 +713,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
         notes: session.notes,
         quote: session.quote,
         createdAt: new Date().toISOString(),
+        // Include booking terms and questionnaire status
         hasSignedBookingTerms,
         hasFilledQuestionnaire,
+        // URLs for forms (same as new session)
+        bookingTermsUrl: `${window.location.origin}/booking-terms?email=${encodeURIComponent(client.email)}`,
+        questionnaireUrl: `${window.location.origin}/behaviour-questionnaire?email=${encodeURIComponent(client.email)}`,
         // Callback URL for Event ID
         eventIdCallbackUrl: `${window.location.origin}/api/session/event-id`
       };
