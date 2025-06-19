@@ -707,7 +707,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       console.log('Triggering Make.com webhook for session update:', webhookData);
 
       // Call the specified webhook
-      const response = await fetch('https://hook.eu1.make.com/lipggo8kcd8kwq2vp6j6mr3gnxbx12h7', {
+      const response = await fetch('https://hook.eu1.make.com/yaoalfe77uqtw4xv9fbh5atf4okq14wm', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
