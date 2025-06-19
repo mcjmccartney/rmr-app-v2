@@ -17,7 +17,7 @@ interface EditSessionModalProps {
 }
 
 export default function EditSessionModal({ session, isOpen, onClose }: EditSessionModalProps) {
-  const { state, updateSession } = useApp();
+  const { state, updateSession, triggerSessionWebhook, triggerSessionDeletionWebhook } = useApp();
   const [formData, setFormData] = useState({
     clientId: '',
     sessionType: 'In-Person',
@@ -94,7 +94,33 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
     };
 
     try {
-      await updateSession(session.id, updates);
+      // Check if date or time has changed
+      const dateChanged = session.bookingDate !== formData.date;
+      const timeChanged = session.bookingTime !== formData.time;
+      const dateTimeChanged = dateChanged || timeChanged;
+
+      if (dateTimeChanged && session.eventId) {
+        console.log('Date/time changed, triggering calendar update webhooks');
+
+        // First, trigger deletion webhook for the old calendar event
+        await triggerSessionDeletionWebhook(session);
+
+        // Update the session in database (this will clear the eventId)
+        const updatedSession = await updateSession(session.id, {
+          ...updates,
+          eventId: undefined // Clear the old event ID
+        });
+
+        // Then trigger creation webhook for the new calendar event
+        await triggerSessionWebhook(updatedSession);
+
+        console.log('Calendar update webhooks completed');
+      } else {
+        console.log('No date/time changes, updating session without calendar webhooks');
+        // Just update the session normally
+        await updateSession(session.id, updates);
+      }
+
       onClose();
     } catch (error) {
       console.error('Failed to update session:', error);

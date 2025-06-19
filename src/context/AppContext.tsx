@@ -220,6 +220,8 @@ const AppContext = createContext<{
   createSession: (session: Omit<Session, 'id'>) => Promise<Session>;
   updateSession: (id: string, updates: Partial<Session>) => Promise<Session>;
   deleteSession: (id: string) => Promise<void>;
+  triggerSessionWebhook: (session: Session) => Promise<void>;
+  triggerSessionDeletionWebhook: (session: Session) => Promise<void>;
   findClientByEmail: (email: string) => Promise<Client | null>;
   getMembershipsByClientId: (clientId: string) => Promise<Membership[]>;
   getMembershipsByEmail: (email: string) => Promise<Membership[]>;
@@ -827,6 +829,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       createSession,
       updateSession,
       deleteSession,
+      triggerSessionWebhook,
+      triggerSessionDeletionWebhook,
       findClientByEmail,
       getMembershipsByClientId,
       getMembershipsByEmail,
