@@ -99,26 +99,16 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
       const timeChanged = session.bookingTime !== formData.time;
       const dateTimeChanged = dateChanged || timeChanged;
 
-      if (dateTimeChanged && session.eventId) {
-        console.log('Date/time changed, triggering calendar update webhooks');
+      // Always update the session first
+      const updatedSession = await updateSession(session.id, updates);
 
-        // First, trigger deletion webhook for the old calendar event
-        await triggerSessionDeletionWebhook(session);
-
-        // Update the session in database (this will clear the eventId)
-        const updatedSession = await updateSession(session.id, {
-          ...updates,
-          eventId: undefined // Clear the old event ID
-        });
-
-        // Then trigger update webhook for the new calendar event (no emails)
+      // If date/time changed, trigger the webhook
+      if (dateTimeChanged) {
+        console.log('Date/time changed, triggering webhook');
         await triggerSessionUpdateWebhook(updatedSession);
-
-        console.log('Calendar update webhooks completed');
+        console.log('Webhook triggered for session update');
       } else {
-        console.log('No date/time changes, updating session without calendar webhooks');
-        // Just update the session normally
-        await updateSession(session.id, updates);
+        console.log('No date/time changes, no webhook triggered');
       }
 
       onClose();
