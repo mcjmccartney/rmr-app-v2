@@ -209,6 +209,32 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Validate required fields
+    if (!formData.clientId) {
+      alert('Please select a client');
+      return;
+    }
+
+    if (!formData.date) {
+      alert('Please select a date');
+      return;
+    }
+
+    if (!formData.time) {
+      alert('Please select a time');
+      return;
+    }
+
+    console.log('Form data before submission:', {
+      clientId: formData.clientId,
+      dogName: formData.dogName,
+      sessionType: formData.sessionType,
+      date: formData.date,
+      time: formData.time,
+      quote: formData.quote,
+      notes: formData.notes
+    });
+
     try {
       await createSession({
         clientId: formData.clientId,

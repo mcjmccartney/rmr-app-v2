@@ -651,70 +651,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Create session in Supabase
   const createSession = async (sessionData: Omit<Session, 'id'>): Promise<Session> => {
     try {
-      // First create the session in the database
+      // Create the session in the database
       const session = await sessionService.create(sessionData);
+      dispatch({ type: 'ADD_SESSION', payload: session });
 
-      // Find the client for this session
-      const client = state.clients.find(c => c.id === session.clientId);
+      // Trigger the booking terms email webhook
+      await triggerSessionWebhook(session);
 
-      if (client) {
-        try {
-          // Create Google Calendar event via API route
-          const calendarResponse = await fetch('/api/calendar/create', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              sessionId: session.id,
-              clientName: `${client.firstName} ${client.lastName}`.trim(),
-              clientEmail: client.email,
-              dogName: session.dogName || client.dogName,
-              sessionType: session.sessionType,
-              bookingDate: session.bookingDate,
-              bookingTime: session.bookingTime,
-              notes: session.notes,
-              quote: session.quote
-            })
-          });
-
-          if (calendarResponse.ok) {
-            const calendarData = await calendarResponse.json();
-            const eventId = calendarData.eventId;
-
-            // Update session with eventId
-            const updatedSession = await sessionService.update(session.id, { eventId });
-            dispatch({ type: 'UPDATE_SESSION', payload: updatedSession });
-
-            // Still trigger the booking terms email webhook (not calendar related)
-            await triggerSessionWebhook(updatedSession);
-
-            return updatedSession;
-          } else {
-            console.error('Failed to create calendar event via API');
-            // Session is still created, just without calendar event
-            dispatch({ type: 'ADD_SESSION', payload: session });
-
-            // Still trigger the booking terms email webhook
-            await triggerSessionWebhook(session);
-
-            return session;
-          }
-        } catch (calendarError) {
-          console.error('Failed to create calendar event:', calendarError);
-          // Session is still created, just without calendar event
-          dispatch({ type: 'ADD_SESSION', payload: session });
-
-          // Still trigger the booking terms email webhook
-          await triggerSessionWebhook(session);
-
-          return session;
-        }
-      } else {
-        console.error('No client found for session, skipping calendar creation');
-        dispatch({ type: 'ADD_SESSION', payload: session });
-        return session;
-      }
+      return session;
     } catch (error) {
       console.error('Failed to create session:', error);
       throw error;
