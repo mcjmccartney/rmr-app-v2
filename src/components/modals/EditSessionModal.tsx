@@ -17,7 +17,7 @@ interface EditSessionModalProps {
 }
 
 export default function EditSessionModal({ session, isOpen, onClose }: EditSessionModalProps) {
-  const { state, updateSession, triggerSessionWebhook, triggerSessionDeletionWebhook } = useApp();
+  const { state, updateSession, triggerSessionUpdateWebhook, triggerSessionDeletionWebhook } = useApp();
   const [formData, setFormData] = useState({
     clientId: '',
     sessionType: 'In-Person',
@@ -111,8 +111,8 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
           eventId: undefined // Clear the old event ID
         });
 
-        // Then trigger creation webhook for the new calendar event
-        await triggerSessionWebhook(updatedSession);
+        // Then trigger update webhook for the new calendar event (no emails)
+        await triggerSessionUpdateWebhook(updatedSession);
 
         console.log('Calendar update webhooks completed');
       } else {
