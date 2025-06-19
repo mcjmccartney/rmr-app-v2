@@ -17,7 +17,7 @@ interface EditSessionModalProps {
 }
 
 export default function EditSessionModal({ session, isOpen, onClose }: EditSessionModalProps) {
-  const { state, updateSession, triggerSessionUpdateWebhook, triggerSessionDeletionWebhook } = useApp();
+  const { state, updateSession, updateCalendarEvent } = useApp();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     clientId: '',
@@ -107,13 +107,13 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
       // Always update the session first
       const updatedSession = await updateSession(session.id, updates);
 
-      // If date/time changed, trigger the update webhook
+      // If date/time changed, update the calendar event
       if (dateTimeChanged) {
-        console.log('Date/time changed, triggering session update webhook');
-        await triggerSessionUpdateWebhook(updatedSession);
-        console.log('Session update webhook triggered');
+        console.log('Date/time changed, updating calendar event');
+        await updateCalendarEvent(updatedSession);
+        console.log('Calendar event updated');
       } else {
-        console.log('No date/time changes, no webhooks triggered');
+        console.log('No date/time changes, no calendar updates needed');
       }
 
       onClose();

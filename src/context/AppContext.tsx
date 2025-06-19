@@ -221,8 +221,8 @@ const AppContext = createContext<{
   updateSession: (id: string, updates: Partial<Session>) => Promise<Session>;
   deleteSession: (id: string) => Promise<void>;
   triggerSessionWebhook: (session: Session) => Promise<void>;
-  triggerSessionUpdateWebhook: (session: Session) => Promise<void>;
-  triggerSessionDeletionWebhook: (session: Session) => Promise<void>;
+  updateCalendarEvent: (session: Session) => Promise<void>;
+  deleteCalendarEvent: (session: Session) => Promise<void>;
   findClientByEmail: (email: string) => Promise<Client | null>;
   getMembershipsByClientId: (clientId: string) => Promise<Membership[]>;
   getMembershipsByEmail: (email: string) => Promise<Membership[]>;
@@ -651,13 +651,41 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Create session in Supabase
   const createSession = async (sessionData: Omit<Session, 'id'>): Promise<Session> => {
     try {
+      // First create the session in the database
       const session = await sessionService.create(sessionData);
-      dispatch({ type: 'ADD_SESSION', payload: session });
 
-      // Trigger Make.com webhook for calendar creation and other integrations
-      await triggerSessionWebhook(session);
+      // Find the client for this session
+      const client = state.clients.find(c => c.id === session.clientId);
 
-      return session;
+      if (client) {
+        try {
+          // Create Google Calendar event directly
+          const { googleCalendarService } = await import('@/services/googleCalendarService');
+          const eventId = await googleCalendarService.createEvent(session, client);
+
+          // Update session with eventId
+          const updatedSession = await sessionService.update(session.id, { eventId });
+          dispatch({ type: 'UPDATE_SESSION', payload: updatedSession });
+
+          // Still trigger the booking terms email webhook (not calendar related)
+          await triggerSessionWebhook(updatedSession);
+
+          return updatedSession;
+        } catch (calendarError) {
+          console.error('Failed to create calendar event:', calendarError);
+          // Session is still created, just without calendar event
+          dispatch({ type: 'ADD_SESSION', payload: session });
+
+          // Still trigger the booking terms email webhook
+          await triggerSessionWebhook(session);
+
+          return session;
+        }
+      } else {
+        console.error('No client found for session, skipping calendar creation');
+        dispatch({ type: 'ADD_SESSION', payload: session });
+        return session;
+      }
     } catch (error) {
       console.error('Failed to create session:', error);
       throw error;
@@ -676,133 +704,54 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Trigger Make.com webhook for session update when date/time changes
-  const triggerSessionUpdateWebhook = async (session: Session) => {
-    try {
-      // Find the client for this session
-      const client = state.clients.find(c => c.id === session.clientId);
-
-      if (!client || !client.email) {
-        console.log('No client or email found for session update, skipping webhook');
-        return;
-      }
-
-      // Check if client has already signed booking terms
-      const hasSignedBookingTerms = state.bookingTerms.some(bt =>
-        bt.email?.toLowerCase() === client.email?.toLowerCase()
-      );
-
-      // Check if client has filled behaviour questionnaire
-      const hasFilledQuestionnaire = client && client.dogName && client.email ?
-        state.behaviourQuestionnaires.some(q =>
-          q.email?.toLowerCase() === client.email?.toLowerCase() &&
-          q.dogName?.toLowerCase() === client.dogName?.toLowerCase()
-        ) : false;
-
-      // Prepare session data for Make.com webhook (match new session format)
-      const webhookData = {
-        sessionId: session.id,
-        clientId: session.clientId,
-        clientName: `${client.firstName} ${client.lastName}`.trim(),
-        clientFirstName: client.firstName,
-        clientEmail: client.email,
-        address: client.address || '', // Add client address field
-        dogName: session.dogName || client.dogName,
-        sessionType: session.sessionType,
-        bookingDate: session.bookingDate,
-        bookingTime: session.bookingTime,
-        notes: session.notes,
-        quote: session.quote,
-        createdAt: new Date().toISOString(),
-        eventId: session.eventId || '', // Include eventId for calendar operations
-        // Include booking terms and questionnaire status
-        hasSignedBookingTerms,
-        hasFilledQuestionnaire,
-        // URLs for forms (same as new session)
-        bookingTermsUrl: `${window.location.origin}/booking-terms?email=${encodeURIComponent(client.email)}`,
-        questionnaireUrl: `${window.location.origin}/behaviour-questionnaire?email=${encodeURIComponent(client.email)}`,
-        // Callback URL for Event ID
-        eventIdCallbackUrl: `${window.location.origin}/api/session/event-id`
-      };
-
-      console.log('Triggering Make.com webhook for session update (date/time changed):', webhookData);
-
-      // Only call the final webhook for session updates when date/time changes
-      const response = await fetch('https://hook.eu1.make.com/osd1yw9dbusym6ury9o8rg1679vzi2ju', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(webhookData)
-      });
-
-      if (response.ok) {
-        console.log('Successfully triggered session update webhook');
-        const responseText = await response.text();
-        console.log('Session update webhook response:', responseText);
-      } else {
-        console.error('Failed to trigger session update webhook:', response.status, response.statusText);
-        const errorText = await response.text();
-        console.error('Session update webhook error response:', errorText);
-      }
-
-    } catch (error) {
-      console.error('Error triggering Make.com session update webhook:', error);
-      // Don't throw error - webhook failure shouldn't prevent session update
-    }
-  };
-
-  // Trigger Make.com webhook for session deletion
-  const triggerSessionDeletionWebhook = async (session: Session) => {
+  // Update Google Calendar event when session date/time changes
+  const updateCalendarEvent = async (session: Session) => {
     try {
       // Find the client for this session
       const client = state.clients.find(c => c.id === session.clientId);
 
       if (!client) {
-        console.log('No client found for session, skipping deletion webhook');
+        console.log('No client found for session update, skipping calendar update');
         return;
       }
 
-      // Prepare session data for Make.com deletion webhook
-      const webhookData = {
-        sessionId: session.id,
-        eventId: session.eventId || null, // Include even if null for debugging
-        clientId: session.clientId,
-        clientName: `${client.firstName} ${client.lastName}`.trim(),
-        clientEmail: client.email,
-        dogName: session.dogName || client.dogName,
-        sessionType: session.sessionType,
-        bookingDate: session.bookingDate,
-        bookingTime: session.bookingTime,
-        notes: session.notes,
-        quote: session.quote
-      };
-
-      console.log('Triggering Make.com deletion webhook for session:', webhookData);
-
-      // Call the Make.com deletion webhook
-      const response = await fetch('https://hook.eu1.make.com/5o6hoq9apeqrbaoqgo65nrmdic64bvds', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(webhookData)
-      });
-
-      if (response.ok) {
-        console.log('Successfully triggered session deletion webhook');
-        const responseText = await response.text();
-        console.log('Webhook response:', responseText);
-      } else {
-        console.error('Failed to trigger session deletion webhook:', response.status, response.statusText);
-        const errorText = await response.text();
-        console.error('Error response:', errorText);
-        // Throw error so deleteSession can handle it
-        throw new Error(`Webhook failed with status ${response.status}: ${response.statusText}`);
+      if (!session.eventId) {
+        console.log('No eventId found for session, skipping calendar update');
+        return;
       }
 
+      console.log('Updating Google Calendar event for session:', session.id);
+
+      // Update Google Calendar event directly
+      const { googleCalendarService } = await import('@/services/googleCalendarService');
+      await googleCalendarService.updateEvent(session.eventId, session, client);
+
+      console.log('Successfully updated calendar event');
+
     } catch (error) {
-      console.error('Error triggering session deletion webhook:', error);
+      console.error('Error updating Google Calendar event:', error);
+      // Don't throw error - calendar failure shouldn't prevent session update
+    }
+  };
+
+  // Delete Google Calendar event when session is deleted
+  const deleteCalendarEvent = async (session: Session) => {
+    try {
+      if (!session.eventId) {
+        console.log('No eventId found for session, skipping calendar deletion');
+        return;
+      }
+
+      console.log('Deleting Google Calendar event for session:', session.id);
+
+      // Delete Google Calendar event directly
+      const { googleCalendarService } = await import('@/services/googleCalendarService');
+      await googleCalendarService.deleteEvent(session.eventId);
+
+      console.log('Successfully deleted calendar event');
+
+    } catch (error) {
+      console.error('Error deleting Google Calendar event:', error);
       // Throw error so deleteSession can handle it and ask user for confirmation
       throw error;
     }
@@ -819,19 +768,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
       console.log('Session Event ID:', sessionFromDb?.eventId || 'None');
 
       if (sessionFromDb) {
-        console.log('Triggering deletion webhook for session:', sessionFromDb.id);
-        // Trigger deletion webhook and wait for it to complete before deleting from database
+        console.log('Deleting calendar event for session:', sessionFromDb.id);
+        // Delete calendar event and wait for it to complete before deleting from database
         try {
-          await triggerSessionDeletionWebhook(sessionFromDb);
-          console.log('Deletion webhook completed successfully');
-        } catch (webhookError) {
-          console.error('Deletion webhook failed:', webhookError);
-          // Ask user if they want to proceed despite webhook failure
+          await deleteCalendarEvent(sessionFromDb);
+          console.log('Calendar event deletion completed successfully');
+        } catch (calendarError) {
+          console.error('Calendar event deletion failed:', calendarError);
+          // Ask user if they want to proceed despite calendar failure
           const proceed = window.confirm(
-            'The calendar deletion webhook failed. The session will still be deleted from the app, but the calendar event may remain. Do you want to proceed with deleting the session?'
+            'The calendar event deletion failed. The session will still be deleted from the app, but the calendar event may remain. Do you want to proceed with deleting the session?'
           );
           if (!proceed) {
-            console.log('User cancelled deletion due to webhook failure');
+            console.log('User cancelled deletion due to calendar failure');
             return; // Don't delete if user cancels
           }
         }
@@ -923,8 +872,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       updateSession,
       deleteSession,
       triggerSessionWebhook,
-      triggerSessionUpdateWebhook,
-      triggerSessionDeletionWebhook,
+      updateCalendarEvent,
+      deleteCalendarEvent,
       findClientByEmail,
       getMembershipsByClientId,
       getMembershipsByEmail,
