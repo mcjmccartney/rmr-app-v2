@@ -714,6 +714,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         notes: session.notes,
         quote: session.quote,
         createdAt: new Date().toISOString(),
+        eventId: session.eventId || '', // Include eventId for calendar operations
         // Include booking terms and questionnaire status
         hasSignedBookingTerms,
         hasFilledQuestionnaire,
