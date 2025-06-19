@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     // If event doesn't exist, that's okay - it might have been deleted already
     if (error instanceof Error && error.message.includes('404')) {
-      console.log('Calendar event not found (already deleted):', body.eventId);
+      console.log('Calendar event not found (already deleted):', eventId);
       return NextResponse.json({
         success: true,
         message: 'Calendar event not found (already deleted)'
