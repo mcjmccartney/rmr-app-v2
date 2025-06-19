@@ -18,6 +18,7 @@ interface EditSessionModalProps {
 
 export default function EditSessionModal({ session, isOpen, onClose }: EditSessionModalProps) {
   const { state, updateSession, triggerSessionUpdateWebhook, triggerSessionDeletionWebhook } = useApp();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     clientId: '',
     sessionType: 'In-Person',
@@ -82,7 +83,9 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!session) return;
+    if (!session || isSubmitting) return;
+
+    setIsSubmitting(true);
 
     const updates: Partial<Session> = {
       clientId: formData.clientId,
@@ -98,6 +101,8 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
       const dateChanged = session.bookingDate !== formData.date;
       const timeChanged = session.bookingTime !== formData.time;
       const dateTimeChanged = dateChanged || timeChanged;
+
+      console.log('Updating session...', { dateTimeChanged, dateChanged, timeChanged });
 
       // Always update the session first
       const updatedSession = await updateSession(session.id, updates);
@@ -115,6 +120,8 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
     } catch (error) {
       console.error('Failed to update session:', error);
       alert('Failed to update session. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -228,9 +235,14 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
 
         <button
           type="submit"
-          className="w-full bg-amber-800 text-white py-3 px-6 rounded-lg font-medium hover:bg-amber-700 transition-colors"
+          disabled={isSubmitting}
+          className={`w-full py-3 px-6 rounded-lg font-medium transition-colors ${
+            isSubmitting
+              ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
+              : 'bg-amber-800 text-white hover:bg-amber-700'
+          }`}
         >
-          Update Session
+          {isSubmitting ? 'Updating...' : 'Update Session'}
         </button>
       </form>
     </SlideUpModal>
