@@ -753,7 +753,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       // Delete Google Calendar event via API route with timeout
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
 
       try {
         const calendarResponse = await fetch('/api/calendar/delete', {
