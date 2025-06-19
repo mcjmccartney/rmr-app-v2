@@ -687,11 +687,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
         return;
       }
 
+      // Check if client has already signed booking terms
+      const hasSignedBookingTerms = state.bookingTerms.some(bt =>
+        bt.email?.toLowerCase() === client.email?.toLowerCase()
+      );
+
+      // Check if client has filled behaviour questionnaire
+      const hasFilledQuestionnaire = client && client.dogName && client.email ?
+        state.behaviourQuestionnaires.some(q =>
+          q.email?.toLowerCase() === client.email?.toLowerCase() &&
+          q.dogName?.toLowerCase() === client.dogName?.toLowerCase()
+        ) : false;
+
       // Prepare session data for Make.com webhook
       const webhookData = {
         sessionId: session.id,
         clientId: session.clientId,
         clientName: `${client.firstName} ${client.lastName}`.trim(),
+        clientFirstName: client.firstName,
         clientEmail: client.email,
         dogName: session.dogName || client.dogName,
         sessionType: session.sessionType,
@@ -700,6 +713,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         notes: session.notes,
         quote: session.quote,
         createdAt: new Date().toISOString(),
+        hasSignedBookingTerms,
+        hasFilledQuestionnaire,
         // Callback URL for Event ID
         eventIdCallbackUrl: `${window.location.origin}/api/session/event-id`
       };
