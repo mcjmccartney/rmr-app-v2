@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
         dateTime: endDateTime,
         timeZone: TIMEZONE,
       },
-      attendees: clientEmail ? [{ email: clientEmail }] : [],
+      // Removed attendees field - service accounts can't invite attendees without Domain-Wide Delegation
     };
 
     console.log('Event object created:', JSON.stringify(event, null, 2));
