@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { Session } from '@/types';
 import { useApp } from '@/context/AppContext';
 import SlideUpModal from './SlideUpModal';
@@ -20,6 +21,7 @@ interface SessionModalProps {
 
 export default function SessionModal({ session, isOpen, onClose, onEditSession, onEditClient, onCreateSessionPlan, onViewBehaviouralBrief, onViewBehaviourQuestionnaire }: SessionModalProps) {
   const { state, deleteSession, updateSession } = useApp();
+  const [isDeleting, setIsDeleting] = useState(false);
 
   if (!session) return null;
 
@@ -44,12 +46,15 @@ export default function SessionModal({ session, isOpen, onClose, onEditSession, 
   const handleDelete = async () => {
     // Show confirmation dialog
     if (window.confirm('Are you sure you want to delete this session? This action cannot be undone.')) {
+      setIsDeleting(true);
       try {
         await deleteSession(session.id);
         onClose();
       } catch (error) {
         console.error('Error deleting session:', error);
         alert('Failed to delete session. Please try again.');
+      } finally {
+        setIsDeleting(false);
       }
     }
   };
@@ -337,9 +342,14 @@ export default function SessionModal({ session, isOpen, onClose, onEditSession, 
         {/* Delete Button */}
         <button
           onClick={handleDelete}
-          className="w-full bg-amber-800 hover:bg-amber-700 text-white py-3 px-4 rounded-lg font-medium transition-colors"
+          disabled={isDeleting}
+          className={`w-full py-3 px-4 rounded-lg font-medium transition-colors ${
+            isDeleting
+              ? 'bg-gray-400 cursor-not-allowed text-gray-600'
+              : 'bg-amber-800 hover:bg-amber-700 text-white'
+          }`}
         >
-          Delete Session
+          {isDeleting ? 'Deleting...' : 'Delete Session'}
         </button>
       </div>
     </SlideUpModal>
