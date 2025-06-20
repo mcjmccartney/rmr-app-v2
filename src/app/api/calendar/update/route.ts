@@ -38,26 +38,13 @@ const calculateEndTime = (date: string, time: string): string => {
 };
 
 // Helper function to format session title
-const formatSessionTitle = (clientName: string, dogName: string, sessionType: string): string => {
-  return `${clientName}${dogName ? ` w/ ${dogName}` : ''} - ${sessionType}`;
+const formatSessionTitle = (clientName: string, dogName: string): string => {
+  return `${clientName}${dogName ? ` w/ ${dogName}` : ''}`;
 };
 
 // Helper function to format session description
-const formatSessionDescription = (sessionType: string, dogName: string, notes: string, quote: number, clientEmail: string): string => {
-  let description = `Session Type: ${sessionType}\n`;
-  
-  if (dogName) {
-    description += `Dog: ${dogName}\n`;
-  }
-  
-  if (notes) {
-    description += `Notes: ${notes}\n`;
-  }
-  
-  description += `Quote: £${quote}\n`;
-  description += `Client Email: ${clientEmail}`;
-  
-  return description;
+const formatSessionDescription = (sessionType: string): string => {
+  return sessionType;
 };
 
 export async function POST(request: NextRequest) {
@@ -102,8 +89,8 @@ export async function POST(request: NextRequest) {
     console.log('Date/time calculated:', { startDateTime, endDateTime });
 
     const event = {
-      summary: formatSessionTitle(clientName, dogName, sessionType),
-      description: formatSessionDescription(sessionType, dogName, notes, quote, clientEmail),
+      summary: formatSessionTitle(clientName, dogName),
+      description: formatSessionDescription(sessionType),
       start: {
         dateTime: startDateTime,
         timeZone: TIMEZONE,
