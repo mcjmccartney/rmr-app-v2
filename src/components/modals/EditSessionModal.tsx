@@ -119,6 +119,23 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
       // Trigger session update webhook
       try {
         console.log('Triggering session update webhook');
+
+        // Find the client for this session
+        const client = state.clients.find(c => c.id === updatedSession.clientId);
+
+        // Check if client has signed booking terms
+        const hasSignedBookingTerms = client && client.email ?
+          state.bookingTerms.some(bt =>
+            bt.email?.toLowerCase() === client.email?.toLowerCase()
+          ) : false;
+
+        // Check if client has filled behaviour questionnaire
+        const hasFilledQuestionnaire = client && client.dogName && client.email ?
+          state.behaviourQuestionnaires.some(q =>
+            q.email?.toLowerCase() === client.email?.toLowerCase() &&
+            q.dogName?.toLowerCase() === client.dogName?.toLowerCase()
+          ) : false;
+
         await fetch('https://hook.eu1.make.com/yaoalfe77uqtw4xv9fbh5atf4okq14wm', {
           method: 'POST',
           headers: {
@@ -127,12 +144,15 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
           body: JSON.stringify({
             sessionId: updatedSession.id,
             clientId: updatedSession.clientId,
+            clientFirstName: client?.firstName || '',
             sessionType: updatedSession.sessionType,
             bookingDate: updatedSession.bookingDate,
             bookingTime: updatedSession.bookingTime,
             notes: updatedSession.notes,
             quote: updatedSession.quote,
             eventId: updatedSession.eventId,
+            hasSignedBookingTerms,
+            hasFilledQuestionnaire,
             updatedAt: new Date().toISOString()
           })
         });
