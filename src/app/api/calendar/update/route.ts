@@ -30,10 +30,10 @@ const getCalendarClient = () => {
   return google.calendar({ version: 'v3', auth });
 };
 
-// Helper function to calculate session end time (assuming 1 hour sessions)
+// Helper function to calculate session end time (1.5 hour sessions)
 const calculateEndTime = (date: string, time: string): string => {
   const startDateTime = new Date(`${date}T${time}:00`);
-  const endDateTime = new Date(startDateTime.getTime() + 60 * 60 * 1000); // Add 1 hour
+  const endDateTime = new Date(startDateTime.getTime() + 90 * 60 * 1000); // Add 1.5 hours (90 minutes)
   return endDateTime.toISOString().slice(0, 19); // Remove milliseconds and Z
 };
 
