@@ -56,6 +56,7 @@ export async function POST(request: NextRequest) {
       eventId,
       clientName,
       clientEmail,
+      clientAddress,
       dogName,
       sessionType,
       bookingDate,
@@ -91,6 +92,7 @@ export async function POST(request: NextRequest) {
     const event = {
       summary: formatSessionTitle(clientName, dogName),
       description: formatSessionDescription(sessionType),
+      location: clientAddress || '',
       start: {
         dateTime: startDateTime,
         timeZone: TIMEZONE,

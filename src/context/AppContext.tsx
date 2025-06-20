@@ -709,6 +709,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             eventId: session.eventId,
             clientName: `${client.firstName} ${client.lastName}`.trim(),
             clientEmail: client.email,
+            clientAddress: client.address,
             dogName: session.dogName || client.dogName,
             sessionType: session.sessionType,
             bookingDate: session.bookingDate,
