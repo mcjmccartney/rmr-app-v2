@@ -116,6 +116,32 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
         console.log('No date/time changes, no calendar updates needed');
       }
 
+      // Trigger session update webhook
+      try {
+        console.log('Triggering session update webhook');
+        await fetch('https://hook.eu1.make.com/yaoalfe77uqtw4xv9fbh5atf4okq14wm', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            sessionId: updatedSession.id,
+            clientId: updatedSession.clientId,
+            sessionType: updatedSession.sessionType,
+            bookingDate: updatedSession.bookingDate,
+            bookingTime: updatedSession.bookingTime,
+            notes: updatedSession.notes,
+            quote: updatedSession.quote,
+            eventId: updatedSession.eventId,
+            updatedAt: new Date().toISOString()
+          })
+        });
+        console.log('Session update webhook triggered successfully');
+      } catch (webhookError) {
+        console.error('Failed to trigger session update webhook:', webhookError);
+        // Don't block the UI for webhook failures
+      }
+
       onClose();
     } catch (error) {
       console.error('Failed to update session:', error);
