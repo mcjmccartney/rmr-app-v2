@@ -50,16 +50,20 @@ export const membershipExpirationService = {
       // Calculate expiration date (1 month from last payment)
       const expirationDate = new Date(lastPaymentDate);
       expirationDate.setMonth(expirationDate.getMonth() + 1);
-      
+
+      // Set expiration to midnight of the following day to avoid premature expiration
+      const expirationEndOfDay = new Date(expirationDate);
+      expirationEndOfDay.setHours(23, 59, 59, 999); // End of expiration day
+
       const now = new Date();
-      const daysUntilExpiration = Math.ceil((expirationDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-      const isExpired = now > expirationDate;
+      const daysUntilExpiration = Math.ceil((expirationEndOfDay.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      const isExpired = now > expirationEndOfDay;
       const isActive = !isExpired;
 
       return {
         isActive,
         lastPaymentDate: mostRecentMembership.date,
-        expirationDate: expirationDate.toISOString().split('T')[0], // YYYY-MM-DD format
+        expirationDate: expirationDate.toISOString().split('T')[0], // YYYY-MM-DD format (display date)
         daysUntilExpiration,
         isExpired
       };
