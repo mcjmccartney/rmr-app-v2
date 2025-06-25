@@ -568,7 +568,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      // Check if session is 4 days or less away
+      // Calculate days until session for webhook logic
       const sessionDate = new Date(session.bookingDate);
       const today = new Date();
       today.setHours(0, 0, 0, 0); // Reset time to start of day for accurate comparison
@@ -576,12 +576,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       const daysUntilSession = Math.ceil((sessionDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
-      if (daysUntilSession > 4) {
-        console.log(`Session is ${daysUntilSession} days away, skipping webhook (only triggers for sessions 4 days or less away)`);
-        return;
-      }
-
-      console.log(`Session is ${daysUntilSession} days away, triggering webhook`);
+      console.log(`Session is ${daysUntilSession} days away`);
 
       // Check if client has already signed booking terms by looking in booking_terms table
       const hasSignedBookingTerms = state.bookingTerms.some(bt =>
@@ -621,17 +616,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       console.log('Triggering Make.com webhooks for new session:', webhookData);
 
-      // Send to both webhooks in parallel
-      const webhookPromises = [
-        // Original session webhook
-        fetch('https://hook.eu1.make.com/lipggo8kcd8kwq2vp6j6mr3gnxbx12h7', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(webhookData)
-        }),
-        // New booking terms email webhook
+      // Prepare webhook promises - booking terms webhook always triggers
+      const webhookPromises = [];
+      const webhookNames = [];
+
+      // Always trigger booking terms email webhook
+      webhookPromises.push(
         fetch('https://hook.eu1.make.com/yaoalfe77uqtw4xv9fbh5atf4okq14wm', {
           method: 'POST',
           headers: {
@@ -639,13 +629,31 @@ export function AppProvider({ children }: { children: ReactNode }) {
           },
           body: JSON.stringify(webhookData)
         })
-      ];
+      );
+      webhookNames.push('booking terms email webhook');
+
+      // Only trigger session email webhook if session is 4 days or less away
+      if (daysUntilSession <= 4) {
+        webhookPromises.push(
+          fetch('https://hook.eu1.make.com/lipggo8kcd8kwq2vp6j6mr3gnxbx12h7', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(webhookData)
+          })
+        );
+        webhookNames.push('session email webhook');
+        console.log('Triggering both webhooks (session is ≤4 days away)');
+      } else {
+        console.log('Triggering only booking terms webhook (session is >4 days away)');
+      }
 
       const responses = await Promise.allSettled(webhookPromises);
 
       // Log results
       responses.forEach((result, index) => {
-        const webhookName = index === 0 ? 'session webhook' : 'booking terms email webhook';
+        const webhookName = webhookNames[index];
         if (result.status === 'fulfilled' && result.value.ok) {
           console.log(`Successfully triggered ${webhookName}`);
         } else {
