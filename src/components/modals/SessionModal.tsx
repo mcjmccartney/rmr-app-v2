@@ -364,8 +364,8 @@ export default function SessionModal({ session, isOpen, onClose, onEditSession, 
           </div>
         )}
 
-        {/* Questionnaire Bypass Buttons - Only show if no questionnaire is connected */}
-        {client && !behaviourQuestionnaire && (
+        {/* Questionnaire Bypass Buttons - Only show if no questionnaire is connected and not charcoal grey */}
+        {client && !behaviourQuestionnaire && !session.sessionPlanSent && (
           <div className="pb-3 border-b border-gray-200">
             {!session.questionnaireBypass ? (
               <button
@@ -414,7 +414,7 @@ export default function SessionModal({ session, isOpen, onClose, onEditSession, 
               onClick={() => onCreateSessionPlan(session)}
               className="w-full bg-amber-800 hover:bg-amber-700 text-white py-3 px-4 rounded-lg font-medium transition-colors"
             >
-              Create Session Plan
+              {session.sessionPlanSent ? 'View Session Plan' : 'Create Session Plan'}
             </button>
           )}
         </div>
