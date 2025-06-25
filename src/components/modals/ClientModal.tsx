@@ -375,7 +375,33 @@ export default function ClientModal({ client, isOpen, onClose, onEditClient, onV
           )}
         </div>
 
+        {/* Totals Section */}
+        <div className="space-y-0 divide-y divide-gray-100 border-t border-gray-200 pt-4">
+          {(() => {
+            const sessionsTotal = Array.isArray(clientSessions) ?
+              clientSessions.reduce((sum, session) => sum + (session?.quote || 0), 0) : 0;
+            const membershipsTotal = Array.isArray(clientMemberships) ?
+              clientMemberships.reduce((sum, membership) => sum + (membership?.amount || 0), 0) : 0;
+            const grandTotal = sessionsTotal + membershipsTotal;
 
+            return (
+              <>
+                <div className="flex justify-between items-center py-3">
+                  <span className="text-gray-600 font-medium">Sessions Total</span>
+                  <span className="font-semibold text-gray-900">£{sessionsTotal.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between items-center py-3">
+                  <span className="text-gray-600 font-medium">Memberships Total</span>
+                  <span className="font-semibold text-gray-900">£{membershipsTotal.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between items-center py-3">
+                  <span className="text-gray-700 font-semibold">Grand Total</span>
+                  <span className="font-bold text-gray-900 text-lg">£{grandTotal.toFixed(2)}</span>
+                </div>
+              </>
+            );
+          })()}
+        </div>
 
         {/* Edit Button */}
         <button

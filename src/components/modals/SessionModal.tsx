@@ -199,6 +199,18 @@ export default function SessionModal({ session, isOpen, onClose, onEditSession, 
             </div>
           )}
 
+          {client && client.email && state.bookingTerms.some(bt => bt.email?.toLowerCase() === client.email?.toLowerCase()) && (
+            <div className="flex justify-between items-center py-4">
+              <span className="text-gray-600 font-medium">Signed On</span>
+              <span className="font-semibold text-gray-900 text-right">
+                {(() => {
+                  const bookingTerm = state.bookingTerms.find(bt => bt.email?.toLowerCase() === client.email?.toLowerCase());
+                  return bookingTerm?.submitted ? new Date(bookingTerm.submitted).toLocaleDateString('en-GB') : 'Unknown';
+                })()}
+              </span>
+            </div>
+          )}
+
           {client?.phone && (
             <div className="flex justify-between items-center py-4">
               <span className="text-gray-600 font-medium">Phone</span>

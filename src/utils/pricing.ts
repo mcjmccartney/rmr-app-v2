@@ -4,7 +4,7 @@ export const calculateQuote = (sessionType: Session['sessionType'], isMember: bo
   switch (sessionType) {
     case 'Online':
     case 'Training':
-      return isMember ? 50 : 60;
+      return isMember ? 50 : 70;
     case 'In-Person':
       return isMember ? 75 : 95;
     case 'Online Catchup':
