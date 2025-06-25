@@ -210,7 +210,9 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
     e.preventDefault();
 
     // Validate required fields
-    if (!formData.clientId) {
+    // Client is only required for non-Group and non-RMR Live sessions
+    const isGroupOrRMRLive = formData.sessionType === 'Group' || formData.sessionType === 'RMR Live';
+    if (!isGroupOrRMRLive && !formData.clientId) {
       alert('Please select a client');
       return;
     }
@@ -237,7 +239,7 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
 
     try {
       await createSession({
-        clientId: formData.clientId,
+        clientId: formData.clientId || undefined, // Allow undefined for Group/RMR Live sessions
         dogName: formData.dogName || undefined,
         sessionType: formData.sessionType,
         bookingDate: formData.date, // YYYY-MM-DD format
@@ -257,16 +259,26 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
     <form onSubmit={handleSubmit} className="space-y-6">
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Client
+          Client {(formData.sessionType === 'Group' || formData.sessionType === 'RMR Live') && '(Optional)'}
         </label>
         <SearchableDropdown
           value={formData.clientId}
           onChange={handleClientChange}
-          options={state.clients.map((client) => ({
-            value: client.id,
-            label: `${client.firstName} ${client.lastName}${client.dogName ? ` w/ ${client.dogName}` : ''}`
-          }))}
-          placeholder="Select a client"
+          options={[
+            ...(formData.sessionType === 'Group' || formData.sessionType === 'RMR Live'
+              ? [{ value: '', label: 'No client (Group/RMR Live session)' }]
+              : []
+            ),
+            ...state.clients.map((client) => ({
+              value: client.id,
+              label: `${client.firstName} ${client.lastName}${client.dogName ? ` w/ ${client.dogName}` : ''}`
+            }))
+          ]}
+          placeholder={
+            formData.sessionType === 'Group' || formData.sessionType === 'RMR Live'
+              ? "Select a client (optional)"
+              : "Select a client"
+          }
           searchPlaceholder="Search clients..."
         />
       </div>

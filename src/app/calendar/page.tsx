@@ -442,8 +442,6 @@ export default function CalendarPage() {
                       // Include email aliases in the check
                       const clientEmails = getClientEmails(client, state.clientEmailAliases || {});
 
-
-
                       const hasSignedBookingTerms = clientEmails.length > 0 ?
                         state.bookingTerms.some(bt =>
                           clientEmails.includes(bt.email?.toLowerCase() || '')

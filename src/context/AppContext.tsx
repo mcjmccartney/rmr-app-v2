@@ -577,8 +577,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Trigger Make.com webhooks for new session
   const triggerSessionWebhook = async (session: Session) => {
     try {
-      // Find the client for this session
-      const client = state.clients.find(c => c.id === session.clientId);
+      // Find the client for this session (if any)
+      const client = session.clientId ? state.clients.find(c => c.id === session.clientId) : null;
+
+      // For Group and RMR Live sessions without clients, skip webhook
+      if (!session.clientId && (session.sessionType === 'Group' || session.sessionType === 'RMR Live')) {
+        console.log('Group/RMR Live session without client, skipping webhook');
+        return;
+      }
 
       if (!client || !client.email) {
         console.log('No client or email found for session, skipping webhook');
@@ -732,10 +738,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Update Google Calendar event when session date/time changes
   const updateCalendarEvent = async (session: Session) => {
     try {
-      // Find the client for this session
-      const client = state.clients.find(c => c.id === session.clientId);
+      // Find the client for this session (if any)
+      const client = session.clientId ? state.clients.find(c => c.id === session.clientId) : null;
 
-      if (!client) {
+      // For Group and RMR Live sessions without clients, we can still update the calendar
+      if (!client && session.sessionType !== 'Group' && session.sessionType !== 'RMR Live') {
         console.log('No client found for session update, skipping calendar update');
         return;
       }
