@@ -516,7 +516,7 @@ export default function CalendarPage() {
       <button
         onClick={handleUpNextClick}
         disabled={!firstSession}
-        className="text-white px-4 py-4 flex-shrink-0 w-full text-left disabled:cursor-default"
+        className="text-white px-4 py-6 flex-shrink-0 w-full text-left disabled:cursor-default"
         style={{
           backgroundColor: (() => {
             if (!firstSession || !firstSessionClient) return '#973b00';
