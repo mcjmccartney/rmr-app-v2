@@ -337,8 +337,8 @@ export default function SessionModal({ session, isOpen, onClose, onEditSession, 
           </div>
         )}
 
-        {/* Questionnaire Bypass Buttons */}
-        {client && (
+        {/* Questionnaire Bypass Buttons - Only show if no questionnaire is connected */}
+        {client && !behaviourQuestionnaire && (
           <div className="pb-3 border-b border-gray-200">
             {!session.questionnaireBypass ? (
               <button
