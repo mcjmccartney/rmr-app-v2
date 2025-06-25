@@ -28,6 +28,25 @@ export default function SessionModal({ session, isOpen, onClose, onEditSession, 
   // Find the client for this session
   const client = state.clients.find(c => c.id === session.clientId);
 
+  // Helper function to get all emails for a client (including aliases)
+  const getClientEmails = (client: any) => {
+    const emails: string[] = [];
+    if (client?.email) {
+      emails.push(client.email.toLowerCase());
+    }
+    // Add email aliases if available
+    const aliases = state.clientEmailAliases?.[client?.id];
+    if (aliases && Array.isArray(aliases)) {
+      aliases.forEach((alias: any) => {
+        const aliasEmail = alias?.email?.toLowerCase();
+        if (aliasEmail && !emails.includes(aliasEmail)) {
+          emails.push(aliasEmail);
+        }
+      });
+    }
+    return emails;
+  };
+
   // Find behavioural brief and questionnaire for this client
   const behaviouralBrief = client
     ? state.behaviouralBriefs.find(b => b.client_id === client.id) ||
@@ -205,22 +224,30 @@ export default function SessionModal({ session, isOpen, onClose, onEditSession, 
             <div className="flex justify-between items-center py-4">
               <span className="text-gray-600 font-medium">Booking Terms</span>
               <div className="flex items-center space-x-2">
-                {client.email && state.bookingTerms.some(bt => bt.email?.toLowerCase() === client.email?.toLowerCase()) ? (
-                  <>
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span className="font-semibold text-green-600">
-                      Signed {(() => {
-                        const bookingTerm = state.bookingTerms.find(bt => bt.email?.toLowerCase() === client.email?.toLowerCase());
-                        return bookingTerm?.submitted ? new Date(bookingTerm.submitted).toLocaleDateString('en-GB') : '';
-                      })()}
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                    <span className="font-semibold text-red-600">Not Signed</span>
-                  </>
-                )}
+                {(() => {
+                  const clientEmails = getClientEmails(client);
+                  const hasSignedBookingTerms = clientEmails.length > 0 &&
+                    state.bookingTerms.some(bt => clientEmails.includes(bt.email?.toLowerCase() || ''));
+
+                  if (hasSignedBookingTerms) {
+                    const bookingTerm = state.bookingTerms.find(bt => clientEmails.includes(bt.email?.toLowerCase() || ''));
+                    return (
+                      <>
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <span className="font-semibold text-green-600">
+                          Signed {bookingTerm?.submitted ? new Date(bookingTerm.submitted).toLocaleDateString('en-GB') : ''}
+                        </span>
+                      </>
+                    );
+                  } else {
+                    return (
+                      <>
+                        <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                        <span className="font-semibold text-red-600">Not Signed</span>
+                      </>
+                    );
+                  }
+                })()}
               </div>
             </div>
           )}

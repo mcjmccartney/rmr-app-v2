@@ -142,6 +142,14 @@ export interface BookingTerms {
   created_at?: string;
 }
 
+export interface ClientEmailAlias {
+  id: string;
+  clientId: string;
+  email: string;
+  isPrimary: boolean;
+  createdAt: string;
+}
+
 export interface PotentialDuplicate {
   id: string;
   primaryClient: Client;
@@ -204,6 +212,7 @@ export interface AppState {
   actionPoints: ActionPoint[];
   memberships: Membership[];
   bookingTerms: BookingTerms[];
+  clientEmailAliases: { [clientId: string]: ClientEmailAlias[] };
   potentialDuplicates: PotentialDuplicate[];
   selectedSession: Session | null;
   selectedClient: Client | null;
@@ -234,6 +243,7 @@ export type AppAction =
   | { type: 'DELETE_MEMBERSHIP'; payload: string }
   | { type: 'SET_BOOKING_TERMS'; payload: BookingTerms[] }
   | { type: 'ADD_BOOKING_TERMS'; payload: BookingTerms }
+  | { type: 'SET_CLIENT_EMAIL_ALIASES'; payload: { [clientId: string]: ClientEmailAlias[] } }
   | { type: 'SET_ACTION_POINTS'; payload: ActionPoint[] }
   | { type: 'ADD_ACTION_POINT'; payload: ActionPoint }
   | { type: 'UPDATE_ACTION_POINT'; payload: ActionPoint }

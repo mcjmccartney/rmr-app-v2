@@ -123,16 +123,35 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
         // Find the client for this session
         const client = state.clients.find(c => c.id === updatedSession.clientId);
 
+        // Helper function to get all emails for a client (including aliases)
+        const getClientEmails = (client: any) => {
+          const emails: string[] = [];
+          if (client?.email) {
+            emails.push(client.email.toLowerCase());
+          }
+          // Add email aliases if available
+          const aliases = state.clientEmailAliases?.[client?.id];
+          if (aliases && Array.isArray(aliases)) {
+            aliases.forEach((alias: any) => {
+              const aliasEmail = alias?.email?.toLowerCase();
+              if (aliasEmail && !emails.includes(aliasEmail)) {
+                emails.push(aliasEmail);
+              }
+            });
+          }
+          return emails;
+        };
+
+        const clientEmails = getClientEmails(client);
+
         // Check if client has signed booking terms
-        const hasSignedBookingTerms = client && client.email ?
-          state.bookingTerms.some(bt =>
-            bt.email?.toLowerCase() === client.email?.toLowerCase()
-          ) : false;
+        const hasSignedBookingTerms = clientEmails.length > 0 ?
+          state.bookingTerms.some(bt => clientEmails.includes(bt.email?.toLowerCase() || '')) : false;
 
         // Check if client has filled behaviour questionnaire
-        const hasFilledQuestionnaire = client && client.dogName && client.email ?
+        const hasFilledQuestionnaire = client && client.dogName && clientEmails.length > 0 ?
           state.behaviourQuestionnaires.some(q =>
-            q.email?.toLowerCase() === client.email?.toLowerCase() &&
+            clientEmails.includes(q.email?.toLowerCase() || '') &&
             q.dogName?.toLowerCase() === client.dogName?.toLowerCase()
           ) : false;
 

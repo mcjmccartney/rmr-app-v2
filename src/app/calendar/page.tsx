@@ -15,6 +15,25 @@ import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMont
 import { formatTime, formatDayDate, formatMonthYear, combineDateAndTime } from '@/utils/dateFormatting';
 import { ChevronLeft, ChevronRight, Calendar, UserPlus, X, Users, CalendarDays, Edit3 } from 'lucide-react';
 
+// Helper function to get all emails for a client (including aliases)
+const getClientEmails = (client: any, clientEmailAliases: { [clientId: string]: any[] } = {}) => {
+  const emails: string[] = [];
+  if (client?.email) {
+    emails.push(client.email.toLowerCase());
+  }
+  // Add email aliases if available
+  const aliases = clientEmailAliases?.[client?.id];
+  if (aliases && Array.isArray(aliases)) {
+    aliases.forEach((alias: any) => {
+      const aliasEmail = alias?.email?.toLowerCase();
+      if (aliasEmail && !emails.includes(aliasEmail)) {
+        emails.push(aliasEmail);
+      }
+    });
+  }
+  return emails;
+};
+
 export default function CalendarPage() {
   const { state, updateClient } = useApp();
   const router = useRouter();
@@ -420,37 +439,23 @@ export default function CalendarPage() {
                         : `${timeOnly} | Unknown Client`;
 
                       // Check if client has both booking terms signed and questionnaire filled for this dog
-                      const hasSignedBookingTerms = client?.email ?
-                        state.bookingTerms.some(bt => bt.email?.toLowerCase() === client.email?.toLowerCase()) : false;
-                      const hasFilledQuestionnaire = client && client.dogName && client.email ?
+                      // Include email aliases in the check
+                      const clientEmails = getClientEmails(client, state.clientEmailAliases || {});
+
+
+
+                      const hasSignedBookingTerms = clientEmails.length > 0 ?
+                        state.bookingTerms.some(bt =>
+                          clientEmails.includes(bt.email?.toLowerCase() || '')
+                        ) : false;
+                      const hasFilledQuestionnaire = client && client.dogName && clientEmails.length > 0 ?
                         state.behaviourQuestionnaires.some(q =>
-                          q.email?.toLowerCase() === client.email?.toLowerCase() &&
+                          clientEmails.includes(q.email?.toLowerCase() || '') &&
                           q.dogName?.toLowerCase() === client.dogName?.toLowerCase()
                         ) : false;
 
-                      // Debug logging for Matthew Mccartney
-                      if (client?.firstName === 'Matthew' && client?.lastName === 'Mccartney') {
-                        console.log('🔍 Debug for Matthew Mccartney:', {
-                          clientId: client.id,
-                          email: client.email,
-                          dogName: client.dogName,
-                          booking_terms_signed: client.booking_terms_signed,
-                          hasSignedBookingTerms,
-                          questionnairesCount: state.behaviourQuestionnaires.length,
-                          questionnaires: state.behaviourQuestionnaires.map(q => ({
-                            email: q.email,
-                            dogName: q.dogName
-                          })),
-                          hasFilledQuestionnaire,
-                          behaviourQuestionnaireId: client.behaviourQuestionnaireId
-                        });
 
-                        // One-time fix for Matthew's missing dog name
-                        if (!client.dogName && client.id === '1ea6ff58-89da-453b-94b2-63dabb4b1294') {
-                          console.log('🔧 Fixing Matthew\'s missing dog name...');
-                          updateClient(client.id, { dogName: 'Kuki' });
-                        }
-                      }
+
 
                       // Priority: No Client (charcoal grey) > Session Plan Sent (charcoal grey) > Paid + Terms + Questionnaire (green) > Terms + Questionnaire (amber) > Default (amber-800)
                       const isFullyCompleted = hasSignedBookingTerms && (hasFilledQuestionnaire || session.questionnaireBypass);
@@ -522,11 +527,12 @@ export default function CalendarPage() {
             if (!firstSession || !firstSessionClient) return '#973b00';
 
             // Check if first session client has both booking terms signed and questionnaire filled
-            const hasSignedBookingTerms = firstSessionClient.email ?
-              state.bookingTerms.some(bt => bt.email?.toLowerCase() === firstSessionClient.email?.toLowerCase()) : false;
-            const hasFilledQuestionnaire = firstSessionClient.dogName && firstSessionClient.email ?
+            const clientEmails = getClientEmails(firstSessionClient, state.clientEmailAliases || {});
+            const hasSignedBookingTerms = clientEmails.length > 0 ?
+              state.bookingTerms.some(bt => clientEmails.includes(bt.email?.toLowerCase() || '')) : false;
+            const hasFilledQuestionnaire = firstSessionClient.dogName && clientEmails.length > 0 ?
               state.behaviourQuestionnaires.some(q =>
-                q.email?.toLowerCase() === firstSessionClient.email?.toLowerCase() &&
+                clientEmails.includes(q.email?.toLowerCase() || '') &&
                 q.dogName?.toLowerCase() === firstSessionClient.dogName?.toLowerCase()
               ) : false;
 
@@ -632,11 +638,12 @@ export default function CalendarPage() {
                   : 'Unknown Client';
 
                 // Determine button style - priority: session plan sent (black) > paid + terms + questionnaire (green) > default
-                const hasSignedBookingTerms = client?.email ?
-                  state.bookingTerms.some(bt => bt.email?.toLowerCase() === client.email?.toLowerCase()) : false;
-                const hasFilledQuestionnaire = client && client.dogName && client.email ?
+                const clientEmails = getClientEmails(client, state.clientEmailAliases || {});
+                const hasSignedBookingTerms = clientEmails.length > 0 ?
+                  state.bookingTerms.some(bt => clientEmails.includes(bt.email?.toLowerCase() || '')) : false;
+                const hasFilledQuestionnaire = client && client.dogName && clientEmails.length > 0 ?
                   state.behaviourQuestionnaires.some(q =>
-                    q.email?.toLowerCase() === client.email?.toLowerCase() &&
+                    clientEmails.includes(q.email?.toLowerCase() || '') &&
                     q.dogName?.toLowerCase() === client.dogName?.toLowerCase()
                   ) : false;
                 const isPaid = session.sessionPaid;
@@ -704,11 +711,12 @@ export default function CalendarPage() {
                     : 'Unknown Client';
 
                   // Determine button style - priority: session plan sent (black) > paid + terms + questionnaire (green) > default
-                  const hasSignedBookingTerms = client?.email ?
-                    state.bookingTerms.some(bt => bt.email?.toLowerCase() === client.email?.toLowerCase()) : false;
-                  const hasFilledQuestionnaire = client && client.dogName && client.email ?
+                  const clientEmails = getClientEmails(client, state.clientEmailAliases || {});
+                  const hasSignedBookingTerms = clientEmails.length > 0 ?
+                    state.bookingTerms.some(bt => clientEmails.includes(bt.email?.toLowerCase() || '')) : false;
+                  const hasFilledQuestionnaire = client && client.dogName && clientEmails.length > 0 ?
                     state.behaviourQuestionnaires.some(q =>
-                      q.email?.toLowerCase() === client.email?.toLowerCase() &&
+                      clientEmails.includes(q.email?.toLowerCase() || '') &&
                       q.dogName?.toLowerCase() === client.dogName?.toLowerCase()
                     ) : false;
                   const isPaid = session.sessionPaid;

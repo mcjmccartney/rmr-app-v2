@@ -12,6 +12,7 @@ import { sessionPlanService } from '@/services/sessionPlanService';
 import { DuplicateDetectionService } from '@/services/duplicateDetectionService';
 import { dismissedDuplicatesService } from '@/services/dismissedDuplicatesService';
 import { membershipExpirationService } from '@/services/membershipExpirationService';
+import { ClientEmailAliasService, ClientEmailAlias } from '@/services/clientEmailAliasService';
 
 const initialState: AppState = {
   sessions: [],
@@ -23,6 +24,7 @@ const initialState: AppState = {
   actionPoints: [],
   memberships: [],
   bookingTerms: [],
+  clientEmailAliases: {},
   potentialDuplicates: [],
   selectedSession: null,
   selectedClient: null,
@@ -145,6 +147,9 @@ function appReducer(state: AppState, action: AppAction): AppState {
     case 'ADD_BOOKING_TERMS':
       return { ...state, bookingTerms: [...state.bookingTerms, action.payload] };
 
+    case 'SET_CLIENT_EMAIL_ALIASES':
+      return { ...state, clientEmailAliases: action.payload };
+
     case 'SET_ACTION_POINTS':
       return { ...state, actionPoints: action.payload };
 
@@ -206,6 +211,7 @@ const AppContext = createContext<{
   loadMemberships: () => Promise<void>;
   loadBehaviourQuestionnaires: () => Promise<void>;
   loadBookingTerms: () => Promise<void>;
+  loadClientEmailAliases: () => Promise<void>;
   loadActionPoints: () => Promise<void>;
   createActionPoint: (actionPoint: Omit<ActionPoint, 'id'>) => Promise<ActionPoint>;
   updateActionPoint: (id: string, updates: Partial<ActionPoint>) => Promise<ActionPoint>;
@@ -344,6 +350,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
       dispatch({ type: 'SET_BOOKING_TERMS', payload: bookingTerms });
     } catch (error) {
       console.error('Failed to load booking terms:', error);
+    }
+  };
+
+  // Load client email aliases from Supabase
+  const loadClientEmailAliases = async () => {
+    try {
+      const aliases = await ClientEmailAliasService.getAllClientsWithAliases();
+      dispatch({ type: 'SET_CLIENT_EMAIL_ALIASES', payload: aliases });
+    } catch (error) {
+      console.error('Failed to load client email aliases:', error);
     }
   };
 
@@ -921,6 +937,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       await loadBehaviouralBriefs();
       await loadBehaviourQuestionnaires();
       await loadBookingTerms();
+      await loadClientEmailAliases();
       await loadActionPoints();
 
       // Update membership statuses after loading all data
@@ -940,6 +957,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       loadMemberships,
       loadBehaviourQuestionnaires,
       loadBookingTerms,
+      loadClientEmailAliases,
       loadActionPoints,
       createActionPoint,
       updateActionPoint,
