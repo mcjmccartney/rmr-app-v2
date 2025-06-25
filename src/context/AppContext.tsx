@@ -568,6 +568,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
         return;
       }
 
+      // Check if session is 4 days or less away
+      const sessionDate = new Date(session.bookingDate);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Reset time to start of day for accurate comparison
+      sessionDate.setHours(0, 0, 0, 0); // Reset time to start of day
+
+      const daysUntilSession = Math.ceil((sessionDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+      if (daysUntilSession > 4) {
+        console.log(`Session is ${daysUntilSession} days away, skipping webhook (only triggers for sessions 4 days or less away)`);
+        return;
+      }
+
+      console.log(`Session is ${daysUntilSession} days away, triggering webhook`);
+
       // Check if client has already signed booking terms by looking in booking_terms table
       const hasSignedBookingTerms = state.bookingTerms.some(bt =>
         bt.email?.toLowerCase() === client.email?.toLowerCase()
