@@ -120,6 +120,34 @@ export default function SessionModal({ session, isOpen, onClose, onEditSession, 
     }
   };
 
+  const handleQuestionnaireBypass = async () => {
+    try {
+      await updateSession(session.id, {
+        questionnaireBypass: true
+      });
+      onClose(); // Close the modal
+      // Refresh the page to show updated questionnaire status
+      window.location.reload();
+    } catch (error) {
+      console.error('Error setting questionnaire bypass:', error);
+      alert('Failed to set questionnaire bypass. Please try again.');
+    }
+  };
+
+  const handleQuestionnaireBypassRemove = async () => {
+    try {
+      await updateSession(session.id, {
+        questionnaireBypass: false
+      });
+      onClose(); // Close the modal
+      // Refresh the page to show updated questionnaire status
+      window.location.reload();
+    } catch (error) {
+      console.error('Error removing questionnaire bypass:', error);
+      alert('Failed to remove questionnaire bypass. Please try again.');
+    }
+  };
+
   // For Group and RMR Live sessions, show session type instead of "Unknown Client"
   const isGroupOrRMRLive = session.sessionType === 'Group' || session.sessionType === 'RMR Live';
   const displayName = client
@@ -160,7 +188,9 @@ export default function SessionModal({ session, isOpen, onClose, onEditSession, 
               {session.sessionPaid ? (
                 <>
                   <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span className="font-semibold text-green-600">Paid</span>
+                  <span className="font-semibold text-green-600">
+                    Paid {session.paymentConfirmedAt && new Date(session.paymentConfirmedAt).toLocaleDateString('en-GB')}
+                  </span>
                 </>
               ) : (
                 <>
@@ -171,15 +201,6 @@ export default function SessionModal({ session, isOpen, onClose, onEditSession, 
             </div>
           </div>
 
-          {session.sessionPaid && session.paymentConfirmedAt && (
-            <div className="flex justify-between items-center py-4">
-              <span className="text-gray-600 font-medium">Paid On</span>
-              <span className="font-semibold text-gray-900 text-right">
-                {new Date(session.paymentConfirmedAt).toLocaleDateString('en-GB')}
-              </span>
-            </div>
-          )}
-
           {client && (
             <div className="flex justify-between items-center py-4">
               <span className="text-gray-600 font-medium">Booking Terms</span>
@@ -187,7 +208,12 @@ export default function SessionModal({ session, isOpen, onClose, onEditSession, 
                 {client.email && state.bookingTerms.some(bt => bt.email?.toLowerCase() === client.email?.toLowerCase()) ? (
                   <>
                     <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span className="font-semibold text-green-600">Signed</span>
+                    <span className="font-semibold text-green-600">
+                      Signed {(() => {
+                        const bookingTerm = state.bookingTerms.find(bt => bt.email?.toLowerCase() === client.email?.toLowerCase());
+                        return bookingTerm?.submitted ? new Date(bookingTerm.submitted).toLocaleDateString('en-GB') : '';
+                      })()}
+                    </span>
                   </>
                 ) : (
                   <>
@@ -196,18 +222,6 @@ export default function SessionModal({ session, isOpen, onClose, onEditSession, 
                   </>
                 )}
               </div>
-            </div>
-          )}
-
-          {client && client.email && state.bookingTerms.some(bt => bt.email?.toLowerCase() === client.email?.toLowerCase()) && (
-            <div className="flex justify-between items-center py-4">
-              <span className="text-gray-600 font-medium">Signed On</span>
-              <span className="font-semibold text-gray-900 text-right">
-                {(() => {
-                  const bookingTerm = state.bookingTerms.find(bt => bt.email?.toLowerCase() === client.email?.toLowerCase());
-                  return bookingTerm?.submitted ? new Date(bookingTerm.submitted).toLocaleDateString('en-GB') : 'Unknown';
-                })()}
-              </span>
             </div>
           )}
 
@@ -318,6 +332,33 @@ export default function SessionModal({ session, isOpen, onClose, onEditSession, 
                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#973b00'}
               >
                 Session Plan Unsent
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Questionnaire Bypass Buttons */}
+        {client && (
+          <div className="pb-3 border-b border-gray-200">
+            {!session.questionnaireBypass ? (
+              <button
+                onClick={handleQuestionnaireBypass}
+                className="w-full text-white py-3 px-4 rounded-lg font-medium transition-colors"
+                style={{ backgroundColor: '#e17100' }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#c55a00'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#e17100'}
+              >
+                Questionnaire N/A
+              </button>
+            ) : (
+              <button
+                onClick={handleQuestionnaireBypassRemove}
+                className="w-full text-white py-3 px-4 rounded-lg font-medium transition-colors"
+                style={{ backgroundColor: '#973b00' }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#7a2f00'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#973b00'}
+              >
+                Remove Questionnaire N/A
               </button>
             )}
           </div>

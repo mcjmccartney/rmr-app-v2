@@ -30,6 +30,7 @@ function dbRowToSession(row: Record<string, any>): Session {
     sessionPaid: row.session_paid || false,
     paymentConfirmedAt: row.payment_confirmed_at,
     sessionPlanSent: row.session_plan_sent || false,
+    questionnaireBypass: row.questionnaire_bypass || false,
     eventId: row.event_id,
     googleMeetLink: row.google_meet_link,
   }
@@ -47,6 +48,7 @@ function sessionToDbRow(session: Partial<Session>) {
     session_paid: session.sessionPaid,
     payment_confirmed_at: session.paymentConfirmedAt,
     session_plan_sent: session.sessionPlanSent,
+    questionnaire_bypass: session.questionnaireBypass,
     event_id: session.eventId,
     google_meet_link: session.googleMeetLink,
   };
