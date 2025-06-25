@@ -617,8 +617,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       console.log('Triggering Make.com webhooks for new session:', webhookData);
 
       // Prepare webhook promises - booking terms webhook always triggers
-      const webhookPromises = [];
-      const webhookNames = [];
+      const webhookPromises: Promise<Response>[] = [];
+      const webhookNames: string[] = [];
 
       // Always trigger booking terms email webhook
       webhookPromises.push(
