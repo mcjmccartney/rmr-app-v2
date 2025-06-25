@@ -46,7 +46,7 @@ export default function FloatingActionButton() {
 
       {/* Navigation Items */}
       {isExpanded && (
-        <div className={`fixed right-6 z-50 flex flex-col-reverse gap-3 ${pathname === '/calendar' ? 'bottom-88' : 'bottom-24'}`}>
+        <div className={`fixed right-6 z-50 flex flex-col-reverse gap-3 ${pathname === '/calendar' ? 'bottom-32' : 'bottom-24'}`}>
           {navItems.map(({ icon: Icon, label, path }, index) => {
             const isActive = pathname === path;
             const delay = index * 50; // Stagger animation
@@ -87,7 +87,7 @@ export default function FloatingActionButton() {
             ? 'bg-gray-600 text-white'
             : 'bg-amber-800 text-white'
           }
-          ${pathname === '/calendar' ? 'bottom-70' : 'bottom-6'}
+          ${pathname === '/calendar' ? 'bottom-14' : 'bottom-6'}
         `}
       >
         {isExpanded ? (

@@ -452,7 +452,7 @@ export default function CalendarPage() {
                         }
                       }
 
-                      // Priority: Session Plan Sent (black) > Paid + Terms + Questionnaire (green) > Terms + Questionnaire (amber) > Default (amber-800)
+                      // Priority: No Client (charcoal grey) > Session Plan Sent (charcoal grey) > Paid + Terms + Questionnaire (green) > Terms + Questionnaire (amber) > Default (amber-800)
                       const isFullyCompleted = hasSignedBookingTerms && (hasFilledQuestionnaire || session.questionnaireBypass);
                       const isPaid = session.sessionPaid;
                       const isCompletelyFinished = isPaid && isFullyCompleted; // All three conditions
@@ -461,8 +461,8 @@ export default function CalendarPage() {
                       let buttonStyle = {};
                       let buttonClasses = "";
 
-                      if (isSessionPlanSent) {
-                        // Session plan sent = dark charcoal grey background (highest priority)
+                      if (!client || isSessionPlanSent) {
+                        // No client or session plan sent = dark charcoal grey background (highest priority)
                         buttonStyle = { backgroundColor: '#36454F' };
                         buttonClasses = "w-full text-white text-xs px-2 py-1 rounded text-left transition-colors flex-shrink-0 hover:opacity-80";
                       } else if (isCompletelyFinished) {
@@ -646,7 +646,7 @@ export default function CalendarPage() {
                 let buttonClass = "";
                 let buttonStyle = {};
 
-                if (isSessionPlanSent) {
+                if (!client || isSessionPlanSent) {
                   buttonClass = "w-full text-white p-4 rounded-lg text-left transition-colors hover:opacity-80";
                   buttonStyle = { backgroundColor: '#36454F' };
                 } else if (isCompletelyFinished) {
@@ -718,7 +718,7 @@ export default function CalendarPage() {
                   let buttonClass = "";
                   let buttonStyle = {};
 
-                  if (isSessionPlanSent) {
+                  if (!client || isSessionPlanSent) {
                     buttonClass = "w-full text-white p-4 rounded-lg text-left transition-colors hover:opacity-80";
                     buttonStyle = { backgroundColor: '#36454F' };
                   } else if (isCompletelyFinished) {
