@@ -597,6 +597,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         clientName: `${client.firstName} ${client.lastName}`.trim(),
         clientFirstName: client.firstName,
         clientEmail: client.email,
+        address: client.address || '',
         dogName: client.dogName || '',
         sessionType: session.sessionType,
         bookingDate: session.bookingDate, // YYYY-MM-DD format
@@ -613,6 +614,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
         // Callback URL for Event ID
         eventIdCallbackUrl: `${window.location.origin}/api/session/event-id`
       };
+
+      // Validate essential data before triggering webhooks
+      if (!webhookData.sessionId || !webhookData.clientEmail || !webhookData.sessionType || !webhookData.bookingDate) {
+        console.log('Skipping webhook trigger - missing essential data:', {
+          hasSessionId: !!webhookData.sessionId,
+          hasClientEmail: !!webhookData.clientEmail,
+          hasSessionType: !!webhookData.sessionType,
+          hasBookingDate: !!webhookData.bookingDate
+        });
+        return;
+      }
 
       console.log('Triggering Make.com webhooks for new session:', webhookData);
 
