@@ -16,7 +16,7 @@ interface ClientModalProps {
 }
 
 export default function ClientModal({ client, isOpen, onClose, onEditClient, onViewBehaviouralBrief, onViewBehaviourQuestionnaire }: ClientModalProps) {
-  const { state, updateClient, deleteClient, getMembershipsByClientId, getMembershipsByEmail } = useApp();
+  const { state, updateClient, deleteClient, getMembershipsByClientId, getMembershipsByEmail, getMembershipsByClientIdWithAliases } = useApp();
   const [activeTab, setActiveTab] = useState<'sessions' | 'memberships'>('sessions');
   const [clientSessions, setClientSessions] = useState<Session[]>([]);
   const [clientMemberships, setClientMemberships] = useState<Membership[]>([]);
@@ -56,13 +56,11 @@ export default function ClientModal({ client, isOpen, onClose, onEditClient, onV
         console.log('Found sessions:', sessions.length);
         setClientSessions(sessions || []);
 
-        // Load memberships for this client by email
+        // Load memberships for this client including email aliases
         let memberships: Membership[] = [];
-        if (currentClient.email) {
-          console.log('Loading memberships for email:', currentClient.email);
-          memberships = await getMembershipsByEmail(currentClient.email);
-          console.log('Found memberships:', memberships.length);
-        }
+        console.log('Loading memberships for client ID:', currentClient.id);
+        memberships = await getMembershipsByClientIdWithAliases(currentClient.id);
+        console.log('Found memberships (including aliases):', memberships.length);
 
         setClientMemberships(memberships || []);
       } catch (error) {

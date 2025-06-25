@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase'
 import { Membership } from '@/types'
+import { ClientEmailAliasService } from './clientEmailAliasService'
 
 // Convert database row to Membership type
 function dbRowToMembership(row: Record<string, any>): Membership {
@@ -58,6 +59,38 @@ export const membershipService = {
     }
 
     return data?.map(dbRowToMembership) || []
+  },
+
+  // Get memberships by client ID including email aliases
+  async getByClientIdWithAliases(clientId: string): Promise<Membership[]> {
+    try {
+      // Get all email aliases for this client
+      const aliases = await ClientEmailAliasService.getAliasesByClientId(clientId)
+
+      if (aliases.length === 0) {
+        return []
+      }
+
+      // Get all emails (primary and aliases)
+      const emails = aliases.map(alias => alias.email)
+
+      // Fetch memberships for all emails
+      const { data, error } = await supabase
+        .from('memberships')
+        .select('*')
+        .in('email', emails)
+        .order('date', { ascending: false })
+
+      if (error) {
+        console.error('Error fetching memberships by client ID with aliases:', error)
+        throw error
+      }
+
+      return data?.map(dbRowToMembership) || []
+    } catch (error) {
+      console.error('Error in getByClientIdWithAliases:', error)
+      return []
+    }
   },
 
   // Get membership by ID

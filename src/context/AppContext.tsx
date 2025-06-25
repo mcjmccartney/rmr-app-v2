@@ -226,6 +226,7 @@ const AppContext = createContext<{
   findClientByEmail: (email: string) => Promise<Client | null>;
   getMembershipsByClientId: (clientId: string) => Promise<Membership[]>;
   getMembershipsByEmail: (email: string) => Promise<Membership[]>;
+  getMembershipsByClientIdWithAliases: (clientId: string) => Promise<Membership[]>;
 } | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
@@ -900,6 +901,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Get memberships by client ID including email aliases
+  const getMembershipsByClientIdWithAliases = async (clientId: string): Promise<Membership[]> => {
+    try {
+      return await membershipService.getByClientIdWithAliases(clientId);
+    } catch (error) {
+      console.error('Failed to get memberships by client ID with aliases:', error);
+      throw error;
+    }
+  };
+
   // Load initial data on mount
   useEffect(() => {
     console.log('AppContext: Loading initial data...');
@@ -949,6 +960,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       findClientByEmail,
       getMembershipsByClientId,
       getMembershipsByEmail,
+      getMembershipsByClientIdWithAliases,
     }}>
       {children}
     </AppContext.Provider>
