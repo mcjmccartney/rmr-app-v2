@@ -53,9 +53,19 @@ export const membershipPairingService = {
       // Process each client
       for (const client of clients || []) {
         try {
-          // Get all email aliases for this client (includes primary email)
+          // Start with client's primary email
+          const clientEmails: string[] = []
+          if (client.email) {
+            clientEmails.push(client.email)
+          }
+
+          // Get all email aliases for this client and add them
           const aliases = await ClientEmailAliasService.getAliasesByClientId(client.id)
-          const clientEmails = aliases.map(alias => alias.email)
+          aliases.forEach(alias => {
+            if (alias.email && !clientEmails.includes(alias.email)) {
+              clientEmails.push(alias.email)
+            }
+          })
 
           // Find memberships for any of the client's emails
           const clientMemberships = (memberships || []).filter(membership =>
@@ -166,9 +176,34 @@ export const membershipPairingService = {
     lastMembershipDate?: string;
   }> {
     try {
-      // Get all email aliases for this client
+      // Get the client's primary email first
+      const { data: client, error: clientError } = await supabase
+        .from('clients')
+        .select('email')
+        .eq('id', clientId)
+        .single()
+
+      if (clientError) {
+        console.error('Error fetching client for membership details:', clientError)
+        return {
+          isMember: false,
+          memberships: []
+        }
+      }
+
+      // Start with client's primary email
+      const emails: string[] = []
+      if (client?.email) {
+        emails.push(client.email)
+      }
+
+      // Get all email aliases for this client and add them
       const aliases = await ClientEmailAliasService.getAliasesByClientId(clientId)
-      const emails = aliases.map(alias => alias.email)
+      aliases.forEach(alias => {
+        if (alias.email && !emails.includes(alias.email)) {
+          emails.push(alias.email)
+        }
+      })
 
       if (emails.length === 0) {
         return {

@@ -64,15 +64,37 @@ export const membershipService = {
   // Get memberships by client ID including email aliases
   async getByClientIdWithAliases(clientId: string): Promise<Membership[]> {
     try {
-      // Get all email aliases for this client
-      const aliases = await ClientEmailAliasService.getAliasesByClientId(clientId)
+      // Get the client's primary email first
+      const { data: client, error: clientError } = await supabase
+        .from('clients')
+        .select('email')
+        .eq('id', clientId)
+        .single()
 
-      if (aliases.length === 0) {
+      if (clientError) {
+        console.error('Error fetching client for membership lookup:', clientError)
         return []
       }
 
-      // Get all emails (primary and aliases)
-      const emails = aliases.map(alias => alias.email)
+      // Start with client's primary email
+      const emails: string[] = []
+      if (client?.email) {
+        emails.push(client.email)
+      }
+
+      // Get all email aliases for this client
+      const aliases = await ClientEmailAliasService.getAliasesByClientId(clientId)
+
+      // Add alias emails (avoid duplicates)
+      aliases.forEach(alias => {
+        if (alias.email && !emails.includes(alias.email)) {
+          emails.push(alias.email)
+        }
+      })
+
+      if (emails.length === 0) {
+        return []
+      }
 
       // Fetch memberships for all emails
       const { data, error } = await supabase
