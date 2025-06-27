@@ -28,6 +28,16 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
     notes: ''
   });
 
+  // Helper function to check if session is in the past
+  const isSessionInPast = (date: string, time: string) => {
+    if (!date || !time) return false;
+
+    const sessionDateTime = new Date(`${date}T${time}:00`);
+    const now = new Date();
+
+    return sessionDateTime < now;
+  };
+
   // Generate time options
   const hourOptions = generateHourOptions();
   const minuteOptions = generateMinuteOptions();
@@ -116,9 +126,11 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
         console.log('No date/time changes, no calendar updates needed');
       }
 
-      // Trigger session update webhook
-      try {
-        console.log('Triggering session update webhook');
+      // Trigger session update webhook (only for future sessions)
+      const isPastSession = isSessionInPast(updatedSession.bookingDate, updatedSession.bookingTime);
+      if (!isPastSession) {
+        try {
+          console.log('Triggering session update webhook');
 
         // Find the client for this session
         const client = state.clients.find(c => c.id === updatedSession.clientId);
@@ -177,9 +189,12 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
           })
         });
         console.log('Session update webhook triggered successfully');
-      } catch (webhookError) {
-        console.error('Failed to trigger session update webhook:', webhookError);
-        // Don't block the UI for webhook failures
+        } catch (webhookError) {
+          console.error('Failed to trigger session update webhook:', webhookError);
+          // Don't block the UI for webhook failures
+        }
+      } else {
+        console.log('Skipping webhook for past session');
       }
 
       onClose();
@@ -230,16 +245,32 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
           <label className="block text-gray-700 text-sm font-medium mb-2">
             Session Type
           </label>
-          <input
-            type="text"
-            value={formData.sessionType}
-            disabled
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed"
-            title="Session type cannot be changed. Delete and recreate session to change type."
-          />
-          <p className="text-xs text-gray-500 mt-1">
-            To change session type, delete and recreate the session
-          </p>
+          {isSessionInPast(formData.date, formData.time) ? (
+            <CustomDropdown
+              value={formData.sessionType}
+              onChange={(value) => setFormData({ ...formData, sessionType: value })}
+              options={sessionTypeOptions}
+              className="w-full"
+            />
+          ) : (
+            <>
+              <input
+                type="text"
+                value={formData.sessionType}
+                disabled
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed"
+                title="Session type cannot be changed for future sessions. Delete and recreate session to change type."
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                To change session type for future sessions, delete and recreate the session
+              </p>
+            </>
+          )}
+          {isSessionInPast(formData.date, formData.time) && (
+            <p className="text-xs text-green-600 mt-1">
+              Session type can be changed for past sessions
+            </p>
+          )}
         </div>
 
         <div>
