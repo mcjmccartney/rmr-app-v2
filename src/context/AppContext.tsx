@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useReducer, ReactNode, useEffect } from 'react';
-import { AppState, AppAction, Session, Client, Membership, BookingTerms, ActionPoint } from '@/types';
+import { AppState, AppAction, Session, Client, Membership, BookingTerms, ActionPoint, SessionParticipant } from '@/types';
 import { clientService } from '@/services/clientService';
 import { sessionService } from '@/services/sessionService';
 import { membershipService } from '@/services/membershipService';
@@ -13,6 +13,8 @@ import { DuplicateDetectionService } from '@/services/duplicateDetectionService'
 import { dismissedDuplicatesService } from '@/services/dismissedDuplicatesService';
 import { membershipExpirationService } from '@/services/membershipExpirationService';
 import { ClientEmailAliasService, ClientEmailAlias } from '@/services/clientEmailAliasService';
+import { sessionParticipantService } from '@/services/sessionParticipantService';
+import { membershipPairingService } from '@/services/membershipPairingService';
 
 const initialState: AppState = {
   sessions: [],
@@ -26,6 +28,7 @@ const initialState: AppState = {
   bookingTerms: [],
   clientEmailAliases: {},
   potentialDuplicates: [],
+  sessionParticipants: [],
   selectedSession: null,
   selectedClient: null,
   selectedBehaviouralBrief: null,
@@ -196,7 +199,27 @@ function appReducer(state: AppState, action: AppAction): AppState {
 
     case 'SET_MODAL_TYPE':
       return { ...state, modalType: action.payload };
-    
+
+    case 'SET_SESSION_PARTICIPANTS':
+      return { ...state, sessionParticipants: action.payload };
+
+    case 'ADD_SESSION_PARTICIPANT':
+      return { ...state, sessionParticipants: [...state.sessionParticipants, action.payload] };
+
+    case 'UPDATE_SESSION_PARTICIPANT':
+      return {
+        ...state,
+        sessionParticipants: state.sessionParticipants.map(participant =>
+          participant.id === action.payload.id ? action.payload : participant
+        ),
+      };
+
+    case 'DELETE_SESSION_PARTICIPANT':
+      return {
+        ...state,
+        sessionParticipants: state.sessionParticipants.filter(participant => participant.id !== action.payload),
+      };
+
     default:
       return state;
   }
@@ -213,6 +236,7 @@ const AppContext = createContext<{
   loadBookingTerms: () => Promise<void>;
   loadClientEmailAliases: () => Promise<void>;
   loadActionPoints: () => Promise<void>;
+  loadSessionParticipants: () => Promise<void>;
   createActionPoint: (actionPoint: Omit<ActionPoint, 'id'>) => Promise<ActionPoint>;
   updateActionPoint: (id: string, updates: Partial<ActionPoint>) => Promise<ActionPoint>;
   deleteActionPoint: (id: string) => Promise<void>;
@@ -233,6 +257,11 @@ const AppContext = createContext<{
   getMembershipsByClientId: (clientId: string) => Promise<Membership[]>;
   getMembershipsByEmail: (email: string) => Promise<Membership[]>;
   getMembershipsByClientIdWithAliases: (clientId: string) => Promise<Membership[]>;
+  createSessionParticipant: (participant: Omit<SessionParticipant, 'id'>) => Promise<SessionParticipant>;
+  updateSessionParticipant: (id: string, updates: Partial<SessionParticipant>) => Promise<SessionParticipant>;
+  deleteSessionParticipant: (id: string) => Promise<void>;
+  getSessionParticipants: (sessionId: string) => Promise<SessionParticipant[]>;
+  pairMembershipsWithClients: () => Promise<any>;
 } | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
@@ -372,6 +401,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
       dispatch({ type: 'SET_ACTION_POINTS', payload: actionPoints });
     } catch (error) {
       console.error('Failed to load action points:', error);
+    }
+  };
+
+  // Load session participants from Supabase
+  const loadSessionParticipants = async () => {
+    try {
+      console.log('Loading session participants...');
+      const participants = await sessionParticipantService.getAll();
+      console.log('Loaded session participants:', participants.length);
+      dispatch({ type: 'SET_SESSION_PARTICIPANTS', payload: participants });
+    } catch (error) {
+      console.error('Failed to load session participants:', error);
     }
   };
 
@@ -934,6 +975,70 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Session Participants Management
+  const createSessionParticipant = async (participantData: Omit<SessionParticipant, 'id'>): Promise<SessionParticipant> => {
+    try {
+      const participant = await sessionParticipantService.create(participantData);
+      dispatch({ type: 'ADD_SESSION_PARTICIPANT', payload: participant });
+      return participant;
+    } catch (error) {
+      console.error('Failed to create session participant:', error);
+      throw error;
+    }
+  };
+
+  const updateSessionParticipant = async (id: string, updates: Partial<SessionParticipant>): Promise<SessionParticipant> => {
+    try {
+      const participant = await sessionParticipantService.update(id, updates);
+      dispatch({ type: 'UPDATE_SESSION_PARTICIPANT', payload: participant });
+      return participant;
+    } catch (error) {
+      console.error('Failed to update session participant:', error);
+      throw error;
+    }
+  };
+
+  const deleteSessionParticipant = async (id: string): Promise<void> => {
+    try {
+      await sessionParticipantService.delete(id);
+      dispatch({ type: 'DELETE_SESSION_PARTICIPANT', payload: id });
+    } catch (error) {
+      console.error('Failed to delete session participant:', error);
+      throw error;
+    }
+  };
+
+  const getSessionParticipants = async (sessionId: string): Promise<SessionParticipant[]> => {
+    try {
+      return await sessionParticipantService.getBySessionId(sessionId);
+    } catch (error) {
+      console.error('Failed to get session participants:', error);
+      throw error;
+    }
+  };
+
+  // Membership Pairing
+  const pairMembershipsWithClients = async () => {
+    try {
+      console.log('🔄 Auto-pairing memberships with clients...');
+      const result = await membershipPairingService.pairMembershipsWithClients();
+
+      if (result.success) {
+        console.log(`✅ Successfully paired ${result.pairingCount} memberships`);
+        // Reload clients to reflect updated membership statuses
+        await loadClients();
+        await loadMemberships();
+      } else {
+        console.error('❌ Membership pairing failed:', result.errors);
+      }
+
+      return result;
+    } catch (error) {
+      console.error('Failed to pair memberships with clients:', error);
+      throw error;
+    }
+  };
+
   // Load initial data on mount
   useEffect(() => {
     console.log('AppContext: Loading initial data...');
@@ -946,6 +1051,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       await loadBookingTerms();
       await loadClientEmailAliases();
       await loadActionPoints();
+      await loadSessionParticipants();
 
       // Update membership statuses after loading all data
       console.log('🔄 Checking membership statuses...');
@@ -966,6 +1072,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       loadBookingTerms,
       loadClientEmailAliases,
       loadActionPoints,
+      loadSessionParticipants,
       createActionPoint,
       updateActionPoint,
       deleteActionPoint,
@@ -986,6 +1093,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
       getMembershipsByClientId,
       getMembershipsByEmail,
       getMembershipsByClientIdWithAliases,
+      createSessionParticipant,
+      updateSessionParticipant,
+      deleteSessionParticipant,
+      getSessionParticipants,
+      pairMembershipsWithClients,
     }}>
       {children}
     </AppContext.Provider>

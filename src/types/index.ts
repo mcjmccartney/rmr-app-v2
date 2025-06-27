@@ -1,3 +1,12 @@
+export interface SessionParticipant {
+  id: string;
+  sessionId: string;
+  clientId: string;
+  individualQuote: number; // Amount each participant pays
+  paid: boolean; // Individual payment status
+  paidAt?: string; // When this participant paid
+}
+
 export interface Session {
   id: string;
   clientId?: string; // Optional for Group and RMR Live sessions
@@ -15,6 +24,9 @@ export interface Session {
   questionnaireBypass?: boolean; // Whether questionnaire requirement is bypassed
   eventId?: string; // Google Calendar Event ID for deletion
   googleMeetLink?: string; // Google Meet link from Make.com
+  // Group/RMR Live session fields
+  participants?: SessionParticipant[]; // For Group and RMR Live sessions
+  individualQuote?: number; // Per-participant quote for Group/RMR Live sessions
 }
 
 export interface ActionPoint {
@@ -214,6 +226,7 @@ export interface AppState {
   bookingTerms: BookingTerms[];
   clientEmailAliases: { [clientId: string]: ClientEmailAlias[] };
   potentialDuplicates: PotentialDuplicate[];
+  sessionParticipants: SessionParticipant[];
   selectedSession: Session | null;
   selectedClient: Client | null;
   selectedBehaviouralBrief: BehaviouralBrief | null;
@@ -232,6 +245,10 @@ export type AppAction =
   | { type: 'ADD_CLIENT'; payload: Client }
   | { type: 'UPDATE_CLIENT'; payload: Client }
   | { type: 'DELETE_CLIENT'; payload: string }
+  | { type: 'SET_SESSION_PARTICIPANTS'; payload: SessionParticipant[] }
+  | { type: 'ADD_SESSION_PARTICIPANT'; payload: SessionParticipant }
+  | { type: 'UPDATE_SESSION_PARTICIPANT'; payload: SessionParticipant }
+  | { type: 'DELETE_SESSION_PARTICIPANT'; payload: string }
   | { type: 'SET_BEHAVIOURAL_BRIEFS'; payload: BehaviouralBrief[] }
   | { type: 'ADD_BEHAVIOURAL_BRIEF'; payload: BehaviouralBrief }
   | { type: 'UPDATE_BEHAVIOURAL_BRIEF'; payload: BehaviouralBrief }

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
 import SessionModal from '@/components/modals/SessionModal';
 import EditSessionModal from '@/components/modals/EditSessionModal';
+import GroupSessionModal from '@/components/modals/GroupSessionModal';
 import ClientModal from '@/components/modals/ClientModal';
 import EditClientModal from '@/components/modals/EditClientModal';
 import BehaviouralBriefModal from '@/components/modals/BehaviouralBriefModal';
@@ -35,7 +36,7 @@ const getClientEmails = (client: any, clientEmailAliases: { [clientId: string]: 
 };
 
 export default function CalendarPage() {
-  const { state, updateClient } = useApp();
+  const { state, updateClient, pairMembershipsWithClients } = useApp();
   const router = useRouter();
 
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -43,6 +44,7 @@ export default function CalendarPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [addModalType, setAddModalType] = useState<'session' | 'client'>('session');
   const [showEditSessionModal, setShowEditSessionModal] = useState(false);
+  const [showGroupSessionModal, setShowGroupSessionModal] = useState(false);
   const [showClientModal, setShowClientModal] = useState(false);
   const [showEditClientModal, setShowEditClientModal] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
@@ -56,6 +58,21 @@ export default function CalendarPage() {
   const [selectedDayDate, setSelectedDayDate] = useState<Date | null>(null);
   const [hideWeekends, setHideWeekends] = useState(false);
 
+  // Auto-pair memberships with clients on component mount
+  useEffect(() => {
+    const runMembershipPairing = async () => {
+      try {
+        console.log('🔄 Running automatic membership pairing...');
+        await pairMembershipsWithClients();
+      } catch (error) {
+        console.error('❌ Error during automatic membership pairing:', error);
+      }
+    };
+
+    // Run pairing after a short delay to ensure all data is loaded
+    const timer = setTimeout(runMembershipPairing, 2000);
+    return () => clearTimeout(timer);
+  }, [pairMembershipsWithClients]);
 
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
@@ -100,10 +117,16 @@ export default function CalendarPage() {
 
   const handleSessionClick = (session: Session) => {
     setSelectedSession(session);
+
+    // Open GroupSessionModal for Group and RMR Live sessions
+    if (session.sessionType === 'Group' || session.sessionType === 'RMR Live') {
+      setShowGroupSessionModal(true);
+    }
   };
 
   const handleCloseModal = () => {
     setSelectedSession(null);
+    setShowGroupSessionModal(false);
   };
 
   const handleAddSession = () => {
@@ -554,7 +577,7 @@ export default function CalendarPage() {
 
       <SessionModal
         session={selectedSession}
-        isOpen={!!selectedSession && !showEditSessionModal && !showClientModal && !showEditClientModal && !showMobileDayModal}
+        isOpen={!!selectedSession && !showEditSessionModal && !showClientModal && !showEditClientModal && !showMobileDayModal && !showGroupSessionModal && selectedSession?.sessionType !== 'Group' && selectedSession?.sessionType !== 'RMR Live'}
         onClose={handleCloseModal}
         onEditSession={handleEditSession}
         onEditClient={handleEditClient}
@@ -567,6 +590,13 @@ export default function CalendarPage() {
         session={selectedSession}
         isOpen={showEditSessionModal}
         onClose={handleCloseEditSessionModal}
+      />
+
+      <GroupSessionModal
+        session={selectedSession}
+        isOpen={showGroupSessionModal}
+        onClose={handleCloseModal}
+        onEditSession={handleEditSession}
       />
 
       <ClientModal
