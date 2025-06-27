@@ -141,7 +141,7 @@ export default function GroupSessionModal({ session, isOpen, onClose, onEditSess
         </div>
 
         {/* Financial Summary */}
-        <div className="bg-blue-50 p-4 rounded-lg">
+        <div className="bg-gray-100 p-4 rounded-lg">
           <h4 className="font-medium text-gray-900 mb-2">Financial Summary</h4>
           <div className="grid grid-cols-3 gap-4 text-sm">
             <div>
@@ -168,7 +168,8 @@ export default function GroupSessionModal({ session, isOpen, onClose, onEditSess
             <h4 className="font-medium text-gray-900">Participants ({participants.length})</h4>
             <button
               onClick={() => setShowAddParticipant(true)}
-              className="flex items-center gap-2 px-3 py-1 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700"
+              className="flex items-center gap-2 px-3 py-1 text-white rounded-md text-sm hover:opacity-90"
+              style={{ backgroundColor: '#973b00' }}
             >
               <Plus size={16} />
               Add Participant
@@ -220,7 +221,7 @@ export default function GroupSessionModal({ session, isOpen, onClose, onEditSess
 
         {/* Add Participant Form */}
         {showAddParticipant && (
-          <div className="bg-blue-50 p-4 rounded-lg">
+          <div className="bg-gray-100 p-4 rounded-lg">
             <h4 className="font-medium text-gray-900 mb-3">Add Participant</h4>
             <div className="space-y-3">
               <div>
@@ -246,7 +247,7 @@ export default function GroupSessionModal({ session, isOpen, onClose, onEditSess
                   onChange={(e) => setIndividualQuote(parseFloat(e.target.value) || 0)}
                   min="0"
                   step="0.01"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none"
                 />
               </div>
               
@@ -254,7 +255,8 @@ export default function GroupSessionModal({ session, isOpen, onClose, onEditSess
                 <button
                   onClick={handleAddParticipant}
                   disabled={!selectedClientId}
-                  className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 text-white py-2 px-4 rounded-md hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ backgroundColor: '#973b00' }}
                 >
                   Add Participant
                 </button>
@@ -276,7 +278,8 @@ export default function GroupSessionModal({ session, isOpen, onClose, onEditSess
         <div className="flex gap-3 pt-4 border-t">
           <button
             onClick={() => onEditSession(session)}
-            className="flex-1 bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 font-medium"
+            className="flex-1 text-white py-3 px-4 rounded-md hover:opacity-90 font-medium"
+            style={{ backgroundColor: '#973b00' }}
           >
             Edit Session Details
           </button>
