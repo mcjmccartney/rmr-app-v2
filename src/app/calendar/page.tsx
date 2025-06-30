@@ -469,11 +469,8 @@ export default function CalendarPage() {
                         state.bookingTerms.some(bt =>
                           clientEmails.includes(bt.email?.toLowerCase() || '')
                         ) : false;
-                      const hasFilledQuestionnaire = client && client.dogName && clientEmails.length > 0 ?
-                        state.behaviourQuestionnaires.some(q =>
-                          clientEmails.includes(q.email?.toLowerCase() || '') &&
-                          q.dogName?.toLowerCase() === client.dogName?.toLowerCase()
-                        ) : false;
+                      const hasFilledQuestionnaire = client ?
+                        state.behaviourQuestionnaires.some(q => q.clientId === client.id) : false;
 
 
 
@@ -551,11 +548,8 @@ export default function CalendarPage() {
             const clientEmails = getClientEmails(firstSessionClient, state.clientEmailAliases || {});
             const hasSignedBookingTerms = clientEmails.length > 0 ?
               state.bookingTerms.some(bt => clientEmails.includes(bt.email?.toLowerCase() || '')) : false;
-            const hasFilledQuestionnaire = firstSessionClient.dogName && clientEmails.length > 0 ?
-              state.behaviourQuestionnaires.some(q =>
-                clientEmails.includes(q.email?.toLowerCase() || '') &&
-                q.dogName?.toLowerCase() === firstSessionClient.dogName?.toLowerCase()
-              ) : false;
+            const hasFilledQuestionnaire = firstSessionClient ?
+              state.behaviourQuestionnaires.some(q => q.clientId === firstSessionClient.id) : false;
 
             return (hasSignedBookingTerms && (hasFilledQuestionnaire || firstSession.questionnaireBypass)) ? '#e17100' : '#973b00';
           })()
@@ -669,11 +663,8 @@ export default function CalendarPage() {
                 const clientEmails = getClientEmails(client, state.clientEmailAliases || {});
                 const hasSignedBookingTerms = clientEmails.length > 0 ?
                   state.bookingTerms.some(bt => clientEmails.includes(bt.email?.toLowerCase() || '')) : false;
-                const hasFilledQuestionnaire = client && client.dogName && clientEmails.length > 0 ?
-                  state.behaviourQuestionnaires.some(q =>
-                    clientEmails.includes(q.email?.toLowerCase() || '') &&
-                    q.dogName?.toLowerCase() === client.dogName?.toLowerCase()
-                  ) : false;
+                const hasFilledQuestionnaire = client ?
+                  state.behaviourQuestionnaires.some(q => q.clientId === client.id) : false;
                 const isPaid = session.sessionPaid;
                 const isCompletelyFinished = isPaid && hasSignedBookingTerms && (hasFilledQuestionnaire || session.questionnaireBypass);
                 const isSessionPlanSent = session.sessionPlanSent;
@@ -742,11 +733,8 @@ export default function CalendarPage() {
                   const clientEmails = getClientEmails(client, state.clientEmailAliases || {});
                   const hasSignedBookingTerms = clientEmails.length > 0 ?
                     state.bookingTerms.some(bt => clientEmails.includes(bt.email?.toLowerCase() || '')) : false;
-                  const hasFilledQuestionnaire = client && client.dogName && clientEmails.length > 0 ?
-                    state.behaviourQuestionnaires.some(q =>
-                      clientEmails.includes(q.email?.toLowerCase() || '') &&
-                      q.dogName?.toLowerCase() === client.dogName?.toLowerCase()
-                    ) : false;
+                  const hasFilledQuestionnaire = client ?
+                    state.behaviourQuestionnaires.some(q => q.clientId === client.id) : false;
                   const isPaid = session.sessionPaid;
                   const isCompletelyFinished = isPaid && hasSignedBookingTerms && (hasFilledQuestionnaire || session.questionnaireBypass);
                   const isSessionPlanSent = session.sessionPlanSent;

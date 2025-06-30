@@ -647,11 +647,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         bt.email?.toLowerCase() === client.email?.toLowerCase()
       );
 
-      // Check if client has filled questionnaire for this dog
-      // Look for questionnaire with matching client email and dog name
+      // Check if client has filled questionnaire
+      // Look for questionnaire with matching client_id
       const hasFilledQuestionnaire = state.behaviourQuestionnaires.some(q =>
-        q.email?.toLowerCase() === client.email?.toLowerCase() &&
-        q.dogName?.toLowerCase() === client.dogName?.toLowerCase()
+        q.clientId === client.id
       );
 
       // Prepare session data for Make.com

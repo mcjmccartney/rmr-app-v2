@@ -164,11 +164,8 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
           state.bookingTerms.some(bt => clientEmails.includes(bt.email?.toLowerCase() || '')) : false;
 
         // Check if client has filled behaviour questionnaire
-        const hasFilledQuestionnaire = client && client.dogName && clientEmails.length > 0 ?
-          state.behaviourQuestionnaires.some(q =>
-            clientEmails.includes(q.email?.toLowerCase() || '') &&
-            q.dogName?.toLowerCase() === client.dogName?.toLowerCase()
-          ) : false;
+        const hasFilledQuestionnaire = client ?
+          state.behaviourQuestionnaires.some(q => q.clientId === client.id) : false;
 
         // Prepare webhook payload
         const webhookPayload = {
