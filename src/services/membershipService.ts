@@ -7,7 +7,7 @@ function dbRowToMembership(row: Record<string, any>): Membership {
   return {
     id: row.id,
     email: row.email,
-    date: row.date,
+    date: row.month || row.date, // Handle both column names for compatibility
     amount: parseFloat(row.amount) || 0,
   }
 }
@@ -17,7 +17,7 @@ function membershipToDbRow(membership: Partial<Membership>): Record<string, any>
   const dbRow: Record<string, any> = {}
 
   if (membership.email !== undefined) dbRow.email = membership.email
-  if (membership.date !== undefined) dbRow.date = membership.date
+  if (membership.date !== undefined) dbRow.month = membership.date // Map date to month column
   if (membership.amount !== undefined) dbRow.amount = membership.amount
 
   return dbRow
@@ -29,7 +29,7 @@ export const membershipService = {
     const { data, error } = await supabase
       .from('memberships')
       .select('*')
-      .order('date', { ascending: false })
+      .order('created_at', { ascending: false }) // Use created_at instead of date/month
 
     if (error) {
       console.error('Error fetching memberships:', error)
@@ -52,7 +52,7 @@ export const membershipService = {
       .from('memberships')
       .select('*')
       .eq('email', email)
-      .order('date', { ascending: false })
+      .order('created_at', { ascending: false }) // Use created_at instead of date
 
     if (error) {
       console.error('Error fetching memberships by email:', error)
@@ -102,7 +102,7 @@ export const membershipService = {
         .from('memberships')
         .select('*')
         .in('email', emails)
-        .order('date', { ascending: false })
+        .order('created_at', { ascending: false }) // Use created_at instead of date
 
       if (error) {
         console.error('Error fetching memberships by client ID with aliases:', error)
