@@ -197,7 +197,7 @@ export default function BehaviourQuestionnaireModal({ behaviourQuestionnaire, is
 
             {behaviourQuestionnaire.anythingElse && (
               <div>
-                <h4 className="font-medium text-gray-800 mb-2">Anything Else to Help With</h4>
+                <h4 className="font-medium text-gray-800 mb-2">Is there anything else you would like help with if possible?</h4>
                 <div className="bg-gray-50 p-3 rounded">
                   <p className="text-gray-700 text-sm whitespace-pre-wrap">{behaviourQuestionnaire.anythingElse}</p>
                 </div>
@@ -215,7 +215,8 @@ export default function BehaviourQuestionnaireModal({ behaviourQuestionnaire, is
             <div className="space-y-3">
               {behaviourQuestionnaire.medicalHistory && (
                 <div>
-                  <h4 className="font-medium text-gray-800 mb-2">Medical History</h4>
+                  <h4 className="font-medium text-gray-800 mb-2">Does your dog have any past relevant medical or health conditions or important medical history? If yes, please describe.</h4>
+                  <p className="text-xs text-gray-600 mb-2">Allergies, medication, injury etc.</p>
                   <div className="bg-gray-50 p-3 rounded">
                     <p className="text-gray-700 text-sm whitespace-pre-wrap">{behaviourQuestionnaire.medicalHistory}</p>
                   </div>
@@ -223,7 +224,7 @@ export default function BehaviourQuestionnaireModal({ behaviourQuestionnaire, is
               )}
               {behaviourQuestionnaire.vetAdvice && (
                 <div>
-                  <h4 className="font-medium text-gray-800 mb-2">Veterinarian Advice</h4>
+                  <h4 className="font-medium text-gray-800 mb-2">Have you specifically asked your Veterinarian about any of your dog's training and behaviour concerns? If yes, what was their advice?</h4>
                   <div className="bg-gray-50 p-3 rounded">
                     <p className="text-gray-700 text-sm whitespace-pre-wrap">{behaviourQuestionnaire.vetAdvice}</p>
                   </div>
@@ -242,19 +243,19 @@ export default function BehaviourQuestionnaireModal({ behaviourQuestionnaire, is
             <div className="space-y-3">
               {behaviourQuestionnaire.whereGotDog && (
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Where got dog</span>
+                  <span className="text-gray-600">Where did you get your dog from?</span>
                   <span className="font-medium text-gray-900">{behaviourQuestionnaire.whereGotDog}</span>
                 </div>
               )}
               {behaviourQuestionnaire.ageWhenGot && (
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Age when acquired</span>
+                  <span className="text-gray-600">How old was your dog when you got him/her?</span>
                   <span className="font-medium text-gray-900">{behaviourQuestionnaire.ageWhenGot}</span>
                 </div>
               )}
               {behaviourQuestionnaire.rescueBackground && (
                 <div>
-                  <h4 className="font-medium text-gray-800 mb-2">Rescue Background</h4>
+                  <h4 className="font-medium text-gray-800 mb-2">If your dog was a rescue, what do you know about their background?</h4>
                   <div className="bg-gray-50 p-3 rounded">
                     <p className="text-gray-700 text-sm whitespace-pre-wrap">{behaviourQuestionnaire.rescueBackground}</p>
                   </div>
@@ -271,12 +272,13 @@ export default function BehaviourQuestionnaireModal({ behaviourQuestionnaire, is
           </div>
           <div className="space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-gray-600">Food Motivation (1-10)</span>
+              <span className="text-gray-600">How food motivated is your dog? (1-10)</span>
               <span className="font-medium text-gray-900">{behaviourQuestionnaire.foodMotivated}/10</span>
             </div>
             {behaviourQuestionnaire.whatFeed && (
               <div>
-                <h4 className="font-medium text-gray-800 mb-2">What they feed</h4>
+                <h4 className="font-medium text-gray-800 mb-2">What do you feed your dog? Please be specific</h4>
+                <p className="text-xs text-gray-600 mb-2">Brand, variety, canned, dried, raw, home cooked, etc.</p>
                 <div className="bg-gray-50 p-3 rounded">
                   <p className="text-gray-700 text-sm whitespace-pre-wrap">{behaviourQuestionnaire.whatFeed}</p>
                 </div>
@@ -284,7 +286,8 @@ export default function BehaviourQuestionnaireModal({ behaviourQuestionnaire, is
             )}
             {behaviourQuestionnaire.mealtime && (
               <div>
-                <h4 className="font-medium text-gray-800 mb-2">Mealtime Routine</h4>
+                <h4 className="font-medium text-gray-800 mb-2">Please describe your dog's mealtime.</h4>
+                <p className="text-xs text-gray-600 mb-2">Where, when, how often, who feeds, special routine, etc.</p>
                 <div className="bg-gray-50 p-3 rounded">
                   <p className="text-gray-700 text-sm whitespace-pre-wrap">{behaviourQuestionnaire.mealtime}</p>
                 </div>
@@ -292,7 +295,8 @@ export default function BehaviourQuestionnaireModal({ behaviourQuestionnaire, is
             )}
             {behaviourQuestionnaire.treatRoutine && (
               <div>
-                <h4 className="font-medium text-gray-800 mb-2">Treat Routine</h4>
+                <h4 className="font-medium text-gray-800 mb-2">Please describe any treat routine your dog has.</h4>
+                <p className="text-xs text-gray-600 mb-2">Who, what kind of treat, etc.</p>
                 <div className="bg-gray-50 p-3 rounded">
                   <p className="text-gray-700 text-sm whitespace-pre-wrap">{behaviourQuestionnaire.treatRoutine}</p>
                 </div>
@@ -300,7 +304,7 @@ export default function BehaviourQuestionnaireModal({ behaviourQuestionnaire, is
             )}
             {behaviourQuestionnaire.happyWithTreats && (
               <div>
-                <h4 className="font-medium text-gray-800 mb-2">Happy with trainer treats?</h4>
+                <h4 className="font-medium text-gray-800 mb-2">If applicable, are you happy for me to give your dog treats I bring along? If no, please have some to hand that you are happy for me to use.</h4>
                 <div className="bg-gray-50 p-3 rounded">
                   <p className="text-gray-700 text-sm whitespace-pre-wrap">{behaviourQuestionnaire.happyWithTreats}</p>
                 </div>
@@ -318,7 +322,7 @@ export default function BehaviourQuestionnaireModal({ behaviourQuestionnaire, is
             <div className="space-y-3">
               {behaviourQuestionnaire.typesOfPlay && (
                 <div>
-                  <h4 className="font-medium text-gray-800 mb-2">Types of Play</h4>
+                  <h4 className="font-medium text-gray-800 mb-2">What types of play do you engage in with your dog? Do they enjoy it?</h4>
                   <div className="bg-gray-50 p-3 rounded">
                     <p className="text-gray-700 text-sm whitespace-pre-wrap">{behaviourQuestionnaire.typesOfPlay}</p>
                   </div>
@@ -326,7 +330,7 @@ export default function BehaviourQuestionnaireModal({ behaviourQuestionnaire, is
               )}
               {behaviourQuestionnaire.affectionate && (
                 <div>
-                  <h4 className="font-medium text-gray-800 mb-2">Affection</h4>
+                  <h4 className="font-medium text-gray-800 mb-2">Are you affectionate with your dog? Do they enjoy it?</h4>
                   <div className="bg-gray-50 p-3 rounded">
                     <p className="text-gray-700 text-sm whitespace-pre-wrap">{behaviourQuestionnaire.affectionate}</p>
                   </div>
@@ -334,7 +338,7 @@ export default function BehaviourQuestionnaireModal({ behaviourQuestionnaire, is
               )}
               {behaviourQuestionnaire.exercise && (
                 <div>
-                  <h4 className="font-medium text-gray-800 mb-2">Exercise</h4>
+                  <h4 className="font-medium text-gray-800 mb-2">What types of exercise does your dog regularly get?</h4>
                   <div className="bg-gray-50 p-3 rounded">
                     <p className="text-gray-700 text-sm whitespace-pre-wrap">{behaviourQuestionnaire.exercise}</p>
                   </div>
@@ -342,7 +346,7 @@ export default function BehaviourQuestionnaireModal({ behaviourQuestionnaire, is
               )}
               {behaviourQuestionnaire.useMuzzle && (
                 <div>
-                  <h4 className="font-medium text-gray-800 mb-2">Muzzle Use</h4>
+                  <h4 className="font-medium text-gray-800 mb-2">Does your dog use a muzzle for any reason?</h4>
                   <div className="bg-gray-50 p-3 rounded">
                     <p className="text-gray-700 text-sm whitespace-pre-wrap">{behaviourQuestionnaire.useMuzzle}</p>
                   </div>
@@ -350,7 +354,8 @@ export default function BehaviourQuestionnaireModal({ behaviourQuestionnaire, is
               )}
               {behaviourQuestionnaire.familiarPeople && (
                 <div>
-                  <h4 className="font-medium text-gray-800 mb-2">Reaction to Familiar People</h4>
+                  <h4 className="font-medium text-gray-800 mb-2">How does your dog react when familiar people come to your home? Please describe.</h4>
+                  <p className="text-xs text-gray-600 mb-2">Bark, jump, mouth, calm, etc.</p>
                   <div className="bg-gray-50 p-3 rounded">
                     <p className="text-gray-700 text-sm whitespace-pre-wrap">{behaviourQuestionnaire.familiarPeople}</p>
                   </div>
@@ -358,7 +363,8 @@ export default function BehaviourQuestionnaireModal({ behaviourQuestionnaire, is
               )}
               {behaviourQuestionnaire.unfamiliarPeople && (
                 <div>
-                  <h4 className="font-medium text-gray-800 mb-2">Reaction to Unfamiliar People</h4>
+                  <h4 className="font-medium text-gray-800 mb-2">How does your dog react when unfamiliar people come to your home? Please describe.</h4>
+                  <p className="text-xs text-gray-600 mb-2">Bark, jump, mouth, calm, etc.</p>
                   <div className="bg-gray-50 p-3 rounded">
                     <p className="text-gray-700 text-sm whitespace-pre-wrap">{behaviourQuestionnaire.unfamiliarPeople}</p>
                   </div>
@@ -366,7 +372,7 @@ export default function BehaviourQuestionnaireModal({ behaviourQuestionnaire, is
               )}
               {behaviourQuestionnaire.housetrained && (
                 <div>
-                  <h4 className="font-medium text-gray-800 mb-2">Housetraining</h4>
+                  <h4 className="font-medium text-gray-800 mb-2">Is your dog fully housetrained?</h4>
                   <div className="bg-gray-50 p-3 rounded">
                     <p className="text-gray-700 text-sm whitespace-pre-wrap">{behaviourQuestionnaire.housetrained}</p>
                   </div>
@@ -374,7 +380,8 @@ export default function BehaviourQuestionnaireModal({ behaviourQuestionnaire, is
               )}
               {behaviourQuestionnaire.likesToDo && (
                 <div>
-                  <h4 className="font-medium text-gray-800 mb-2">Activities Besides Walks</h4>
+                  <h4 className="font-medium text-gray-800 mb-2">What does your dog like to do aside from walks?</h4>
+                  <p className="text-xs text-gray-600 mb-2">Enrichment, games, jobs, etc.</p>
                   <div className="bg-gray-50 p-3 rounded">
                     <p className="text-gray-700 text-sm whitespace-pre-wrap">{behaviourQuestionnaire.likesToDo}</p>
                   </div>
@@ -393,7 +400,7 @@ export default function BehaviourQuestionnaireModal({ behaviourQuestionnaire, is
             <div className="space-y-3">
               {behaviourQuestionnaire.likeAboutDog && (
                 <div>
-                  <h4 className="font-medium text-gray-800 mb-2">What They Like About Dog</h4>
+                  <h4 className="font-medium text-gray-800 mb-2">What do you like about your dog?</h4>
                   <div className="bg-gray-50 p-3 rounded">
                     <p className="text-gray-700 text-sm whitespace-pre-wrap">{behaviourQuestionnaire.likeAboutDog}</p>
                   </div>
@@ -401,7 +408,7 @@ export default function BehaviourQuestionnaireModal({ behaviourQuestionnaire, is
               )}
               {behaviourQuestionnaire.mostChallenging && (
                 <div>
-                  <h4 className="font-medium text-gray-800 mb-2">Most Challenging</h4>
+                  <h4 className="font-medium text-gray-800 mb-2">What do you find most challenging about your dog?</h4>
                   <div className="bg-gray-50 p-3 rounded">
                     <p className="text-gray-700 text-sm whitespace-pre-wrap">{behaviourQuestionnaire.mostChallenging}</p>
                   </div>
@@ -420,7 +427,7 @@ export default function BehaviourQuestionnaireModal({ behaviourQuestionnaire, is
             <div className="space-y-3">
               {behaviourQuestionnaire.howGood && (
                 <div>
-                  <h4 className="font-medium text-gray-800 mb-2">How They Reward Good Behavior</h4>
+                  <h4 className="font-medium text-gray-800 mb-2">How do you let your dog know when they have done something "good"?</h4>
                   <div className="bg-gray-50 p-3 rounded">
                     <p className="text-gray-700 text-sm whitespace-pre-wrap">{behaviourQuestionnaire.howGood}</p>
                   </div>
@@ -428,7 +435,7 @@ export default function BehaviourQuestionnaireModal({ behaviourQuestionnaire, is
               )}
               {behaviourQuestionnaire.favouriteRewards && (
                 <div>
-                  <h4 className="font-medium text-gray-800 mb-2">Dog's Favorite Rewards</h4>
+                  <h4 className="font-medium text-gray-800 mb-2">What are your dog's favourite rewards?</h4>
                   <div className="bg-gray-50 p-3 rounded">
                     <p className="text-gray-700 text-sm whitespace-pre-wrap">{behaviourQuestionnaire.favouriteRewards}</p>
                   </div>
@@ -436,7 +443,7 @@ export default function BehaviourQuestionnaireModal({ behaviourQuestionnaire, is
               )}
               {behaviourQuestionnaire.howBad && (
                 <div>
-                  <h4 className="font-medium text-gray-800 mb-2">How They Handle Bad Behavior</h4>
+                  <h4 className="font-medium text-gray-800 mb-2">Do you let your dog know when they have done something "bad"? How?</h4>
                   <div className="bg-gray-50 p-3 rounded">
                     <p className="text-gray-700 text-sm whitespace-pre-wrap">{behaviourQuestionnaire.howBad}</p>
                   </div>
@@ -444,7 +451,8 @@ export default function BehaviourQuestionnaireModal({ behaviourQuestionnaire, is
               )}
               {behaviourQuestionnaire.effectOfBad && (
                 <div>
-                  <h4 className="font-medium text-gray-800 mb-2">Effect of Corrections</h4>
+                  <h4 className="font-medium text-gray-800 mb-2">What effect does your method of telling them they've done something bad have?</h4>
+                  <p className="text-xs text-gray-600 mb-2">ie: no change, stopped behaviour, got worse, only worked with certain person, etc.</p>
                   <div className="bg-gray-50 p-3 rounded">
                     <p className="text-gray-700 text-sm whitespace-pre-wrap">{behaviourQuestionnaire.effectOfBad}</p>
                   </div>
@@ -452,7 +460,8 @@ export default function BehaviourQuestionnaireModal({ behaviourQuestionnaire, is
               )}
               {behaviourQuestionnaire.professionalTraining && (
                 <div>
-                  <h4 className="font-medium text-gray-800 mb-2">Professional Training History</h4>
+                  <h4 className="font-medium text-gray-800 mb-2">Has your dog participated in any professional training before? If yes, please describe.</h4>
+                  <p className="text-xs text-gray-600 mb-2">What type of methods were used? How was your experience and the results?</p>
                   <div className="bg-gray-50 p-3 rounded">
                     <p className="text-gray-700 text-sm whitespace-pre-wrap">{behaviourQuestionnaire.professionalTraining}</p>
                   </div>
@@ -469,11 +478,11 @@ export default function BehaviourQuestionnaireModal({ behaviourQuestionnaire, is
           </div>
           <div className="space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-gray-600">With Dogs</span>
+              <span className="text-gray-600">How would you describe your dog's sociability with other dogs in general?</span>
               <span className="font-medium text-gray-900">{behaviourQuestionnaire.sociabilityDogs}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-gray-600">With People</span>
+              <span className="text-gray-600">How would you describe your dog's sociability with other people in general?</span>
               <span className="font-medium text-gray-900">{behaviourQuestionnaire.sociabilityPeople}</span>
             </div>
           </div>
@@ -483,7 +492,7 @@ export default function BehaviourQuestionnaireModal({ behaviourQuestionnaire, is
         {behaviourQuestionnaire.anythingElseToKnow && (
           <div>
             <div className="text-white text-lg font-bold p-3 mb-3 rounded-lg" style={{ backgroundColor: '#973b00' }}>
-              Additional Information
+              Is there anything else that you would like me to know about your situation or your dog?
             </div>
             <div className="bg-gray-50 p-4 rounded-lg">
               <p className="text-gray-700 whitespace-pre-wrap">{behaviourQuestionnaire.anythingElseToKnow}</p>

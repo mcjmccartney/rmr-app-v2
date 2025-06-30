@@ -120,6 +120,18 @@ export default function BehaviouralBriefModal({ behaviouralBrief, isOpen, onClos
           </div>
         </div>
 
+        {/* Session Type */}
+        {behaviouralBrief.sessionType && (
+          <div>
+            <div className="text-white text-lg font-bold p-3 mb-3 rounded-lg" style={{ backgroundColor: '#973b00' }}>
+              Which type of session would you ideally like?
+            </div>
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <p className="text-gray-700 font-medium">{behaviouralBrief.sessionType}</p>
+            </div>
+          </div>
+        )}
+
         {/* Action Buttons */}
         <div className="flex flex-col gap-3 pt-4 border-t border-gray-200">
           {client && (
