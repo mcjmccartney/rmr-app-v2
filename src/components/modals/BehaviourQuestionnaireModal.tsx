@@ -123,7 +123,7 @@ export default function BehaviourQuestionnaireModal({ behaviourQuestionnaire, is
           <div className="space-y-4">
             {behaviourQuestionnaire.mainHelp && (
               <div>
-                <h4 className="font-medium text-gray-800 mb-2">Main Help Needed</h4>
+                <h4 className="font-medium text-gray-800 mb-2">What is the main thing you would like help with?</h4>
                 <div className="bg-gray-50 p-3 rounded">
                   <p className="text-gray-700 text-sm whitespace-pre-wrap">{behaviourQuestionnaire.mainHelp}</p>
                 </div>
@@ -132,7 +132,7 @@ export default function BehaviourQuestionnaireModal({ behaviourQuestionnaire, is
 
             {behaviourQuestionnaire.firstNoticed && (
               <div>
-                <h4 className="font-medium text-gray-800 mb-2">When First Noticed</h4>
+                <h4 className="font-medium text-gray-800 mb-2">When did you first notice tendencies of this behaviour?</h4>
                 <div className="bg-gray-50 p-3 rounded">
                   <p className="text-gray-700 text-sm whitespace-pre-wrap">{behaviourQuestionnaire.firstNoticed}</p>
                 </div>
@@ -141,7 +141,7 @@ export default function BehaviourQuestionnaireModal({ behaviourQuestionnaire, is
 
             {behaviourQuestionnaire.whenWhereHow && (
               <div>
-                <h4 className="font-medium text-gray-800 mb-2">When, Where & How Often</h4>
+                <h4 className="font-medium text-gray-800 mb-2">When, where and how often does it happen? Be specific</h4>
                 <div className="bg-gray-50 p-3 rounded">
                   <p className="text-gray-700 text-sm whitespace-pre-wrap">{behaviourQuestionnaire.whenWhereHow}</p>
                 </div>
@@ -150,7 +150,8 @@ export default function BehaviourQuestionnaireModal({ behaviourQuestionnaire, is
 
             {behaviourQuestionnaire.recentChange && (
               <div>
-                <h4 className="font-medium text-gray-800 mb-2">Recent Changes</h4>
+                <h4 className="font-medium text-gray-800 mb-2">Has there been a recent change in the behaviour?</h4>
+                <p className="text-xs text-gray-600 mb-2">More frequent? More intense? Different circumstances?</p>
                 <div className="bg-gray-50 p-3 rounded">
                   <p className="text-gray-700 text-sm whitespace-pre-wrap">{behaviourQuestionnaire.recentChange}</p>
                 </div>
@@ -159,7 +160,8 @@ export default function BehaviourQuestionnaireModal({ behaviourQuestionnaire, is
 
             {behaviourQuestionnaire.canAnticipate && (
               <div>
-                <h4 className="font-medium text-gray-800 mb-2">Can Anticipate When It Happens</h4>
+                <h4 className="font-medium text-gray-800 mb-2">Can you anticipate when it is likely to happen?</h4>
+                <p className="text-xs text-gray-600 mb-2">Location, who is present, trigger, etc.</p>
                 <div className="bg-gray-50 p-3 rounded">
                   <p className="text-gray-700 text-sm whitespace-pre-wrap">{behaviourQuestionnaire.canAnticipate}</p>
                 </div>
@@ -168,7 +170,7 @@ export default function BehaviourQuestionnaireModal({ behaviourQuestionnaire, is
 
             {behaviourQuestionnaire.whyThinking && (
               <div>
-                <h4 className="font-medium text-gray-800 mb-2">Why Dog Is Doing This</h4>
+                <h4 className="font-medium text-gray-800 mb-2">Why do you think your dog is doing this?</h4>
                 <div className="bg-gray-50 p-3 rounded">
                   <p className="text-gray-700 text-sm whitespace-pre-wrap">{behaviourQuestionnaire.whyThinking}</p>
                 </div>
@@ -177,7 +179,7 @@ export default function BehaviourQuestionnaireModal({ behaviourQuestionnaire, is
 
             {behaviourQuestionnaire.whatDoneSoFar && (
               <div>
-                <h4 className="font-medium text-gray-800 mb-2">What's Been Tried So Far</h4>
+                <h4 className="font-medium text-gray-800 mb-2">What have you done so far to address this problem? With what effect?</h4>
                 <div className="bg-gray-50 p-3 rounded">
                   <p className="text-gray-700 text-sm whitespace-pre-wrap">{behaviourQuestionnaire.whatDoneSoFar}</p>
                 </div>
@@ -186,7 +188,7 @@ export default function BehaviourQuestionnaireModal({ behaviourQuestionnaire, is
 
             {behaviourQuestionnaire.idealGoal && (
               <div>
-                <h4 className="font-medium text-gray-800 mb-2">Ideal Goal/Outcome</h4>
+                <h4 className="font-medium text-gray-800 mb-2">What would you consider your ideal goal/outcome of a training program?</h4>
                 <div className="bg-gray-50 p-3 rounded">
                   <p className="text-gray-700 text-sm whitespace-pre-wrap">{behaviourQuestionnaire.idealGoal}</p>
                 </div>

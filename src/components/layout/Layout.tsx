@@ -18,11 +18,14 @@ export default function Layout({ children }: LayoutProps) {
   // Define the main navigation pages in order
   const mainPages = ['/clients', '/calendar', '/sessions'];
 
-  // Keyboard navigation for main pages
+  // Keyboard navigation for main pages (excluding calendar page)
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       // Only handle navigation on main pages and when no modals are open
       if (!mainPages.includes(pathname)) return;
+
+      // Don't handle left/right navigation on calendar page (calendar has its own navigation)
+      if (pathname === '/calendar') return;
 
       // Check if any input/textarea is focused
       const activeElement = document.activeElement;

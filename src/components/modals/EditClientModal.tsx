@@ -142,7 +142,7 @@ export default function EditClientModal({ client, isOpen, onClose }: EditClientM
             onClick={addPartnerField}
             className="text-amber-600 hover:text-amber-700 text-sm font-medium mt-2"
           >
-            + Add Partner Name
+            + Add partner name
           </button>
         </div>
 

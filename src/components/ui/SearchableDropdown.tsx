@@ -29,6 +29,7 @@ export default function SearchableDropdown({
 }: SearchableDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -56,6 +57,52 @@ export default function SearchableDropdown({
     }
   }, [isOpen]);
 
+  // Reset highlighted index when search term changes
+  useEffect(() => {
+    setHighlightedIndex(-1);
+  }, [searchTerm]);
+
+  // Keyboard navigation
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const filteredOptions = options.filter(option =>
+        option.label.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+
+      switch (event.key) {
+        case 'ArrowDown':
+          event.preventDefault();
+          setHighlightedIndex(prev =>
+            prev < filteredOptions.length - 1 ? prev + 1 : 0
+          );
+          break;
+        case 'ArrowUp':
+          event.preventDefault();
+          setHighlightedIndex(prev =>
+            prev > 0 ? prev - 1 : filteredOptions.length - 1
+          );
+          break;
+        case 'Enter':
+          event.preventDefault();
+          if (highlightedIndex >= 0 && highlightedIndex < filteredOptions.length) {
+            handleSelect(filteredOptions[highlightedIndex].value);
+          }
+          break;
+        case 'Escape':
+          event.preventDefault();
+          setIsOpen(false);
+          setSearchTerm('');
+          setHighlightedIndex(-1);
+          break;
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, searchTerm, highlightedIndex, options]);
+
   // Filter options based on search term
   const filteredOptions = options.filter(option =>
     option.label.toLowerCase().includes(searchTerm.toLowerCase())
@@ -67,6 +114,7 @@ export default function SearchableDropdown({
     onChange(optionValue);
     setIsOpen(false);
     setSearchTerm(''); // Clear search after selection
+    setHighlightedIndex(-1); // Reset highlight
   };
 
   const handleToggle = () => {
@@ -74,6 +122,7 @@ export default function SearchableDropdown({
       setIsOpen(!isOpen);
       if (!isOpen) {
         setSearchTerm(''); // Clear search when opening
+        setHighlightedIndex(-1); // Reset highlight
       }
     }
   };
@@ -119,13 +168,17 @@ export default function SearchableDropdown({
           {/* Options List */}
           <div className="max-h-60 overflow-y-auto">
             {filteredOptions.length > 0 ? (
-              filteredOptions.map((option) => (
+              filteredOptions.map((option, index) => (
                 <button
                   key={option.value}
                   type="button"
                   onClick={() => handleSelect(option.value)}
-                  className={`w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors ${
-                    option.value === value ? 'bg-amber-50 text-amber-900' : 'text-gray-900'
+                  className={`w-full px-4 py-3 text-left transition-colors ${
+                    index === highlightedIndex
+                      ? 'bg-amber-100 text-amber-900'
+                      : option.value === value
+                        ? 'bg-amber-50 text-amber-900'
+                        : 'text-gray-900 hover:bg-gray-50'
                   }`}
                 >
                   {option.label}

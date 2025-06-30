@@ -101,8 +101,9 @@ export default function BehaviouralBriefModal({ behaviouralBrief, isOpen, onClos
         {/* Life with Dog */}
         <div>
           <div className="text-white text-lg font-bold p-3 mb-3 rounded-lg" style={{ backgroundColor: '#973b00' }}>
-            Life with Dog
+            In general, how is life with your dog, and what would you like help with?
           </div>
+          <p className="text-xs text-gray-600 mb-2">New puppy, new dog, new rescue, general training, behaviour concern, etc.</p>
           <div className="bg-gray-50 p-4 rounded-lg">
             <p className="text-gray-700 whitespace-pre-wrap">{behaviouralBrief.lifeWithDog}</p>
           </div>
@@ -111,8 +112,9 @@ export default function BehaviouralBriefModal({ behaviouralBrief, isOpen, onClos
         {/* Best Outcome */}
         <div>
           <div className="text-white text-lg font-bold p-3 mb-3 rounded-lg" style={{ backgroundColor: '#973b00' }}>
-            Desired Outcome
+            What would be the best outcome for you and your dog?
           </div>
+          <p className="text-xs text-gray-600 mb-2">E.g. a better relationship, a happier dog, an easier home life, more relaxed walks, etc.</p>
           <div className="bg-gray-50 p-4 rounded-lg">
             <p className="text-gray-700 whitespace-pre-wrap">{behaviouralBrief.bestOutcome}</p>
           </div>

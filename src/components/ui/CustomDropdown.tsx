@@ -26,6 +26,7 @@ export default function CustomDropdown({
   disabled = false
 }: CustomDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
@@ -33,6 +34,7 @@ export default function CustomDropdown({
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsOpen(false);
+        setHighlightedIndex(-1);
       }
     };
 
@@ -41,6 +43,42 @@ export default function CustomDropdown({
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  // Keyboard navigation
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      switch (event.key) {
+        case 'ArrowDown':
+          event.preventDefault();
+          setHighlightedIndex(prev =>
+            prev < options.length - 1 ? prev + 1 : 0
+          );
+          break;
+        case 'ArrowUp':
+          event.preventDefault();
+          setHighlightedIndex(prev =>
+            prev > 0 ? prev - 1 : options.length - 1
+          );
+          break;
+        case 'Enter':
+          event.preventDefault();
+          if (highlightedIndex >= 0 && highlightedIndex < options.length) {
+            handleSelect(options[highlightedIndex].value);
+          }
+          break;
+        case 'Escape':
+          event.preventDefault();
+          setIsOpen(false);
+          setHighlightedIndex(-1);
+          break;
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, highlightedIndex, options]);
 
   const selectedOption = options.find(option => option.value === value);
 
@@ -58,6 +96,7 @@ export default function CustomDropdown({
     console.log('CustomDropdown handleSelect:', { optionValue, placeholder });
     onChange(optionValue);
     setIsOpen(false);
+    setHighlightedIndex(-1);
   };
 
   return (
@@ -83,13 +122,17 @@ export default function CustomDropdown({
 
       {isOpen && (
         <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-          {options.map((option) => (
+          {options.map((option, index) => (
             <button
               key={option.value}
               type="button"
               onClick={() => handleSelect(option.value)}
-              className={`w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors ${
-                option.value === value ? 'bg-amber-50 text-amber-900' : 'text-gray-900'
+              className={`w-full px-4 py-3 text-left transition-colors ${
+                index === highlightedIndex
+                  ? 'bg-amber-100 text-amber-900'
+                  : option.value === value
+                    ? 'bg-amber-50 text-amber-900'
+                    : 'text-gray-900 hover:bg-gray-50'
               }`}
             >
               {option.label}

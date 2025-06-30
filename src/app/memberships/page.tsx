@@ -64,8 +64,8 @@ export default function MembershipsPage() {
     return memberships.reduce((total, membership) => total + membership.amount, 0);
   };
 
-  // Calculate percentage change from previous month
-  const calculatePercentageChange = (currentMonthKey: string, currentRevenue: number) => {
+  // Calculate percentage change from previous month based on number of memberships
+  const calculatePercentageChange = (currentMonthKey: string, currentMemberships: Membership[]) => {
     // Parse current month string like "June 2025"
     const [currentMonthName, currentYearStr] = currentMonthKey.split(' ');
     const currentYear = parseInt(currentYearStr);
@@ -90,12 +90,14 @@ export default function MembershipsPage() {
       return null; // No previous month data
     }
 
-    const previousRevenue = calculateMonthlyRevenue(previousMonthMemberships);
-    if (previousRevenue === 0) {
-      return currentRevenue > 0 ? 100 : 0; // If previous was 0 and current > 0, show 100% increase
+    const currentCount = currentMemberships.length;
+    const previousCount = previousMonthMemberships.length;
+
+    if (previousCount === 0) {
+      return currentCount > 0 ? 100 : 0; // If previous was 0 and current > 0, show 100% increase
     }
 
-    return ((currentRevenue - previousRevenue) / previousRevenue) * 100;
+    return ((currentCount - previousCount) / previousCount) * 100;
   };
 
   return (
@@ -123,7 +125,7 @@ export default function MembershipsPage() {
             {sortedMonths.map((monthKey) => {
               const monthMemberships = membershipsByMonth[monthKey];
               const monthlyRevenue = calculateMonthlyRevenue(monthMemberships);
-              const percentageChange = calculatePercentageChange(monthKey, monthlyRevenue);
+              const percentageChange = calculatePercentageChange(monthKey, monthMemberships);
               const isExpanded = expandedMonths.has(monthKey);
 
               return (
