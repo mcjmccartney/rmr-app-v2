@@ -188,10 +188,16 @@ export interface GroupCoachingReset {
   updatedAt?: string;
 }
 
+export interface PartnerName {
+  firstName: string;
+  lastName: string;
+}
+
 export interface Client {
   id: string;
   firstName: string;
   lastName: string;
+  partnerNames?: PartnerName[]; // Array of partner names
   dogName?: string; // Made optional - some clients might not have a dog yet
   otherDogs?: string[];
   phone?: string;

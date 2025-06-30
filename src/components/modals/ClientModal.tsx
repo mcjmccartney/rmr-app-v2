@@ -169,6 +169,15 @@ export default function ClientModal({ client, isOpen, onClose, onEditClient, onV
             </div>
           )}
 
+          {currentClient.partnerNames && currentClient.partnerNames.length > 0 && (
+            <div className="flex justify-between items-start py-4">
+              <span className="text-gray-600 font-medium">Partner Names</span>
+              <span className="font-semibold text-gray-900 text-right max-w-48">
+                {currentClient.partnerNames.map(partner => `${partner.firstName} ${partner.lastName}`).join(', ')}
+              </span>
+            </div>
+          )}
+
           {currentClient.otherDogs && currentClient.otherDogs.length > 0 && (
             <div className="flex justify-between items-start py-4">
               <span className="text-gray-600 font-medium">Other Dogs</span>

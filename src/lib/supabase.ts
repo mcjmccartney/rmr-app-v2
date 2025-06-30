@@ -38,6 +38,7 @@ export type Database = {
           id: string
           first_name: string
           last_name: string
+          partner_names: any[] | null
           dog_name: string | null
           other_dogs: string[] | null
           phone: string | null
@@ -48,6 +49,8 @@ export type Database = {
           avatar: string | null
           behavioural_brief_id: string | null
           behaviour_questionnaire_id: string | null
+          booking_terms_signed: boolean | null
+          booking_terms_signed_date: string | null
           created_at: string
           updated_at: string
         }

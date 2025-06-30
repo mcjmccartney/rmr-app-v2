@@ -27,12 +27,27 @@ export default function MembershipsPage() {
     return acc;
   }, {} as Record<string, Membership[]>);
 
-  // Sort months in descending order (newest first)
+  // Sort months with current year first, then chronologically within each year
   const sortedMonths = Object.keys(membershipsByMonth).sort((a, b) => {
-    // Parse month strings like "June 2025" back to dates for proper sorting
-    const dateA = new Date(a + ' 1'); // Add day to make it a valid date
-    const dateB = new Date(b + ' 1');
-    return dateB.getTime() - dateA.getTime();
+    // Parse month strings like "June 2025" to get month and year
+    const [monthA, yearA] = a.split(' ');
+    const [monthB, yearB] = b.split(' ');
+
+    const yearNumA = parseInt(yearA);
+    const yearNumB = parseInt(yearB);
+
+    // First sort by year (descending - newest year first)
+    if (yearNumA !== yearNumB) {
+      return yearNumB - yearNumA;
+    }
+
+    // Within the same year, sort by month (descending - newest month first)
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                       'July', 'August', 'September', 'October', 'November', 'December'];
+    const monthIndexA = monthNames.indexOf(monthA);
+    const monthIndexB = monthNames.indexOf(monthB);
+
+    return monthIndexB - monthIndexA;
   });
 
   const toggleMonth = (monthKey: string) => {
@@ -51,9 +66,24 @@ export default function MembershipsPage() {
 
   // Calculate percentage change from previous month
   const calculatePercentageChange = (currentMonthKey: string, currentRevenue: number) => {
-    const currentDate = new Date(currentMonthKey);
-    const previousMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
-    const previousMonthKey = previousMonth.toLocaleDateString('en-GB', { year: 'numeric', month: 'long' });
+    // Parse current month string like "June 2025"
+    const [currentMonthName, currentYearStr] = currentMonthKey.split(' ');
+    const currentYear = parseInt(currentYearStr);
+
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                       'July', 'August', 'September', 'October', 'November', 'December'];
+    const currentMonthIndex = monthNames.indexOf(currentMonthName);
+
+    // Calculate previous month
+    let previousMonthIndex = currentMonthIndex - 1;
+    let previousYear = currentYear;
+
+    if (previousMonthIndex < 0) {
+      previousMonthIndex = 11; // December
+      previousYear = currentYear - 1;
+    }
+
+    const previousMonthKey = `${monthNames[previousMonthIndex]} ${previousYear}`;
 
     const previousMonthMemberships = membershipsByMonth[previousMonthKey];
     if (!previousMonthMemberships || previousMonthMemberships.length === 0) {
