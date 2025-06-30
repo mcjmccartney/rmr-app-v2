@@ -18,7 +18,7 @@ function BehaviourQuestionnaireForm() {
     address1: '',
     address2: '',
     city: '',
-    county: '',
+    stateProvince: '',
     zipPostalCode: '',
     country: '',
     howDidYouHear: '',
@@ -143,7 +143,7 @@ function BehaviourQuestionnaireForm() {
         address1: formData.address1,
         address2: formData.address2,
         city: formData.city,
-        county: formData.county,
+        stateProvince: formData.stateProvince,
         zipPostalCode: formData.zipPostalCode,
         country: formData.country,
         howDidYouHear: formData.howDidYouHear,
@@ -200,7 +200,7 @@ function BehaviourQuestionnaireForm() {
           dogName: formData.dogName,
           phone: formData.contactNumber,
           email: formData.email,
-          address: `${formData.address1}${formData.address2 ? ', ' + formData.address2 : ''}, ${formData.city}, ${formData.county} ${formData.zipPostalCode}, ${formData.country}`,
+          address: `${formData.address1}${formData.address2 ? ', ' + formData.address2 : ''}, ${formData.city}, ${formData.stateProvince} ${formData.zipPostalCode}, ${formData.country}`,
           active: true,
           membership: false,
         });
@@ -354,11 +354,11 @@ function BehaviourQuestionnaireForm() {
                           />
                         </div>
                         <div>
-                          <label className="block text-xs text-gray-600 mb-1">County</label>
+                          <label className="block text-xs text-gray-600 mb-1">State/Province</label>
                           <input
                             type="text"
-                            name="county"
-                            value={formData.county}
+                            name="stateProvince"
+                            value={formData.stateProvince}
                             onChange={handleInputChange}
                             className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
                             style={{ backgroundColor: '#ebeadf' }}
