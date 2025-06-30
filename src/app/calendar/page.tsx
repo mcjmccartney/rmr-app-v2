@@ -542,7 +542,10 @@ export default function CalendarPage() {
         className="text-white px-4 py-1.5 flex-shrink-0 w-full text-left disabled:cursor-default"
         style={{
           backgroundColor: (() => {
-            if (!firstSession || !firstSessionClient) return '#973b00';
+            if (!firstSession) return '#973b00';
+
+            // For Group and RMR Live sessions without a specific client, use default color
+            if (!firstSessionClient) return '#e17100'; // Use ready color for group sessions
 
             // Check if first session client has both booking terms signed and questionnaire filled
             const clientEmails = getClientEmails(firstSessionClient, state.clientEmailAliases || {});
@@ -555,10 +558,14 @@ export default function CalendarPage() {
           })()
         }}
       >
-        {firstSession && firstSessionClient ? (
+        {firstSession ? (
           <>
             <div className="text-lg font-medium">
-              {formatTime(firstSession.bookingTime)} | {firstSessionClient.firstName} {firstSessionClient.lastName}{firstSession.dogName ? ` w/ ${firstSession.dogName}` : firstSessionClient.dogName ? ` w/ ${firstSessionClient.dogName}` : ''}
+              {formatTime(firstSession.bookingTime)} | {
+                firstSessionClient
+                  ? `${firstSessionClient.firstName} ${firstSessionClient.lastName}${firstSession.dogName ? ` w/ ${firstSession.dogName}` : firstSessionClient.dogName ? ` w/ ${firstSessionClient.dogName}` : ''}`
+                  : firstSession.sessionType // For Group and RMR Live sessions without a specific client
+              }
             </div>
             <div className="text-white/80 text-sm">
               {firstSession.sessionType} • {formatDayDate(firstSession.bookingDate)}

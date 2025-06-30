@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useApp } from '@/context/AppContext';
 import Header from '@/components/layout/Header';
 import { Membership } from '@/types';
-import { ChevronDown, ChevronRight, CreditCard } from 'lucide-react';
+import { ChevronDown, ChevronRight, CreditCard, TrendingUp, TrendingDown } from 'lucide-react';
 
 export default function MembershipsPage() {
   const { state } = useApp();
@@ -48,6 +48,25 @@ export default function MembershipsPage() {
     return memberships.reduce((total, membership) => total + membership.amount, 0);
   };
 
+  // Calculate percentage change from previous month
+  const calculatePercentageChange = (currentMonthKey: string, currentRevenue: number) => {
+    const currentDate = new Date(currentMonthKey);
+    const previousMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
+    const previousMonthKey = previousMonth.toLocaleDateString('en-GB', { year: 'numeric', month: 'long' });
+
+    const previousMonthMemberships = membershipsByMonth[previousMonthKey];
+    if (!previousMonthMemberships || previousMonthMemberships.length === 0) {
+      return null; // No previous month data
+    }
+
+    const previousRevenue = calculateMonthlyRevenue(previousMonthMemberships);
+    if (previousRevenue === 0) {
+      return currentRevenue > 0 ? 100 : 0; // If previous was 0 and current > 0, show 100% increase
+    }
+
+    return ((currentRevenue - previousRevenue) / previousRevenue) * 100;
+  };
+
   return (
     <div className="min-h-screen bg-white flex flex-col">
       <div className="bg-amber-800">
@@ -73,6 +92,7 @@ export default function MembershipsPage() {
             {sortedMonths.map((monthKey) => {
               const monthMemberships = membershipsByMonth[monthKey];
               const monthlyRevenue = calculateMonthlyRevenue(monthMemberships);
+              const percentageChange = calculatePercentageChange(monthKey, monthlyRevenue);
               const isExpanded = expandedMonths.has(monthKey);
 
               return (
@@ -83,9 +103,25 @@ export default function MembershipsPage() {
                     className="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
                   >
                     <div className="flex flex-col items-start">
-                      <h2 className="text-lg font-semibold text-gray-900">
-                        {monthKey} - £{monthlyRevenue.toFixed(2)}
-                      </h2>
+                      <div className="flex items-center gap-2">
+                        <h2 className="text-lg font-semibold text-gray-900">
+                          {monthKey} - £{monthlyRevenue.toFixed(2)}
+                        </h2>
+                        {percentageChange !== null && (
+                          <div className="flex items-center gap-1">
+                            {percentageChange >= 0 ? (
+                              <TrendingUp size={16} className="text-green-600" />
+                            ) : (
+                              <TrendingDown size={16} className="text-red-600" />
+                            )}
+                            <span className={`text-sm font-medium ${
+                              percentageChange >= 0 ? 'text-green-600' : 'text-red-600'
+                            }`}>
+                              {percentageChange >= 0 ? '+' : ''}{percentageChange.toFixed(1)}%
+                            </span>
+                          </div>
+                        )}
+                      </div>
                       <p className="text-sm text-gray-600 mt-1">
                         {monthMemberships.length} Payments
                       </p>

@@ -266,6 +266,15 @@ export default function SessionModal({ session, isOpen, onClose, onEditSession, 
             </div>
           )}
 
+          {(client?.phone || behaviourQuestionnaire?.contactNumber) && (
+            <div className="flex justify-between items-center py-4">
+              <span className="text-gray-600 font-medium">Phone</span>
+              <span className="font-semibold text-gray-900 text-right">
+                {client?.phone || behaviourQuestionnaire?.contactNumber}
+              </span>
+            </div>
+          )}
+
           {client?.address && (
             <div className="flex justify-between items-start py-4">
               <span className="text-gray-600 font-medium">Address</span>
