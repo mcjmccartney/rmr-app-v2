@@ -117,13 +117,13 @@ export async function GET(request: NextRequest) {
         notes: session.notes,
         quote: session.quote
       },
-      client: session.clients ? {
-        id: session.clients.id,
-        firstName: session.clients.first_name,
-        lastName: session.clients.last_name,
-        email: session.clients.email,
-        dogName: session.clients.dog_name,
-        fullName: `${session.clients.first_name} ${session.clients.last_name}`.trim()
+      client: session.clients && session.clients.length > 0 ? {
+        id: session.clients[0].id,
+        firstName: session.clients[0].first_name,
+        lastName: session.clients[0].last_name,
+        email: session.clients[0].email,
+        dogName: session.clients[0].dog_name,
+        fullName: `${session.clients[0].first_name} ${session.clients[0].last_name}`.trim()
       } : null
     }));
 
