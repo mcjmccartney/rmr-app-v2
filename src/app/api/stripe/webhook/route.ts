@@ -135,6 +135,44 @@ export async function POST(request: NextRequest) {
           }
         } else {
           console.log('No client found with email:', membershipData.email);
+
+          // Create a basic client profile for the new member
+          try {
+            // Extract first name, last name from email if possible, or use defaults
+            const emailParts = membershipData.email.split('@')[0];
+            const nameParts = emailParts.split(/[._-]/);
+
+            const firstName = nameParts[0] ? nameParts[0].charAt(0).toUpperCase() + nameParts[0].slice(1) : 'New';
+            const lastName = nameParts[1] ? nameParts[1].charAt(0).toUpperCase() + nameParts[1].slice(1) : 'Member';
+
+            const { data: newClient, error: createError } = await supabase
+              .from('clients')
+              .insert({
+                first_name: firstName,
+                last_name: lastName,
+                email: membershipData.email,
+                postcode: body.postcode || '', // Use postcode from webhook if provided
+                active: true,
+                membership: true
+              })
+              .select();
+
+            if (createError) {
+              console.error('Error creating new client:', createError);
+              clientError = createError;
+            } else {
+              clientData = newClient;
+              console.log('Successfully created new client for member:', {
+                email: membershipData.email,
+                firstName,
+                lastName,
+                clientId: newClient[0]?.id
+              });
+            }
+          } catch (createClientError) {
+            console.error('Error creating new client profile:', createClientError);
+            clientError = createClientError;
+          }
         }
       }
     } catch (error) {

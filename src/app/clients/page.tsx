@@ -367,18 +367,6 @@ export default function ClientsPage() {
                             </div>
 
                             <div className="flex items-center space-x-2">
-                              {/* Form indicators */}
-                              {client.behaviouralBriefId && (
-                                <div className="bg-green-100 p-2 rounded-full" title="Has Behavioural Brief">
-                                  <ClipboardList size={16} className="text-green-600" />
-                                </div>
-                              )}
-                              {client.behaviourQuestionnaireId && (
-                                <div className="bg-blue-100 p-2 rounded-full" title="Has Behaviour Questionnaire">
-                                  <FileQuestion size={16} className="text-blue-600" />
-                                </div>
-                              )}
-
                               {/* Group Coaching Button - inline */}
                               {showAddedToSessionButton && (
                                 <button
@@ -427,18 +415,7 @@ export default function ClientsPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center space-x-2">
-                    {client.behaviouralBriefId && (
-                      <div className="bg-green-100 p-2 rounded-full" title="Has Behavioural Brief">
-                        <ClipboardList size={16} className="text-green-600" />
-                      </div>
-                    )}
-                    {client.behaviourQuestionnaireId && (
-                      <div className="bg-blue-100 p-2 rounded-full" title="Has Behaviour Questionnaire">
-                        <FileQuestion size={16} className="text-blue-600" />
-                      </div>
-                    )}
-                  </div>
+
                 </div>
               ))}
             </div>
