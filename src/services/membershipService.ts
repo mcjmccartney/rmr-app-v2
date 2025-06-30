@@ -42,6 +42,7 @@ export const membershipService = {
   // Get memberships by client ID (not used since we don't have client_id in your table)
   async getByClientId(clientId: string): Promise<Membership[]> {
     // Since your table doesn't have client_id, return empty array
+    // This function is kept for compatibility but doesn't query the database
     return []
   },
 
@@ -185,15 +186,11 @@ export const membershipService = {
   },
 
   // Update client ID for memberships (for pairing with existing clients)
+  // Note: This function is kept for compatibility but doesn't update the database
+  // since the memberships table doesn't have a client_id column.
+  // Memberships are paired with clients by email matching instead.
   async updateClientId(email: string, clientId: string): Promise<void> {
-    const { error } = await supabase
-      .from('memberships')
-      .update({ client_id: clientId })
-      .eq('email', email)
-
-    if (error) {
-      console.error('Error updating membership client ID:', error)
-      throw error
-    }
+    // No-op: memberships are paired by email, not by storing client_id
+    console.log(`Membership pairing: ${email} paired with client ${clientId} (email-based matching)`);
   }
 }

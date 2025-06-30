@@ -176,6 +176,7 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
           clientId: updatedSession.clientId,
           clientFirstName: client?.firstName || '',
           clientEmail: client?.email || '',
+          dogName: client?.dogName || '',
           sessionType: updatedSession.sessionType,
           bookingDate: updatedSession.bookingDate,
           bookingTime: updatedSession.bookingTime,
@@ -205,14 +206,28 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
           return;
         }
 
-        await fetch('https://hook.eu1.make.com/yaoalfe77uqtw4xv9fbh5atf4okq14wm', {
+        console.log('Sending webhook data to Make.com:', webhookPayload);
+
+        const webhookResponse = await fetch('https://hook.eu1.make.com/yaoalfe77uqtw4xv9fbh5atf4okq14wm', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(webhookPayload)
         });
-        console.log('Session update webhook triggered successfully');
+
+        console.log('Session update webhook response:', {
+          status: webhookResponse.status,
+          statusText: webhookResponse.statusText,
+          ok: webhookResponse.ok
+        });
+
+        if (!webhookResponse.ok) {
+          const responseText = await webhookResponse.text();
+          console.error('Webhook failed with response:', responseText);
+        } else {
+          console.log('Session update webhook triggered successfully');
+        }
         } catch (webhookError) {
           console.error('Failed to trigger session update webhook:', webhookError);
           // Don't block the UI for webhook failures

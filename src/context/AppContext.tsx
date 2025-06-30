@@ -783,11 +783,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const client = session.clientId ? state.clients.find(c => c.id === session.clientId) : null;
 
       if (!session.eventId) {
-        console.log('No eventId found for session, skipping calendar update');
+        console.log('No eventId found for session, skipping calendar update. Session:', {
+          id: session.id,
+          eventId: session.eventId,
+          clientId: session.clientId,
+          sessionType: session.sessionType
+        });
         return;
       }
 
-      console.log('Updating Google Calendar event for session:', session.id);
+      console.log('Updating Google Calendar event for session:', {
+        sessionId: session.id,
+        eventId: session.eventId,
+        clientName: client ? `${client.firstName} ${client.lastName}`.trim() : session.sessionType,
+        bookingDate: session.bookingDate,
+        bookingTime: session.bookingTime
+      });
 
       // Update Google Calendar event via API route with timeout
       const controller = new AbortController();
