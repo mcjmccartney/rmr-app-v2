@@ -82,7 +82,7 @@ export interface BehaviourQuestionnaire {
   address1: string;
   address2?: string;
   city: string;
-  stateProvince: string;
+  county: string;
   zipPostalCode: string;
   country: string;
   howDidYouHear: string;

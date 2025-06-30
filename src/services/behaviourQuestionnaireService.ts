@@ -14,7 +14,7 @@ function dbRowToBehaviourQuestionnaire(row: Record<string, any>): BehaviourQuest
     address1: row.address1,
     address2: row.address2,
     city: row.city,
-    stateProvince: row.state_province,
+    county: row.county,
     zipPostalCode: row.zip_postal_code,
     country: row.country,
     howDidYouHear: row.how_did_you_hear,
@@ -78,7 +78,7 @@ function behaviourQuestionnaireToDbRow(questionnaire: Partial<BehaviourQuestionn
   if (questionnaire.address1 !== undefined) row.address1 = questionnaire.address1;
   if (questionnaire.address2 !== undefined) row.address2 = questionnaire.address2;
   if (questionnaire.city !== undefined) row.city = questionnaire.city;
-  if (questionnaire.stateProvince !== undefined) row.state_province = questionnaire.stateProvince;
+  if (questionnaire.county !== undefined) row.county = questionnaire.county;
   if (questionnaire.zipPostalCode !== undefined) row.zip_postal_code = questionnaire.zipPostalCode;
   if (questionnaire.country !== undefined) row.country = questionnaire.country;
   if (questionnaire.howDidYouHear !== undefined) row.how_did_you_hear = questionnaire.howDidYouHear;

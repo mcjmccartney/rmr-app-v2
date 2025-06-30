@@ -112,7 +112,15 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
       const timeChanged = session.bookingTime !== formData.time;
       const dateTimeChanged = dateChanged || timeChanged;
 
-      console.log('Updating session...', { dateTimeChanged, dateChanged, timeChanged });
+      console.log('Updating session...', {
+        dateTimeChanged,
+        dateChanged,
+        timeChanged,
+        oldDate: session.bookingDate,
+        newDate: formData.date,
+        oldTime: session.bookingTime,
+        newTime: formData.time
+      });
 
       // Always update the session first
       const updatedSession = await updateSession(session.id, updates);
@@ -128,6 +136,13 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
 
       // Trigger session update webhook (only for future sessions)
       const isPastSession = isSessionInPast(updatedSession.bookingDate, updatedSession.bookingTime);
+      console.log('Session date check:', {
+        sessionDate: updatedSession.bookingDate,
+        sessionTime: updatedSession.bookingTime,
+        isPastSession,
+        currentTime: new Date().toISOString()
+      });
+
       if (!isPastSession) {
         try {
           console.log('Triggering session update webhook');
@@ -167,28 +182,46 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
             q.dogName?.toLowerCase() === client.dogName?.toLowerCase()
           ) : false;
 
-        await fetch('https://hook.eu1.make.com/yaoalfe77uqtw4xv9fbh5atf4okq14wm', {
+        const webhookData = {
+          sessionId: updatedSession.id,
+          clientId: updatedSession.clientId,
+          clientFirstName: client?.firstName || '',
+          clientEmail: client?.email || '',
+          dogName: client?.dogName || '',
+          sessionType: updatedSession.sessionType,
+          bookingDate: updatedSession.bookingDate,
+          bookingTime: updatedSession.bookingTime,
+          notes: updatedSession.notes,
+          quote: updatedSession.quote,
+          eventId: updatedSession.eventId,
+          hasSignedBookingTerms,
+          hasFilledQuestionnaire,
+          updatedAt: new Date().toISOString(),
+          isUpdate: true
+        };
+
+        console.log('Sending webhook data to Make.com:', webhookData);
+
+        const webhookResponse = await fetch('https://hook.eu1.make.com/yaoalfe77uqtw4xv9fbh5atf4okq14wm', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            sessionId: updatedSession.id,
-            clientId: updatedSession.clientId,
-            clientFirstName: client?.firstName || '',
-            clientEmail: client?.email || '',
-            sessionType: updatedSession.sessionType,
-            bookingDate: updatedSession.bookingDate,
-            bookingTime: updatedSession.bookingTime,
-            notes: updatedSession.notes,
-            quote: updatedSession.quote,
-            eventId: updatedSession.eventId,
-            hasSignedBookingTerms,
-            hasFilledQuestionnaire,
-            updatedAt: new Date().toISOString()
-          })
+          body: JSON.stringify(webhookData)
         });
-        console.log('Session update webhook triggered successfully');
+
+        console.log('Session update webhook response:', {
+          status: webhookResponse.status,
+          statusText: webhookResponse.statusText,
+          ok: webhookResponse.ok
+        });
+
+        if (!webhookResponse.ok) {
+          const responseText = await webhookResponse.text();
+          console.error('Webhook failed with response:', responseText);
+        } else {
+          console.log('Session update webhook triggered successfully');
+        }
         } catch (webhookError) {
           console.error('Failed to trigger session update webhook:', webhookError);
           // Don't block the UI for webhook failures
