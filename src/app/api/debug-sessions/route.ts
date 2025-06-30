@@ -52,12 +52,12 @@ export async function GET(request: NextRequest) {
           notes: sessionData.notes,
           quote: sessionData.quote
         },
-        client: sessionData.clients ? {
-          id: sessionData.clients.id,
-          firstName: sessionData.clients.first_name,
-          lastName: sessionData.clients.last_name,
-          email: sessionData.clients.email,
-          dogName: sessionData.clients.dog_name
+        client: sessionData.clients && sessionData.clients.length > 0 ? {
+          id: sessionData.clients[0].id,
+          firstName: sessionData.clients[0].first_name,
+          lastName: sessionData.clients[0].last_name,
+          email: sessionData.clients[0].email,
+          dogName: sessionData.clients[0].dog_name
         } : null
       });
     }
