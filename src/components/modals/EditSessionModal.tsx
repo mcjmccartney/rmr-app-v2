@@ -192,13 +192,26 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
                                 webhookPayload.bookingDate &&
                                 webhookPayload.bookingTime;
 
-        if (!hasEssentialData) {
-          console.log('Skipping webhook - missing essential data:', {
+        // Additional validation to prevent empty/invalid payloads
+        const hasValidData = webhookPayload.sessionId?.trim() &&
+                            webhookPayload.clientEmail?.trim() &&
+                            webhookPayload.sessionType?.trim() &&
+                            webhookPayload.bookingDate?.trim() &&
+                            webhookPayload.bookingTime?.trim() &&
+                            webhookPayload.clientEmail.includes('@'); // Basic email validation
+
+        if (!hasEssentialData || !hasValidData) {
+          console.log('Skipping webhook - missing or invalid essential data:', {
             hasSessionId: !!webhookPayload.sessionId,
             hasClientEmail: !!webhookPayload.clientEmail,
             hasSessionType: !!webhookPayload.sessionType,
             hasBookingDate: !!webhookPayload.bookingDate,
-            hasBookingTime: !!webhookPayload.bookingTime
+            hasBookingTime: !!webhookPayload.bookingTime,
+            validSessionId: !!webhookPayload.sessionId?.trim(),
+            validClientEmail: !!webhookPayload.clientEmail?.trim() && webhookPayload.clientEmail.includes('@'),
+            validSessionType: !!webhookPayload.sessionType?.trim(),
+            validBookingDate: !!webhookPayload.bookingDate?.trim(),
+            validBookingTime: !!webhookPayload.bookingTime?.trim()
           });
           return;
         }

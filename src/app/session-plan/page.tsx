@@ -445,6 +445,37 @@ function SessionPlanContent() {
     };
 
     try {
+      // Validate essential data before sending webhook
+      const hasEssentialData = sessionData.sessionId &&
+                               sessionData.clientName &&
+                               sessionData.dogName &&
+                               sessionData.sessionNumber;
+
+      // Additional validation to prevent empty/invalid payloads
+      const hasValidData = sessionData.sessionId?.trim() &&
+                          sessionData.clientName?.trim() &&
+                          sessionData.dogName?.trim() &&
+                          typeof sessionData.sessionNumber === 'number' && sessionData.sessionNumber > 0 &&
+                          sessionData.actionPoints &&
+                          sessionData.actionPoints.length > 0;
+
+      if (!hasEssentialData || !hasValidData) {
+        console.log('Skipping webhook - missing or invalid essential data:', {
+          hasSessionId: !!sessionData.sessionId,
+          hasClientName: !!sessionData.clientName,
+          hasDogName: !!sessionData.dogName,
+          hasSessionNumber: !!sessionData.sessionNumber,
+          validSessionId: !!sessionData.sessionId?.trim(),
+          validClientName: !!sessionData.clientName?.trim(),
+          validDogName: !!sessionData.dogName?.trim(),
+          validSessionNumber: typeof sessionData.sessionNumber === 'number' && sessionData.sessionNumber > 0,
+          hasActionPoints: !!sessionData.actionPoints && sessionData.actionPoints.length > 0
+        });
+        console.error('Missing required data for session plan generation. Please ensure all fields are filled.');
+        setIsGeneratingDoc(false);
+        return;
+      }
+
       console.log('Sending data to Make.com webhook:', sessionData);
       console.log('Selected action points being sent:', selectedActionPoints);
       console.log('Action points data being sent:', sessionData.actionPoints);

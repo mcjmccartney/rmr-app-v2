@@ -1,5 +1,6 @@
 -- Supabase CORS and RLS Fix
 -- Run this SQL in your Supabase SQL Editor to fix CORS and access issues
+-- IMPORTANT: Also add https://raising-my-rescue.vercel.app to your Supabase CORS origins in the dashboard
 
 -- 1. Ensure RLS policies allow public access for your app
 -- Note: These are permissive policies for development. Restrict them in production.
@@ -14,6 +15,10 @@ DROP POLICY IF EXISTS "Allow all operations on booking_terms" ON booking_terms;
 DROP POLICY IF EXISTS "Allow all operations on client_email_aliases" ON client_email_aliases;
 DROP POLICY IF EXISTS "Allow all operations on action_points" ON action_points;
 DROP POLICY IF EXISTS "Allow all operations on session_participants" ON session_participants;
+DROP POLICY IF EXISTS "Allow all operations on session_plans" ON session_plans;
+DROP POLICY IF EXISTS "Allow all operations on potential_duplicates" ON potential_duplicates;
+DROP POLICY IF EXISTS "Allow all operations on dismissed_duplicates" ON dismissed_duplicates;
+DROP POLICY IF EXISTS "Allow all operations on group_coaching_resets" ON group_coaching_resets;
 
 -- Create permissive policies for all tables
 CREATE POLICY "Allow all operations on clients" ON clients
@@ -43,6 +48,18 @@ CREATE POLICY "Allow all operations on action_points" ON action_points
 CREATE POLICY "Allow all operations on session_participants" ON session_participants
     FOR ALL USING (true) WITH CHECK (true);
 
+CREATE POLICY "Allow all operations on session_plans" ON session_plans
+    FOR ALL USING (true) WITH CHECK (true);
+
+CREATE POLICY "Allow all operations on potential_duplicates" ON potential_duplicates
+    FOR ALL USING (true) WITH CHECK (true);
+
+CREATE POLICY "Allow all operations on dismissed_duplicates" ON dismissed_duplicates
+    FOR ALL USING (true) WITH CHECK (true);
+
+CREATE POLICY "Allow all operations on group_coaching_resets" ON group_coaching_resets
+    FOR ALL USING (true) WITH CHECK (true);
+
 -- Ensure RLS is enabled on all tables
 ALTER TABLE clients ENABLE ROW LEVEL SECURITY;
 ALTER TABLE sessions ENABLE ROW LEVEL SECURITY;
@@ -53,6 +70,10 @@ ALTER TABLE booking_terms ENABLE ROW LEVEL SECURITY;
 ALTER TABLE client_email_aliases ENABLE ROW LEVEL SECURITY;
 ALTER TABLE action_points ENABLE ROW LEVEL SECURITY;
 ALTER TABLE session_participants ENABLE ROW LEVEL SECURITY;
+ALTER TABLE session_plans ENABLE ROW LEVEL SECURITY;
+ALTER TABLE potential_duplicates ENABLE ROW LEVEL SECURITY;
+ALTER TABLE dismissed_duplicates ENABLE ROW LEVEL SECURITY;
+ALTER TABLE group_coaching_resets ENABLE ROW LEVEL SECURITY;
 
 -- Grant necessary permissions to anon role
 GRANT USAGE ON SCHEMA public TO anon;

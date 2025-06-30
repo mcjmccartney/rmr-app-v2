@@ -679,12 +679,30 @@ export function AppProvider({ children }: { children: ReactNode }) {
       };
 
       // Validate essential data before triggering webhooks
-      if (!webhookData.sessionId || !webhookData.clientEmail || !webhookData.sessionType || !webhookData.bookingDate) {
-        console.log('Skipping webhook trigger - missing essential data:', {
+      const hasEssentialData = webhookData.sessionId &&
+                               webhookData.clientEmail &&
+                               webhookData.sessionType &&
+                               webhookData.bookingDate;
+
+      // Additional validation to prevent empty/invalid payloads
+      const hasValidData = webhookData.sessionId?.trim() &&
+                          webhookData.clientEmail?.trim() &&
+                          webhookData.sessionType?.trim() &&
+                          webhookData.bookingDate?.trim() &&
+                          webhookData.clientEmail.includes('@') && // Basic email validation
+                          webhookData.quote > 0; // Ensure quote is valid
+
+      if (!hasEssentialData || !hasValidData) {
+        console.log('Skipping webhook trigger - missing or invalid essential data:', {
           hasSessionId: !!webhookData.sessionId,
           hasClientEmail: !!webhookData.clientEmail,
           hasSessionType: !!webhookData.sessionType,
-          hasBookingDate: !!webhookData.bookingDate
+          hasBookingDate: !!webhookData.bookingDate,
+          validSessionId: !!webhookData.sessionId?.trim(),
+          validClientEmail: !!webhookData.clientEmail?.trim() && webhookData.clientEmail.includes('@'),
+          validSessionType: !!webhookData.sessionType?.trim(),
+          validBookingDate: !!webhookData.bookingDate?.trim(),
+          validQuote: webhookData.quote > 0
         });
         return;
       }
