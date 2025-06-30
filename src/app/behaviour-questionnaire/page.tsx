@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
 import { BehaviourQuestionnaire } from '@/types';
 import { behaviourQuestionnaireService } from '@/services/behaviourQuestionnaireService';
+import ThankYouPopup from '@/components/ui/ThankYouPopup';
 
 function BehaviourQuestionnaireForm() {
   const { dispatch, createClient, updateClient, findClientByEmail, state } = useApp();
@@ -74,6 +75,8 @@ function BehaviourQuestionnaireForm() {
     anythingElseToKnow: '',
     timePerWeek: '',
   });
+
+  const [showThankYou, setShowThankYou] = useState(false);
 
   // Check for email parameter in URL and prefill, also check if already completed
   useEffect(() => {
@@ -222,8 +225,8 @@ function BehaviourQuestionnaireForm() {
         dogName: formData.dogName, // Ensure dog name is set on client
       });
 
-      // Navigate back silently (no alert as per user preference)
-      window.location.href = '/';
+      // Show thank you popup
+      setShowThankYou(true);
     } catch (error) {
       console.error('Error submitting questionnaire:', error);
       alert('There was an error submitting your questionnaire. Please try again.');
@@ -1160,6 +1163,16 @@ function BehaviourQuestionnaireForm() {
           </div>
         </div>
       </div>
+
+      {/* Thank You Popup */}
+      <ThankYouPopup
+        isOpen={showThankYou}
+        onClose={() => setShowThankYou(false)}
+        title="Thank You!"
+        message="Your behaviour questionnaire has been successfully submitted. We appreciate the detailed information you've provided about your dog. This will help us create the best training plan for you and your furry friend."
+        redirectUrl="/questionnaire-completed"
+        redirectDelay={4000}
+      />
     </div>
   );
 }

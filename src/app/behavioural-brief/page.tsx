@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useApp } from '@/context/AppContext';
 import { BehaviouralBrief } from '@/types';
 import { behaviouralBriefService } from '@/services/behaviouralBriefService';
+import ThankYouPopup from '@/components/ui/ThankYouPopup';
 
 export default function BehaviouralBriefPage() {
   const { createClient, dispatch } = useApp();
@@ -20,6 +21,8 @@ export default function BehaviouralBriefPage() {
     bestOutcome: '',
     sessionType: '' as BehaviouralBrief['sessionType'] | '',
   });
+
+  const [showThankYou, setShowThankYou] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -73,8 +76,8 @@ export default function BehaviouralBriefPage() {
       // Add behavioural brief to local state
       dispatch({ type: 'ADD_BEHAVIOURAL_BRIEF', payload: createdBrief });
 
-      // Navigate back silently (no alert as per user preference)
-      window.location.href = '/';
+      // Show thank you popup
+      setShowThankYou(true);
     } catch (error) {
       console.error('Error submitting form:', error);
       alert('There was an error submitting your form. Please try again.');
@@ -308,6 +311,16 @@ export default function BehaviouralBriefPage() {
           </div>
         </div>
       </div>
+
+      {/* Thank You Popup */}
+      <ThankYouPopup
+        isOpen={showThankYou}
+        onClose={() => setShowThankYou(false)}
+        title="Thank You!"
+        message="Your behavioural brief has been successfully submitted. We appreciate the information you've provided about your training goals. We'll be in touch soon to discuss the next steps."
+        redirectUrl="/"
+        redirectDelay={3500}
+      />
     </div>
   );
 }

@@ -1,17 +1,18 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { bookingTermsService } from '@/services/bookingTermsService';
 import { useApp } from '@/context/AppContext';
+import ThankYouPopup from '@/components/ui/ThankYouPopup';
 
 function BookingTermsContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const { state } = useApp();
   const [email, setEmail] = useState('');
   const [agreed, setAgreed] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showThankYou, setShowThankYou] = useState(false);
 
   // Get email from URL parameters and check if already completed
   useEffect(() => {
@@ -54,8 +55,8 @@ function BookingTermsContent() {
         email: email
       });
 
-      // Success - navigate back silently
-      router.push('/');
+      // Success - show thank you popup
+      setShowThankYou(true);
 
     } catch (error) {
       console.error('Error:', error);
@@ -190,6 +191,16 @@ function BookingTermsContent() {
           </div>
         </div>
       </div>
+
+      {/* Thank You Popup */}
+      <ThankYouPopup
+        isOpen={showThankYou}
+        onClose={() => setShowThankYou(false)}
+        title="Thank You!"
+        message="Your booking terms have been successfully submitted. We appreciate you taking the time to review and agree to our terms and conditions."
+        redirectUrl="/booking-terms-completed"
+        redirectDelay={3000}
+      />
     </div>
   );
 }
