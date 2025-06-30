@@ -521,28 +521,30 @@ function ClientForm({ onSubmit }: { onSubmit: () => void }) {
             Partner Names
           </label>
           {formData.partnerNames.map((partner, index) => (
-            <div key={index} className="flex gap-2 mb-2">
+            <div key={index} className="grid grid-cols-2 gap-4 mb-2">
               <input
                 type="text"
                 value={partner.firstName}
                 onChange={(e) => updatePartnerField(index, 'firstName', e.target.value)}
-                className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                 placeholder="First name"
               />
-              <input
-                type="text"
-                value={partner.lastName}
-                onChange={(e) => updatePartnerField(index, 'lastName', e.target.value)}
-                className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                placeholder="Last name"
-              />
-              <button
-                type="button"
-                onClick={() => removePartnerField(index)}
-                className="px-3 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600"
-              >
-                ×
-              </button>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={partner.lastName}
+                  onChange={(e) => updatePartnerField(index, 'lastName', e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                  placeholder="Last name"
+                />
+                <button
+                  type="button"
+                  onClick={() => removePartnerField(index)}
+                  className="px-3 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 flex-shrink-0"
+                >
+                  ×
+                </button>
+              </div>
             </div>
           ))}
         </div>

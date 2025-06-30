@@ -251,6 +251,7 @@ const AppContext = createContext<{
   updateSession: (id: string, updates: Partial<Session>) => Promise<Session>;
   deleteSession: (id: string) => Promise<void>;
   triggerSessionWebhook: (session: Session) => Promise<void>;
+  createCalendarEvent: (session: Session) => Promise<void>;
   updateCalendarEvent: (session: Session) => Promise<void>;
   deleteCalendarEvent: (session: Session) => Promise<void>;
   findClientByEmail: (email: string) => Promise<Client | null>;
@@ -725,21 +726,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
       );
       webhookNames.push('booking terms email webhook');
 
-      // Only trigger session email webhook if session is 4 days or less away
+      // Always trigger session webhook for calendar creation
+      // Only send session emails if session is 4 days or less away
+      const webhookDataWithEmailFlag = {
+        ...webhookData,
+        sendSessionEmail: daysUntilSession <= 4 // Flag to control email sending in Make.com
+      };
+
+      webhookPromises.push(
+        fetch('https://hook.eu1.make.com/lipggo8kcd8kwq2vp6j6mr3gnxbx12h7', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(webhookDataWithEmailFlag)
+        })
+      );
+      webhookNames.push('session webhook (calendar + conditional email)');
+
       if (daysUntilSession <= 4) {
-        webhookPromises.push(
-          fetch('https://hook.eu1.make.com/lipggo8kcd8kwq2vp6j6mr3gnxbx12h7', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(webhookData)
-          })
-        );
-        webhookNames.push('session email webhook');
-        console.log('Triggering both webhooks (session is ≤4 days away)');
+        console.log('Triggering both webhooks (session is ≤4 days away - will send emails + create calendar)');
       } else {
-        console.log('Triggering only booking terms webhook (session is >4 days away)');
+        console.log('Triggering both webhooks (session is >4 days away - will create calendar only, no emails)');
       }
 
       const responses = await Promise.allSettled(webhookPromises);
@@ -771,8 +779,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const session = await sessionService.create(sessionData);
       dispatch({ type: 'ADD_SESSION', payload: session });
 
-      // Trigger the booking terms email webhook
+      // Trigger the booking terms email webhook (which should also create calendar event)
       await triggerSessionWebhook(session);
+
+      // Fallback: Create calendar event directly if Make.com webhook doesn't provide eventId within 10 seconds
+      setTimeout(async () => {
+        try {
+          // Check if the session now has an eventId (from Make.com webhook)
+          const updatedSession = await sessionService.getById(session.id);
+          if (!updatedSession?.eventId) {
+            console.log('No eventId found after 10 seconds, creating calendar event directly as fallback');
+            await createCalendarEvent(session);
+          } else {
+            console.log('Session already has eventId from webhook, skipping fallback calendar creation');
+          }
+        } catch (error) {
+          console.error('Error in fallback calendar creation:', error);
+        }
+      }, 10000); // Wait 10 seconds for Make.com webhook to complete
 
       return session;
     } catch (error) {
@@ -790,6 +814,81 @@ export function AppProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('Failed to update session:', error);
       throw error;
+    }
+  };
+
+  // Create calendar event directly (fallback for when Make.com webhook fails)
+  const createCalendarEvent = async (session: Session) => {
+    try {
+      const client = session.clientId ? state.clients.find(c => c.id === session.clientId) : null;
+
+      // Skip calendar creation for Group/RMR Live sessions without clients
+      if (!session.clientId && (session.sessionType === 'Group' || session.sessionType === 'RMR Live')) {
+        console.log('Group/RMR Live session without client, skipping calendar creation');
+        return;
+      }
+
+      if (!client) {
+        console.log('No client found for session, skipping calendar creation');
+        return;
+      }
+
+      console.log('Creating Google Calendar event for session:', {
+        sessionId: session.id,
+        clientName: `${client.firstName} ${client.lastName}`.trim(),
+        bookingDate: session.bookingDate,
+        bookingTime: session.bookingTime
+      });
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
+      try {
+        const calendarResponse = await fetch('/api/calendar/create', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            clientName: `${client.firstName} ${client.lastName}`.trim(),
+            clientEmail: client.email || '',
+            clientAddress: client.address || '',
+            dogName: session.dogName || client.dogName || '',
+            sessionType: session.sessionType,
+            bookingDate: session.bookingDate,
+            bookingTime: session.bookingTime,
+            notes: session.notes,
+            quote: session.quote
+          }),
+          signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (calendarResponse.ok) {
+          const result = await calendarResponse.json();
+          console.log('Successfully created calendar event:', result.eventId);
+
+          // Update the session with the new eventId
+          if (result.eventId) {
+            await updateSession(session.id, { eventId: result.eventId });
+            console.log('Updated session with eventId:', result.eventId);
+          }
+        } else {
+          console.error('Failed to create calendar event via API:', calendarResponse.status);
+        }
+      } catch (fetchError) {
+        clearTimeout(timeoutId);
+        if (fetchError instanceof Error && fetchError.name === 'AbortError') {
+          console.error('Calendar creation request timed out');
+        } else {
+          console.error('Calendar creation request failed:', fetchError);
+        }
+      }
+
+    } catch (error) {
+      console.error('Error creating Google Calendar event:', error);
+      // Don't throw error - calendar failure shouldn't prevent session creation
     }
   };
 
@@ -1109,6 +1208,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       updateSession,
       deleteSession,
       triggerSessionWebhook,
+      createCalendarEvent,
       updateCalendarEvent,
       deleteCalendarEvent,
       findClientByEmail,
