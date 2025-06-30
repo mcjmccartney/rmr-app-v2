@@ -39,7 +39,7 @@ export default function CalendarPage() {
   const { state, updateClient, pairMembershipsWithClients } = useApp();
   const router = useRouter();
 
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const [currentDate, setCurrentDate] = useState(() => new Date());
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [addModalType, setAddModalType] = useState<'session' | 'client'>('session');

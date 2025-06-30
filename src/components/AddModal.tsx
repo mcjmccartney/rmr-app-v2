@@ -135,7 +135,7 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
     date: '',
     time: '',
     notes: '',
-    quote: 0
+    quote: ''
   });
 
   // Generate time options
@@ -194,7 +194,7 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
       ...formData,
       clientId,
       dogName: defaultDogName,
-      quote: calculateQuote(formData.sessionType, client?.membership || false)
+      quote: calculateQuote(formData.sessionType, client?.membership || false).toString()
     });
   };
 
@@ -202,7 +202,7 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
     setFormData({
       ...formData,
       sessionType,
-      quote: calculateQuote(sessionType, selectedClient?.membership || false)
+      quote: calculateQuote(sessionType, selectedClient?.membership || false).toString()
     });
   };
 
@@ -244,7 +244,7 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
         sessionType: formData.sessionType,
         bookingDate: formData.date, // YYYY-MM-DD format
         bookingTime: formData.time, // HH:mm format
-        quote: formData.quote,
+        quote: parseFloat(formData.quote) || 0,
         notes: formData.notes || undefined,
       });
 
@@ -366,7 +366,8 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
         <input
           type="number"
           value={formData.quote}
-          onChange={(e) => setFormData({ ...formData, quote: parseFloat(e.target.value) || 0 })}
+          onChange={(e) => setFormData({ ...formData, quote: e.target.value })}
+          onWheel={(e) => e.currentTarget.blur()} // Prevent trackpad scrolling from affecting the input
           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
           placeholder="Enter quote amount"
           min="0"

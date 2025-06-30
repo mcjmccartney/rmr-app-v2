@@ -370,6 +370,7 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
             type="number"
             value={formData.quote}
             onChange={(e) => setFormData({ ...formData, quote: e.target.value })}
+            onWheel={(e) => e.currentTarget.blur()} // Prevent trackpad scrolling from affecting the input
             className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
             placeholder="Enter quote amount"
             min="0"

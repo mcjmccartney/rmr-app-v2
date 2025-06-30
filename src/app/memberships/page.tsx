@@ -29,8 +29,9 @@ export default function MembershipsPage() {
 
   // Sort months in descending order (newest first)
   const sortedMonths = Object.keys(membershipsByMonth).sort((a, b) => {
-    const dateA = new Date(a);
-    const dateB = new Date(b);
+    // Parse month strings like "June 2025" back to dates for proper sorting
+    const dateA = new Date(a + ' 1'); // Add day to make it a valid date
+    const dateB = new Date(b + ' 1');
     return dateB.getTime() - dateA.getTime();
   });
 
