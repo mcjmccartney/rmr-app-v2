@@ -53,23 +53,23 @@ export const membershipPairingService = {
       // Process each client
       for (const client of clients || []) {
         try {
-          // Start with client's primary email
+          // Start with client's primary email (case-insensitive)
           const clientEmails: string[] = []
           if (client.email) {
-            clientEmails.push(client.email)
+            clientEmails.push(client.email.toLowerCase())
           }
 
           // Get all email aliases for this client and add them
           const aliases = await ClientEmailAliasService.getAliasesByClientId(client.id)
           aliases.forEach(alias => {
-            if (alias.email && !clientEmails.includes(alias.email)) {
-              clientEmails.push(alias.email)
+            if (alias.email && !clientEmails.includes(alias.email.toLowerCase())) {
+              clientEmails.push(alias.email.toLowerCase())
             }
           })
 
-          // Find memberships for any of the client's emails
+          // Find memberships for any of the client's emails (case-insensitive)
           const clientMemberships = (memberships || []).filter(membership =>
-            clientEmails.includes(membership.email)
+            clientEmails.includes(membership.email.toLowerCase())
           )
 
           // Check if client has any recent memberships (within last 2 months)
@@ -101,6 +101,8 @@ export const membershipPairingService = {
                 email: client.email || 'No primary email',
                 membershipCount: clientMemberships.length
               })
+
+              console.log(`✅ Updated membership status for ${client.first_name} ${client.last_name}: ${currentMembershipStatus} → ${shouldBeMember} (found ${clientMemberships.length} memberships across ${clientEmails.length} emails)`)
             }
           }
 

@@ -1,5 +1,6 @@
 import { membershipService } from './membershipService';
 import { clientService } from './clientService';
+import { ClientEmailAliasService } from './clientEmailAliasService';
 import { Client, Membership } from '@/types';
 
 export interface MembershipStatus {
@@ -12,23 +13,13 @@ export interface MembershipStatus {
 
 export const membershipExpirationService = {
   /**
-   * Check if a client's membership is still active based on their most recent payment
+   * Check if a client's membership is still active based on their most recent payment (including email aliases)
    */
   async checkMembershipStatus(client: Client): Promise<MembershipStatus> {
-    if (!client.email) {
-      return {
-        isActive: false,
-        lastPaymentDate: null,
-        expirationDate: null,
-        daysUntilExpiration: null,
-        isExpired: true
-      };
-    }
-
     try {
-      // Get all memberships for this client's email
-      const memberships = await membershipService.getByEmail(client.email);
-      
+      // Get all memberships for this client (including email aliases)
+      const memberships = await membershipService.getByClientIdWithAliases(client.id);
+
       if (memberships.length === 0) {
         return {
           isActive: false,
@@ -116,13 +107,12 @@ export const membershipExpirationService = {
       let updatedCount = 0;
       
       for (const client of clients) {
-        if (client.email) {
-          const originalStatus = client.membership;
-          const updatedClient = await this.updateClientMembershipStatus(client);
-          
-          if (updatedClient.membership !== originalStatus) {
-            updatedCount++;
-          }
+        // Check membership status for all clients (even those without primary email but with aliases)
+        const originalStatus = client.membership;
+        const updatedClient = await this.updateClientMembershipStatus(client);
+
+        if (updatedClient.membership !== originalStatus) {
+          updatedCount++;
         }
       }
       

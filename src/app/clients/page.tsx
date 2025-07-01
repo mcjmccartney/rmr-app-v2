@@ -83,13 +83,31 @@ export default function ClientsPage() {
     loadResets();
   }, []);
 
-  // Calculate membership count since reset for a client
+  // Calculate membership count since reset for a client (including email aliases)
   const getMembershipCountSinceReset = (client: Client): number => {
-    if (!client.email) return 0;
+    if (!client.email && !state.clientEmailAliases[client.id]) return 0;
 
     const resetDate = membershipResets[client.id];
+
+    // Get all emails for this client (primary + aliases)
+    const clientEmails: string[] = [];
+    if (client.email) {
+      clientEmails.push(client.email.toLowerCase());
+    }
+
+    // Add email aliases
+    const aliases = state.clientEmailAliases[client.id] || [];
+    aliases.forEach(alias => {
+      if (alias.email && !clientEmails.includes(alias.email.toLowerCase())) {
+        clientEmails.push(alias.email.toLowerCase());
+      }
+    });
+
+    if (clientEmails.length === 0) return 0;
+
+    // Find memberships for any of the client's emails
     const clientMemberships = state.memberships.filter(m =>
-      m.email.toLowerCase() === client.email?.toLowerCase()
+      clientEmails.includes(m.email.toLowerCase())
     );
 
     if (!resetDate) {
