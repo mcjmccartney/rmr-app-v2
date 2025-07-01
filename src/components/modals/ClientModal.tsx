@@ -22,6 +22,8 @@ export default function ClientModal({ client, isOpen, onClose, onEditClient, onV
   const [clientMemberships, setClientMemberships] = useState<Membership[]>([]);
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [isTabExpanded, setIsTabExpanded] = useState(false);
+  const [isUpdatingActive, setIsUpdatingActive] = useState(false);
+  const [isUpdatingMembership, setIsUpdatingMembership] = useState(false);
 
   // Get the fresh client data from state to ensure we have the latest updates
   const currentClient = client ? (state.clients.find(c => c.id === client.id) || client) : null;
@@ -117,22 +119,28 @@ export default function ClientModal({ client, isOpen, onClose, onEditClient, onV
   };
 
   const handleToggleActive = async () => {
-    if (!currentClient) return;
+    if (!currentClient || isUpdatingActive) return;
+    setIsUpdatingActive(true);
     try {
       await updateClient(currentClient.id, { active: !currentClient.active });
     } catch (error) {
       console.error('Failed to update client active status:', error);
       alert('Failed to update client status. Please try again.');
+    } finally {
+      setIsUpdatingActive(false);
     }
   };
 
   const handleToggleMembership = async () => {
-    if (!currentClient) return;
+    if (!currentClient || isUpdatingMembership) return;
+    setIsUpdatingMembership(true);
     try {
       await updateClient(currentClient.id, { membership: !currentClient.membership });
     } catch (error) {
       console.error('Failed to update client membership status:', error);
       alert('Failed to update membership status. Please try again.');
+    } finally {
+      setIsUpdatingMembership(false);
     }
   };
 
@@ -197,9 +205,10 @@ export default function ClientModal({ client, isOpen, onClose, onEditClient, onV
             <span className="text-gray-600 font-medium">Active</span>
             <button
               onClick={handleToggleActive}
+              disabled={isUpdatingActive}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ${
-                currentClient.active ? 'bg-gray-300' : 'bg-gray-300'
-              }`}
+                isUpdatingActive ? 'opacity-50 cursor-not-allowed' : ''
+              } ${currentClient.active ? 'bg-gray-300' : 'bg-gray-300'}`}
               style={currentClient.active ? { backgroundColor: '#4f6749' } : {}}
             >
               <span
@@ -207,6 +216,11 @@ export default function ClientModal({ client, isOpen, onClose, onEditClient, onV
                   currentClient.active ? 'translate-x-6' : 'translate-x-1'
                 }`}
               />
+              {isUpdatingActive && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin"></div>
+                </div>
+              )}
             </button>
           </div>
 
@@ -214,9 +228,10 @@ export default function ClientModal({ client, isOpen, onClose, onEditClient, onV
             <span className="text-gray-600 font-medium">Membership</span>
             <button
               onClick={handleToggleMembership}
+              disabled={isUpdatingMembership}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ${
-                currentClient.membership ? 'bg-gray-300' : 'bg-gray-300'
-              }`}
+                isUpdatingMembership ? 'opacity-50 cursor-not-allowed' : ''
+              } ${currentClient.membership ? 'bg-gray-300' : 'bg-gray-300'}`}
               style={currentClient.membership ? { backgroundColor: '#4f6749' } : {}}
             >
               <span
@@ -224,6 +239,11 @@ export default function ClientModal({ client, isOpen, onClose, onEditClient, onV
                   currentClient.membership ? 'translate-x-6' : 'translate-x-1'
                 }`}
               />
+              {isUpdatingMembership && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin"></div>
+                </div>
+              )}
             </button>
           </div>
 
