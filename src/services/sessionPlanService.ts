@@ -150,13 +150,13 @@ export const sessionPlanService = {
     return data ? dbRowToSessionPlan(data) : null;
   },
 
-  // Calculate session number for a session
+  // Calculate session number for a session (only counting Online and In-Person sessions)
   async calculateSessionNumber(sessionId: string): Promise<number> {
     try {
-      // First, get the session to find the client
+      // First, get the session to find the client and session type
       const { data: session, error: sessionError } = await supabase
         .from('sessions')
-        .select('client_id, booking_date, booking_time')
+        .select('client_id, booking_date, booking_time, session_type')
         .eq('id', sessionId)
         .single();
 
@@ -165,24 +165,41 @@ export const sessionPlanService = {
         return 1;
       }
 
-      // Get all sessions for this client ordered by date/time (most recent first)
+      // Get all Online and In-Person sessions for this client that are chronologically before or equal to this session
       const { data: clientSessions, error: sessionsError } = await supabase
         .from('sessions')
-        .select('id, booking_date, booking_time')
+        .select('id, booking_date, booking_time, session_type')
         .eq('client_id', session.client_id)
-        .order('booking_date', { ascending: false })
-        .order('booking_time', { ascending: false });
+        .in('session_type', ['Online', 'In-Person'])
+        .order('booking_date', { ascending: true })
+        .order('booking_time', { ascending: true });
 
       if (sessionsError || !clientSessions) {
         console.error('Error fetching client sessions:', sessionsError);
         return 1;
       }
 
-      // Find the position of this session in the reverse chronological order
-      // Sessions are displayed newest first, but numbered chronologically
-      // So oldest session = Session 1, newest = Session N
-      const sessionIndex = clientSessions.findIndex(s => s.id === sessionId);
-      return sessionIndex >= 0 ? clientSessions.length - sessionIndex : 1;
+      // Filter sessions that are chronologically before or equal to the current session
+      const sessionsBeforeOrEqual = clientSessions.filter(s => {
+        const sDate = new Date(`${s.booking_date}T${s.booking_time}`);
+        const currentDate = new Date(`${session.booking_date}T${session.booking_time}`);
+        return sDate <= currentDate;
+      });
+
+      // The session number is the count of sessions before or equal to this one
+      const sessionNumber = sessionsBeforeOrEqual.length;
+
+      console.log(`Calculated session number for session ${sessionId}:`, {
+        clientId: session.client_id,
+        sessionDate: session.booking_date,
+        sessionTime: session.booking_time,
+        sessionType: session.session_type,
+        totalOnlineInPersonSessions: clientSessions.length,
+        sessionsBeforeOrEqual: sessionsBeforeOrEqual.length,
+        calculatedNumber: sessionNumber
+      });
+
+      return Math.max(sessionNumber, 1); // Ensure minimum of 1
 
     } catch (error) {
       console.error('Error calculating session number:', error);

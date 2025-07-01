@@ -467,7 +467,7 @@ function SessionPlanContent() {
       const hasValidData = sessionData.sessionId?.trim() &&
                           sessionData.clientName?.trim() &&
                           sessionData.dogName?.trim() &&
-                          typeof sessionData.sessionNumber === 'number' && sessionData.sessionNumber > 0 &&
+                          sessionData.sessionNumber && sessionData.sessionNumber !== '0' &&
                           sessionData.actionPoints &&
                           sessionData.actionPoints.length > 0;
 
@@ -480,7 +480,7 @@ function SessionPlanContent() {
           validSessionId: !!sessionData.sessionId?.trim(),
           validClientName: !!sessionData.clientName?.trim(),
           validDogName: !!sessionData.dogName?.trim(),
-          validSessionNumber: typeof sessionData.sessionNumber === 'number' && sessionData.sessionNumber > 0,
+          validSessionNumber: !!sessionData.sessionNumber && sessionData.sessionNumber !== '0',
           hasActionPoints: !!sessionData.actionPoints && sessionData.actionPoints.length > 0,
           // Show actual values for debugging
           actualSessionId: sessionData.sessionId,
@@ -499,7 +499,7 @@ function SessionPlanContent() {
         if (!sessionData.sessionId?.trim()) missingFields.push('Session ID');
         if (!sessionData.clientName?.trim()) missingFields.push('Client Name');
         if (!sessionData.dogName?.trim()) missingFields.push('Dog Name');
-        if (!(typeof sessionData.sessionNumber === 'number' && sessionData.sessionNumber > 0)) missingFields.push('Session Number');
+        if (!sessionData.sessionNumber || sessionData.sessionNumber === '0') missingFields.push('Session Number');
         if (!sessionData.actionPoints || sessionData.actionPoints.length === 0) missingFields.push('Action Points');
 
         alert(`Cannot generate document. Missing or invalid data for: ${missingFields.join(', ')}`);
