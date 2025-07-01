@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase'
-import { Client, PartnerName } from '@/types'
+import { Client } from '@/types'
 
 // Convert database row to Client type
 function dbRowToClient(row: Record<string, any>): Client {
@@ -7,7 +7,7 @@ function dbRowToClient(row: Record<string, any>): Client {
     id: row.id,
     firstName: row.first_name,
     lastName: row.last_name,
-    partnerNames: row.partner_names || [],
+    partnerName: row.partner_name || undefined,
     dogName: row.dog_name || undefined, // Handle null values
     otherDogs: row.other_dogs,
     phone: row.phone,
@@ -29,7 +29,7 @@ function clientToDbRow(client: Partial<Client>) {
     id: client.id,
     first_name: client.firstName,
     last_name: client.lastName,
-    partner_names: client.partnerNames || [],
+    partner_name: client.partnerName || null,
     dog_name: client.dogName,
     other_dogs: client.otherDogs,
     phone: client.phone,

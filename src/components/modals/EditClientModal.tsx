@@ -16,7 +16,7 @@ export default function EditClientModal({ client, isOpen, onClose }: EditClientM
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
-    partnerNames: [] as { firstName: string; lastName: string }[],
+    partnerName: '',
     email: '',
     phone: '',
     dogName: '',
@@ -31,7 +31,7 @@ export default function EditClientModal({ client, isOpen, onClose }: EditClientM
       setFormData({
         firstName: client.firstName,
         lastName: client.lastName,
-        partnerNames: (client.partnerNames || []) as { firstName: string; lastName: string }[],
+        partnerName: client.partnerName || '',
         email: client.email || '',
         phone: client.phone || '',
         dogName: client.dogName || '',
@@ -43,20 +43,7 @@ export default function EditClientModal({ client, isOpen, onClose }: EditClientM
     }
   }, [client]);
 
-  const addPartnerField = () => {
-    setFormData({ ...formData, partnerNames: [...formData.partnerNames, { firstName: '', lastName: '' }] });
-  };
 
-  const removePartnerField = (index: number) => {
-    const newPartnerNames = formData.partnerNames.filter((_, i) => i !== index);
-    setFormData({ ...formData, partnerNames: newPartnerNames });
-  };
-
-  const updatePartnerField = (index: number, field: 'firstName' | 'lastName', value: string) => {
-    const newPartnerNames = [...formData.partnerNames];
-    newPartnerNames[index][field] = value;
-    setFormData({ ...formData, partnerNames: newPartnerNames });
-  };
 
   const addDogField = () => {
     setFormData({ ...formData, otherDogs: [...formData.otherDogs, ''] });
@@ -80,10 +67,7 @@ export default function EditClientModal({ client, isOpen, onClose }: EditClientM
     const updates: Partial<Client> = {
       firstName: formData.firstName,
       lastName: formData.lastName,
-      partnerNames: (() => {
-        const filtered = formData.partnerNames.filter(partner => partner.firstName.trim() !== '' && partner.lastName.trim() !== '');
-        return filtered.length > 0 ? filtered : undefined;
-      })(),
+      partnerName: formData.partnerName.trim() || undefined,
       email: formData.email || undefined,
       phone: formData.phone || undefined,
       dogName: formData.dogName || undefined,
@@ -139,51 +123,20 @@ export default function EditClientModal({ client, isOpen, onClose }: EditClientM
             />
           </div>
 
-          {/* Add Partner Name button */}
-          <button
-            type="button"
-            onClick={addPartnerField}
-            className="text-amber-600 hover:text-amber-700 text-sm font-medium mt-2"
-          >
-            + Add partner name
-          </button>
         </div>
 
-        {/* Additional partner fields - only show if there are partners */}
-        {formData.partnerNames.length > 0 && (
-          <div>
-            <label className="block text-gray-700 text-sm font-medium mb-2">
-              Partner Names
-            </label>
-            {formData.partnerNames.map((partner, index) => (
-              <div key={index} className="grid grid-cols-2 gap-4 mb-2">
-                <input
-                  type="text"
-                  value={partner.firstName}
-                  onChange={(e) => updatePartnerField(index, 'firstName', e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                  placeholder="First name"
-                />
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={partner.lastName}
-                    onChange={(e) => updatePartnerField(index, 'lastName', e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                    placeholder="Last name"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removePartnerField(index)}
-                    className="px-3 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 flex-shrink-0"
-                  >
-                    ×
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+        <div>
+          <label className="block text-gray-700 text-sm font-medium mb-2">
+            Partner Name
+          </label>
+          <input
+            type="text"
+            value={formData.partnerName}
+            onChange={(e) => setFormData({ ...formData, partnerName: e.target.value })}
+            className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+            placeholder="Enter partner name (optional)"
+          />
+        </div>
 
         <div>
           <label className="block text-gray-700 text-sm font-medium mb-2">

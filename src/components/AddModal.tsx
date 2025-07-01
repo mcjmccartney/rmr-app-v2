@@ -410,7 +410,7 @@ function ClientForm({ onSubmit }: { onSubmit: () => void }) {
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
-    partnerNames: [] as { firstName: string; lastName: string }[],
+    partnerName: '',
     dogName: '',
     otherDogs: [] as string[],
     phone: '',
@@ -427,7 +427,7 @@ function ClientForm({ onSubmit }: { onSubmit: () => void }) {
       await createClient({
         firstName: formData.firstName,
         lastName: formData.lastName,
-        partnerNames: formData.partnerNames.filter(partner => partner.firstName.trim() !== '' && partner.lastName.trim() !== ''),
+        partnerName: formData.partnerName.trim() || undefined,
         dogName: formData.dogName,
         otherDogs: formData.otherDogs.filter(dog => dog.trim() !== ''),
         phone: formData.phone || undefined,
@@ -444,20 +444,7 @@ function ClientForm({ onSubmit }: { onSubmit: () => void }) {
     }
   };
 
-  const addPartnerField = () => {
-    setFormData({ ...formData, partnerNames: [...formData.partnerNames, { firstName: '', lastName: '' }] });
-  };
 
-  const removePartnerField = (index: number) => {
-    const newPartnerNames = formData.partnerNames.filter((_, i) => i !== index);
-    setFormData({ ...formData, partnerNames: newPartnerNames });
-  };
-
-  const updatePartnerField = (index: number, field: 'firstName' | 'lastName', value: string) => {
-    const newPartnerNames = [...formData.partnerNames];
-    newPartnerNames[index][field] = value;
-    setFormData({ ...formData, partnerNames: newPartnerNames });
-  };
 
   const addDogField = () => {
     setFormData({ ...formData, otherDogs: [...formData.otherDogs, ''] });
@@ -504,51 +491,20 @@ function ClientForm({ onSubmit }: { onSubmit: () => void }) {
           />
         </div>
 
-        {/* Add Partner Name button */}
-        <button
-          type="button"
-          onClick={addPartnerField}
-          className="text-amber-600 hover:text-amber-700 text-sm font-medium mt-2"
-        >
-          + Add partner name
-        </button>
       </div>
 
-      {/* Additional partner fields - only show if there are partners */}
-      {formData.partnerNames.length > 0 && (
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Partner Names
-          </label>
-          {formData.partnerNames.map((partner, index) => (
-            <div key={index} className="grid grid-cols-2 gap-4 mb-2">
-              <input
-                type="text"
-                value={partner.firstName}
-                onChange={(e) => updatePartnerField(index, 'firstName', e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                placeholder="First name"
-              />
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={partner.lastName}
-                  onChange={(e) => updatePartnerField(index, 'lastName', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                  placeholder="Last name"
-                />
-                <button
-                  type="button"
-                  onClick={() => removePartnerField(index)}
-                  className="px-3 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 flex-shrink-0"
-                >
-                  ×
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Partner Name <span className="text-gray-500">(optional)</span>
+        </label>
+        <input
+          type="text"
+          value={formData.partnerName}
+          onChange={(e) => setFormData({ ...formData, partnerName: e.target.value })}
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+          placeholder="Enter partner name (optional)"
+        />
+      </div>
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">

@@ -38,7 +38,7 @@ export type Database = {
           id: string
           first_name: string
           last_name: string
-          partner_names: any[] | null
+          partner_name: string | null
           dog_name: string | null
           other_dogs: string[] | null
           phone: string | null
