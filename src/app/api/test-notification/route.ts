@@ -80,7 +80,11 @@ export async function GET() {
     console.log('Sending test behaviour questionnaire notification...');
 
     // Test behaviour questionnaire notification
-    const questionnaireResponse = await fetch(`${process.env.VERCEL_URL || 'http://localhost:3000'}/api/send-notification`, {
+    const baseUrl = process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : 'http://localhost:3000';
+
+    const questionnaireResponse = await fetch(`${baseUrl}/api/send-notification`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -100,7 +104,7 @@ export async function GET() {
     console.log('Sending test behavioural brief notification...');
 
     // Test behavioural brief notification
-    const briefResponse = await fetch(`${process.env.VERCEL_URL || 'http://localhost:3000'}/api/send-notification`, {
+    const briefResponse = await fetch(`${baseUrl}/api/send-notification`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
