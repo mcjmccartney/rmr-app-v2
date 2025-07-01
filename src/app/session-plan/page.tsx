@@ -555,42 +555,7 @@ function SessionPlanContent() {
     }
   };
 
-  // Test function to verify webhook connectivity
-  const testWebhook = async () => {
-    console.log('Testing webhook connectivity...');
-    try {
-      const testData = {
-        test: true,
-        timestamp: new Date().toISOString(),
-        message: 'Test webhook call from RMR app'
-      };
 
-      console.log('Sending test data:', testData);
-
-      const response = await fetch('https://hook.eu1.make.com/lbfmnhl3xpf7c0y2sfos3vdln6y1fmqm', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(testData)
-      });
-
-      console.log('Test webhook response status:', response.status);
-      console.log('Test webhook response headers:', Object.fromEntries(response.headers.entries()));
-
-      const responseText = await response.text();
-      console.log('Test webhook response text:', responseText);
-
-      if (response.ok) {
-        alert('Webhook test successful! Check console for details.');
-      } else {
-        alert(`Webhook test failed: ${response.status} - ${responseText}`);
-      }
-    } catch (error) {
-      console.error('Webhook test error:', error);
-      alert(`Webhook test error: ${error instanceof Error ? error.message : String(error)}`);
-    }
-  };
 
   // Removed unused function handleSaveEditedContent
 
@@ -892,25 +857,17 @@ function SessionPlanContent() {
                   </button>
 
                   {!generatedDocUrl ? (
-                    <div className="space-y-2">
-                      <button
-                        onClick={handlePreviewAndEdit}
-                        disabled={isGeneratingDoc || isPollingForUrl}
-                        className="w-full bg-white text-amber-800 py-3 rounded-md font-medium border border-amber-800 hover:bg-amber-800/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {isGeneratingDoc
-                          ? 'Generating Document...'
-                          : isPollingForUrl
-                          ? 'Waiting for Document...'
-                          : 'Generate Google Doc'}
-                      </button>
-                      <button
-                        onClick={testWebhook}
-                        className="w-full bg-blue-600 text-white py-2 rounded-md font-medium hover:bg-blue-700 transition-colors text-sm"
-                      >
-                        Test Webhook Connection
-                      </button>
-                    </div>
+                    <button
+                      onClick={handlePreviewAndEdit}
+                      disabled={isGeneratingDoc || isPollingForUrl}
+                      className="w-full bg-white text-amber-800 py-3 rounded-md font-medium border border-amber-800 hover:bg-amber-800/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isGeneratingDoc
+                        ? 'Generating Document...'
+                        : isPollingForUrl
+                        ? 'Waiting for Document...'
+                        : 'Generate Google Doc'}
+                    </button>
                   ) : (
                     <div className="space-y-2">
                       <button
