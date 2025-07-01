@@ -453,6 +453,9 @@ export default function CalendarPage() {
                       const client = state.clients.find(c => c.id === session.clientId);
                       const timeOnly = formatTime(session.bookingTime);
 
+                      // Check if this session has a session plan
+                      const hasSessionPlan = state.sessionPlans.some(plan => plan.sessionId === session.id);
+
                       // For Group and RMR Live sessions, show session type instead of "Unknown Client"
                       const isGroupOrRMRLive = session.sessionType === 'Group' || session.sessionType === 'RMR Live';
                       const fullDisplayText = client
@@ -511,12 +514,19 @@ export default function CalendarPage() {
                           className={`${buttonClasses} ${
                             // Hide sessions beyond first 2 on mobile
                             sessionIndex >= 2 ? 'hidden md:block' : ''
-                          }`}
+                          } relative`}
                           style={buttonStyle}
                         >
                           {/* Show only time on mobile, full text on desktop */}
                           <span className="block sm:hidden">{timeOnly}</span>
                           <span className="hidden sm:block">{fullDisplayText}</span>
+
+                          {/* White tick icon for sessions with session plans */}
+                          {hasSessionPlan && (
+                            <span className="absolute right-2 top-1/2 transform -translate-y-1/2 text-white text-sm font-bold">
+                              ✓
+                            </span>
+                          )}
                         </button>
                       );
                     })}
@@ -665,6 +675,9 @@ export default function CalendarPage() {
                   ? session.sessionType
                   : 'Unknown Client';
 
+                // Check if this session has a session plan
+                const hasSessionPlan = state.sessionPlans.some(plan => plan.sessionId === session.id);
+
                 // Determine button style - priority: session plan sent (black) > paid (green) > default
                 const clientEmails = getClientEmails(client, state.clientEmailAliases || {});
                 const hasSignedBookingTerms = clientEmails.length > 0 ?
@@ -699,7 +712,7 @@ export default function CalendarPage() {
                       handleCloseMobileDayModal();
                       handleSessionClick(session);
                     }}
-                    className={buttonClass}
+                    className={`${buttonClass} relative`}
                     style={buttonStyle}
                   >
                     <div className="font-medium">
@@ -708,6 +721,13 @@ export default function CalendarPage() {
                     <div className="text-amber-100 text-sm mt-1">
                       {session.sessionType}
                     </div>
+
+                    {/* White tick icon for sessions with session plans */}
+                    {hasSessionPlan && (
+                      <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white text-lg font-bold">
+                        ✓
+                      </span>
+                    )}
                   </button>
                 );
               })}
@@ -737,6 +757,9 @@ export default function CalendarPage() {
                     : isGroupOrRMRLive
                     ? session.sessionType
                     : 'Unknown Client';
+
+                  // Check if this session has a session plan
+                  const hasSessionPlan = state.sessionPlans.some(plan => plan.sessionId === session.id);
 
                   // Determine button style - priority: session plan sent (black) > paid (green) > default
                   const clientEmails = getClientEmails(client, state.clientEmailAliases || {});
@@ -772,7 +795,7 @@ export default function CalendarPage() {
                         handleCloseMobileDayModal();
                         handleSessionClick(session);
                       }}
-                      className={buttonClass}
+                      className={`${buttonClass} relative`}
                       style={buttonStyle}
                     >
                       <div className="font-medium">
@@ -781,6 +804,13 @@ export default function CalendarPage() {
                       <div className="text-amber-100 text-sm mt-1">
                         {session.sessionType}
                       </div>
+
+                      {/* White tick icon for sessions with session plans */}
+                      {hasSessionPlan && (
+                        <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white text-lg font-bold">
+                          ✓
+                        </span>
+                      )}
                     </button>
                   );
                 })}

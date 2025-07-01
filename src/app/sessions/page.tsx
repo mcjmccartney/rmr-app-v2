@@ -193,11 +193,14 @@ export default function SessionsPage() {
                         ? session.sessionType
                         : 'Unknown Client';
 
+                      // Check if this session has a session plan
+                      const hasSessionPlan = state.sessionPlans.some(plan => plan.sessionId === session.id);
+
                       return (
                         <div
                           key={session.id}
                           onClick={() => handleSessionClick(session)}
-                          className="p-4 border-b border-gray-100 last:border-b-0 active:bg-gray-50 transition-colors cursor-pointer"
+                          className="p-4 border-b border-gray-100 last:border-b-0 active:bg-gray-50 transition-colors cursor-pointer relative"
                         >
                           <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-3 flex-1">
@@ -209,6 +212,13 @@ export default function SessionsPage() {
                               </div>
                             </div>
                             <div className="flex items-center space-x-2">
+                              {/* Session plan tick icon */}
+                              {hasSessionPlan && (
+                                <span className="text-green-600 text-lg font-bold mr-2">
+                                  ✓
+                                </span>
+                              )}
+
                               {session.sessionPaid ? (
                                 <div className="flex items-center space-x-1">
                                   <div className="w-2 h-2 bg-green-500 rounded-full"></div>
