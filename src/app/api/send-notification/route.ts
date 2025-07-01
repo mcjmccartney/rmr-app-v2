@@ -107,7 +107,6 @@ function formatBehaviourQuestionnaireEmail(data: any): string {
     color: #374151;
     margin-bottom: 16px;
     line-height: 1.5;
-    white-space: pre-wrap;
     margin-top: 0;
   `;
 
@@ -336,7 +335,6 @@ function formatBehaviouralBriefEmail(data: any): string {
     color: #374151;
     margin-bottom: 16px;
     line-height: 1.5;
-    white-space: pre-wrap;
     margin-top: 0;
   `;
 
