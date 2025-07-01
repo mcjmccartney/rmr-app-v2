@@ -96,7 +96,7 @@ function formatBehaviourQuestionnaireEmail(data: any): string {
   const questionStyle = `
     font-weight: 600;
     color: #1f2937;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
     font-size: 16px;
   `;
 
@@ -108,6 +108,7 @@ function formatBehaviourQuestionnaireEmail(data: any): string {
     margin-bottom: 16px;
     line-height: 1.5;
     white-space: pre-wrap;
+    margin-top: 0;
   `;
 
   return `
@@ -324,7 +325,7 @@ function formatBehaviouralBriefEmail(data: any): string {
   const questionStyle = `
     font-weight: 600;
     color: #1f2937;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
     font-size: 16px;
   `;
 
@@ -336,6 +337,7 @@ function formatBehaviouralBriefEmail(data: any): string {
     margin-bottom: 16px;
     line-height: 1.5;
     white-space: pre-wrap;
+    margin-top: 0;
   `;
 
   return `
