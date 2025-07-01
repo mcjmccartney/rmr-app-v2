@@ -117,10 +117,10 @@ export default function BehaviourQuestionnaireModal({ behaviourQuestionnaire, is
           </div>
         </div>
 
-        {/* Behavior Information */}
+        {/* Behaviour Information */}
         <div>
           <div className="text-white text-lg font-bold p-3 mb-3 -mx-6" style={{ backgroundColor: '#973b00' }}>
-            Behavior Information
+            Behaviour Information
           </div>
           <div className="space-y-4">
             {behaviourQuestionnaire.mainHelp && (

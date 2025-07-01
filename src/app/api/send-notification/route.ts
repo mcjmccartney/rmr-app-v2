@@ -312,11 +312,9 @@ function formatBehaviouralBriefEmail(data: any): string {
   `;
 
   const headerStyle = `
-    background-color: #973b00;
-    color: white;
+    color: #1f2937;
     font-size: 18px;
     font-weight: bold;
-    padding: 12px;
     margin-bottom: 12px;
     margin: 0 0 12px 0;
   `;
@@ -391,7 +389,7 @@ function formatBehaviouralBriefEmail(data: any): string {
     <div style="${answerStyle}">${data.sessionType || 'Not provided'}</div>
   </div>
 
-  <div style="text-align: center; margin-top: 30px; padding: 20px; background-color: #973b00; color: white;">
+  <div style="text-align: center; margin-top: 30px; padding: 20px; background-color: #f9fafb; color: #374151;">
     <p style="margin: 0; font-size: 14px;">Submitted: ${new Date().toLocaleString()}</p>
   </div>
 

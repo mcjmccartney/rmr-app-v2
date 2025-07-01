@@ -12,7 +12,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Raising My Rescue",
-  description: "Dog training and behavioral consultation management system",
+  description: "Dog training and behavioural consultation management system",
   manifest: "/manifest.json",
   themeColor: "#4f6749",
   appleWebApp: {
@@ -27,12 +27,12 @@ export const metadata: Metadata = {
     type: "website",
     siteName: "Raising My Rescue",
     title: "Raising My Rescue",
-    description: "Dog training and behavioral consultation management system",
+    description: "Dog training and behavioural consultation management system",
   },
   twitter: {
     card: "summary",
     title: "Raising My Rescue",
-    description: "Dog training and behavioral consultation management system",
+    description: "Dog training and behavioural consultation management system",
   },
 };
 
@@ -49,7 +49,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="Raising My Rescue" />
-        <meta name="description" content="Dog training and behavioral consultation management system" />
+        <meta name="description" content="Dog training and behavioural consultation management system" />
         <meta name="format-detection" content="telephone=no" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="msapplication-config" content="/icons/browserconfig.xml" />

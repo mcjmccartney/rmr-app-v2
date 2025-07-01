@@ -100,9 +100,6 @@ export default function BehaviouralBriefModal({ behaviouralBrief, isOpen, onClos
 
         {/* Life with Dog */}
         <div>
-          <div className="text-white text-lg font-bold p-3 mb-3 -mx-6" style={{ backgroundColor: '#973b00' }}>
-            In general, how is life with your dog, and what would you like help with?
-          </div>
           <div>
             <h4 className="font-medium text-gray-800 mb-2">In general, how is life with your dog, and what would you like help with?</h4>
             <p className="text-xs text-gray-600 mb-2">New puppy, new dog, new rescue, general training, behaviour concern, etc.</p>
@@ -114,9 +111,6 @@ export default function BehaviouralBriefModal({ behaviouralBrief, isOpen, onClos
 
         {/* Best Outcome */}
         <div>
-          <div className="text-white text-lg font-bold p-3 mb-3 -mx-6" style={{ backgroundColor: '#973b00' }}>
-            What would be the best outcome for you and your dog?
-          </div>
           <div>
             <h4 className="font-medium text-gray-800 mb-2">What would be the best outcome for you and your dog?</h4>
             <p className="text-xs text-gray-600 mb-2">E.g. a better relationship, a happier dog, an easier home life, more relaxed walks, etc.</p>
@@ -129,9 +123,6 @@ export default function BehaviouralBriefModal({ behaviouralBrief, isOpen, onClos
         {/* Session Type */}
         {behaviouralBrief.sessionType && (
           <div>
-            <div className="text-white text-lg font-bold p-3 mb-3 -mx-6" style={{ backgroundColor: '#973b00' }}>
-              Which type of session would you ideally like?
-            </div>
             <div className="flex justify-between items-center">
               <span className="text-gray-600">Which type of session would you ideally like?</span>
               <span className="font-medium text-gray-900">{behaviouralBrief.sessionType}</span>
