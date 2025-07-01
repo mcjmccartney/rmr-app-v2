@@ -445,6 +445,18 @@ function SessionPlanContent() {
     };
 
     try {
+      // Debug: Log the prepared session data before validation
+      console.log('Prepared session data for validation:', {
+        sessionId: sessionData.sessionId,
+        clientName: sessionData.clientName,
+        dogName: sessionData.dogName,
+        sessionNumber: sessionData.sessionNumber,
+        sessionType: sessionData.sessionType,
+        actionPointsCount: sessionData.actionPoints?.length || 0,
+        selectedActionPointsCount: selectedActionPoints.length,
+        formData: formData
+      });
+
       // Validate essential data before sending webhook
       const hasEssentialData = sessionData.sessionId &&
                                sessionData.clientName &&
@@ -460,7 +472,7 @@ function SessionPlanContent() {
                           sessionData.actionPoints.length > 0;
 
       if (!hasEssentialData || !hasValidData) {
-        console.log('Skipping webhook - missing or invalid essential data:', {
+        const validationDetails = {
           hasSessionId: !!sessionData.sessionId,
           hasClientName: !!sessionData.clientName,
           hasDogName: !!sessionData.dogName,
@@ -469,9 +481,28 @@ function SessionPlanContent() {
           validClientName: !!sessionData.clientName?.trim(),
           validDogName: !!sessionData.dogName?.trim(),
           validSessionNumber: typeof sessionData.sessionNumber === 'number' && sessionData.sessionNumber > 0,
-          hasActionPoints: !!sessionData.actionPoints && sessionData.actionPoints.length > 0
-        });
+          hasActionPoints: !!sessionData.actionPoints && sessionData.actionPoints.length > 0,
+          // Show actual values for debugging
+          actualSessionId: sessionData.sessionId,
+          actualClientName: sessionData.clientName,
+          actualDogName: sessionData.dogName,
+          actualSessionNumber: sessionData.sessionNumber,
+          actualActionPointsCount: sessionData.actionPoints?.length || 0,
+          selectedActionPointsCount: selectedActionPoints.length
+        };
+
+        console.log('Skipping webhook - missing or invalid essential data:', validationDetails);
         console.error('Missing required data for session plan generation. Please ensure all fields are filled.');
+
+        // Show user-friendly error message
+        const missingFields = [];
+        if (!sessionData.sessionId?.trim()) missingFields.push('Session ID');
+        if (!sessionData.clientName?.trim()) missingFields.push('Client Name');
+        if (!sessionData.dogName?.trim()) missingFields.push('Dog Name');
+        if (!(typeof sessionData.sessionNumber === 'number' && sessionData.sessionNumber > 0)) missingFields.push('Session Number');
+        if (!sessionData.actionPoints || sessionData.actionPoints.length === 0) missingFields.push('Action Points');
+
+        alert(`Cannot generate document. Missing or invalid data for: ${missingFields.join(', ')}`);
         setIsGeneratingDoc(false);
         return;
       }
