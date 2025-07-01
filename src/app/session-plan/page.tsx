@@ -588,7 +588,7 @@ function SessionPlanContent() {
       }
     } catch (error) {
       console.error('Webhook test error:', error);
-      alert(`Webhook test error: ${error.message}`);
+      alert(`Webhook test error: ${error instanceof Error ? error.message : String(error)}`);
     }
   };
 
