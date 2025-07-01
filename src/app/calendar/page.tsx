@@ -475,10 +475,9 @@ export default function CalendarPage() {
 
 
 
-                      // Priority: No Client (charcoal grey) > Session Plan Sent (charcoal grey) > Paid + Terms + Questionnaire (green) > Terms + Questionnaire (amber) > Default (amber-800)
+                      // Priority: No Client (charcoal grey) > Session Plan Sent (charcoal grey) > Paid (green) > Terms + Questionnaire (amber) > Default (amber-800)
                       const isFullyCompleted = hasSignedBookingTerms && (hasFilledQuestionnaire || session.questionnaireBypass);
                       const isPaid = session.sessionPaid;
-                      const isCompletelyFinished = isPaid && isFullyCompleted; // All three conditions
                       const isSessionPlanSent = session.sessionPlanSent;
 
                       let buttonStyle = {};
@@ -488,8 +487,8 @@ export default function CalendarPage() {
                         // No client or session plan sent = dark charcoal grey background (highest priority)
                         buttonStyle = { backgroundColor: '#36454F' };
                         buttonClasses = "w-full text-white text-xs px-2 py-1 rounded text-left transition-colors flex-shrink-0 hover:opacity-80";
-                      } else if (isCompletelyFinished) {
-                        // Paid + Terms + Questionnaire = green background
+                      } else if (isPaid) {
+                        // Paid = green background (overrides amber/red but not charcoal grey)
                         buttonStyle = { backgroundColor: '#4f6749' };
                         buttonClasses = "w-full text-white text-xs px-2 py-1 rounded text-left transition-colors flex-shrink-0 hover:opacity-80";
                       } else if (isFullyCompleted) {
@@ -666,14 +665,14 @@ export default function CalendarPage() {
                   ? session.sessionType
                   : 'Unknown Client';
 
-                // Determine button style - priority: session plan sent (black) > paid + terms + questionnaire (green) > default
+                // Determine button style - priority: session plan sent (black) > paid (green) > default
                 const clientEmails = getClientEmails(client, state.clientEmailAliases || {});
                 const hasSignedBookingTerms = clientEmails.length > 0 ?
                   state.bookingTerms.some(bt => clientEmails.includes(bt.email?.toLowerCase() || '')) : false;
                 const hasFilledQuestionnaire = client ?
                   state.behaviourQuestionnaires.some(q => q.clientId === client.id) : false;
                 const isPaid = session.sessionPaid;
-                const isCompletelyFinished = isPaid && hasSignedBookingTerms && (hasFilledQuestionnaire || session.questionnaireBypass);
+                const isFullyCompleted = hasSignedBookingTerms && (hasFilledQuestionnaire || session.questionnaireBypass);
                 const isSessionPlanSent = session.sessionPlanSent;
 
                 let buttonClass = "";
@@ -682,9 +681,12 @@ export default function CalendarPage() {
                 if (!client || isSessionPlanSent) {
                   buttonClass = "w-full text-white p-4 rounded-lg text-left transition-colors hover:opacity-80";
                   buttonStyle = { backgroundColor: '#36454F' };
-                } else if (isCompletelyFinished) {
+                } else if (isPaid) {
                   buttonClass = "w-full text-white p-4 rounded-lg text-left transition-colors hover:opacity-80";
                   buttonStyle = { backgroundColor: '#4f6749' };
+                } else if (isFullyCompleted) {
+                  buttonClass = "w-full text-white p-4 rounded-lg text-left transition-colors hover:opacity-80";
+                  buttonStyle = { backgroundColor: '#e17100' };
                 } else {
                   buttonClass = "w-full bg-amber-800 text-white p-4 rounded-lg text-left hover:bg-amber-700 transition-colors";
                   buttonStyle = {};
@@ -736,14 +738,14 @@ export default function CalendarPage() {
                     ? session.sessionType
                     : 'Unknown Client';
 
-                  // Determine button style - priority: session plan sent (black) > paid + terms + questionnaire (green) > default
+                  // Determine button style - priority: session plan sent (black) > paid (green) > default
                   const clientEmails = getClientEmails(client, state.clientEmailAliases || {});
                   const hasSignedBookingTerms = clientEmails.length > 0 ?
                     state.bookingTerms.some(bt => clientEmails.includes(bt.email?.toLowerCase() || '')) : false;
                   const hasFilledQuestionnaire = client ?
                     state.behaviourQuestionnaires.some(q => q.clientId === client.id) : false;
                   const isPaid = session.sessionPaid;
-                  const isCompletelyFinished = isPaid && hasSignedBookingTerms && (hasFilledQuestionnaire || session.questionnaireBypass);
+                  const isFullyCompleted = hasSignedBookingTerms && (hasFilledQuestionnaire || session.questionnaireBypass);
                   const isSessionPlanSent = session.sessionPlanSent;
 
                   let buttonClass = "";
@@ -752,9 +754,12 @@ export default function CalendarPage() {
                   if (!client || isSessionPlanSent) {
                     buttonClass = "w-full text-white p-4 rounded-lg text-left transition-colors hover:opacity-80";
                     buttonStyle = { backgroundColor: '#36454F' };
-                  } else if (isCompletelyFinished) {
+                  } else if (isPaid) {
                     buttonClass = "w-full text-white p-4 rounded-lg text-left transition-colors hover:opacity-80";
                     buttonStyle = { backgroundColor: '#4f6749' };
+                  } else if (isFullyCompleted) {
+                    buttonClass = "w-full text-white p-4 rounded-lg text-left transition-colors hover:opacity-80";
+                    buttonStyle = { backgroundColor: '#e17100' };
                   } else {
                     buttonClass = "w-full bg-amber-800 text-white p-4 rounded-lg text-left hover:bg-amber-700 transition-colors";
                     buttonStyle = {};
