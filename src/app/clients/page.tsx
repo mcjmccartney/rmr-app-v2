@@ -10,7 +10,7 @@ import BehaviouralBriefModal from '@/components/modals/BehaviouralBriefModal';
 import BehaviourQuestionnaireModal from '@/components/modals/BehaviourQuestionnaireModal';
 import RMRLogo from '@/components/RMRLogo';
 import { Client, BehaviouralBrief, BehaviourQuestionnaire, Membership } from '@/types';
-import { Calendar, UserPlus, Users, UserCheck, ClipboardList, FileQuestion, Star, Edit3 } from 'lucide-react';
+import { Calendar, UserPlus, Users, UserCheck, ClipboardList, FileQuestion, Star, Edit3, Download } from 'lucide-react';
 import { groupCoachingResetService } from '@/services/groupCoachingResetService';
 
 export default function ClientsPage() {
@@ -27,6 +27,8 @@ export default function ClientsPage() {
   const [selectedBehaviourQuestionnaire, setSelectedBehaviourQuestionnaire] = useState<BehaviourQuestionnaire | null>(null);
   const [showMembersOnly, setShowMembersOnly] = useState(false);
   const [showActiveOnly, setShowActiveOnly] = useState(false);
+  const [selectedClients, setSelectedClients] = useState<Set<string>>(new Set());
+  const [showExportModal, setShowExportModal] = useState(false);
 
   // Membership tracking state - stores reset dates for each client (now from database)
   const [membershipResets, setMembershipResets] = useState<{ [clientId: string]: string }>({});
@@ -117,6 +119,49 @@ export default function ClientsPage() {
     } catch (error) {
       console.error('❌ Error resetting group coaching count:', error);
       alert('Failed to reset group coaching count. Please try again.');
+    }
+  };
+
+  // Handle checkbox selection
+  const handleClientSelection = (clientId: string, checked: boolean) => {
+    const newSelectedClients = new Set(selectedClients);
+    if (checked) {
+      newSelectedClients.add(clientId);
+    } else {
+      newSelectedClients.delete(clientId);
+    }
+    setSelectedClients(newSelectedClients);
+  };
+
+  // Handle bulk "Added to Session" for selected clients
+  const handleBulkAddedToSession = async () => {
+    try {
+      const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+
+      // Process all selected clients
+      for (const clientId of selectedClients) {
+        await groupCoachingResetService.addReset(clientId, today);
+      }
+
+      // Update local state for all selected clients
+      const updates: { [key: string]: string } = {};
+      selectedClients.forEach(clientId => {
+        updates[clientId] = today;
+      });
+
+      setMembershipResets(prev => ({
+        ...prev,
+        ...updates
+      }));
+
+      console.log(`✅ Reset group coaching count for ${selectedClients.size} clients`);
+
+      // Clear selections and close modal
+      setSelectedClients(new Set());
+      setShowExportModal(false);
+    } catch (error) {
+      console.error('❌ Error resetting group coaching counts:', error);
+      alert('Failed to reset group coaching counts. Please try again.');
     }
   };
 
@@ -273,9 +318,23 @@ export default function ClientsPage() {
         <Header
           title={getDisplayTitle()}
           buttons={[
+            ...(selectedClients.size > 0 ? [{
+              icon: Download,
+              onClick: () => setShowExportModal(true),
+              title: `Export (${selectedClients.size})`,
+              isActive: false,
+              iconOnly: true
+            }] : []),
             {
               icon: Star,
-              onClick: () => setShowMembersOnly(!showMembersOnly),
+              onClick: () => {
+                const newShowMembersOnly = !showMembersOnly;
+                setShowMembersOnly(newShowMembersOnly);
+                // Clear selections when turning off Members filter
+                if (!newShowMembersOnly) {
+                  setSelectedClients(new Set());
+                }
+              },
               title: `Members (${membersCount})`,
               isActive: showMembersOnly,
               iconOnly: true
@@ -367,6 +426,18 @@ export default function ClientsPage() {
                             </div>
 
                             <div className="flex items-center space-x-2">
+                              {/* Checkbox for Members filter */}
+                              {showMembersOnly && (
+                                <input
+                                  type="checkbox"
+                                  checked={selectedClients.has(client.id)}
+                                  onChange={(e) => {
+                                    e.stopPropagation();
+                                    handleClientSelection(client.id, e.target.checked);
+                                  }}
+                                  className="w-4 h-4 text-amber-600 bg-gray-100 border-gray-300 rounded focus:ring-amber-500 focus:ring-2"
+                                />
+                              )}
                               {/* Group Coaching Button - inline */}
                               {showAddedToSessionButton && (
                                 <button
@@ -415,6 +486,18 @@ export default function ClientsPage() {
                     </div>
                   </div>
 
+                  {/* Checkbox for Members filter */}
+                  {showMembersOnly && (
+                    <input
+                      type="checkbox"
+                      checked={selectedClients.has(client.id)}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        handleClientSelection(client.id, e.target.checked);
+                      }}
+                      className="w-4 h-4 text-amber-600 bg-gray-100 border-gray-300 rounded focus:ring-amber-500 focus:ring-2"
+                    />
+                  )}
 
                 </div>
               ))}
@@ -463,6 +546,66 @@ export default function ClientsPage() {
         onClose={handleCloseBehaviourQuestionnaireModal}
         onViewClient={handleViewClientFromModal}
       />
+
+      {/* Export Modal */}
+      {showExportModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[80vh] overflow-hidden flex flex-col">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold text-gray-900">Export Selected Clients</h2>
+              <button
+                onClick={() => setShowExportModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-200">
+                    <th className="text-left py-2 px-3 font-medium text-gray-900">Client Name</th>
+                    <th className="text-left py-2 px-3 font-medium text-gray-900">Email</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Array.from(selectedClients).map(clientId => {
+                    const client = state.clients.find(c => c.id === clientId);
+                    if (!client) return null;
+
+                    return (
+                      <tr key={clientId} className="border-b border-gray-100">
+                        <td className="py-2 px-3 text-gray-900">
+                          {client.firstName} {client.lastName}
+                        </td>
+                        <td className="py-2 px-3 text-gray-600">
+                          {client.email || 'No email'}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="flex justify-end space-x-3 mt-4 pt-4 border-t border-gray-200">
+              <button
+                onClick={() => setShowExportModal(false)}
+                className="px-4 py-2 text-gray-600 hover:text-gray-800"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleBulkAddedToSession}
+                className="px-4 py-2 bg-amber-800 text-white rounded-lg hover:bg-amber-700 transition-colors font-medium"
+              >
+                Added
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
