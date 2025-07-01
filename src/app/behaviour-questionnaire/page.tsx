@@ -225,6 +225,24 @@ function BehaviourQuestionnaireForm() {
         dogName: formData.dogName, // Ensure dog name is set on client
       });
 
+      // Send email notification
+      try {
+        await fetch('/api/send-notification', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            type: 'behaviour_questionnaire',
+            data: formData
+          })
+        });
+        console.log('Email notification sent for behaviour questionnaire');
+      } catch (emailError) {
+        console.error('Failed to send email notification:', emailError);
+        // Don't fail the form submission if email fails
+      }
+
       // Show thank you popup
       setShowThankYou(true);
     } catch (error) {

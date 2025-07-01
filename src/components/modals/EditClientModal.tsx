@@ -80,7 +80,10 @@ export default function EditClientModal({ client, isOpen, onClose }: EditClientM
     const updates: Partial<Client> = {
       firstName: formData.firstName,
       lastName: formData.lastName,
-      partnerNames: formData.partnerNames.filter(partner => partner.firstName.trim() !== '' && partner.lastName.trim() !== '') || undefined,
+      partnerNames: (() => {
+        const filtered = formData.partnerNames.filter(partner => partner.firstName.trim() !== '' && partner.lastName.trim() !== '');
+        return filtered.length > 0 ? filtered : undefined;
+      })(),
       email: formData.email || undefined,
       phone: formData.phone || undefined,
       dogName: formData.dogName || undefined,
@@ -91,7 +94,9 @@ export default function EditClientModal({ client, isOpen, onClose }: EditClientM
     };
 
     try {
+      console.log('🔄 Updating client with partner names:', updates.partnerNames);
       await updateClient(client.id, updates);
+      console.log('✅ Client updated successfully');
       onClose();
     } catch (error) {
       console.error('Failed to update client:', error);

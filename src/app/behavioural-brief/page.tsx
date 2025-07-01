@@ -76,6 +76,24 @@ export default function BehaviouralBriefPage() {
       // Add behavioural brief to local state
       dispatch({ type: 'ADD_BEHAVIOURAL_BRIEF', payload: createdBrief });
 
+      // Send email notification
+      try {
+        await fetch('/api/send-notification', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            type: 'behavioural_brief',
+            data: formData
+          })
+        });
+        console.log('Email notification sent for behavioural brief');
+      } catch (emailError) {
+        console.error('Failed to send email notification:', emailError);
+        // Don't fail the form submission if email fails
+      }
+
       // Show thank you popup
       setShowThankYou(true);
     } catch (error) {

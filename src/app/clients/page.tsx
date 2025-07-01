@@ -552,7 +552,7 @@ export default function ClientsPage() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[80vh] overflow-hidden flex flex-col">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-gray-900">Export Selected Clients</h2>
+              <h2 className="text-xl font-semibold text-gray-900">Client Emails</h2>
               <button
                 onClick={() => setShowExportModal(false)}
                 className="text-gray-400 hover:text-gray-600"
@@ -565,7 +565,6 @@ export default function ClientsPage() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-200">
-                    <th className="text-left py-2 px-3 font-medium text-gray-900">Client Name</th>
                     <th className="text-left py-2 px-3 font-medium text-gray-900">Email</th>
                   </tr>
                 </thead>
@@ -576,9 +575,6 @@ export default function ClientsPage() {
 
                     return (
                       <tr key={clientId} className="border-b border-gray-100">
-                        <td className="py-2 px-3 text-gray-900">
-                          {client.firstName} {client.lastName}
-                        </td>
                         <td className="py-2 px-3 text-gray-600">
                           {client.email || 'No email'}
                         </td>
