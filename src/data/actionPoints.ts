@@ -90,26 +90,34 @@ export const predefinedActionPoints: ActionPoint[] = [
   {
     id: 'FSLTl8VETe-PuACfmZP3vg',
     header: 'Build Patience in Tiny Doses',
-    details: 'Patience is a wonderful skill to have. Build it up in small doses, being sure to get ahead of [Dog Name] and reward before [he/she] gets frustrated.'
+    details: 'Patience is a wonderful skill to have. Build it up in small doses, being sure to get ahead of any discomfort. If Mila always expects to feel uncomfortable while waiting, [he] will anticipate it and become less patient.\n\nIf you know [his] limit is, say 30 seconds, make sure you go after 20 seconds. Then next time, try 25 (literally set a stopwatch, it really helps!) then gradually build it, always getting up/leaving BEFORE [he] gets frustrated.'
   }
 ];
 
 // Helper function to replace placeholders with actual dog name and pronouns
 export function personalizeActionPoint(actionPoint: ActionPoint, dogName: string, dogGender: 'Male' | 'Female'): ActionPoint {
-  const pronouns = dogGender === 'Male' 
+  const pronouns = dogGender === 'Male'
     ? { he: 'he', him: 'him', his: 'his', self: 'himself' }
     : { he: 'she', him: 'her', his: 'her', self: 'herself' };
 
   const personalizedHeader = actionPoint.header
     .replace(/\{\{Dog\}\}/g, dogName)
     .replace(/\{\{Self\}\}/g, pronouns.self)
-    .replace(/\{\{Him\}\}/g, pronouns.him);
+    .replace(/\{\{Him\}\}/g, pronouns.him)
+    // Handle simple bracket pronouns like [he], [his], [him]
+    .replace(/\[he\]/g, pronouns.he)
+    .replace(/\[his\]/g, pronouns.his)
+    .replace(/\[him\]/g, pronouns.him);
 
   const personalizedDetails = actionPoint.details
     .replace(/\[Dog Name\]/g, dogName)
     .replace(/\[he\/she\]/g, pronouns.he)
     .replace(/\[him\/her\]/g, pronouns.him)
-    .replace(/\[his\/her\]/g, pronouns.his);
+    .replace(/\[his\/her\]/g, pronouns.his)
+    // Handle simple bracket pronouns like [he], [his], [him]
+    .replace(/\[he\]/g, pronouns.he)
+    .replace(/\[his\]/g, pronouns.his)
+    .replace(/\[him\]/g, pronouns.him);
 
   return {
     ...actionPoint,
