@@ -43,7 +43,8 @@ export async function POST(request: NextRequest) {
     console.log('Sending email notification via Make.com:', { subject, type });
 
     // Call Make.com webhook for email notifications
-    const response = await fetch('https://hook.eu1.make.com/notification-email-webhook-url', {
+    // TODO: Replace with actual Make.com webhook URL for email notifications
+    const response = await fetch('https://hook.eu1.make.com/REPLACE_WITH_ACTUAL_WEBHOOK_URL', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

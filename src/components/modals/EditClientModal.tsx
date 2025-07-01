@@ -94,9 +94,7 @@ export default function EditClientModal({ client, isOpen, onClose }: EditClientM
     };
 
     try {
-      console.log('🔄 Updating client with partner names:', updates.partnerNames);
       await updateClient(client.id, updates);
-      console.log('✅ Client updated successfully');
       onClose();
     } catch (error) {
       console.error('Failed to update client:', error);

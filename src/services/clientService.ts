@@ -101,10 +101,6 @@ export const clientService = {
   // Update existing client
   async update(id: string, updates: Partial<Client>): Promise<Client> {
     const dbRow = clientToDbRow(updates)
-    console.log('🔄 ClientService: Converting to DB row:', {
-      partnerNames: updates.partnerNames,
-      partner_names: dbRow.partner_names
-    });
 
     const { data, error } = await supabase
       .from('clients')
@@ -118,9 +114,6 @@ export const clientService = {
       throw error
     }
 
-    console.log('✅ ClientService: Updated client data from DB:', {
-      partner_names: data.partner_names
-    });
     return dbRowToClient(data)
   },
 
