@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Generate PWA Icons</title>
+</head>
+<body>
+    <h1>Generating PWA Icons...</h1>
+    <canvas id="canvas" style="display: none;"></canvas>
+    
+    <script>
+        const sizes = [72, 96, 128, 144, 152, 192, 384, 512];
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        function generateIcon(size) {
+            canvas.width = size;
+            canvas.height = size;
+            
+            // Background
+            ctx.fillStyle = '#4f6749';
+            ctx.fillRect(0, 0, size, size);
+            
+            // Inner circle
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+            ctx.beginPath();
+            ctx.arc(size/2, size/2, size * 0.39, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Dog body
+            ctx.fillStyle = '#ffffff';
+            const bodyWidth = size * 0.26;
+            const bodyHeight = size * 0.14;
+            const bodyX = size/2 - bodyWidth/2;
+            const bodyY = size * 0.39;
+            ctx.fillRect(bodyX, bodyY, bodyWidth, bodyHeight);
+            
+            // Dog head
+            ctx.beginPath();
+            ctx.arc(size/2, size * 0.39, size * 0.098, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Dog ears
+            ctx.beginPath();
+            ctx.ellipse(size * 0.37, size * 0.35, size * 0.029, size * 0.049, 0, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            ctx.beginPath();
+            ctx.ellipse(size * 0.63, size * 0.35, size * 0.029, size * 0.049, 0, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Dog eyes
+            ctx.fillStyle = '#4f6749';
+            ctx.beginPath();
+            ctx.arc(size * 0.47, size * 0.37, size * 0.012, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            ctx.beginPath();
+            ctx.arc(size * 0.53, size * 0.37, size * 0.012, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Dog nose
+            ctx.beginPath();
+            ctx.ellipse(size/2, size * 0.41, size * 0.008, size * 0.006, 0, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Text "RMR"
+            ctx.fillStyle = '#ffffff';
+            ctx.font = `bold ${size * 0.094}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.fillText('RMR', size/2, size * 0.88);
+            
+            // Download the image
+            canvas.toBlob(function(blob) {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `icon-${size}x${size}.png`;
+                a.click();
+                URL.revokeObjectURL(url);
+            });
+        }
+        
+        // Generate all sizes
+        sizes.forEach((size, index) => {
+            setTimeout(() => generateIcon(size), index * 500);
+        });
+        
+        document.body.innerHTML += '<p>Icons will download automatically. Save them to public/icons/ folder.</p>';
+    </script>
+</body>
+</html>

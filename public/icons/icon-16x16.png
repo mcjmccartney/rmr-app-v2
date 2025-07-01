@@ -1,0 +1,27 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="256" cy="256" r="256" fill="#4f6749"/>
+  
+  <!-- Inner circle -->
+  <circle cx="256" cy="256" r="200" fill="#ffffff" fill-opacity="0.1"/>
+  
+  <!-- Dog silhouette -->
+  <path d="M180 200c-20 0-36 16-36 36v40c0 20 16 36 36 36h20v60c0 11 9 20 20 20s20-9 20-20v-60h32v60c0 11 9 20 20 20s20-9 20-20v-60h20c20 0 36-16 36-36v-40c0-20-16-36-36-36h-132z" fill="#ffffff"/>
+  
+  <!-- Dog ears -->
+  <ellipse cx="190" cy="180" rx="15" ry="25" fill="#ffffff"/>
+  <ellipse cx="322" cy="180" rx="15" ry="25" fill="#ffffff"/>
+  
+  <!-- Dog head -->
+  <circle cx="256" cy="200" r="50" fill="#ffffff"/>
+  
+  <!-- Dog eyes -->
+  <circle cx="240" cy="190" r="6" fill="#4f6749"/>
+  <circle cx="272" cy="190" r="6" fill="#4f6749"/>
+  
+  <!-- Dog nose -->
+  <ellipse cx="256" cy="210" rx="4" ry="3" fill="#4f6749"/>
+  
+  <!-- Text -->
+  <text x="256" y="450" font-family="Arial, sans-serif" font-size="48" font-weight="bold" text-anchor="middle" fill="#ffffff">RMR</text>
+</svg>
