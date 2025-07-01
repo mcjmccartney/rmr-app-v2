@@ -79,33 +79,35 @@ export async function POST(request: NextRequest) {
 }
 
 function formatBehaviourQuestionnaireEmail(data: any): string {
-  const cardStyle = `
-    background-color: #f5f5f5;
-    border-radius: 8px;
-    padding: 16px;
-    margin-bottom: 16px;
-    border-left: 4px solid #4f6749;
+  const sectionStyle = `
+    margin-bottom: 24px;
   `;
 
   const headerStyle = `
-    color: #4f6749;
+    background-color: #973b00;
+    color: white;
     font-size: 18px;
     font-weight: bold;
+    padding: 12px;
     margin-bottom: 12px;
-    border-bottom: 2px solid #4f6749;
-    padding-bottom: 8px;
+    margin: 0 0 12px 0;
   `;
 
   const questionStyle = `
-    font-weight: bold;
-    color: #333;
-    margin-bottom: 4px;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 8px;
+    font-size: 16px;
   `;
 
   const answerStyle = `
-    color: #555;
-    margin-bottom: 12px;
-    line-height: 1.4;
+    background-color: #f9fafb;
+    padding: 12px;
+    border-radius: 6px;
+    color: #374151;
+    margin-bottom: 16px;
+    line-height: 1.5;
+    white-space: pre-wrap;
   `;
 
   return `
@@ -115,48 +117,51 @@ function formatBehaviourQuestionnaireEmail(data: any): string {
   <meta charset="utf-8">
   <title>New Behaviour Questionnaire Submission</title>
 </head>
-<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px;">
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; background-color: #ffffff;">
 
-  <h1 style="color: #4f6749; text-align: center; margin-bottom: 30px;">New Behaviour Questionnaire Submission</h1>
+  <h1 style="color: #973b00; text-align: center; margin-bottom: 30px; font-size: 24px;">New Behaviour Questionnaire Submission</h1>
 
-  <div style="${cardStyle}">
-    <h2 style="${headerStyle}">Owner Information</h2>
-    <div style="${questionStyle}">Owner Name:</div>
+  <div style="${sectionStyle}">
+    <div style="${headerStyle}">Owner Information</div>
+
+    <div style="${questionStyle}">Owner Name</div>
     <div style="${answerStyle}">${data.ownerFirstName} ${data.ownerLastName}</div>
 
-    <div style="${questionStyle}">Email:</div>
-    <div style="${answerStyle}">${data.email}</div>
+    <div style="${questionStyle}">Email</div>
+    <div style="${answerStyle}">${data.email || 'Not provided'}</div>
 
-    <div style="${questionStyle}">Contact Number:</div>
-    <div style="${answerStyle}">${data.contactNumber}</div>
+    <div style="${questionStyle}">Contact Number</div>
+    <div style="${answerStyle}">${data.contactNumber || 'Not provided'}</div>
 
-    <div style="${questionStyle}">Address:</div>
-    <div style="${answerStyle}">${data.address1}${data.address2 ? ', ' + data.address2 : ''}, ${data.city}, ${data.stateProvince} ${data.zipPostalCode}, ${data.country}</div>
+    <div style="${questionStyle}">Address</div>
+    <div style="${answerStyle}">${[data.address1, data.address2, data.city, data.stateProvince, data.zipPostalCode, data.country].filter(Boolean).join(', ') || 'Not provided'}</div>
 
     <div style="${questionStyle}">How did you hear about my services?</div>
     <div style="${answerStyle}">${data.howDidYouHear || 'Not provided'}</div>
   </div>
 
-  <div style="${cardStyle}">
-    <h2 style="${headerStyle}">Dog Information</h2>
-    <div style="${questionStyle}">Dog Name:</div>
-    <div style="${answerStyle}">${data.dogName}</div>
+  <div style="${sectionStyle}">
+    <div style="${headerStyle}">Dog Information</div>
 
-    <div style="${questionStyle}">Age:</div>
-    <div style="${answerStyle}">${data.age}</div>
+    <div style="${questionStyle}">Dog Name</div>
+    <div style="${answerStyle}">${data.dogName || 'Not provided'}</div>
 
-    <div style="${questionStyle}">Sex:</div>
-    <div style="${answerStyle}">${data.sex}</div>
+    <div style="${questionStyle}">Age</div>
+    <div style="${answerStyle}">${data.age || 'Not provided'}</div>
+
+    <div style="${questionStyle}">Sex</div>
+    <div style="${answerStyle}">${data.sex || 'Not provided'}</div>
 
     <div style="${questionStyle}">What breed is your dog?</div>
-    <div style="${answerStyle}">${data.breed}</div>
+    <div style="${answerStyle}">${data.breed || 'Not provided'}</div>
 
     <div style="${questionStyle}">Neutered/Spayed? At what age?</div>
-    <div style="${answerStyle}">${data.neuteredSpayed}</div>
+    <div style="${answerStyle}">${data.neuteredSpayed || 'Not provided'}</div>
   </div>
 
-  <div style="${cardStyle}">
-    <h2 style="${headerStyle}">Behaviour Concerns</h2>
+  <div style="${sectionStyle}">
+    <div style="${headerStyle}">Behaviour Concerns</div>
+
     <div style="${questionStyle}">What is the main thing you would like help with?</div>
     <div style="${answerStyle}">${data.mainHelp || 'Not provided'}</div>
 
@@ -185,8 +190,9 @@ function formatBehaviourQuestionnaireEmail(data: any): string {
     <div style="${answerStyle}">${data.anythingElse || 'Not provided'}</div>
   </div>
 
-  <div style="${cardStyle}">
-    <h2 style="${headerStyle}">Health and Veterinary</h2>
+  <div style="${sectionStyle}">
+    <div style="${headerStyle}">Health and Veterinary</div>
+
     <div style="${questionStyle}">Does your dog have any past relevant medical or health conditions or important medical history? If yes, please describe. (Allergies, medication, injury etc.)</div>
     <div style="${answerStyle}">${data.medicalHistory || 'Not provided'}</div>
 
@@ -194,8 +200,9 @@ function formatBehaviourQuestionnaireEmail(data: any): string {
     <div style="${answerStyle}">${data.vetAdvice || 'Not provided'}</div>
   </div>
 
-  <div style="${cardStyle}">
-    <h2 style="${headerStyle}">Background</h2>
+  <div style="${sectionStyle}">
+    <div style="${headerStyle}">Background</div>
+
     <div style="${questionStyle}">Where did you get your dog from? (E.g. breeder, rescue centre, ex-street dog)</div>
     <div style="${answerStyle}">${data.whereGotDog || 'Not provided'}</div>
 
@@ -206,8 +213,9 @@ function formatBehaviourQuestionnaireEmail(data: any): string {
     <div style="${answerStyle}">${data.ageWhenGot || 'Not provided'}</div>
   </div>
 
-  <div style="${cardStyle}">
-    <h2 style="${headerStyle}">Feeding</h2>
+  <div style="${sectionStyle}">
+    <div style="${headerStyle}">Feeding</div>
+
     <div style="${questionStyle}">What do you feed your dog? Please be specific (Brand, variety, canned, dried, raw, home cooked, etc.)</div>
     <div style="${answerStyle}">${data.whatFeed || 'Not provided'}</div>
 
@@ -224,8 +232,9 @@ function formatBehaviourQuestionnaireEmail(data: any): string {
     <div style="${answerStyle}">${data.happyForTreats || 'Not provided'}</div>
   </div>
 
-  <div style="${cardStyle}">
-    <h2 style="${headerStyle}">Interaction & Exercise</h2>
+  <div style="${sectionStyle}">
+    <div style="${headerStyle}">Interaction & Exercise</div>
+
     <div style="${questionStyle}">What types of play do you engage in with your dog? Do they enjoy it?</div>
     <div style="${answerStyle}">${data.typesOfPlay || 'Not provided'}</div>
 
@@ -248,8 +257,9 @@ function formatBehaviourQuestionnaireEmail(data: any): string {
     <div style="${answerStyle}">${data.housetrained || 'Not provided'}</div>
   </div>
 
-  <div style="${cardStyle}">
-    <h2 style="${headerStyle}">General Information</h2>
+  <div style="${sectionStyle}">
+    <div style="${headerStyle}">General Information</div>
+
     <div style="${questionStyle}">What does your dog like to do aside from walks? (Enrichment, games, jobs, etc.)</div>
     <div style="${answerStyle}">${data.likesToDo || 'Not provided'}</div>
 
@@ -287,7 +297,7 @@ function formatBehaviourQuestionnaireEmail(data: any): string {
     <div style="${answerStyle}">${data.timePerWeek || 'Not provided'}</div>
   </div>
 
-  <div style="text-align: center; margin-top: 30px; padding: 20px; background-color: #4f6749; color: white; border-radius: 8px;">
+  <div style="text-align: center; margin-top: 30px; padding: 20px; background-color: #973b00; color: white;">
     <p style="margin: 0; font-size: 14px;">Submitted: ${new Date().toLocaleString()}</p>
   </div>
 
@@ -297,33 +307,35 @@ function formatBehaviourQuestionnaireEmail(data: any): string {
 }
 
 function formatBehaviouralBriefEmail(data: any): string {
-  const cardStyle = `
-    background-color: #f5f5f5;
-    border-radius: 8px;
-    padding: 16px;
-    margin-bottom: 16px;
-    border-left: 4px solid #4f6749;
+  const sectionStyle = `
+    margin-bottom: 24px;
   `;
 
   const headerStyle = `
-    color: #4f6749;
+    background-color: #973b00;
+    color: white;
     font-size: 18px;
     font-weight: bold;
+    padding: 12px;
     margin-bottom: 12px;
-    border-bottom: 2px solid #4f6749;
-    padding-bottom: 8px;
+    margin: 0 0 12px 0;
   `;
 
   const questionStyle = `
-    font-weight: bold;
-    color: #333;
-    margin-bottom: 4px;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 8px;
+    font-size: 16px;
   `;
 
   const answerStyle = `
-    color: #555;
-    margin-bottom: 12px;
-    line-height: 1.4;
+    background-color: #f9fafb;
+    padding: 12px;
+    border-radius: 6px;
+    color: #374151;
+    margin-bottom: 16px;
+    line-height: 1.5;
+    white-space: pre-wrap;
   `;
 
   return `
@@ -333,50 +345,53 @@ function formatBehaviouralBriefEmail(data: any): string {
   <meta charset="utf-8">
   <title>New Behavioural Brief Submission</title>
 </head>
-<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px;">
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; background-color: #ffffff;">
 
-  <h1 style="color: #4f6749; text-align: center; margin-bottom: 30px;">New Behavioural Brief Submission</h1>
+  <h1 style="color: #973b00; text-align: center; margin-bottom: 30px; font-size: 24px;">New Behavioural Brief Submission</h1>
 
-  <div style="${cardStyle}">
-    <h2 style="${headerStyle}">Owner Information</h2>
-    <div style="${questionStyle}">Owner Name:</div>
+  <div style="${sectionStyle}">
+    <div style="${headerStyle}">Owner Information</div>
+
+    <div style="${questionStyle}">Owner Name</div>
     <div style="${answerStyle}">${data.ownerFirstName} ${data.ownerLastName}</div>
 
-    <div style="${questionStyle}">Email:</div>
-    <div style="${answerStyle}">${data.email}</div>
+    <div style="${questionStyle}">Email</div>
+    <div style="${answerStyle}">${data.email || 'Not provided'}</div>
 
-    <div style="${questionStyle}">Contact Number:</div>
-    <div style="${answerStyle}">${data.contactNumber}</div>
+    <div style="${questionStyle}">Contact Number</div>
+    <div style="${answerStyle}">${data.contactNumber || 'Not provided'}</div>
 
-    <div style="${questionStyle}">Postcode:</div>
-    <div style="${answerStyle}">${data.postcode}</div>
+    <div style="${questionStyle}">Postcode</div>
+    <div style="${answerStyle}">${data.postcode || 'Not provided'}</div>
   </div>
 
-  <div style="${cardStyle}">
-    <h2 style="${headerStyle}">Dog Information</h2>
-    <div style="${questionStyle}">Dog Name:</div>
-    <div style="${answerStyle}">${data.dogName}</div>
+  <div style="${sectionStyle}">
+    <div style="${headerStyle}">Dog Information</div>
 
-    <div style="${questionStyle}">Sex:</div>
-    <div style="${answerStyle}">${data.sex}</div>
+    <div style="${questionStyle}">Dog Name</div>
+    <div style="${answerStyle}">${data.dogName || 'Not provided'}</div>
+
+    <div style="${questionStyle}">Sex</div>
+    <div style="${answerStyle}">${data.sex || 'Not provided'}</div>
 
     <div style="${questionStyle}">What breed is your dog? (Unknown/mixed is fine :-)</div>
-    <div style="${answerStyle}">${data.breed}</div>
+    <div style="${answerStyle}">${data.breed || 'Not provided'}</div>
   </div>
 
-  <div style="${cardStyle}">
-    <h2 style="${headerStyle}">Consultation Details</h2>
+  <div style="${sectionStyle}">
+    <div style="${headerStyle}">Consultation Details</div>
+
     <div style="${questionStyle}">In general, how is life with your dog, and what would you like help with? (New puppy, new dog, new rescue, general training, behaviour concern, etc.)</div>
-    <div style="${answerStyle}">${data.lifeWithDog}</div>
+    <div style="${answerStyle}">${data.lifeWithDog || 'Not provided'}</div>
 
     <div style="${questionStyle}">What would be the best outcome for you and your dog? (E.g. a better relationship, a happier dog, an easier home life, more relaxed walks, etc.)</div>
-    <div style="${answerStyle}">${data.bestOutcome}</div>
+    <div style="${answerStyle}">${data.bestOutcome || 'Not provided'}</div>
 
     <div style="${questionStyle}">Which type of session would you ideally like?</div>
-    <div style="${answerStyle}">${data.sessionType}</div>
+    <div style="${answerStyle}">${data.sessionType || 'Not provided'}</div>
   </div>
 
-  <div style="text-align: center; margin-top: 30px; padding: 20px; background-color: #4f6749; color: white; border-radius: 8px;">
+  <div style="text-align: center; margin-top: 30px; padding: 20px; background-color: #973b00; color: white;">
     <p style="margin: 0; font-size: 14px;">Submitted: ${new Date().toLocaleString()}</p>
   </div>
 
