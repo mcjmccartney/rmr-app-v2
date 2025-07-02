@@ -66,7 +66,7 @@ export default function PWAInstallPrompt() {
     });
 
     // For Android, also check if we should show a manual install prompt
-    if (android && !standalone) {
+    if (isAndroid && !isStandalone) {
       const dismissed = localStorage.getItem('pwa-install-dismissed');
       if (!dismissed) {
         // Show manual install prompt after a short delay if no beforeinstallprompt fires
@@ -87,7 +87,7 @@ export default function PWAInstallPrompt() {
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     };
-  }, [android, standalone, deferredPrompt]);
+  }, [isAndroid, isStandalone, deferredPrompt]);
 
   const handleInstallClick = async () => {
     if (!deferredPrompt) return;
