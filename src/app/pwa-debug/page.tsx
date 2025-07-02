@@ -41,7 +41,7 @@ export default function PWADebugPage() {
       console.log('beforeinstallprompt event fired');
       e.preventDefault();
       setDeferredPrompt(e);
-      setDebugInfo(prev => ({...prev, hasBeforeInstallPrompt: true}));
+      setDebugInfo((prev: any) => ({...prev, hasBeforeInstallPrompt: true}));
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
