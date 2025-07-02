@@ -5,7 +5,7 @@ import { AppProvider } from "@/context/AppContext";
 import { ModalProvider } from "@/context/ModalContext";
 import { AuthProvider } from "@/context/AuthContext";
 import Layout from "@/components/layout/Layout";
-import PWAInstallPrompt from "@/components/PWAInstallPrompt";
+
 import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -78,7 +78,6 @@ export default function RootLayout({
               <Layout>
                 {children}
               </Layout>
-              <PWAInstallPrompt />
               <ServiceWorkerRegistration />
             </ModalProvider>
           </AppProvider>

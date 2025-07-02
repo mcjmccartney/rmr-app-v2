@@ -96,9 +96,8 @@ export default function PWADebugPage() {
   };
 
   const forceInstallPrompt = () => {
-    // Clear the dismissed flag and show manual instructions
-    localStorage.removeItem('pwa-install-dismissed');
-    alert('Install prompt flag cleared. For Android Chrome:\n\n1. Tap the 3-dot menu (⋮) in the top right\n2. Look for "Install app" or "Add to Home screen"\n3. If not available, try:\n   - Refresh the page\n   - Visit the site a few more times\n   - Wait for Chrome to recognize it as installable\n\nChrome requires user engagement before showing install prompts.');
+    // Show manual installation instructions for Android Chrome
+    alert('Manual Installation Instructions:\n\nFor Android Chrome:\n1. Tap the 3-dot menu (⋮) in the top right\n2. Look for "Install app" or "Add to Home screen"\n3. If not available, try:\n   - Refresh the page\n   - Visit the site a few more times\n   - Wait for Chrome to recognize it as installable\n\nFor iOS Safari:\n1. Tap the Share button\n2. Select "Add to Home Screen"\n\nChrome requires user engagement and proper PWA criteria before showing install options.');
   };
 
   return (
