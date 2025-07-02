@@ -81,6 +81,11 @@ export default function PWADebugPage() {
         const registration = await navigator.serviceWorker.register('/sw.js');
         console.log('Service worker registered:', registration);
         alert('Service worker registered successfully');
+
+        // Wait a moment then check status again
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
       } catch (error) {
         console.error('Service worker registration failed:', error);
         alert('Service worker registration failed - check console');
@@ -88,6 +93,12 @@ export default function PWADebugPage() {
     } else {
       alert('Service workers not supported');
     }
+  };
+
+  const forceInstallPrompt = () => {
+    // Clear the dismissed flag and show manual instructions
+    localStorage.removeItem('pwa-install-dismissed');
+    alert('Install prompt flag cleared. For Android Chrome:\n\n1. Tap the 3-dot menu (⋮) in the top right\n2. Look for "Install app" or "Add to Home screen"\n3. If not available, try:\n   - Refresh the page\n   - Visit the site a few more times\n   - Wait for Chrome to recognize it as installable\n\nChrome requires user engagement before showing install prompts.');
   };
 
   return (
@@ -130,17 +141,29 @@ export default function PWADebugPage() {
             >
               Test Service Worker Registration
             </button>
+            <button
+              onClick={forceInstallPrompt}
+              className="w-full px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700"
+            >
+              Force Install Prompt
+            </button>
           </div>
         </div>
 
         <div className="bg-white rounded-lg shadow p-6">
           <h2 className="text-lg font-semibold mb-4">Instructions</h2>
           <div className="space-y-2 text-sm text-gray-600">
-            <p>1. Check that all PWA requirements show "Yes"</p>
-            <p>2. If "hasBeforeInstallPrompt" is false, the browser doesn't think this is installable</p>
-            <p>3. Try the "Try Install PWA" button</p>
-            <p>4. If that doesn't work, use browser menu "Add to Home Screen"</p>
-            <p>5. Check console for detailed error messages</p>
+            <p><strong>1.</strong> Check that all PWA requirements show "Yes"</p>
+            <p><strong>2.</strong> If "hasBeforeInstallPrompt" is false, Chrome hasn't recognized this as installable yet</p>
+            <p><strong>3.</strong> Try the "Try Install PWA" button</p>
+            <p><strong>4.</strong> For Android Chrome manual install:</p>
+            <ul className="ml-4 space-y-1">
+              <li>• Tap the 3-dot menu (⋮) in top right corner</li>
+              <li>• Look for "Install app" or "Add to Home screen"</li>
+              <li>• If not available, try refreshing and visiting the site more</li>
+            </ul>
+            <p><strong>5.</strong> Chrome requires user engagement before showing install prompts</p>
+            <p><strong>6.</strong> Check console for detailed error messages</p>
           </div>
         </div>
       </div>

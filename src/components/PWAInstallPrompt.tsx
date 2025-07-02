@@ -66,7 +66,7 @@ export default function PWAInstallPrompt() {
     });
 
     // For Android, also check if we should show a manual install prompt
-    if (isAndroid && !isStandalone) {
+    if (android && !standalone) {
       const dismissed = localStorage.getItem('pwa-install-dismissed');
       if (!dismissed) {
         // Show manual install prompt after a short delay if no beforeinstallprompt fires
@@ -75,13 +75,29 @@ export default function PWAInstallPrompt() {
             console.log('No beforeinstallprompt event, showing manual prompt for Android');
             setShowInstallPrompt(true);
           }
-        }, 3000);
+        }, 5000); // Increased delay to 5 seconds
 
         return () => {
           clearTimeout(timer);
           window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
         };
       }
+    }
+
+    // Also show manual prompt for any device after some user engagement
+    if (!standalone) {
+      const dismissed = localStorage.getItem('pwa-install-dismissed');
+      const engagementTimer = setTimeout(() => {
+        if (!dismissed && !deferredPrompt) {
+          console.log('Showing manual install prompt after user engagement');
+          setShowInstallPrompt(true);
+        }
+      }, 10000); // Show after 10 seconds of engagement
+
+      return () => {
+        clearTimeout(engagementTimer);
+        window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      };
     }
 
     return () => {
