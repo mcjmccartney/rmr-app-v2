@@ -33,6 +33,15 @@ export default function PWAInstallPrompt() {
                       (window.navigator as any).standalone === true;
     setIsStandalone(standalone);
 
+    // Debug logging
+    console.log('PWA Install Prompt - Device Detection:', {
+      iOS,
+      android,
+      standalone,
+      userAgent: navigator.userAgent,
+      displayMode: window.matchMedia('(display-mode: standalone)').matches
+    });
+
     // Listen for the beforeinstallprompt event
     const handleBeforeInstallPrompt = (e: Event) => {
       console.log('beforeinstallprompt event fired');
@@ -56,10 +65,29 @@ export default function PWAInstallPrompt() {
       localStorage.removeItem('pwa-install-dismissed');
     });
 
+    // For Android, also check if we should show a manual install prompt
+    if (android && !standalone) {
+      const dismissed = localStorage.getItem('pwa-install-dismissed');
+      if (!dismissed) {
+        // Show manual install prompt after a short delay if no beforeinstallprompt fires
+        const timer = setTimeout(() => {
+          if (!deferredPrompt) {
+            console.log('No beforeinstallprompt event, showing manual prompt for Android');
+            setShowInstallPrompt(true);
+          }
+        }, 3000);
+
+        return () => {
+          clearTimeout(timer);
+          window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+        };
+      }
+    }
+
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     };
-  }, []);
+  }, [android, standalone, deferredPrompt]);
 
   const handleInstallClick = async () => {
     if (!deferredPrompt) return;

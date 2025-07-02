@@ -1,11 +1,13 @@
 // Service Worker for Raising My Rescue PWA
-const CACHE_NAME = 'rmr-app-v1';
+const CACHE_NAME = 'rmr-app-v2';
 const urlsToCache = [
   '/',
   '/calendar',
   '/clients',
   '/sessions',
-  '/manifest.json'
+  '/manifest.json',
+  '/icons/icon-192x192.png',
+  '/icons/icon-512x512.png'
 ];
 
 // Install event - cache resources

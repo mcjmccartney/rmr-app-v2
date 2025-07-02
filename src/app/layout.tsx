@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   title: "Raising My Rescue",
   description: "Dog training and behavioural consultation management system",
   manifest: "/manifest.json",
-  themeColor: "#4f6749",
+  themeColor: "#973b00",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -53,7 +53,7 @@ export default function RootLayout({
         <meta name="format-detection" content="telephone=no" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="msapplication-config" content="/icons/browserconfig.xml" />
-        <meta name="msapplication-TileColor" content="#4f6749" />
+        <meta name="msapplication-TileColor" content="#973b00" />
         <meta name="msapplication-tap-highlight" content="no" />
         <meta name="theme-color" content="#973b00" />
 
