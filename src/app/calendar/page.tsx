@@ -56,7 +56,7 @@ export default function CalendarPage() {
   const [showMobileDayModal, setShowMobileDayModal] = useState(false);
   const [selectedDaySessions, setSelectedDaySessions] = useState<Session[]>([]);
   const [selectedDayDate, setSelectedDayDate] = useState<Date | null>(null);
-  const [hideWeekends, setHideWeekends] = useState(false);
+  const [hideWeekends, setHideWeekends] = useState(true);
 
   // Auto-pair memberships with clients on component mount
   useEffect(() => {
@@ -365,7 +365,7 @@ export default function CalendarPage() {
             className={`p-2 rounded transition-colors text-white hover:bg-brand-primary-dark ${
               hideWeekends ? 'bg-brand-primary-dark' : ''
             }`}
-            title={hideWeekends ? 'Show weekends' : 'Hide weekends'}
+            title={hideWeekends ? 'Show weekends (7-day view)' : 'Hide weekends (5-day view)'}
           >
             <CalendarDays size={20} />
           </button>

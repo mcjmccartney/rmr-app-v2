@@ -6,7 +6,7 @@ import { useApp } from '@/context/AppContext';
 import SlideUpModal from './SlideUpModal';
 import { formatDateTime } from '@/utils/dateFormatting';
 import { Users, Plus, Trash2, Check, X } from 'lucide-react';
-import CustomDropdown from '../ui/CustomDropdown';
+import SearchableDropdown from '../ui/SearchableDropdown';
 
 interface GroupSessionModalProps {
   session: Session | null;
@@ -118,8 +118,8 @@ export default function GroupSessionModal({ session, isOpen, onClose, onEditSess
     label: `${client.firstName} ${client.lastName}${client.dogName ? ` w/ ${client.dogName}` : ''}`
   }));
 
-  const totalAmount = participants.length * individualQuote;
-  const paidAmount = participants.filter(p => p.paid).length * individualQuote;
+  const totalAmount = participants.reduce((sum, p) => sum + p.individualQuote, 0);
+  const paidAmount = participants.filter(p => p.paid).reduce((sum, p) => sum + p.individualQuote, 0);
   const unpaidAmount = totalAmount - paidAmount;
 
   if (!session) return null;
@@ -158,7 +158,11 @@ export default function GroupSessionModal({ session, isOpen, onClose, onEditSess
             </div>
           </div>
           <div className="mt-2 text-xs text-gray-500">
-            {participants.length} participant{participants.length !== 1 ? 's' : ''} × £{individualQuote.toFixed(2)} each
+            {participants.length} participant{participants.length !== 1 ? 's' : ''}
+            {participants.length > 0 && participants.every(p => p.individualQuote === participants[0].individualQuote)
+              ? ` × £${participants[0].individualQuote.toFixed(2)} each`
+              : ' (individual pricing)'
+            }
           </div>
         </div>
 
@@ -175,6 +179,62 @@ export default function GroupSessionModal({ session, isOpen, onClose, onEditSess
               Add Participant
             </button>
           </div>
+
+          {/* Add Participant Form - appears right below the button */}
+          {showAddParticipant && (
+            <div className="bg-gray-100 p-4 rounded-lg mb-4">
+              <h4 className="font-medium text-gray-900 mb-3">Add Participant</h4>
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Select Client
+                  </label>
+                  <SearchableDropdown
+                    value={selectedClientId}
+                    onChange={setSelectedClientId}
+                    options={clientOptions}
+                    placeholder="Choose a client..."
+                    searchPlaceholder="Search clients..."
+                    className="w-full"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Individual Quote (£)
+                  </label>
+                  <input
+                    type="number"
+                    value={individualQuote}
+                    onChange={(e) => setIndividualQuote(Number(e.target.value))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleAddParticipant}
+                    disabled={!selectedClientId}
+                    className="flex-1 px-4 py-2 text-white rounded-md text-sm font-medium hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: '#973b00' }}
+                  >
+                    Add Participant
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowAddParticipant(false);
+                      setSelectedClientId('');
+                    }}
+                    className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-400"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {loading ? (
             <div className="text-center py-4 text-gray-500">Loading participants...</div>
@@ -219,61 +279,7 @@ export default function GroupSessionModal({ session, isOpen, onClose, onEditSess
           )}
         </div>
 
-        {/* Add Participant Form */}
-        {showAddParticipant && (
-          <div className="bg-gray-100 p-4 rounded-lg">
-            <h4 className="font-medium text-gray-900 mb-3">Add Participant</h4>
-            <div className="space-y-3">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Select Client
-                </label>
-                <CustomDropdown
-                  value={selectedClientId}
-                  onChange={setSelectedClientId}
-                  options={clientOptions}
-                  placeholder="Choose a client..."
-                  className="w-full"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Individual Quote (£)
-                </label>
-                <input
-                  type="number"
-                  value={individualQuote}
-                  onChange={(e) => setIndividualQuote(parseFloat(e.target.value) || 0)}
-                  onWheel={(e) => e.currentTarget.blur()} // Prevent trackpad scrolling from affecting the input
-                  min="0"
-                  step="0.01"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none"
-                />
-              </div>
-              
-              <div className="flex gap-2">
-                <button
-                  onClick={handleAddParticipant}
-                  disabled={!selectedClientId}
-                  className="flex-1 text-white py-2 px-4 rounded-md hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{ backgroundColor: '#973b00' }}
-                >
-                  Add Participant
-                </button>
-                <button
-                  onClick={() => {
-                    setShowAddParticipant(false);
-                    setSelectedClientId('');
-                  }}
-                  className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+
 
         {/* Action Buttons */}
         <div className="flex gap-3 pt-4 border-t">

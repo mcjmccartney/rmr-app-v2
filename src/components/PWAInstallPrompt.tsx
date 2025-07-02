@@ -16,6 +16,7 @@ export default function PWAInstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
+  const [isAndroid, setIsAndroid] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
 
   useEffect(() => {
@@ -23,18 +24,25 @@ export default function PWAInstallPrompt() {
     const iOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
     setIsIOS(iOS);
 
+    // Check if device is Android
+    const android = /Android/.test(navigator.userAgent);
+    setIsAndroid(android);
+
     // Check if app is already installed (standalone mode)
-    const standalone = window.matchMedia('(display-mode: standalone)').matches;
+    const standalone = window.matchMedia('(display-mode: standalone)').matches ||
+                      (window.navigator as any).standalone === true;
     setIsStandalone(standalone);
 
     // Listen for the beforeinstallprompt event
     const handleBeforeInstallPrompt = (e: Event) => {
+      console.log('beforeinstallprompt event fired');
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
-      
+
       // Show install prompt if not already installed and not dismissed
       const dismissed = localStorage.getItem('pwa-install-dismissed');
       if (!dismissed && !standalone) {
+        console.log('Showing PWA install prompt');
         setShowInstallPrompt(true);
       }
     };
@@ -90,8 +98,10 @@ export default function PWAInstallPrompt() {
                 Install Raising My Rescue
               </h3>
               <p className="text-xs text-gray-500 mt-1">
-                {isIOS 
+                {isIOS
                   ? 'Tap the share button and "Add to Home Screen"'
+                  : isAndroid
+                  ? 'Tap "Install" or "Add to Home Screen" in your browser menu'
                   : 'Install the app for a better experience'
                 }
               </p>
