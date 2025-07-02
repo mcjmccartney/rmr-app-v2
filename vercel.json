@@ -1,4 +1,7 @@
 {
+  "alias": [
+    "raising-my-rescue.vercel.app"
+  ],
   "crons": [
     {
       "path": "/api/scheduled-webhooks",
