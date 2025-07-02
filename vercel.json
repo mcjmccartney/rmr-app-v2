@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/scheduled-webhooks",
+      "schedule": "0 10 * * *"
+    }
+  ]
+}
