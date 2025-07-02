@@ -19,7 +19,6 @@ export default withPWA({
   register: true,
   skipWaiting: true,
   disable: false, // Enable PWA in all environments
-  reloadOnOnline: true,
   fallbacks: {
     document: '/offline.html'
   },
