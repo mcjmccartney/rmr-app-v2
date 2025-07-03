@@ -10,7 +10,7 @@ import EditClientModal from '@/components/modals/EditClientModal';
 import BehaviouralBriefModal from '@/components/modals/BehaviouralBriefModal';
 import BehaviourQuestionnaireModal from '@/components/modals/BehaviourQuestionnaireModal';
 import RMRLogo from '@/components/RMRLogo';
-import { Client, BehaviouralBrief, BehaviourQuestionnaire, Membership } from '@/types';
+import { Client, Session, BehaviouralBrief, BehaviourQuestionnaire, Membership } from '@/types';
 import { Calendar, UserPlus, Users, UserCheck, ClipboardList, FileQuestion, Star, Edit3, Download } from 'lucide-react';
 import { groupCoachingResetService } from '@/services/groupCoachingResetService';
 
