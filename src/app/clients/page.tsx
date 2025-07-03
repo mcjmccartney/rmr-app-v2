@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
 import Header from '@/components/layout/Header';
 import AddModal from '@/components/AddModal';
@@ -13,7 +14,9 @@ import { Client, BehaviouralBrief, BehaviourQuestionnaire, Membership } from '@/
 import { Calendar, UserPlus, Users, UserCheck, ClipboardList, FileQuestion, Star, Edit3, Download } from 'lucide-react';
 import { groupCoachingResetService } from '@/services/groupCoachingResetService';
 
-export default function ClientsPage() {
+function ClientsPageContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { state, updateMembershipStatuses } = useApp();
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
@@ -82,6 +85,20 @@ export default function ClientsPage() {
 
     loadResets();
   }, []);
+
+  // Handle openClient query parameter for navigation back from session plan
+  useEffect(() => {
+    const openClientId = searchParams.get('openClient');
+    if (openClientId) {
+      const client = state.clients.find(c => c.id === openClientId);
+      if (client) {
+        setSelectedClient(client);
+        setShowClientModal(true);
+        // Clear the query parameter
+        router.replace('/clients');
+      }
+    }
+  }, [searchParams, state.clients, router]);
 
   // Calculate membership count since reset for a client (including email aliases)
   const getMembershipCountSinceReset = (client: Client): number => {
@@ -299,6 +316,11 @@ export default function ClientsPage() {
       setShowClientModal(false);
       setShowBehaviourQuestionnaireModal(true);
     }
+  };
+
+  const handleViewSession = (session: Session) => {
+    // Navigate to session plan page with the session ID and indicate we came from clients page
+    router.push(`/session-plan?sessionId=${session.id}&from=clients&clientId=${session.clientId}`);
   };
 
   const handleCloseBehaviourQuestionnaireModal = () => {
@@ -543,6 +565,7 @@ export default function ClientsPage() {
         onEditClient={handleEditClient}
         onViewBehaviouralBrief={handleViewBehaviouralBrief}
         onViewBehaviourQuestionnaire={handleViewBehaviourQuestionnaire}
+        onViewSession={handleViewSession}
       />
 
       <EditClientModal
@@ -621,5 +644,17 @@ export default function ClientsPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function ClientsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-gray-500">Loading...</div>
+      </div>
+    }>
+      <ClientsPageContent />
+    </Suspense>
   );
 }

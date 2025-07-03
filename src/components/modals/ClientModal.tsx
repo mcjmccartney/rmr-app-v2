@@ -13,9 +13,10 @@ interface ClientModalProps {
   onEditClient: (client: Client) => void;
   onViewBehaviouralBrief?: (behaviouralBriefId: string) => void;
   onViewBehaviourQuestionnaire?: (behaviourQuestionnaireId: string) => void;
+  onViewSession?: (session: Session) => void;
 }
 
-export default function ClientModal({ client, isOpen, onClose, onEditClient, onViewBehaviouralBrief, onViewBehaviourQuestionnaire }: ClientModalProps) {
+export default function ClientModal({ client, isOpen, onClose, onEditClient, onViewBehaviouralBrief, onViewBehaviourQuestionnaire, onViewSession }: ClientModalProps) {
   const { state, updateClient, deleteClient, getMembershipsByClientId, getMembershipsByEmail, getMembershipsByClientIdWithAliases } = useApp();
   const [activeTab, setActiveTab] = useState<'sessions' | 'memberships'>('sessions');
   const [clientSessions, setClientSessions] = useState<Session[]>([]);
@@ -356,7 +357,11 @@ export default function ClientModal({ client, isOpen, onClose, onEditClient, onV
                           // So we reverse the numbering: total sessions - current index
                           const sessionNumber = clientSessions.length - index;
                           return (
-                            <div key={session.id} className="bg-gray-50 p-3 rounded-lg">
+                            <div
+                              key={session.id}
+                              className="bg-gray-50 p-3 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
+                              onClick={() => onViewSession && onViewSession(session)}
+                            >
                               <div className="flex justify-between items-start">
                                 <div>
                                   <div className="font-medium text-gray-900 text-sm">

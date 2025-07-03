@@ -139,7 +139,16 @@ function SessionPlanContent() {
   }, [sessionId]); // Only depend on sessionId to prevent unnecessary re-runs
 
   const handleBack = () => {
-    router.push('/calendar');
+    const from = searchParams.get('from');
+    const clientId = searchParams.get('clientId');
+
+    if (from === 'clients' && clientId) {
+      // Navigate back to clients page and open the client modal
+      router.push(`/clients?openClient=${clientId}`);
+    } else {
+      // Default to calendar
+      router.push('/calendar');
+    }
   };
 
   const handleInputChange = (field: string, value: string) => {
@@ -215,10 +224,10 @@ function SessionPlanContent() {
 
     try {
       await saveSessionPlan();
-      router.push('/calendar');
+      handleBack();
     } catch (error) {
       console.error('Error saving session plan:', error);
-      router.push('/calendar');
+      handleBack();
     }
   };
 
@@ -401,11 +410,11 @@ function SessionPlanContent() {
       sessionDate: new Date(currentSession.bookingDate).toLocaleDateString('en-GB'),
       sessionTime: currentSession.bookingTime.substring(0, 5), // Ensure HH:mm format (remove seconds)
 
-      // Main goals (current form state)
-      mainGoal1: formData.mainGoal1 || '',
-      mainGoal2: formData.mainGoal2 || '',
-      mainGoal3: formData.mainGoal3 || '',
-      mainGoal4: formData.mainGoal4 || '',
+      // Main goals (current form state) - Add bullet points before each goal
+      mainGoal1: formData.mainGoal1 ? `• ${formData.mainGoal1}` : '',
+      mainGoal2: formData.mainGoal2 ? `• ${formData.mainGoal2}` : '',
+      mainGoal3: formData.mainGoal3 ? `• ${formData.mainGoal3}` : '',
+      mainGoal4: formData.mainGoal4 ? `• ${formData.mainGoal4}` : '',
 
       // Explanation (current form state)
       explanationOfBehaviour: formData.explanationOfBehaviour || '',
