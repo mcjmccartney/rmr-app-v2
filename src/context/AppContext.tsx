@@ -237,6 +237,7 @@ const AppContext = createContext<{
   loadClientEmailAliases: () => Promise<void>;
   loadActionPoints: () => Promise<void>;
   loadSessionParticipants: () => Promise<void>;
+  loadSessionPlans: () => Promise<void>;
   createActionPoint: (actionPoint: Omit<ActionPoint, 'id'>) => Promise<ActionPoint>;
   updateActionPoint: (id: string, updates: Partial<ActionPoint>) => Promise<ActionPoint>;
   deleteActionPoint: (id: string) => Promise<void>;
@@ -414,6 +415,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
       dispatch({ type: 'SET_SESSION_PARTICIPANTS', payload: participants });
     } catch (error) {
       console.error('Failed to load session participants:', error);
+    }
+  };
+
+  // Load session plans from Supabase
+  const loadSessionPlans = async () => {
+    try {
+      console.log('Loading session plans...');
+      const sessionPlans = await sessionPlanService.getAll();
+      console.log('Loaded session plans:', sessionPlans.length);
+      dispatch({ type: 'SET_SESSION_PLANS', payload: sessionPlans });
+    } catch (error) {
+      console.error('Failed to load session plans:', error);
     }
   };
 
@@ -1173,6 +1186,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       await loadClientEmailAliases();
       await loadActionPoints();
       await loadSessionParticipants();
+      await loadSessionPlans();
 
       // Update membership statuses after loading all data
       console.log('🔄 Checking membership statuses...');
@@ -1194,6 +1208,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       loadClientEmailAliases,
       loadActionPoints,
       loadSessionParticipants,
+      loadSessionPlans,
       createActionPoint,
       updateActionPoint,
       deleteActionPoint,

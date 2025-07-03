@@ -11,10 +11,29 @@ import EditClientModal from '@/components/modals/EditClientModal';
 import BehaviouralBriefModal from '@/components/modals/BehaviouralBriefModal';
 import BehaviourQuestionnaireModal from '@/components/modals/BehaviourQuestionnaireModal';
 import AddModal from '@/components/AddModal';
-import { Session, Client, BehaviouralBrief, BehaviourQuestionnaire } from '@/types';
+import { Session, Client, BehaviouralBrief, BehaviourQuestionnaire, SessionPlan } from '@/types';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek } from 'date-fns';
 import { formatTime, formatDayDate, formatMonthYear, combineDateAndTime } from '@/utils/dateFormatting';
-import { ChevronLeft, ChevronRight, Calendar, UserPlus, X, Users, CalendarDays, Edit3 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar, UserPlus, X, Users, CalendarDays, Edit3, FileText } from 'lucide-react';
+
+// Helper function to check if a session plan has meaningful content
+const sessionPlanHasContent = (sessionPlan: SessionPlan): boolean => {
+  // Check if any main goals have content
+  const hasMainGoals = !!(
+    sessionPlan.mainGoal1?.trim() ||
+    sessionPlan.mainGoal2?.trim() ||
+    sessionPlan.mainGoal3?.trim() ||
+    sessionPlan.mainGoal4?.trim()
+  );
+
+  // Check if explanation has content
+  const hasExplanation = !!(sessionPlan.explanationOfBehaviour?.trim());
+
+  // Check if action points are selected
+  const hasActionPoints = sessionPlan.actionPoints && sessionPlan.actionPoints.length > 0;
+
+  return hasMainGoals || hasExplanation || hasActionPoints;
+};
 
 // Helper function to get all emails for a client (including aliases)
 const getClientEmails = (client: any, clientEmailAliases: { [clientId: string]: any[] } = {}) => {
@@ -469,8 +488,9 @@ export default function CalendarPage() {
                       const client = state.clients.find(c => c.id === session.clientId);
                       const timeOnly = formatTime(session.bookingTime);
 
-                      // Check if this session has a session plan
-                      const hasSessionPlan = state.sessionPlans.some(plan => plan.sessionId === session.id);
+                      // Check if this session has a session plan with content
+                      const sessionPlan = state.sessionPlans.find(plan => plan.sessionId === session.id);
+                      const hasSessionPlanWithContent = sessionPlan && sessionPlanHasContent(sessionPlan);
 
                       // For Group and RMR Live sessions, show session type instead of "Unknown Client"
                       const isGroupOrRMRLive = session.sessionType === 'Group' || session.sessionType === 'RMR Live';
@@ -537,10 +557,10 @@ export default function CalendarPage() {
                           <span className="block sm:hidden">{timeOnly}</span>
                           <span className="hidden sm:block">{fullDisplayText}</span>
 
-                          {/* White tick icon for sessions with session plans */}
-                          {hasSessionPlan && (
-                            <span className="absolute right-2 top-1/2 transform -translate-y-1/2 text-white text-sm font-bold">
-                              ✓
+                          {/* White form icon for sessions with session plan content */}
+                          {hasSessionPlanWithContent && (
+                            <span className="absolute right-2 top-1/2 transform -translate-y-1/2 text-white">
+                              <FileText size={16} />
                             </span>
                           )}
                         </button>
@@ -692,8 +712,9 @@ export default function CalendarPage() {
                   ? session.sessionType
                   : 'Unknown Client';
 
-                // Check if this session has a session plan
-                const hasSessionPlan = state.sessionPlans.some(plan => plan.sessionId === session.id);
+                // Check if this session has a session plan with content
+                const sessionPlan = state.sessionPlans.find(plan => plan.sessionId === session.id);
+                const hasSessionPlanWithContent = sessionPlan && sessionPlanHasContent(sessionPlan);
 
                 // Determine button style - priority: session plan sent (black) > paid (green) > default
                 const clientEmails = getClientEmails(client, state.clientEmailAliases || {});
@@ -739,10 +760,10 @@ export default function CalendarPage() {
                       {session.sessionType}
                     </div>
 
-                    {/* White tick icon for sessions with session plans */}
-                    {hasSessionPlan && (
-                      <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white text-lg font-bold">
-                        ✓
+                    {/* White form icon for sessions with session plan content */}
+                    {hasSessionPlanWithContent && (
+                      <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white">
+                        <FileText size={20} />
                       </span>
                     )}
                   </button>
@@ -775,8 +796,9 @@ export default function CalendarPage() {
                     ? session.sessionType
                     : 'Unknown Client';
 
-                  // Check if this session has a session plan
-                  const hasSessionPlan = state.sessionPlans.some(plan => plan.sessionId === session.id);
+                  // Check if this session has a session plan with content
+                  const sessionPlan = state.sessionPlans.find(plan => plan.sessionId === session.id);
+                  const hasSessionPlanWithContent = sessionPlan && sessionPlanHasContent(sessionPlan);
 
                   // Determine button style - priority: session plan sent (black) > paid (green) > default
                   const clientEmails = getClientEmails(client, state.clientEmailAliases || {});
@@ -822,10 +844,10 @@ export default function CalendarPage() {
                         {session.sessionType}
                       </div>
 
-                      {/* White tick icon for sessions with session plans */}
-                      {hasSessionPlan && (
-                        <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white text-lg font-bold">
-                          ✓
+                      {/* White form icon for sessions with session plan content */}
+                      {hasSessionPlanWithContent && (
+                        <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white">
+                          <FileText size={20} />
                         </span>
                       )}
                     </button>

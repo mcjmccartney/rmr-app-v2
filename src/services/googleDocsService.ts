@@ -164,7 +164,7 @@ export const googleDocsService = {
     ).map(ap => personalizeActionPoint(ap, dogName, dogGender));
 
     return {
-      title: `Session Plan - ${dogName} - Session ${sessionNumber}`,
+      title: `Session ${sessionNumber} - ${dogName}`,
       sessionNumber,
       dogName,
       ownerName,

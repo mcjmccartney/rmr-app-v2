@@ -415,6 +415,9 @@ function SessionPlanContent() {
       // Session identification for callback
       sessionId: currentSession.id,
 
+      // Document title
+      title: `Session ${sessionNumber} - ${currentClient.dogName || 'Unknown Dog'}`,
+
       // Basic session info
       sessionNumber: sessionNumber.toString(),
       dogName: currentClient.dogName || 'Unknown Dog',
