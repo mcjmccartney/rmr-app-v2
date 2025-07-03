@@ -367,7 +367,9 @@ export default function ClientModal({ client, isOpen, onClose, onEditClient, onV
                                   sessionType: session.sessionType,
                                   bookingDate: session.bookingDate
                                 });
-                                onViewSession && onViewSession(session);
+                                if (onViewSession) {
+                                  onViewSession(session);
+                                }
                               }}
                             >
                               <div className="flex justify-between items-start">
