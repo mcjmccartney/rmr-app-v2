@@ -234,6 +234,22 @@ export default function CalendarPage() {
     setShowClientModal(true);
   };
 
+  const handleViewSession = (session: Session) => {
+    console.log('Calendar - handleViewSession called:', {
+      sessionId: session.id,
+      clientId: session.clientId,
+      sessionType: session.sessionType,
+      bookingDate: session.bookingDate
+    });
+
+    // Close the client modal
+    setShowClientModal(false);
+    setSelectedClient(null);
+
+    // Navigate to session plan page
+    router.push(`/session-plan?sessionId=${session.id}&from=calendar&clientId=${session.clientId}`);
+  };
+
   const handleDayClick = (day: Date, sessions: Session[]) => {
     if (sessions.length >= 3) {
       // 3 or more sessions, show modal (mobile slide-in or desktop central)
@@ -616,6 +632,7 @@ export default function CalendarPage() {
         onEditClient={handleEditClientFromModal}
         onViewBehaviouralBrief={handleViewBehaviouralBrief}
         onViewBehaviourQuestionnaire={handleViewBehaviourQuestionnaire}
+        onViewSession={handleViewSession}
       />
 
       <EditClientModal
