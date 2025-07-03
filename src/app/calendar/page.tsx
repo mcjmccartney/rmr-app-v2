@@ -77,21 +77,21 @@ export default function CalendarPage() {
   const [selectedDayDate, setSelectedDayDate] = useState<Date | null>(null);
   const [hideWeekends, setHideWeekends] = useState(true);
 
-  // Auto-pair memberships with clients on component mount
-  useEffect(() => {
-    const runMembershipPairing = async () => {
-      try {
-        console.log('🔄 Running automatic membership pairing...');
-        await pairMembershipsWithClients();
-      } catch (error) {
-        console.error('❌ Error during automatic membership pairing:', error);
-      }
-    };
+  // Disabled automatic membership pairing - now using manual override system
+  // useEffect(() => {
+  //   const runMembershipPairing = async () => {
+  //     try {
+  //       console.log('🔄 Running automatic membership pairing...');
+  //       await pairMembershipsWithClients();
+  //     } catch (error) {
+  //       console.error('❌ Error during automatic membership pairing:', error);
+  //     }
+  //   };
 
-    // Run pairing after a short delay to ensure all data is loaded
-    const timer = setTimeout(runMembershipPairing, 2000);
-    return () => clearTimeout(timer);
-  }, [pairMembershipsWithClients]);
+  //   // Run pairing after a short delay to ensure all data is loaded
+  //   const timer = setTimeout(runMembershipPairing, 2000);
+  //   return () => clearTimeout(timer);
+  // }, [pairMembershipsWithClients]);
 
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);

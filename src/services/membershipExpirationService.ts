@@ -38,13 +38,15 @@ export const membershipExpirationService = {
       const mostRecentMembership = sortedMemberships[0];
       const lastPaymentDate = new Date(mostRecentMembership.date);
       
-      // Calculate expiration date (1 month from last payment)
+      // Calculate expiration date: midnight of the following day of the next month
+      // For example: payment on 2024-01-15 expires at midnight on 2024-02-16
       const expirationDate = new Date(lastPaymentDate);
-      expirationDate.setMonth(expirationDate.getMonth() + 1);
+      expirationDate.setMonth(expirationDate.getMonth() + 1); // Next month
+      expirationDate.setDate(expirationDate.getDate() + 1); // Following day
+      expirationDate.setHours(0, 0, 0, 0); // Midnight
 
-      // Set expiration to midnight of the following day to avoid premature expiration
       const expirationEndOfDay = new Date(expirationDate);
-      expirationEndOfDay.setHours(23, 59, 59, 999); // End of expiration day
+      expirationEndOfDay.setHours(23, 59, 59, 999); // End of expiration day for comparison
 
       const now = new Date();
       const daysUntilExpiration = Math.ceil((expirationEndOfDay.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
@@ -72,19 +74,26 @@ export const membershipExpirationService = {
 
   /**
    * Update a client's membership status based on their payment history
+   * Respects manual override - will not change membership if manual override is enabled
    */
   async updateClientMembershipStatus(client: Client): Promise<Client> {
+    // Skip automatic updates if manual override is enabled
+    if (client.membershipManualOverride) {
+      console.log(`⏭️ Skipping automatic membership update for ${client.firstName} ${client.lastName} - manual override enabled`);
+      return client;
+    }
+
     const membershipStatus = await this.checkMembershipStatus(client);
-    
+
     // Only update if the membership status has changed
     if (client.membership !== membershipStatus.isActive) {
       console.log(`🔄 Updating membership status for ${client.firstName} ${client.lastName}: ${client.membership} → ${membershipStatus.isActive}`);
-      
+
       try {
         const updatedClient = await clientService.update(client.id, {
           membership: membershipStatus.isActive
         });
-        
+
         console.log(`✅ Updated membership status for ${client.firstName} ${client.lastName} to ${membershipStatus.isActive}`);
         return updatedClient;
       } catch (error) {
@@ -92,7 +101,7 @@ export const membershipExpirationService = {
         return client; // Return original client if update fails
       }
     }
-    
+
     return client; // No change needed
   },
 

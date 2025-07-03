@@ -25,6 +25,7 @@ export default function ClientModal({ client, isOpen, onClose, onEditClient, onV
   const [isTabExpanded, setIsTabExpanded] = useState(false);
   const [isUpdatingActive, setIsUpdatingActive] = useState(false);
   const [isUpdatingMembership, setIsUpdatingMembership] = useState(false);
+  const [isUpdatingManualOverride, setIsUpdatingManualOverride] = useState(false);
 
   // Get the fresh client data from state to ensure we have the latest updates
   const currentClient = client ? (state.clients.find(c => c.id === client.id) || client) : null;
@@ -145,6 +146,19 @@ export default function ClientModal({ client, isOpen, onClose, onEditClient, onV
     }
   };
 
+  const handleToggleManualOverride = async () => {
+    if (!currentClient || isUpdatingManualOverride) return;
+    setIsUpdatingManualOverride(true);
+    try {
+      await updateClient(currentClient.id, { membershipManualOverride: !currentClient.membershipManualOverride });
+    } catch (error) {
+      console.error('Failed to update manual override status:', error);
+      alert('Failed to update manual override status. Please try again.');
+    } finally {
+      setIsUpdatingManualOverride(false);
+    }
+  };
+
   const handleEditClick = () => {
     if (!currentClient) return;
     onEditClient(currentClient);
@@ -226,7 +240,12 @@ export default function ClientModal({ client, isOpen, onClose, onEditClient, onV
           </div>
 
           <div className="flex justify-between items-center py-4">
-            <span className="text-gray-600 font-medium">Membership</span>
+            <div className="flex flex-col">
+              <span className="text-gray-600 font-medium">Membership</span>
+              {currentClient.membershipManualOverride && (
+                <span className="text-xs text-amber-600 font-medium">Manual Override</span>
+              )}
+            </div>
             <button
               onClick={handleToggleMembership}
               disabled={isUpdatingMembership}
@@ -243,6 +262,32 @@ export default function ClientModal({ client, isOpen, onClose, onEditClient, onV
               {isUpdatingMembership && (
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin"></div>
+                </div>
+              )}
+            </button>
+          </div>
+
+          <div className="flex justify-between items-center py-4">
+            <div className="flex flex-col">
+              <span className="text-gray-600 font-medium">Manual Override</span>
+              <span className="text-xs text-gray-500">Prevents automatic membership changes</span>
+            </div>
+            <button
+              onClick={handleToggleManualOverride}
+              disabled={isUpdatingManualOverride}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ${
+                isUpdatingManualOverride ? 'opacity-50 cursor-not-allowed' : ''
+              } ${currentClient.membershipManualOverride ? 'bg-gray-300' : 'bg-gray-300'}`}
+              style={currentClient.membershipManualOverride ? { backgroundColor: '#dc2626' } : {}}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ${
+                  currentClient.membershipManualOverride ? 'translate-x-6' : 'translate-x-1'
+                }`}
+              />
+              {isUpdatingManualOverride && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                 </div>
               )}
             </button>

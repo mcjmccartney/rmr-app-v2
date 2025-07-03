@@ -84,8 +84,8 @@ export const membershipPairingService = {
           const shouldBeMember = recentMemberships.length > 0
           const currentMembershipStatus = client.membership
 
-          // Update client membership status if it has changed
-          if (shouldBeMember !== currentMembershipStatus) {
+          // Update client membership status if it has changed and manual override is not enabled
+          if (shouldBeMember !== currentMembershipStatus && !client.membershipManualOverride) {
             const { error: updateError } = await supabase
               .from('clients')
               .update({ membership: shouldBeMember })
@@ -102,8 +102,10 @@ export const membershipPairingService = {
                 membershipCount: clientMemberships.length
               })
 
-              console.log(`✅ Updated membership status for ${client.first_name} ${client.last_name}: ${currentMembershipStatus} → ${shouldBeMember} (found ${clientMemberships.length} memberships across ${clientEmails.length} emails)`)
+              console.log(`✅ Updated membership status for ${client.first_name} ${client.last_name}: ${currentMembershipStatus} → ${shouldBeMember} (found ${clientMemberships.length} memberships across ${clientEmails.length} emails)`);
             }
+          } else if (client.membershipManualOverride) {
+            console.log(`⏭️ Skipping automatic membership update for ${client.first_name} ${client.last_name} - manual override enabled`);
           }
 
           // Update membership records with client_id if not already set
@@ -112,22 +114,22 @@ export const membershipPairingService = {
               const { error: membershipUpdateError } = await supabase
                 .from('memberships')
                 .update({ client_id: client.id })
-                .eq('id', membership.id)
+                .eq('id', membership.id);
 
               if (membershipUpdateError) {
-                result.errors.push(`Error linking membership ${membership.id} to client: ${membershipUpdateError.message}`)
+                result.errors.push(`Error linking membership ${membership.id} to client: ${membershipUpdateError.message}`);
               }
             }
           }
 
         } catch (error) {
-          result.errors.push(`Error processing client ${client.first_name} ${client.last_name}: ${error}`)
+          result.errors.push(`Error processing client ${client.first_name} ${client.last_name}: ${error}`);
         }
       }
 
     } catch (error) {
-      result.success = false
-      result.errors.push(`General error: ${error}`)
+      result.success = false;
+      result.errors.push(`General error: ${error}`);
     }
 
     return result
