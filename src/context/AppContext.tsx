@@ -1188,9 +1188,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       await loadSessionParticipants();
       await loadSessionPlans();
 
-      // Update membership statuses after loading all data
-      console.log('🔄 Checking membership statuses...');
-      await updateMembershipStatuses();
+      // Membership status updates now handled by daily cron job via /api/membership-expiration
+      console.log('✅ Initial data loading complete');
     };
 
     initializeApp();
