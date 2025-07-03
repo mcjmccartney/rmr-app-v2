@@ -1,1 +1,26 @@
-<svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1155 1000"><path d="m577.3 0 577.4 1000H0z" fill="#fff"/></svg>
+<svg width="192" height="192" viewBox="0 0 192 192" xmlns="http://www.w3.org/2000/svg">
+  <!-- Green background -->
+  <rect width="192" height="192" fill="#6B8E6B"/>
+
+  <!-- Paw print -->
+  <g fill="#B85450">
+    <!-- Main pad -->
+    <ellipse cx="96" cy="120" rx="18" ry="22"/>
+
+    <!-- Top left toe -->
+    <ellipse cx="67" cy="82" rx="10" ry="14" transform="rotate(-15 67 82)"/>
+
+    <!-- Top center toe -->
+    <ellipse cx="96" cy="67" rx="11" ry="16"/>
+
+    <!-- Top right toe -->
+    <ellipse cx="125" cy="82" rx="10" ry="14" transform="rotate(15 125 82)"/>
+  </g>
+
+  <!-- RMR text -->
+  <g fill="white" font-family="serif" font-size="48" font-weight="bold" text-anchor="middle">
+    <text x="52" y="112">R</text>
+    <text x="96" y="112">M</text>
+    <text x="140" y="112">R</text>
+  </g>
+</svg>
