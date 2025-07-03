@@ -200,7 +200,6 @@ export interface Client {
   address?: string;
   active: boolean;
   membership: boolean;
-  membershipManualOverride?: boolean; // Prevents automatic membership changes when true
   avatar?: string;
   behaviouralBriefId?: string;
   behaviourQuestionnaireId?: string;

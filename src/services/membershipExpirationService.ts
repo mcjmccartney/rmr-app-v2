@@ -74,15 +74,8 @@ export const membershipExpirationService = {
 
   /**
    * Update a client's membership status based on their payment history
-   * Respects manual override - will not change membership if manual override is enabled
    */
   async updateClientMembershipStatus(client: Client): Promise<Client> {
-    // Skip automatic updates if manual override is enabled
-    if (client.membershipManualOverride) {
-      console.log(`⏭️ Skipping automatic membership update for ${client.firstName} ${client.lastName} - manual override enabled`);
-      return client;
-    }
-
     const membershipStatus = await this.checkMembershipStatus(client);
 
     // Only update if the membership status has changed

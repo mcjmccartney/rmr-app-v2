@@ -23,8 +23,7 @@ export default function EditClientModal({ client, isOpen, onClose }: EditClientM
     otherDogs: [] as string[],
     address: '',
     active: true,
-    membership: false,
-    membershipManualOverride: false
+    membership: false
   });
 
   useEffect(() => {
@@ -39,8 +38,7 @@ export default function EditClientModal({ client, isOpen, onClose }: EditClientM
         otherDogs: (client.otherDogs || []) as string[],
         address: client.address || '',
         active: client.active,
-        membership: client.membership,
-        membershipManualOverride: client.membershipManualOverride || false
+        membership: client.membership
       });
     }
   }, [client]);
@@ -76,8 +74,7 @@ export default function EditClientModal({ client, isOpen, onClose }: EditClientM
       otherDogs: formData.otherDogs.filter(dog => dog.trim() !== '') || undefined,
       address: formData.address || undefined,
       active: formData.active,
-      membership: formData.membership,
-      membershipManualOverride: formData.membershipManualOverride
+      membership: formData.membership
     };
 
     try {
@@ -271,26 +268,7 @@ export default function EditClientModal({ client, isOpen, onClose }: EditClientM
           </div>
         </div>
 
-        <div className="flex items-center justify-between">
-          <div className="flex flex-col">
-            <label className="text-gray-600 text-sm font-medium">Manual Override</label>
-            <span className="text-xs text-gray-500">Prevents automatic membership changes</span>
-          </div>
-          <button
-            type="button"
-            onClick={() => setFormData({ ...formData, membershipManualOverride: !formData.membershipManualOverride })}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-              formData.membershipManualOverride ? 'bg-gray-200' : 'bg-gray-200'
-            }`}
-            style={formData.membershipManualOverride ? { backgroundColor: '#dc2626' } : {}}
-          >
-            <span
-              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                formData.membershipManualOverride ? 'translate-x-6' : 'translate-x-1'
-              }`}
-            />
-          </button>
-        </div>
+
 
         <button
           type="submit"

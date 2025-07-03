@@ -84,8 +84,8 @@ export const membershipPairingService = {
           const shouldBeMember = recentMemberships.length > 0
           const currentMembershipStatus = client.membership
 
-          // Update client membership status if it has changed and manual override is not enabled
-          if (shouldBeMember !== currentMembershipStatus && !client.membershipManualOverride) {
+          // Update client membership status if it has changed
+          if (shouldBeMember !== currentMembershipStatus) {
             const { error: updateError } = await supabase
               .from('clients')
               .update({ membership: shouldBeMember })
@@ -104,8 +104,6 @@ export const membershipPairingService = {
 
               console.log(`✅ Updated membership status for ${client.first_name} ${client.last_name}: ${currentMembershipStatus} → ${shouldBeMember} (found ${clientMemberships.length} memberships across ${clientEmails.length} emails)`);
             }
-          } else if (client.membershipManualOverride) {
-            console.log(`⏭️ Skipping automatic membership update for ${client.first_name} ${client.last_name} - manual override enabled`);
           }
 
           // Update membership records with client_id if not already set
