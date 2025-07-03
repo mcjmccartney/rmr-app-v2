@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS clients (
 CREATE TABLE IF NOT EXISTS sessions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     client_id UUID NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
-    session_type VARCHAR(50) NOT NULL CHECK (session_type IN ('In-Person', 'Online', 'Training', 'Online Catchup', 'Group', 'Phone Call', 'Coaching')),
+    session_type VARCHAR(50) NOT NULL CHECK (session_type IN ('In-Person', 'Online', 'Training - 1hr', 'Training - 30mins', 'Online Catchup', 'Group', 'Phone Call', 'Coaching')),
     booking_date TIMESTAMP WITH TIME ZONE NOT NULL,
     notes TEXT,
     quote DECIMAL(10,2) NOT NULL,

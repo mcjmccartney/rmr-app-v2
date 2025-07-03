@@ -257,7 +257,8 @@ export default function MonthlyBreakdownModal({ finance, allFinancesForMonth, is
       'Group': '#b5aa9f',          // Beige
       'RMR Live': '#e17100',       // Orange
       'Coaching': '#2b4f6c',       // Dark blue
-      'Training': '#7aa37a',       // Light green
+      'Training - 1hr': '#7aa37a', // Light green
+      'Training - 30mins': '#9bb59b', // Lighter green
       'Memberships': '#0a91b1',    // Blue
       'Unknown': '#ecebdd'         // Light beige
     };

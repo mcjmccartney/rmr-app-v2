@@ -4,8 +4,10 @@ export const calculateQuote = (sessionType: Session['sessionType'], isMember: bo
   switch (sessionType) {
     case 'Online':
       return isMember ? 50 : 70;
-    case 'Training':
-      return isMember ? 50 : 60;
+    case 'Training - 1hr':
+      return 50; // Always £50 regardless of membership
+    case 'Training - 30mins':
+      return 25; // Always £25 regardless of membership
     case 'In-Person':
       return isMember ? 75 : 95;
     case 'Online Catchup':

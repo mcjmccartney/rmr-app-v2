@@ -52,7 +52,8 @@ export const generateTimeOptions = (): TimeOption[] => {
 export const sessionTypeOptions = [
   { value: 'In-Person', label: 'In-Person' },
   { value: 'Online', label: 'Online' },
-  { value: 'Training', label: 'Training' },
+  { value: 'Training - 1hr', label: 'Training - 1hr' },
+  { value: 'Training - 30mins', label: 'Training - 30mins' },
   { value: 'Online Catchup', label: 'Online Catchup' },
   { value: 'Group', label: 'Group' },
   { value: 'RMR Live', label: 'RMR Live' },
