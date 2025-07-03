@@ -721,63 +721,65 @@ export function AppProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      console.log('Triggering Make.com webhooks for new session:', webhookData);
-
-      // Prepare webhook promises - booking terms webhook always triggers
-      const webhookPromises: Promise<Response>[] = [];
-      const webhookNames: string[] = [];
-
-      // Always trigger booking terms email webhook
-      webhookPromises.push(
-        fetch('https://hook.eu1.make.com/yaoalfe77uqtw4xv9fbh5atf4okq14wm', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(webhookData)
-        })
-      );
-      webhookNames.push('booking terms email webhook');
-
-      // Always trigger session webhook for calendar creation
-      // Only send session emails if session is 4 days or less away
-      const webhookDataWithEmailFlag = {
-        ...webhookData,
-        sendSessionEmail: daysUntilSession <= 4 // Flag to control email sending in Make.com
-      };
-
-      webhookPromises.push(
-        fetch('https://hook.eu1.make.com/lipggo8kcd8kwq2vp6j6mr3gnxbx12h7', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(webhookDataWithEmailFlag)
-        })
-      );
-      webhookNames.push('session webhook (calendar + conditional email)');
-
+      // Only trigger webhooks if session is 4 days or less away
       if (daysUntilSession <= 4) {
+        console.log('Triggering Make.com webhooks for new session (≤4 days away):', webhookData);
+
+        // Prepare webhook promises - trigger both webhooks for sessions ≤4 days away
+        const webhookPromises: Promise<Response>[] = [];
+        const webhookNames: string[] = [];
+
+        // Trigger booking terms email webhook
+        webhookPromises.push(
+          fetch('https://hook.eu1.make.com/yaoalfe77uqtw4xv9fbh5atf4okq14wm', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(webhookData)
+          })
+        );
+        webhookNames.push('booking terms email webhook');
+
+        // Trigger session webhook for calendar creation and emails
+        const webhookDataWithEmailFlag = {
+          ...webhookData,
+          sendSessionEmail: true // Always true for sessions ≤4 days away
+        };
+
+        webhookPromises.push(
+          fetch('https://hook.eu1.make.com/lipggo8kcd8kwq2vp6j6mr3gnxbx12h7', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(webhookDataWithEmailFlag)
+          })
+        );
+        webhookNames.push('session webhook (calendar + email)');
+
         console.log('Triggering both webhooks (session is ≤4 days away - will send emails + create calendar)');
+
+        const responses = await Promise.allSettled(webhookPromises);
+
+        // Log results
+        responses.forEach((result, index) => {
+          const webhookName = webhookNames[index];
+          if (result.status === 'fulfilled' && result.value.ok) {
+            console.log(`Successfully triggered ${webhookName}`);
+          } else {
+            console.error(`Failed to trigger ${webhookName}:`,
+              result.status === 'fulfilled' ?
+                `${result.value.status} ${result.value.statusText}` :
+                result.reason
+            );
+          }
+        });
       } else {
-        console.log('Triggering both webhooks (session is >4 days away - will create calendar only, no emails)');
+        console.log(`Session is ${daysUntilSession} days away (>4 days) - no webhooks triggered. Will trigger both webhooks via daily cron when session reaches 4 days away.`);
       }
 
-      const responses = await Promise.allSettled(webhookPromises);
 
-      // Log results
-      responses.forEach((result, index) => {
-        const webhookName = webhookNames[index];
-        if (result.status === 'fulfilled' && result.value.ok) {
-          console.log(`Successfully triggered ${webhookName}`);
-        } else {
-          console.error(`Failed to trigger ${webhookName}:`,
-            result.status === 'fulfilled' ?
-              `${result.value.status} ${result.value.statusText}` :
-              result.reason
-          );
-        }
-      });
 
     } catch (error) {
       console.error('Error triggering Make.com webhooks:', error);

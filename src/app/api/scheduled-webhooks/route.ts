@@ -14,7 +14,9 @@ export async function POST() {
     const now = new Date();
     const currentDate = now.toISOString().split('T')[0]; // YYYY-MM-DD
     
-    // Find sessions that are exactly 4 days away for booking terms email reminders
+    // Find sessions that are exactly 4 days away to trigger both webhooks
+    // These are sessions that were >4 days away when created (so no webhooks were triggered)
+    // and now need both booking terms and session webhooks triggered
     const sessionsToTrigger = sessions.filter(session => {
       // Skip sessions without clients or Group/RMR Live sessions
       if (!session.clientId || session.sessionType === 'Group' || session.sessionType === 'RMR Live') {
@@ -26,16 +28,16 @@ export async function POST() {
       const timeDiff = sessionDate.getTime() - now.getTime();
       const daysUntilSession = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
 
-      // We want sessions that are exactly 4 days away for booking terms reminders
+      // We want sessions that are exactly 4 days away to trigger both webhooks
       return daysUntilSession === 4;
     });
 
-    console.log(`Found ${sessionsToTrigger.length} sessions that are exactly 4 days away and need booking terms reminders`);
+    console.log(`Found ${sessionsToTrigger.length} sessions that are exactly 4 days away and need both webhooks triggered`);
     
     if (sessionsToTrigger.length === 0) {
       return NextResponse.json({
         success: true,
-        message: 'No sessions found that need booking terms reminders today',
+        message: 'No sessions found that need webhooks triggered today',
         sessionsProcessed: 0
       });
     }
@@ -69,31 +71,73 @@ export async function POST() {
           sendSessionEmail: true // Force email sending for scheduled webhooks
         };
         
-        console.log(`Triggering scheduled booking terms webhook for session ${session.id}:`, webhookData);
+        console.log(`Triggering both scheduled webhooks for session ${session.id}:`, webhookData);
 
-        // Trigger the booking terms webhook for sessions that are 4 days away
-        const response = await fetch('https://hook.eu1.make.com/yaoalfe77uqtw4xv9fbh5atf4okq14wm', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(webhookData)
+        // Prepare both webhook promises for sessions that are exactly 4 days away
+        const webhookPromises: Promise<Response>[] = [];
+        const webhookNames: string[] = [];
+
+        // Trigger booking terms webhook
+        webhookPromises.push(
+          fetch('https://hook.eu1.make.com/yaoalfe77uqtw4xv9fbh5atf4okq14wm', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(webhookData)
+          })
+        );
+        webhookNames.push('booking terms webhook');
+
+        // Trigger session webhook with email flag enabled
+        const webhookDataWithEmailFlag = {
+          ...webhookData,
+          sendSessionEmail: true // Always true for scheduled webhooks (4 days away)
+        };
+
+        webhookPromises.push(
+          fetch('https://hook.eu1.make.com/lipggo8kcd8kwq2vp6j6mr3gnxbx12h7', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(webhookDataWithEmailFlag)
+          })
+        );
+        webhookNames.push('session webhook');
+
+        const responses = await Promise.allSettled(webhookPromises);
+
+        // Check if both webhooks succeeded
+        let allSucceeded = true;
+        const errors: string[] = [];
+
+        responses.forEach((result, index) => {
+          const webhookName = webhookNames[index];
+          if (result.status === 'fulfilled' && result.value.ok) {
+            console.log(`✅ Successfully triggered scheduled ${webhookName} for session ${session.id}`);
+          } else {
+            allSucceeded = false;
+            const error = result.status === 'fulfilled' ?
+              `${result.value.status} ${result.value.statusText}` :
+              result.reason;
+            console.error(`❌ Failed to trigger scheduled ${webhookName} for session ${session.id}:`, error);
+            errors.push(`${webhookName}: ${error}`);
+          }
         });
-        
-        if (response.ok) {
-          console.log(`✅ Successfully triggered scheduled booking terms webhook for session ${session.id}`);
+
+        if (allSucceeded) {
           results.push({
             sessionId: session.id,
             clientName: `${client.firstName} ${client.lastName}`,
             status: 'success'
           });
         } else {
-          console.error(`❌ Failed to trigger scheduled booking terms webhook for session ${session.id}:`, response.status, response.statusText);
           results.push({
             sessionId: session.id,
             clientName: `${client.firstName} ${client.lastName}`,
             status: 'failed',
-            error: `${response.status} ${response.statusText}`
+            error: errors.join('; ')
           });
         }
         
