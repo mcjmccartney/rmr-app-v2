@@ -318,10 +318,7 @@ function ClientsPageContent() {
     }
   };
 
-  const handleViewSession = (session: Session) => {
-    // Navigate to session plan page with the session ID and indicate we came from clients page
-    router.push(`/session-plan?sessionId=${session.id}&from=clients&clientId=${session.clientId}`);
-  };
+
 
   const handleCloseBehaviourQuestionnaireModal = () => {
     setShowBehaviourQuestionnaireModal(false);
@@ -565,7 +562,6 @@ function ClientsPageContent() {
         onEditClient={handleEditClient}
         onViewBehaviouralBrief={handleViewBehaviouralBrief}
         onViewBehaviourQuestionnaire={handleViewBehaviourQuestionnaire}
-        onViewSession={handleViewSession}
       />
 
       <EditClientModal

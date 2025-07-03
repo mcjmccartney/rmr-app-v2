@@ -57,6 +57,11 @@ function SessionPlanContent() {
     explanationOfBehaviour: '',
   });
 
+  // Auto-save state
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
   const [selectedActionPoints, setSelectedActionPoints] = useState<string[]>([]);
   const [showActionPoints, setShowActionPoints] = useState(false);
   const [editableActionPoints, setEditableActionPoints] = useState<{[key: string]: {header: string, details: string}}>({});
@@ -138,6 +143,10 @@ function SessionPlanContent() {
           if (existingPlan.documentEditUrl) {
             setGeneratedDocUrl(existingPlan.documentEditUrl);
           }
+
+          // Set last saved time and mark as no unsaved changes
+          setLastSaved(existingPlan.updatedAt);
+          setHasUnsavedChanges(false);
         } else {
           console.log('No existing session plan found for sessionId:', sessionId);
         }
@@ -150,6 +159,29 @@ function SessionPlanContent() {
 
     loadExistingSessionPlan();
   }, [sessionId]); // Only depend on sessionId to prevent unnecessary re-runs
+
+  // Auto-save effect - saves every 30 seconds if there are unsaved changes
+  useEffect(() => {
+    if (!hasUnsavedChanges || isSaving || !currentSession || !currentClient) return;
+
+    const autoSaveTimer = setTimeout(async () => {
+      try {
+        await saveSessionPlan(true);
+      } catch (error) {
+        console.error('Auto-save failed:', error);
+      }
+    }, 30000); // 30 seconds
+
+    return () => clearTimeout(autoSaveTimer);
+  }, [hasUnsavedChanges, isSaving, formData, selectedActionPoints]);
+
+  // Track form changes to trigger auto-save
+  useEffect(() => {
+    // Only mark as unsaved if we have actual content and it's not the initial load
+    if (lastSaved !== null || formData.mainGoal1 || formData.mainGoal2 || formData.mainGoal3 || formData.mainGoal4 || formData.explanationOfBehaviour || selectedActionPoints.length > 0) {
+      setHasUnsavedChanges(true);
+    }
+  }, [formData, selectedActionPoints]);
 
   const handleBack = () => {
     const from = searchParams.get('from');
@@ -166,6 +198,7 @@ function SessionPlanContent() {
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    setHasUnsavedChanges(true);
   };
 
   // Poll for document URL from the API endpoint
@@ -245,36 +278,59 @@ function SessionPlanContent() {
   };
 
   // Internal save function that doesn't navigate (for auto-save)
-  const saveSessionPlan = async () => {
+  const saveSessionPlan = async (isAutoSave = false) => {
     if (!currentSession || !currentClient) return;
 
-    const sessionPlanData = {
-      sessionId: currentSession.id,
-      mainGoal1: formData.mainGoal1,
-      mainGoal2: formData.mainGoal2,
-      mainGoal3: formData.mainGoal3,
-      mainGoal4: formData.mainGoal4,
-      explanationOfBehaviour: formData.explanationOfBehaviour,
-      actionPoints: selectedActionPoints,
-      sessionNumber: sessionNumber
-    };
-
-    console.log('Saving session plan data:', sessionPlanData);
-    console.log('Existing session plan:', existingSessionPlan);
-
-    let savedPlan;
-    if (existingSessionPlan) {
-      console.log('Updating existing session plan with ID:', existingSessionPlan.id);
-      savedPlan = await sessionPlanService.update(existingSessionPlan.id, sessionPlanData);
-    } else {
-      console.log('Creating new session plan');
-      savedPlan = await sessionPlanService.create(sessionPlanData);
-      // Update the existingSessionPlan state so subsequent saves will be updates
-      setExistingSessionPlan(savedPlan);
+    if (isAutoSave) {
+      setIsSaving(true);
     }
 
-    console.log('Session plan saved successfully:', savedPlan);
-    return savedPlan;
+    try {
+      const sessionPlanData = {
+        sessionId: currentSession.id,
+        mainGoal1: formData.mainGoal1,
+        mainGoal2: formData.mainGoal2,
+        mainGoal3: formData.mainGoal3,
+        mainGoal4: formData.mainGoal4,
+        explanationOfBehaviour: formData.explanationOfBehaviour,
+        actionPoints: selectedActionPoints,
+        sessionNumber: sessionNumber
+      };
+
+      console.log(isAutoSave ? 'Auto-saving session plan data:' : 'Saving session plan data:', sessionPlanData);
+      console.log('Existing session plan:', existingSessionPlan);
+
+      let savedPlan;
+      if (existingSessionPlan) {
+        console.log('Updating existing session plan with ID:', existingSessionPlan.id);
+        savedPlan = await sessionPlanService.update(existingSessionPlan.id, sessionPlanData);
+      } else {
+        console.log('Creating new session plan');
+        savedPlan = await sessionPlanService.create(sessionPlanData);
+        // Update the existingSessionPlan state so subsequent saves will be updates
+        setExistingSessionPlan(savedPlan);
+      }
+
+      console.log('Session plan saved successfully:', savedPlan);
+
+      if (isAutoSave) {
+        setLastSaved(new Date());
+        setHasUnsavedChanges(false);
+        console.log('✅ Auto-save completed');
+      }
+
+      return savedPlan;
+    } catch (error) {
+      console.error('Error saving session plan:', error);
+      if (isAutoSave) {
+        console.error('❌ Auto-save failed');
+      }
+      throw error;
+    } finally {
+      if (isAutoSave) {
+        setIsSaving(false);
+      }
+    }
   };
 
   // Get dog's gender from questionnaire for proper pronoun replacement
@@ -306,6 +362,7 @@ function SessionPlanContent() {
 
       return newSelected;
     });
+    setHasUnsavedChanges(true);
   };
 
   // Initialize editable action point with personalized content
@@ -337,6 +394,7 @@ function SessionPlanContent() {
         [field]: value
       }
     }));
+    setHasUnsavedChanges(true);
   };
 
   // Move action point up or down
@@ -352,6 +410,7 @@ function SessionPlanContent() {
     [newSelectedActionPoints[newIndex], newSelectedActionPoints[currentIndex]];
 
     setSelectedActionPoints(newSelectedActionPoints);
+    setHasUnsavedChanges(true);
   };
 
   const handlePreviewAndEdit = async () => {
@@ -653,9 +712,23 @@ function SessionPlanContent() {
           >
             ← Back
           </button>
-          <h1 className="text-xl font-semibold text-gray-900">
-            {existingSessionPlan ? 'Edit Session Plan' : 'Create Session Plan'}
-          </h1>
+          <div className="text-center">
+            <h1 className="text-xl font-semibold text-gray-900">
+              {existingSessionPlan ? 'Edit Session Plan' : 'Create Session Plan'}
+            </h1>
+            {/* Auto-save status */}
+            <div className="text-xs text-gray-500 mt-1">
+              {isSaving ? (
+                <span className="text-blue-600">💾 Saving...</span>
+              ) : hasUnsavedChanges ? (
+                <span className="text-amber-600">● Unsaved changes</span>
+              ) : lastSaved ? (
+                <span className="text-green-600">✓ Saved {new Date(lastSaved).toLocaleTimeString()}</span>
+              ) : (
+                <span>Ready to save</span>
+              )}
+            </div>
+          </div>
           <div className="w-16"></div>
         </div>
       </div>

@@ -13,10 +13,9 @@ interface ClientModalProps {
   onEditClient: (client: Client) => void;
   onViewBehaviouralBrief?: (behaviouralBriefId: string) => void;
   onViewBehaviourQuestionnaire?: (behaviourQuestionnaireId: string) => void;
-  onViewSession?: (session: Session) => void;
 }
 
-export default function ClientModal({ client, isOpen, onClose, onEditClient, onViewBehaviouralBrief, onViewBehaviourQuestionnaire, onViewSession }: ClientModalProps) {
+export default function ClientModal({ client, isOpen, onClose, onEditClient, onViewBehaviouralBrief, onViewBehaviourQuestionnaire }: ClientModalProps) {
   const { state, updateClient, deleteClient, getMembershipsByClientId, getMembershipsByEmail, getMembershipsByClientIdWithAliases } = useApp();
   const [activeTab, setActiveTab] = useState<'sessions' | 'memberships'>('sessions');
   const [clientSessions, setClientSessions] = useState<Session[]>([]);
@@ -361,18 +360,7 @@ export default function ClientModal({ client, isOpen, onClose, onEditClient, onV
                           return (
                             <div
                               key={session.id}
-                              className="bg-gray-50 p-3 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
-                              onClick={() => {
-                                console.log('ClientModal - Session clicked:', {
-                                  sessionId: session.id,
-                                  clientId: session.clientId,
-                                  sessionType: session.sessionType,
-                                  bookingDate: session.bookingDate
-                                });
-                                if (onViewSession) {
-                                  onViewSession(session);
-                                }
-                              }}
+                              className="bg-gray-50 p-3 rounded-lg"
                             >
                               <div className="flex justify-between items-start">
                                 <div>
