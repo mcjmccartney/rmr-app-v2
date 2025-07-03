@@ -360,7 +360,15 @@ export default function ClientModal({ client, isOpen, onClose, onEditClient, onV
                             <div
                               key={session.id}
                               className="bg-gray-50 p-3 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
-                              onClick={() => onViewSession && onViewSession(session)}
+                              onClick={() => {
+                                console.log('ClientModal - Session clicked:', {
+                                  sessionId: session.id,
+                                  clientId: session.clientId,
+                                  sessionType: session.sessionType,
+                                  bookingDate: session.bookingDate
+                                });
+                                onViewSession && onViewSession(session);
+                              }}
                             >
                               <div className="flex justify-between items-start">
                                 <div>

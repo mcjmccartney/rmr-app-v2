@@ -20,6 +20,19 @@ function SessionPlanContent() {
   const session = sessionId ? state.sessions.find(s => s.id === sessionId) : null;
   const client = session ? state.clients.find(c => c.id === session.clientId) : null;
 
+  // Debug logging for session navigation
+  useEffect(() => {
+    console.log('Session Plan Debug - Navigation:', {
+      sessionId,
+      sessionFound: !!session,
+      clientFound: !!client,
+      totalSessions: state.sessions.length,
+      totalClients: state.clients.length,
+      from: searchParams.get('from'),
+      clientId: searchParams.get('clientId')
+    });
+  }, [sessionId, session, client, state.sessions.length, state.clients.length, searchParams]);
+
   // Use action points from state (loaded from Supabase) or fallback to predefined ones
   const actionPoints = state.actionPoints.length > 0 ? state.actionPoints : predefinedActionPoints;
 
@@ -599,6 +612,18 @@ function SessionPlanContent() {
 
   // Removed unused function handleSaveEditedContent
 
+  // Show loading state while fetching data
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-xl font-semibold text-gray-900 mb-2">Loading session...</h1>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state if session not found after loading
   if (!sessionId || (!currentSession && !session) || (!currentClient && !client)) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
