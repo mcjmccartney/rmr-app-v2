@@ -492,6 +492,16 @@ export default function CalendarPage() {
                       const sessionPlan = state.sessionPlans.find(plan => plan.sessionId === session.id);
                       const hasSessionPlanWithContent = sessionPlan && sessionPlanHasContent(sessionPlan);
 
+                      // Debug logging for Christine Goldfinch session
+                      if (client && client.firstName === 'Christine' && client.lastName === 'Goldfinch') {
+                        console.log('Christine session debug:', {
+                          sessionId: session.id,
+                          sessionPlan,
+                          hasContent: hasSessionPlanWithContent,
+                          totalSessionPlans: state.sessionPlans.length
+                        });
+                      }
+
                       // For Group and RMR Live sessions, show session type instead of "Unknown Client"
                       const isGroupOrRMRLive = session.sessionType === 'Group' || session.sessionType === 'RMR Live';
                       const fullDisplayText = client
