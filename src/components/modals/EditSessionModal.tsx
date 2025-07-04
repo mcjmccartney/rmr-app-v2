@@ -313,32 +313,12 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
           <label className="block text-gray-700 text-sm font-medium mb-2">
             Session Type
           </label>
-          {isSessionInPast(formData.date, formData.time) ? (
-            <CustomDropdown
-              value={formData.sessionType}
-              onChange={(value) => setFormData({ ...formData, sessionType: value })}
-              options={sessionTypeOptions}
-              className="w-full"
-            />
-          ) : (
-            <>
-              <input
-                type="text"
-                value={formData.sessionType}
-                disabled
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed"
-                title="Session type cannot be changed for future sessions. Delete and recreate session to change type."
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                To change session type for future sessions, delete and recreate the session
-              </p>
-            </>
-          )}
-          {isSessionInPast(formData.date, formData.time) && (
-            <p className="text-xs text-green-600 mt-1">
-              Session type can be changed for past sessions
-            </p>
-          )}
+          <CustomDropdown
+            value={formData.sessionType}
+            onChange={(value) => setFormData({ ...formData, sessionType: value })}
+            options={sessionTypeOptions}
+            className="w-full"
+          />
         </div>
 
         <div>

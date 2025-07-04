@@ -30,10 +30,25 @@ const getCalendarClient = () => {
   return google.calendar({ version: 'v3', auth });
 };
 
-// Helper function to calculate session end time (1.5 hour sessions)
-const calculateEndTime = (date: string, time: string): string => {
+// Helper function to calculate session end time based on session type
+const calculateEndTime = (date: string, time: string, sessionType: string): string => {
   const startDateTime = new Date(`${date}T${time}:00`);
-  const endDateTime = new Date(startDateTime.getTime() + 90 * 60 * 1000); // Add 1.5 hours (90 minutes)
+  let durationMinutes = 90; // Default 1.5 hours (90 minutes)
+
+  // Set duration based on session type
+  switch (sessionType) {
+    case 'Training - 1hr':
+      durationMinutes = 60; // 1 hour
+      break;
+    case 'Training - 30mins':
+      durationMinutes = 30; // 30 minutes
+      break;
+    default:
+      durationMinutes = 90; // 1.5 hours for all other session types
+      break;
+  }
+
+  const endDateTime = new Date(startDateTime.getTime() + durationMinutes * 60 * 1000);
   return endDateTime.toISOString().slice(0, 19); // Remove milliseconds and Z
 };
 
@@ -75,7 +90,7 @@ export async function POST(request: NextRequest) {
     const calendar = getCalendarClient();
 
     const startDateTime = `${bookingDate}T${bookingTime}:00`;
-    const endDateTime = calculateEndTime(bookingDate, bookingTime);
+    const endDateTime = calculateEndTime(bookingDate, bookingTime, sessionType);
 
     const event = {
       summary: formatSessionTitle(clientName, dogName),
