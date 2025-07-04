@@ -40,26 +40,48 @@ export async function OPTIONS() {
 // POST endpoint for Make.com to send back the document URL
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-
-    // Temporary debugging for Make.com issue
-    console.log('POST /api/session-plan/document-url received:', JSON.stringify(body, null, 2));
+    // Check if request has a body
+    let body;
+    try {
+      body = await request.json();
+    } catch (jsonError) {
+      return NextResponse.json(
+        { error: 'Invalid JSON in request body', details: 'Request body must be valid JSON' },
+        { status: 400 }
+      );
+    }
 
     // Try multiple possible field names that Make.com might send
     const sessionId = body.sessionId || body.session_id || body.sessionid;
     const documentUrl = body.documentUrl || body.document_url || body.documenturl || body.url;
 
-    console.log('Extracted values:', { sessionId, documentUrl });
-
     // Validate required fields
     if (!sessionId || !documentUrl) {
       return NextResponse.json(
-        { error: 'Missing sessionId or documentUrl', receivedData: body },
+        {
+          error: 'Missing required fields',
+          required: ['sessionId', 'documentUrl'],
+          received: Object.keys(body),
+          example: {
+            sessionId: 'your-session-id',
+            documentUrl: 'https://docs.google.com/document/d/...'
+          }
+        },
         { status: 400 }
       );
     }
 
-    const supabaseAdmin = createSupabaseAdmin();
+    // Create admin client and handle potential environment variable issues
+    let supabaseAdmin;
+    try {
+      supabaseAdmin = createSupabaseAdmin();
+    } catch (envError) {
+      return NextResponse.json(
+        { error: 'Server configuration error', details: 'Missing environment variables' },
+        { status: 500 }
+      );
+    }
+
     const { data, error } = await supabaseAdmin
       .from('session_plans')
       .update({
@@ -72,7 +94,11 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       return NextResponse.json(
-        { error: 'Failed to update session plan' },
+        {
+          error: 'Database update failed',
+          details: error.message,
+          sessionId: sessionId
+        },
         { status: 500 }
       );
     }
@@ -94,7 +120,11 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     return NextResponse.json(
-      { error: 'Internal server error' },
+      {
+        error: 'Internal server error',
+        details: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      },
       { status: 500 }
     );
   }
