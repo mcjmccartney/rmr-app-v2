@@ -703,8 +703,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
                           webhookData.clientEmail?.trim() &&
                           webhookData.sessionType?.trim() &&
                           webhookData.bookingDate?.trim() &&
-                          webhookData.clientEmail.includes('@') && // Basic email validation
-                          webhookData.quote > 0; // Ensure quote is valid
+                          webhookData.clientEmail.includes('@'); // Basic email validation
 
       if (!hasEssentialData || !hasValidData) {
         console.log('Skipping webhook trigger - missing or invalid essential data:', {
@@ -716,7 +715,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           validClientEmail: !!webhookData.clientEmail?.trim() && webhookData.clientEmail.includes('@'),
           validSessionType: !!webhookData.sessionType?.trim(),
           validBookingDate: !!webhookData.bookingDate?.trim(),
-          validQuote: webhookData.quote > 0
+          quote: webhookData.quote
         });
         return;
       }
@@ -731,7 +730,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
         // Only trigger booking terms webhook if we have valid data
         if (webhookData.sessionId && webhookData.clientEmail && webhookData.sessionType &&
-            webhookData.bookingDate && webhookData.bookingTime && webhookData.quote > 0) {
+            webhookData.bookingDate && webhookData.bookingTime) {
           webhookPromises.push(
             fetch('https://hook.eu1.make.com/yaoalfe77uqtw4xv9fbh5atf4okq14wm', {
               method: 'POST',

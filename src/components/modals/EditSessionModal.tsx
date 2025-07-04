@@ -198,8 +198,7 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
                             webhookPayload.sessionType?.trim() &&
                             webhookPayload.bookingDate?.trim() &&
                             webhookPayload.bookingTime?.trim() &&
-                            webhookPayload.clientEmail.includes('@') && // Basic email validation
-                            webhookPayload.quote > 0; // Ensure quote is valid
+                            webhookPayload.clientEmail.includes('@'); // Basic email validation
 
         if (!hasEssentialData || !hasValidData) {
           console.log('❌ Skipping session update webhook - missing or invalid essential data:', {
@@ -214,7 +213,7 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
             validSessionType: !!webhookPayload.sessionType?.trim(),
             validBookingDate: !!webhookPayload.bookingDate?.trim(),
             validBookingTime: !!webhookPayload.bookingTime?.trim(),
-            validQuote: webhookPayload.quote > 0,
+            quote: webhookPayload.quote,
             webhookPayload: webhookPayload
           });
           return;
@@ -222,7 +221,7 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
 
         // Final validation before webhook call to prevent empty data
         if (!webhookPayload.sessionId || !webhookPayload.clientEmail || !webhookPayload.sessionType ||
-            !webhookPayload.bookingDate || !webhookPayload.bookingTime || webhookPayload.quote <= 0) {
+            !webhookPayload.bookingDate || !webhookPayload.bookingTime) {
           console.log('❌ Final check: Blocking booking terms webhook - invalid data detected');
           return;
         }
