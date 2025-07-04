@@ -1,5 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
+
+// Create server-side Supabase client with service role key to bypass RLS
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+
+// Create admin client only if environment variables are available
+const createSupabaseAdmin = () => {
+  if (!supabaseUrl || !supabaseServiceKey) {
+    throw new Error('Missing Supabase environment variables');
+  }
+  return createClient(supabaseUrl, supabaseServiceKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  });
+};
 
 // OPTIONS handler for CORS preflight requests
 export async function OPTIONS() {
@@ -25,9 +42,14 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
+    // Temporary debugging for Make.com issue
+    console.log('POST /api/session-plan/document-url received:', JSON.stringify(body, null, 2));
+
     // Try multiple possible field names that Make.com might send
     const sessionId = body.sessionId || body.session_id || body.sessionid;
     const documentUrl = body.documentUrl || body.document_url || body.documenturl || body.url;
+
+    console.log('Extracted values:', { sessionId, documentUrl });
 
     // Validate required fields
     if (!sessionId || !documentUrl) {
@@ -37,7 +59,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { data, error } = await supabase
+    const supabaseAdmin = createSupabaseAdmin();
+    const { data, error } = await supabaseAdmin
       .from('session_plans')
       .update({
         document_edit_url: documentUrl,
@@ -82,7 +105,8 @@ export async function DELETE(request: NextRequest) {
   try {
     const body = await request.json();
 
-    const { sessionId } = body;
+    // Try multiple possible field names that Make.com might send
+    const sessionId = body.sessionId || body.session_id || body.sessionid;
 
     // Validate required fields
     if (!sessionId) {
@@ -93,7 +117,8 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Clear the document URL from the session plan
-    const { data, error } = await supabase
+    const supabaseAdmin = createSupabaseAdmin();
+    const { data, error } = await supabaseAdmin
       .from('session_plans')
       .update({
         document_edit_url: null,
@@ -141,7 +166,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Get the session plan with document URL
-    const { data, error } = await supabase
+    const supabaseAdmin = createSupabaseAdmin();
+    const { data, error } = await supabaseAdmin
       .from('session_plans')
       .select('document_edit_url, updated_at')
       .eq('session_id', sessionId)
