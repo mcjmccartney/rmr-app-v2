@@ -4,8 +4,6 @@ import { clientService } from '@/services/clientService';
 
 export async function POST() {
   try {
-    console.log('🕙 Running scheduled webhook check at 10:00am');
-    
     // Get all sessions
     const sessions = await sessionService.getAll();
     const clients = await clientService.getAll();
@@ -32,8 +30,6 @@ export async function POST() {
       return daysUntilSession === 4;
     });
 
-    console.log(`Found ${sessionsToTrigger.length} sessions that are exactly 4 days away and need both webhooks triggered`);
-    
     if (sessionsToTrigger.length === 0) {
       return NextResponse.json({
         success: true,
@@ -51,7 +47,6 @@ export async function POST() {
         const client = clients.find(c => c.id === session.clientId);
         
         if (!client || !client.email) {
-          console.log(`Skipping session ${session.id} - no client or email found`);
           continue;
         }
         
@@ -71,36 +66,37 @@ export async function POST() {
           sendSessionEmail: true // Force email sending for scheduled webhooks
         };
 
-        // Validate essential data before triggering webhooks
-        const hasEssentialData = webhookData.sessionId &&
-                                webhookData.clientEmail &&
-                                webhookData.sessionType &&
-                                webhookData.bookingDate &&
-                                webhookData.bookingTime;
+        // Comprehensive validation to prevent blank/empty webhook data
+        const isValidString = (value: any): boolean => {
+          return value && typeof value === 'string' && value.trim().length > 0;
+        };
 
-        // Additional validation to prevent empty/invalid payloads
-        const hasValidData = webhookData.sessionId?.trim() &&
-                            webhookData.clientEmail?.trim() &&
-                            webhookData.sessionType?.trim() &&
-                            webhookData.bookingDate?.trim() &&
-                            webhookData.bookingTime?.trim() &&
-                            webhookData.clientEmail.includes('@'); // Basic email validation
+        const isValidEmail = (email: any): boolean => {
+          return isValidString(email) && email.includes('@') && email.includes('.') && email.length >= 5;
+        };
 
-        if (!hasEssentialData || !hasValidData) {
-          console.log(`❌ Skipping scheduled webhooks for session ${session.id} - missing or invalid essential data:`, {
-            hasSessionId: !!webhookData.sessionId,
-            hasClientEmail: !!webhookData.clientEmail,
-            hasSessionType: !!webhookData.sessionType,
-            hasBookingDate: !!webhookData.bookingDate,
-            hasBookingTime: !!webhookData.bookingTime,
-            validSessionId: !!webhookData.sessionId?.trim(),
-            validClientEmail: !!webhookData.clientEmail?.trim() && webhookData.clientEmail.includes('@'),
-            validSessionType: !!webhookData.sessionType?.trim(),
-            validBookingDate: !!webhookData.bookingDate?.trim(),
-            validBookingTime: !!webhookData.bookingTime?.trim(),
-            quote: webhookData.quote
-          });
+        const isValidDate = (date: any): boolean => {
+          return isValidString(date) && /^\d{4}-\d{2}-\d{2}$/.test(date);
+        };
 
+        const isValidTime = (time: any): boolean => {
+          return isValidString(time) && /^\d{2}:\d{2}$/.test(time);
+        };
+
+        // Validate all essential fields with strict checks
+        const hasValidData =
+          isValidString(webhookData.sessionId) &&
+          isValidString(webhookData.clientId) &&
+          isValidString(webhookData.clientName) &&
+          isValidEmail(webhookData.clientEmail) &&
+          isValidString(webhookData.sessionType) &&
+          isValidDate(webhookData.bookingDate) &&
+          isValidTime(webhookData.bookingTime) &&
+          typeof webhookData.quote === 'number' &&
+          webhookData.quote >= 0;
+
+        // Block webhook if any essential data is missing or invalid
+        if (!hasValidData) {
           results.push({
             sessionId: session.id,
             status: 'skipped',
@@ -110,15 +106,16 @@ export async function POST() {
           continue;
         }
 
-        console.log(`✅ Triggering both scheduled webhooks for session ${session.id}:`, webhookData);
-
         // Prepare both webhook promises for sessions that are exactly 4 days away
         const webhookPromises: Promise<Response>[] = [];
         const webhookNames: string[] = [];
 
-        // Only trigger booking terms webhook if we have valid data
-        if (webhookData.sessionId && webhookData.clientEmail && webhookData.sessionType &&
-            webhookData.bookingDate && webhookData.bookingTime) {
+        // Double-check validation before booking terms webhook (extra safety)
+        if (isValidString(webhookData.sessionId) &&
+            isValidEmail(webhookData.clientEmail) &&
+            isValidString(webhookData.sessionType) &&
+            isValidDate(webhookData.bookingDate) &&
+            isValidTime(webhookData.bookingTime)) {
           webhookPromises.push(
             fetch('https://hook.eu1.make.com/yaoalfe77uqtw4xv9fbh5atf4okq14wm', {
               method: 'POST',
@@ -129,8 +126,6 @@ export async function POST() {
             })
           );
           webhookNames.push('booking terms webhook');
-        } else {
-          console.log('❌ Skipping booking terms webhook - invalid data');
         }
 
         // Trigger session webhook with email flag enabled
@@ -159,13 +154,12 @@ export async function POST() {
         responses.forEach((result, index) => {
           const webhookName = webhookNames[index];
           if (result.status === 'fulfilled' && result.value.ok) {
-            console.log(`✅ Successfully triggered scheduled ${webhookName} for session ${session.id}`);
+            // Success - no logging needed
           } else {
             allSucceeded = false;
             const error = result.status === 'fulfilled' ?
               `${result.value.status} ${result.value.statusText}` :
               result.reason;
-            console.error(`❌ Failed to trigger scheduled ${webhookName} for session ${session.id}:`, error);
             errors.push(`${webhookName}: ${error}`);
           }
         });
@@ -186,7 +180,6 @@ export async function POST() {
         }
         
       } catch (error) {
-        console.error(`Error processing session ${session.id}:`, error);
         results.push({
           sessionId: session.id,
           status: 'error',
@@ -197,9 +190,7 @@ export async function POST() {
     
     const successCount = results.filter(r => r.status === 'success').length;
     const failureCount = results.length - successCount;
-    
-    console.log(`🎯 Scheduled webhook processing complete: ${successCount} successful, ${failureCount} failed`);
-    
+
     return NextResponse.json({
       success: true,
       message: `Processed ${results.length} sessions`,
@@ -210,7 +201,6 @@ export async function POST() {
     });
     
   } catch (error) {
-    console.error('Error in scheduled webhook processing:', error);
     return NextResponse.json({
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error'
@@ -220,6 +210,5 @@ export async function POST() {
 
 // GET endpoint for testing/manual triggering
 export async function GET() {
-  console.log('Manual trigger of scheduled webhooks');
   return POST();
 }

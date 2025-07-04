@@ -34,7 +34,6 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    console.log('Deleting Google Calendar event:', body);
 
     eventId = body.eventId;
 
@@ -53,8 +52,6 @@ export async function POST(request: NextRequest) {
       eventId: eventId,
     });
 
-    console.log('Successfully deleted calendar event:', eventId);
-
     return NextResponse.json({
       success: true,
       message: 'Calendar event deleted successfully'
@@ -63,14 +60,12 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     // If event doesn't exist, that's okay - it might have been deleted already
     if (error instanceof Error && error.message.includes('404')) {
-      console.log('Calendar event not found (already deleted):', eventId || 'unknown');
       return NextResponse.json({
         success: true,
         message: 'Calendar event not found (already deleted)'
       });
     }
 
-    console.error('Failed to delete calendar event:', error);
     return NextResponse.json(
       {
         error: 'Failed to delete calendar event',

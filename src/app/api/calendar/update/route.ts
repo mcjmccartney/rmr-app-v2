@@ -50,7 +50,6 @@ const formatSessionDescription = (sessionType: string): string => {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    console.log('Calendar update API called with:', JSON.stringify(body, null, 2));
 
     const {
       eventId,
@@ -67,27 +66,16 @@ export async function POST(request: NextRequest) {
 
     // Validate required fields
     if (!eventId || !clientName || !sessionType || !bookingDate || !bookingTime) {
-      console.error('Missing required fields:', {
-        eventId: !!eventId,
-        clientName: !!clientName,
-        sessionType: !!sessionType,
-        bookingDate: !!bookingDate,
-        bookingTime: !!bookingTime
-      });
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
       );
     }
 
-    console.log('Validation passed, initializing calendar client...');
-
     const calendar = getCalendarClient();
-    console.log('Calendar client initialized successfully');
 
     const startDateTime = `${bookingDate}T${bookingTime}:00`;
     const endDateTime = calculateEndTime(bookingDate, bookingTime);
-    console.log('Date/time calculated:', { startDateTime, endDateTime });
 
     const event = {
       summary: formatSessionTitle(clientName, dogName),
@@ -104,31 +92,18 @@ export async function POST(request: NextRequest) {
       // Removed attendees field - service accounts can't invite attendees without Domain-Wide Delegation
     };
 
-    console.log('Event object created:', JSON.stringify(event, null, 2));
-    console.log('Attempting to update calendar event with ID:', eventId);
-
     await calendar.events.update({
       calendarId: CALENDAR_ID,
       eventId: eventId,
       requestBody: event,
     });
 
-    console.log('Successfully updated calendar event:', eventId);
-    
     return NextResponse.json({
       success: true,
       message: 'Calendar event updated successfully'
     });
 
   } catch (error) {
-    console.error('Failed to update calendar event - Full error:', error);
-    console.error('Error type:', typeof error);
-    console.error('Error constructor:', error?.constructor?.name);
-
-    if (error instanceof Error) {
-      console.error('Error message:', error.message);
-      console.error('Error stack:', error.stack);
-    }
 
     return NextResponse.json(
       {

@@ -50,7 +50,6 @@ const formatSessionDescription = (sessionType: string): string => {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    console.log('Calendar create API called with:', JSON.stringify(body, null, 2));
 
     const {
       clientName,
@@ -66,26 +65,16 @@ export async function POST(request: NextRequest) {
 
     // Validate required fields
     if (!clientName || !sessionType || !bookingDate || !bookingTime) {
-      console.error('Missing required fields:', {
-        clientName: !!clientName,
-        sessionType: !!sessionType,
-        bookingDate: !!bookingDate,
-        bookingTime: !!bookingTime
-      });
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
       );
     }
 
-    console.log('Validation passed, initializing calendar client...');
-
     const calendar = getCalendarClient();
-    console.log('Calendar client initialized successfully');
 
     const startDateTime = `${bookingDate}T${bookingTime}:00`;
     const endDateTime = calculateEndTime(bookingDate, bookingTime);
-    console.log('Date/time calculated:', { startDateTime, endDateTime });
 
     const event = {
       summary: formatSessionTitle(clientName, dogName),
@@ -102,17 +91,13 @@ export async function POST(request: NextRequest) {
       // Removed attendees field - service accounts can't invite attendees without Domain-Wide Delegation
     };
 
-    console.log('Event object created:', JSON.stringify(event, null, 2));
-    console.log('Attempting to create calendar event...');
-
     const response = await calendar.events.insert({
       calendarId: CALENDAR_ID,
       requestBody: event,
     });
 
     const eventId = response.data.id;
-    console.log('Successfully created calendar event:', eventId);
-    
+
     return NextResponse.json({
       success: true,
       message: 'Calendar event created successfully',
@@ -120,7 +105,6 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error creating calendar event:', error);
     return NextResponse.json(
       { 
         error: 'Failed to create calendar event',

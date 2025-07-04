@@ -3,16 +3,41 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    console.log('Received notification request:', body);
 
     const { type, data } = body;
 
-    // Validate required fields
-    if (!type || !data) {
+    // Comprehensive validation to prevent blank/empty webhook data
+    const isValidString = (value: any): boolean => {
+      return value && typeof value === 'string' && value.trim().length > 0;
+    };
+
+    const isValidEmail = (email: any): boolean => {
+      return isValidString(email) && email.includes('@') && email.includes('.') && email.length >= 5;
+    };
+
+    // Validate required fields with strict checks
+    if (!isValidString(type) || !data || typeof data !== 'object') {
       return NextResponse.json(
-        { error: 'Missing type or data' },
+        { error: 'Missing or invalid type or data' },
         { status: 400 }
       );
+    }
+
+    // Validate essential data fields based on type
+    if (type === 'behaviour_questionnaire') {
+      if (!isValidString(data.dogName) || !isValidString(data.ownerFirstName) || !isValidEmail(data.email)) {
+        return NextResponse.json(
+          { error: 'Missing essential questionnaire data' },
+          { status: 400 }
+        );
+      }
+    } else if (type === 'behavioural_brief') {
+      if (!isValidString(data.dogName) || !isValidString(data.ownerFirstName) || !isValidEmail(data.email)) {
+        return NextResponse.json(
+          { error: 'Missing essential brief data' },
+          { status: 400 }
+        );
+      }
     }
 
     let emailContent = '';
@@ -40,7 +65,16 @@ export async function POST(request: NextRequest) {
       submittedAt: new Date().toISOString()
     };
 
-    console.log('Sending email notification via Make.com:', { subject, type });
+    // Final validation before sending webhook
+    if (!isValidString(emailData.to) ||
+        !isValidString(emailData.subject) ||
+        !isValidString(emailData.content) ||
+        !isValidString(emailData.type)) {
+      return NextResponse.json(
+        { error: 'Invalid email data prepared' },
+        { status: 400 }
+      );
+    }
 
     // Call Make.com webhook for email notifications
     const response = await fetch('https://hook.eu1.make.com/6h3l774l7datm3dgtjojf7nvkyqp7usa', {
@@ -52,14 +86,11 @@ export async function POST(request: NextRequest) {
     });
 
     if (!response.ok) {
-      console.error('Failed to send email notification:', response.status, response.statusText);
       return NextResponse.json(
         { error: 'Failed to send email notification' },
         { status: 500 }
       );
     }
-
-    console.log('Email notification sent successfully');
 
     return NextResponse.json({
       success: true,

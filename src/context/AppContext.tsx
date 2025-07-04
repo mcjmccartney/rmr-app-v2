@@ -645,45 +645,53 @@ export function AppProvider({ children }: { children: ReactNode }) {
         eventIdCallbackUrl: `${window.location.origin}/api/session/event-id`
       };
 
-      // Validate essential data before triggering webhooks
-      const hasEssentialData = webhookData.sessionId &&
-                               webhookData.clientEmail &&
-                               webhookData.sessionType &&
-                               webhookData.bookingDate;
+      // Comprehensive validation to prevent blank/empty webhook data
+      const isValidString = (value: any): boolean => {
+        return value && typeof value === 'string' && value.trim().length > 0;
+      };
 
-      // Additional validation to prevent empty/invalid payloads
-      const hasValidData = webhookData.sessionId?.trim() &&
-                          webhookData.clientEmail?.trim() &&
-                          webhookData.sessionType?.trim() &&
-                          webhookData.bookingDate?.trim() &&
-                          webhookData.clientEmail.includes('@'); // Basic email validation
+      const isValidEmail = (email: any): boolean => {
+        return isValidString(email) && email.includes('@') && email.includes('.') && email.length >= 5;
+      };
 
-      if (!hasEssentialData || !hasValidData) {
-        console.log('Skipping webhook trigger - missing or invalid essential data:', {
-          hasSessionId: !!webhookData.sessionId,
-          hasClientEmail: !!webhookData.clientEmail,
-          hasSessionType: !!webhookData.sessionType,
-          hasBookingDate: !!webhookData.bookingDate,
-          validSessionId: !!webhookData.sessionId?.trim(),
-          validClientEmail: !!webhookData.clientEmail?.trim() && webhookData.clientEmail.includes('@'),
-          validSessionType: !!webhookData.sessionType?.trim(),
-          validBookingDate: !!webhookData.bookingDate?.trim(),
-          quote: webhookData.quote
-        });
+      const isValidDate = (date: any): boolean => {
+        return isValidString(date) && /^\d{4}-\d{2}-\d{2}$/.test(date);
+      };
+
+      const isValidTime = (time: any): boolean => {
+        return isValidString(time) && /^\d{2}:\d{2}$/.test(time);
+      };
+
+      // Validate all essential fields with strict checks
+      const hasValidData =
+        isValidString(webhookData.sessionId) &&
+        isValidString(webhookData.clientId) &&
+        isValidString(webhookData.clientName) &&
+        isValidString(webhookData.clientFirstName) &&
+        isValidEmail(webhookData.clientEmail) &&
+        isValidString(webhookData.sessionType) &&
+        isValidDate(webhookData.bookingDate) &&
+        isValidTime(webhookData.bookingTime) &&
+        typeof webhookData.quote === 'number' &&
+        webhookData.quote >= 0;
+
+      // Block webhook if any essential data is missing or invalid
+      if (!hasValidData) {
         return;
       }
 
       // Only trigger webhooks if session is 4 days or less away
       if (daysUntilSession <= 4) {
-        console.log('Triggering Make.com webhooks for new session (≤4 days away):', webhookData);
-
         // Prepare webhook promises - trigger both webhooks for sessions ≤4 days away
         const webhookPromises: Promise<Response>[] = [];
         const webhookNames: string[] = [];
 
-        // Only trigger booking terms webhook if we have valid data
-        if (webhookData.sessionId && webhookData.clientEmail && webhookData.sessionType &&
-            webhookData.bookingDate && webhookData.bookingTime) {
+        // Double-check validation before booking terms webhook (extra safety)
+        if (isValidString(webhookData.sessionId) &&
+            isValidEmail(webhookData.clientEmail) &&
+            isValidString(webhookData.sessionType) &&
+            isValidDate(webhookData.bookingDate) &&
+            isValidTime(webhookData.bookingTime)) {
           webhookPromises.push(
             fetch('https://hook.eu1.make.com/yaoalfe77uqtw4xv9fbh5atf4okq14wm', {
               method: 'POST',
@@ -694,8 +702,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
             })
           );
           webhookNames.push('booking terms email webhook');
-        } else {
-          console.log('❌ Skipping booking terms webhook - invalid data');
         }
 
         // Trigger session webhook for calendar creation and emails
@@ -715,23 +721,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         );
         webhookNames.push('session webhook (calendar + email)');
 
-        console.log('Triggering both webhooks (session is ≤4 days away - will send emails + create calendar)');
-
         const responses = await Promise.allSettled(webhookPromises);
-
-        // Log results
-        responses.forEach((result, index) => {
-          const webhookName = webhookNames[index];
-          if (result.status === 'fulfilled' && result.value.ok) {
-            console.log(`Successfully triggered ${webhookName}`);
-          } else {
-            console.error(`Failed to trigger ${webhookName}:`,
-              result.status === 'fulfilled' ?
-                `${result.value.status} ${result.value.statusText}` :
-                result.reason
-            );
-          }
-        });
       } else {
         // Session is >4 days away - no webhooks triggered
       }
