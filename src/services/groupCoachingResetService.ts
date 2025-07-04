@@ -81,8 +81,6 @@ export const groupCoachingResetService = {
   async addReset(clientId: string, resetDate?: string): Promise<GroupCoachingReset> {
     try {
       const dateToUse = resetDate || new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
-      
-      console.log('💾 Adding group coaching reset to database:', { clientId, resetDate: dateToUse });
 
       const { data, error } = await supabase
         .from('group_coaching_resets')
@@ -94,14 +92,11 @@ export const groupCoachingResetService = {
         .single();
 
       if (error) {
-        console.error('Error adding reset:', error);
         throw error;
       }
 
-      console.log('✅ Successfully added group coaching reset:', data);
       return dbRowToGroupCoachingReset(data);
     } catch (error) {
-      console.error('Failed to add reset:', error);
       throw error;
     }
   },
@@ -129,21 +124,15 @@ export const groupCoachingResetService = {
   // Clear all resets for a client (for testing/debugging)
   async clearClientResets(clientId: string): Promise<void> {
     try {
-      console.log('🗑️ Clearing all resets for client:', clientId);
-
       const { error } = await supabase
         .from('group_coaching_resets')
         .delete()
         .eq('client_id', clientId);
 
       if (error) {
-        console.error('Error clearing client resets:', error);
         throw error;
       }
-
-      console.log('✅ Successfully cleared all resets for client:', clientId);
     } catch (error) {
-      console.error('Failed to clear client resets:', error);
       throw error;
     }
   },
@@ -151,21 +140,15 @@ export const groupCoachingResetService = {
   // Clear all resets (for testing/debugging)
   async clearAllResets(): Promise<void> {
     try {
-      console.log('🗑️ Clearing all group coaching resets from database');
-
       const { error } = await supabase
         .from('group_coaching_resets')
         .delete()
         .neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all records
 
       if (error) {
-        console.error('Error clearing all resets:', error);
         throw error;
       }
-
-      console.log('✅ Successfully cleared all group coaching resets');
     } catch (error) {
-      console.error('Failed to clear all resets:', error);
       throw error;
     }
   },
@@ -173,15 +156,12 @@ export const groupCoachingResetService = {
   // Migrate localStorage data to database (one-time migration helper)
   async migrateFromLocalStorage(localStorageData: { [clientId: string]: string }): Promise<void> {
     try {
-      console.log('🔄 Migrating group coaching resets from localStorage to database...');
-      
       const migrations = Object.entries(localStorageData).map(([clientId, resetDate]) => ({
         client_id: clientId,
         reset_date: resetDate
       }));
 
       if (migrations.length === 0) {
-        console.log('📦 No localStorage data to migrate');
         return;
       }
 
@@ -190,13 +170,10 @@ export const groupCoachingResetService = {
         .insert(migrations);
 
       if (error) {
-        console.error('Error migrating localStorage data:', error);
         throw error;
       }
 
-      console.log(`✅ Successfully migrated ${migrations.length} resets from localStorage to database`);
     } catch (error) {
-      console.error('Failed to migrate localStorage data:', error);
       throw error;
     }
   }

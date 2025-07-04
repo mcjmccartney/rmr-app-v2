@@ -6,13 +6,11 @@ export class DuplicateDetectionService {
    */
   static detectDuplicates(clients: Client[]): PotentialDuplicate[] {
     try {
-      console.log('Starting duplicate detection for', clients.length, 'clients');
       const duplicates: PotentialDuplicate[] = [];
       const processedPairs = new Set<string>();
 
       // Validate input
       if (!Array.isArray(clients)) {
-        console.warn('Invalid clients array provided to detectDuplicates');
         return [];
       }
 
@@ -24,7 +22,6 @@ export class DuplicateDetectionService {
 
             // Validate client objects
             if (!clientA || !clientB || !clientA.id || !clientB.id) {
-              console.warn('Invalid client objects found:', { clientA: !!clientA, clientB: !!clientB });
               continue;
             }
 
@@ -55,15 +52,13 @@ export class DuplicateDetectionService {
               });
             }
           } catch (pairError) {
-            console.error('Error processing client pair:', pairError, { i, j });
+            // Error processing client pair
           }
         }
       }
 
-      console.log('Duplicate detection completed. Found', duplicates.length, 'potential duplicates');
       return duplicates;
     } catch (error) {
-      console.error('Error in detectDuplicates:', error);
       return [];
     }
   }

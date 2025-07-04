@@ -164,14 +164,6 @@ export class ClientMergeService {
       // Step 6: Delete duplicate client
       await clientService.delete(duplicateClient.id);
 
-      console.log('Client merge completed successfully:', {
-        mergedClient: updatedPrimaryClient.id,
-        transferredSessions,
-        transferredForms,
-        transferredMemberships,
-        emailAliasesSetup: true
-      });
-
       return {
         success: true,
         mergedClient: updatedPrimaryClient,
@@ -181,7 +173,6 @@ export class ClientMergeService {
       };
 
     } catch (error) {
-      console.error('Error merging clients:', error);
       return {
         success: false,
         mergedClient: primaryClient,

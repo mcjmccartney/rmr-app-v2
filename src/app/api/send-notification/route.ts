@@ -67,9 +67,8 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error sending notification:', error);
     return NextResponse.json(
-      { 
+      {
         error: 'Internal server error',
         message: error instanceof Error ? error.message : 'Unknown error'
       },

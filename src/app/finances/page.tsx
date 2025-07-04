@@ -49,14 +49,7 @@ export default function FinancesPage() {
         .order('month');
 
       if (financesError) {
-        console.error('Finances error details:', {
-          message: financesError.message,
-          details: financesError.details,
-          hint: financesError.hint,
-          code: financesError.code
-        });
-        // Don't throw error, just log it and continue with empty data
-        console.warn('Continuing with empty finances data due to error');
+        // Don't throw error, just continue with empty data
       }
 
       // Fetch sessions
@@ -66,8 +59,7 @@ export default function FinancesPage() {
         .order('booking_date', { ascending: false });
 
       if (sessionsError) {
-        console.error('Sessions error:', sessionsError);
-        // Don't throw error for sessions, just log it
+        // Don't throw error for sessions
       }
 
       // Fetch memberships

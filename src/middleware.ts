@@ -73,11 +73,7 @@ export async function middleware(req: NextRequest) {
   // Public routes that don't require authentication
   const publicRoutes = ['/login', '/behavioural-brief', '/behaviour-questionnaire', '/booking-terms', '/booking-terms-completed', '/pay-confirm', '/payment-confirmed', '/payment-error'];
 
-  // Remove debug logging in production
-  if (process.env.NODE_ENV !== 'production') {
-    console.log('Middleware - Path:', req.nextUrl.pathname);
-    console.log('Middleware - Session exists:', !!session);
-  }
+
 
   // Check if current path is public (including dynamic routes)
   const isPublicRoute = publicRoutes.some(route => {
@@ -89,9 +85,6 @@ export async function middleware(req: NextRequest) {
 
   // If user is not signed in and the current path is not a public route, redirect to /login
   if (!session && !isPublicRoute) {
-    if (process.env.NODE_ENV !== 'production') {
-      console.log('Middleware - Redirecting to login');
-    }
     const redirectResponse = NextResponse.redirect(new URL('/login', req.url));
     return addSecurityHeaders(redirectResponse);
   }

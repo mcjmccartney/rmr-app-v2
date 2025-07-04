@@ -46,14 +46,12 @@ export const formatDateTime = (dateString: string, timeString: string): string =
 export const combineDateAndTime = (dateString: string, timeString: string): Date => {
   // Handle null/undefined values
   if (!dateString || !timeString) {
-    console.warn('Missing date or time string:', { dateString, timeString });
     return new Date(); // Return current date as fallback
   }
 
   try {
     return new Date(`${dateString}T${timeString}`);
   } catch (error) {
-    console.warn('Error parsing date/time:', { dateString, timeString, error });
     return new Date(); // Return current date as fallback
   }
 };

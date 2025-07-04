@@ -189,20 +189,9 @@ export const sessionPlanService = {
       // The session number is the count of sessions before or equal to this one
       const sessionNumber = sessionsBeforeOrEqual.length;
 
-      console.log(`Calculated session number for session ${sessionId}:`, {
-        clientId: session.client_id,
-        sessionDate: session.booking_date,
-        sessionTime: session.booking_time,
-        sessionType: session.session_type,
-        totalOnlineInPersonSessions: clientSessions.length,
-        sessionsBeforeOrEqual: sessionsBeforeOrEqual.length,
-        calculatedNumber: sessionNumber
-      });
-
       return Math.max(sessionNumber, 1); // Ensure minimum of 1
 
     } catch (error) {
-      console.error('Error calculating session number:', error);
       return 1;
     }
   },

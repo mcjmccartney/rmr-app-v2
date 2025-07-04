@@ -54,7 +54,6 @@ export const clientService = {
       .order('created_at', { ascending: false })
 
     if (error) {
-      console.error('Error fetching clients:', error)
       throw error
     }
 
@@ -73,7 +72,6 @@ export const clientService = {
       if (error.code === 'PGRST116') {
         return null // Not found
       }
-      console.error('Error fetching client:', error)
       throw error
     }
 

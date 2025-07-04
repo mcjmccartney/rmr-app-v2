@@ -37,13 +37,11 @@ export const dismissedDuplicatesService = {
         .order('dismissed_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching dismissed duplicates:', error);
         throw error;
       }
 
       return data?.map(row => row.duplicate_id) || [];
     } catch (error) {
-      console.error('Failed to get dismissed duplicate IDs:', error);
       return []; // Return empty array on error to not break duplicate detection
     }
   },
@@ -141,21 +139,15 @@ export const dismissedDuplicatesService = {
   // Clear all dismissed duplicates (for testing/debugging)
   async clearAll(): Promise<void> {
     try {
-      console.log('🗑️ Clearing all dismissed duplicates from database');
-
       const { error } = await supabase
         .from('dismissed_duplicates')
         .delete()
         .neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all records
 
       if (error) {
-        console.error('Error clearing dismissed duplicates:', error);
         throw error;
       }
-
-      console.log('✅ Successfully cleared all dismissed duplicates');
     } catch (error) {
-      console.error('Failed to clear dismissed duplicates:', error);
       throw error;
     }
   },

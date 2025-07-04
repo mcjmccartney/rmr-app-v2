@@ -53,7 +53,6 @@ export const behaviouralBriefService = {
       .order('submitted_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching behavioural briefs:', error);
       throw error;
     }
 
@@ -72,7 +71,6 @@ export const behaviouralBriefService = {
       if (error.code === 'PGRST116') {
         return null; // Not found
       }
-      console.error('Error fetching behavioural brief:', error);
       throw error;
     }
 

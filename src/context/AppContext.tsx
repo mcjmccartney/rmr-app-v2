@@ -272,9 +272,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Load clients from Supabase
   const loadClients = async () => {
     try {
-      console.log('Loading clients...');
       const clients = await clientService.getAll();
-      console.log('Loaded clients:', clients.length);
       dispatch({ type: 'SET_CLIENTS', payload: clients });
 
       // Detect duplicates after loading clients
@@ -286,53 +284,35 @@ export function AppProvider({ children }: { children: ReactNode }) {
           let dismissedIds: string[] = [];
           try {
             dismissedIds = await dismissedDuplicatesService.getAllDismissedIds();
-            console.log('💾 Retrieved dismissed duplicates from database:', dismissedIds);
           } catch (dbError) {
-            console.error('❌ Error reading dismissed duplicates from database:', dbError);
-            console.log('⚠️ Falling back to localStorage for dismissed duplicates');
-
             // Fallback to localStorage if database fails
             try {
               const stored = localStorage.getItem('dismissedDuplicates');
               dismissedIds = stored ? JSON.parse(stored) : [];
-              console.log('📦 Fallback: Retrieved dismissed duplicates from localStorage:', dismissedIds);
             } catch (storageError) {
-              console.error('❌ Error reading dismissed duplicates from localStorage:', storageError);
               dismissedIds = [];
             }
           }
 
           const activeDuplicates = allDuplicates.filter(dup => !dismissedIds.includes(dup.id));
 
-          console.log('🔍 Duplicate detection results:', {
-            total: allDuplicates.length,
-            dismissed: dismissedIds.length,
-            active: activeDuplicates.length,
-            dismissedIds,
-            allDuplicateIds: allDuplicates.map(d => d.id),
-            database_used: true,
-            browser_info: navigator.userAgent
-          });
           dispatch({ type: 'SET_POTENTIAL_DUPLICATES', payload: activeDuplicates });
         } catch (error) {
-          console.error('Error detecting duplicates:', error);
           dispatch({ type: 'SET_POTENTIAL_DUPLICATES', payload: [] });
         }
       }, 100);
     } catch (error) {
-      console.error('Failed to load clients:', error);
+      // Failed to load clients
     }
   };
 
   // Load sessions from Supabase
   const loadSessions = async () => {
     try {
-      console.log('Loading sessions...');
       const sessions = await sessionService.getAll();
-      console.log('Loaded sessions:', sessions.length);
       dispatch({ type: 'SET_SESSIONS', payload: sessions });
     } catch (error) {
-      console.error('Failed to load sessions:', error);
+      // Failed to load sessions
     }
   };
 
@@ -468,38 +448,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Detect potential duplicate clients
   const detectDuplicates = async () => {
     try {
-      console.log('Detecting potential duplicate clients...');
       const allDuplicates = DuplicateDetectionService.detectDuplicates(state.clients);
 
       // Filter out dismissed duplicates using database
       let dismissedIds: string[] = [];
       try {
         dismissedIds = await dismissedDuplicatesService.getAllDismissedIds();
-        console.log('💾 Manual detection: Retrieved dismissed duplicates from database:', dismissedIds);
       } catch (dbError) {
-        console.error('❌ Manual detection: Error reading dismissed duplicates from database:', dbError);
-        console.log('⚠️ Manual detection: Falling back to localStorage');
-
         // Fallback to localStorage if database fails
         try {
           const stored = localStorage.getItem('dismissedDuplicates');
           dismissedIds = stored ? JSON.parse(stored) : [];
-          console.log('📦 Manual detection: Fallback localStorage dismissed duplicates:', dismissedIds);
         } catch (storageError) {
-          console.error('❌ Manual detection: Error reading localStorage:', storageError);
           dismissedIds = [];
         }
       }
 
       const activeDuplicates = allDuplicates.filter(dup => !dismissedIds.includes(dup.id));
-
-      console.log('🔍 Manual duplicate detection results:', {
-        total: allDuplicates.length,
-        dismissed: dismissedIds.length,
-        active: activeDuplicates.length,
-        dismissedIds,
-        allDuplicateIds: allDuplicates.map(d => d.id)
-      });
       dispatch({ type: 'SET_POTENTIAL_DUPLICATES', payload: activeDuplicates });
     } catch (error) {
       console.error('Failed to detect duplicates:', error);
@@ -517,7 +482,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     // Persist dismissal to database
     try {
       await dismissedDuplicatesService.dismiss(duplicateId);
-      console.log('✅ Successfully dismissed duplicate in database:', duplicateId);
 
       // Also save to localStorage as backup
       try {
@@ -525,28 +489,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
         if (!currentDismissed.includes(duplicateId)) {
           currentDismissed.push(duplicateId);
           localStorage.setItem('dismissedDuplicates', JSON.stringify(currentDismissed));
-          console.log('📦 Backup: Also saved to localStorage:', currentDismissed);
         }
       } catch (localStorageError) {
-        console.warn('⚠️ Could not save to localStorage backup:', localStorageError);
+        // Could not save to localStorage backup
       }
 
     } catch (dbError) {
-      console.error('❌ Error dismissing duplicate in database:', dbError);
-      console.log('⚠️ Falling back to localStorage only');
-
       // Fallback to localStorage if database fails
       try {
         const currentDismissed = JSON.parse(localStorage.getItem('dismissedDuplicates') || '[]');
         if (!currentDismissed.includes(duplicateId)) {
           currentDismissed.push(duplicateId);
           localStorage.setItem('dismissedDuplicates', JSON.stringify(currentDismissed));
-          console.log('📦 Fallback: Saved dismissed duplicate to localStorage:', currentDismissed);
         }
       } catch (localStorageError) {
-        console.error('❌ Both database and localStorage failed:', localStorageError);
+        // Both database and localStorage failed
         // Re-add to state since we couldn't persist the dismissal
-        console.log('🔄 Re-adding duplicate to state since dismissal failed');
         // Note: We'd need to re-run duplicate detection to restore the state
         // For now, we'll leave it dismissed in the UI but it will reappear on refresh
       }
@@ -558,24 +516,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
     try {
       // Clear from database
       await dismissedDuplicatesService.clearAll();
-      console.log('🗑️ Cleared all dismissed duplicates from database');
 
       // Also clear localStorage backup
       localStorage.removeItem('dismissedDuplicates');
-      console.log('🗑️ Cleared all dismissed duplicates from localStorage backup');
 
       // Re-run duplicate detection to show all duplicates again
       await detectDuplicates();
     } catch (error) {
-      console.error('❌ Error clearing dismissed duplicates:', error);
-
       // Fallback to localStorage only
       try {
         localStorage.removeItem('dismissedDuplicates');
-        console.log('🗑️ Fallback: Cleared dismissed duplicates from localStorage');
         await detectDuplicates();
       } catch (fallbackError) {
-        console.error('❌ Fallback also failed:', fallbackError);
+        // Fallback also failed
       }
     }
   };
@@ -780,13 +733,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
           }
         });
       } else {
-        console.log(`Session is ${daysUntilSession} days away (>4 days) - no webhooks triggered. Will trigger both webhooks via daily cron when session reaches 4 days away.`);
+        // Session is >4 days away - no webhooks triggered
       }
 
 
 
     } catch (error) {
-      console.error('Error triggering Make.com webhooks:', error);
       // Don't throw error - webhook failure shouldn't prevent session creation
     }
   };

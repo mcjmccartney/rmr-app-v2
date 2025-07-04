@@ -164,7 +164,7 @@ export async function GET() {
       };
     }
 
-    console.log('🎯 DIAGNOSTIC RESULTS:', JSON.stringify(diagnostics, null, 2));
+
 
     return NextResponse.json({
       message: 'Calendar API Comprehensive Diagnostic Complete',
@@ -175,7 +175,6 @@ export async function GET() {
     });
 
   } catch (error) {
-    console.error('❌ Error during calendar diagnostic:', error);
     return NextResponse.json({
       error: 'Failed to run calendar diagnostic',
       message: error instanceof Error ? error.message : 'Unknown error',

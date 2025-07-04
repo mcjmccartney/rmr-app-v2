@@ -20,7 +20,6 @@ export const bookingTermsService = {
       .single();
 
     if (error) {
-      console.error('Error creating booking terms:', error);
       throw error;
     }
 

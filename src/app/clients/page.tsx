@@ -150,9 +150,7 @@ function ClientsPageContent() {
         [client.id]: today
       }));
 
-      console.log(`✅ Reset group coaching count for ${client.firstName} ${client.lastName}`);
     } catch (error) {
-      console.error('❌ Error resetting group coaching count:', error);
       alert('Failed to reset group coaching count. Please try again.');
     }
   };

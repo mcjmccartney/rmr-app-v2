@@ -20,18 +20,7 @@ function SessionPlanContent() {
   const session = sessionId ? state.sessions.find(s => s.id === sessionId) : null;
   const client = session ? state.clients.find(c => c.id === session.clientId) : null;
 
-  // Debug logging for session navigation
-  useEffect(() => {
-    console.log('Session Plan Debug - Navigation:', {
-      sessionId,
-      sessionFound: !!session,
-      clientFound: !!client,
-      totalSessions: state.sessions.length,
-      totalClients: state.clients.length,
-      from: searchParams.get('from'),
-      clientId: searchParams.get('clientId')
-    });
-  }, [sessionId, session, client, state.sessions.length, state.clients.length, searchParams]);
+
 
   // Use action points from state (loaded from Supabase) or fallback to predefined ones
   const actionPoints = state.actionPoints.length > 0 ? state.actionPoints : predefinedActionPoints;
@@ -591,11 +580,7 @@ function SessionPlanContent() {
         return;
       }
 
-      console.log('Sending data to Make.com webhook:', sessionData);
-      console.log('Selected action points being sent:', selectedActionPoints);
-      console.log('Action points data being sent:', sessionData.actionPoints);
-      console.log('Webhook URL:', 'https://hook.eu1.make.com/lbfmnhl3xpf7c0y2sfos3vdln6y1fmqm');
-      console.log('Request payload size:', JSON.stringify(sessionData).length, 'characters');
+
 
       // Send data to Make.com webhook to generate the document
       const response = await fetch('https://hook.eu1.make.com/lbfmnhl3xpf7c0y2sfos3vdln6y1fmqm', {

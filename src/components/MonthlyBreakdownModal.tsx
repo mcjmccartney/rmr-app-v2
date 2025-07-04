@@ -292,7 +292,6 @@ export default function MonthlyBreakdownModal({ finance, allFinancesForMonth, is
                       value={expectedAmount}
                       onChange={(e) => {
                         const value = e.target.value.replace(/[^0-9.]/g, '');
-                        console.log('Input changed:', value);
                         setExpectedAmount(value);
                       }}
                       className="w-full text-lg font-semibold text-center border border-gray-300 rounded-lg p-3 pl-8 focus:ring-2 focus:ring-amber-500 focus:border-transparent"

@@ -47,8 +47,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL(`/payment-confirmed/${sessionId}`, request.url));
       
     } catch (paymentError) {
-      console.error('Error marking session as paid:', paymentError);
-      
       // Try fallback method with direct database update
       try {
         const { supabase } = await import('@/lib/supabase');
@@ -56,16 +54,14 @@ export async function GET(request: NextRequest) {
           .from('sessions')
           .update({ session_paid: true })
           .eq('id', sessionId);
-          
+
         if (updateError) {
           throw updateError;
         }
-        
-        console.log('Session marked as paid via fallback method:', sessionId);
+
         return NextResponse.redirect(new URL(`/payment-confirmed/${sessionId}`, request.url));
-        
+
       } catch (fallbackError) {
-        console.error('Fallback payment marking failed:', fallbackError);
         return NextResponse.redirect(new URL(`/payment-error?reason=update-failed&id=${sessionId}`, request.url));
       }
     }

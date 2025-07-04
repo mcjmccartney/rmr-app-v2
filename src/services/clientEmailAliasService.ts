@@ -108,9 +108,7 @@ export class ClientEmailAliasService {
         await this.addAlias(primaryClientId, duplicateEmail, false);
       }
 
-      console.log('Email aliases set up successfully for client:', primaryClientId);
     } catch (error) {
-      console.error('Error setting up email aliases:', error);
       throw error;
     }
   }
@@ -145,9 +143,7 @@ export class ClientEmailAliasService {
         await this.addAlias(clientId, newPrimaryEmail, true);
       }
 
-      console.log('Primary email updated successfully for client:', clientId);
     } catch (error) {
-      console.error('Error updating primary email:', error);
       throw error;
     }
   }
@@ -162,7 +158,6 @@ export class ClientEmailAliasService {
       .eq('id', aliasId);
 
     if (error) {
-      console.error('Error removing email alias:', error);
       throw error;
     }
   }

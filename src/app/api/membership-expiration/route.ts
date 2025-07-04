@@ -3,12 +3,8 @@ import { membershipExpirationService } from '@/services/membershipExpirationServ
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('🕛 Starting daily membership expiration check...');
-    
     // Run the membership status update for all clients
     const result = await membershipExpirationService.updateAllClientMembershipStatuses();
-    
-    console.log(`✅ Daily membership expiration check complete: ${result.updated} clients updated out of ${result.total} total`);
     
     return NextResponse.json({
       success: true,

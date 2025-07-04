@@ -76,7 +76,6 @@ export const sessionService = {
       .order('booking_time', { ascending: false })
 
     if (error) {
-      console.error('Error fetching sessions:', error)
       throw error
     }
 
@@ -95,7 +94,6 @@ export const sessionService = {
       if (error.code === 'PGRST116') {
         return null // Not found
       }
-      console.error('Error fetching session:', error)
       throw error
     }
 
