@@ -223,6 +223,15 @@ function SessionPlanContent() {
           }
         } else {
           console.log('Polling response not ok:', response.status);
+          // Log the detailed error response
+          try {
+            const errorData = await response.json();
+            console.log('Polling error details:', errorData);
+          } catch (jsonError) {
+            console.log('Could not parse error response as JSON');
+            const errorText = await response.text();
+            console.log('Polling error text:', errorText);
+          }
         }
 
         attempts++;
