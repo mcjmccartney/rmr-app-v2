@@ -56,22 +56,39 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Send email via Make.com webhook
+    // Send email via Make.com webhook - format data to match Make.com expectations
     const emailData = {
-      to: 'raisingmyrescue@outlook.com',
+      address: 'raisingmyrescue@outlook.com', // Make.com expects 'address' not 'to'
       subject: subject,
       content: emailContent,
       type: type,
       submittedAt: new Date().toISOString()
     };
 
-    // Final validation before sending webhook
-    if (!isValidString(emailData.to) ||
+    // Comprehensive validation to prevent blank/empty webhook data
+    if (!isValidString(emailData.address) ||
         !isValidString(emailData.subject) ||
         !isValidString(emailData.content) ||
-        !isValidString(emailData.type)) {
+        !isValidString(emailData.type) ||
+        !isValidString(emailData.submittedAt)) {
       return NextResponse.json(
-        { error: 'Invalid email data prepared' },
+        { error: 'Invalid email data prepared - missing required fields' },
+        { status: 400 }
+      );
+    }
+
+    // Additional validation for email format
+    if (!isValidEmail(emailData.address)) {
+      return NextResponse.json(
+        { error: 'Invalid email address format' },
+        { status: 400 }
+      );
+    }
+
+    // Validate content length (prevent empty content)
+    if (emailData.content.trim().length < 10) {
+      return NextResponse.json(
+        { error: 'Email content too short or empty' },
         { status: 400 }
       );
     }
@@ -86,15 +103,29 @@ export async function POST(request: NextRequest) {
     });
 
     if (!response.ok) {
+      const errorText = await response.text();
       return NextResponse.json(
-        { error: 'Failed to send email notification' },
+        {
+          error: 'Failed to send email notification',
+          details: `Make.com webhook failed with status ${response.status}`,
+          makeComResponse: errorText
+        },
         { status: 500 }
       );
     }
 
+    const responseData = await response.text();
+
     return NextResponse.json({
       success: true,
-      message: 'Notification sent successfully'
+      message: 'Notification sent successfully',
+      makeComResponse: responseData,
+      emailData: {
+        address: emailData.address,
+        subject: emailData.subject,
+        contentLength: emailData.content.length,
+        type: emailData.type
+      }
     });
 
   } catch (error) {
