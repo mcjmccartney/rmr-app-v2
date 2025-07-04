@@ -33,10 +33,10 @@ export async function GET() {
     diagnostics.environmentCheck = {
       hasGooglePrivateKey: !!process.env.GOOGLE_PRIVATE_KEY,
       privateKeyLength: process.env.GOOGLE_PRIVATE_KEY?.length || 0,
-      privateKeyStartsWith: process.env.GOOGLE_PRIVATE_KEY?.substring(0, 50) || 'NOT_SET',
+      privateKeyStartsWith: process.env.GOOGLE_PRIVATE_KEY ? '-----BEGIN PRIVATE KEY-----' : 'NOT_SET',
       privateKeyContainsBegin: process.env.GOOGLE_PRIVATE_KEY?.includes('-----BEGIN PRIVATE KEY-----') || false,
       hasNextPublicBaseUrl: !!process.env.NEXT_PUBLIC_BASE_URL,
-      baseUrl: process.env.NEXT_PUBLIC_BASE_URL || 'NOT_SET'
+      baseUrl: process.env.NEXT_PUBLIC_BASE_URL ? 'SET' : 'NOT_SET'
     };
 
     // 2. Authentication Test

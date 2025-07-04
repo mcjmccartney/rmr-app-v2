@@ -1,56 +1,55 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { clientEmailAliasService } from '@/services/clientEmailAliasService';
+import { sanitizeEmail, sanitizeString, addSecurityHeaders } from '@/lib/security';
 
 export async function POST(request: NextRequest) {
   try {
     // Parse the JSON body from Make.com
     const body = await request.json();
-    
-    console.log('Received webhook data:', body);
+
+    // Sanitize and validate inputs
+    const email = sanitizeEmail(body.email || '');
+    const dateStr = sanitizeString(body.date || '');
+    const amountStr = sanitizeString(body.amount || '');
 
     // Validate required fields
-    if (!body.email || !body.date || !body.amount) {
-      console.error('Missing required fields:', { email: body.email, date: body.date, amount: body.amount });
-      return NextResponse.json(
-        { error: 'Missing required fields: email, date, and amount are required' },
+    if (!email || !dateStr || !amountStr) {
+      return addSecurityHeaders(NextResponse.json(
+        { error: 'Missing or invalid required fields' },
         { status: 400 }
-      );
+      ));
     }
 
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(body.email)) {
-      console.error('Invalid email format:', body.email);
-      return NextResponse.json(
+    // Additional email validation
+    if (!email.includes('@') || email.length > 254) {
+      return addSecurityHeaders(NextResponse.json(
         { error: 'Invalid email format' },
         { status: 400 }
-      );
+      ));
     }
 
     // Validate amount is a positive number
-    const amount = parseFloat(body.amount);
-    if (isNaN(amount) || amount <= 0) {
-      console.error('Invalid amount:', body.amount);
-      return NextResponse.json(
-        { error: 'Amount must be a positive number' },
+    const amount = parseFloat(amountStr);
+    if (isNaN(amount) || amount <= 0 || amount > 10000) { // Max £10,000 sanity check
+      return addSecurityHeaders(NextResponse.json(
+        { error: 'Invalid amount' },
         { status: 400 }
-      );
+      ));
     }
 
     // Validate date format
-    const date = new Date(body.date);
-    if (isNaN(date.getTime())) {
-      console.error('Invalid date format:', body.date);
-      return NextResponse.json(
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime()) || date.getFullYear() < 2020 || date.getFullYear() > 2030) {
+      return addSecurityHeaders(NextResponse.json(
         { error: 'Invalid date format' },
         { status: 400 }
-      );
+      ));
     }
 
     // Prepare membership data for Supabase
     const membershipData = {
-      email: body.email.toLowerCase().trim(), // Normalize email
+      email: email, // Already sanitized and normalized
       date: date.toISOString(), // Ensure proper ISO format
       amount: amount
     };
@@ -65,13 +64,13 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error('Supabase error:', error);
-      return NextResponse.json(
-        { 
-          error: 'Failed to save membership to database',
-          details: error.message 
+      return addSecurityHeaders(NextResponse.json(
+        {
+          error: 'Failed to save membership to database'
+          // Remove error details for security
         },
         { status: 500 }
-      );
+      ));
     }
 
     console.log('Successfully created membership:', data);
@@ -187,53 +186,50 @@ export async function POST(request: NextRequest) {
     }
 
     // Return success response
-    return NextResponse.json({
+    return addSecurityHeaders(NextResponse.json({
       success: true,
       message: 'Membership created successfully',
       membership: data[0],
       clientUpdated: clientData && clientData.length > 0
-    }, { status: 201 });
+    }, { status: 201 }));
 
   } catch (error) {
     console.error('Webhook error:', error);
-    
+
     // Handle JSON parsing errors
     if (error instanceof SyntaxError) {
-      return NextResponse.json(
-        { error: 'Invalid JSON format' },
+      return addSecurityHeaders(NextResponse.json(
+        { error: 'Invalid request format' },
         { status: 400 }
-      );
+      ));
     }
 
-    // Handle other errors
-    return NextResponse.json(
-      { 
-        error: 'Internal server error',
-        message: error instanceof Error ? error.message : 'Unknown error'
-      },
+    // Handle other errors - don't expose internal error details
+    return addSecurityHeaders(NextResponse.json(
+      { error: 'Internal server error' },
       { status: 500 }
-    );
+    ));
   }
 }
 
 // Handle other HTTP methods
 export async function GET() {
-  return NextResponse.json(
-    { message: 'Stripe webhook endpoint - POST only' },
+  return addSecurityHeaders(NextResponse.json(
+    { error: 'Method not allowed' },
     { status: 405 }
-  );
+  ));
 }
 
 export async function PUT() {
-  return NextResponse.json(
-    { message: 'Method not allowed' },
+  return addSecurityHeaders(NextResponse.json(
+    { error: 'Method not allowed' },
     { status: 405 }
-  );
+  ));
 }
 
 export async function DELETE() {
-  return NextResponse.json(
-    { message: 'Method not allowed' },
+  return addSecurityHeaders(NextResponse.json(
+    { error: 'Method not allowed' },
     { status: 405 }
-  );
+  ));
 }

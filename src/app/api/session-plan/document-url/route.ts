@@ -3,12 +3,19 @@ import { supabase } from '@/lib/supabase';
 
 // OPTIONS handler for CORS preflight requests
 export async function OPTIONS() {
+  const allowedOrigins = [
+    'https://raising-my-rescue.vercel.app',
+    'https://hook.eu1.make.com',
+    ...(process.env.NODE_ENV === 'development' ? ['http://localhost:3000'] : [])
+  ];
+
   return new NextResponse(null, {
     status: 200,
     headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, GET, DELETE, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      'Access-Control-Allow-Origin': 'https://hook.eu1.make.com',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+      'Access-Control-Max-Age': '86400', // 24 hours
     },
   });
 }
@@ -82,7 +89,7 @@ export async function POST(request: NextRequest) {
     }, {
       status: 200,
       headers: {
-        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Origin': 'https://hook.eu1.make.com',
         'Access-Control-Allow-Methods': 'POST, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type',
       }
