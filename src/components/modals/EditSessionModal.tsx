@@ -198,10 +198,12 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
                             webhookPayload.sessionType?.trim() &&
                             webhookPayload.bookingDate?.trim() &&
                             webhookPayload.bookingTime?.trim() &&
-                            webhookPayload.clientEmail.includes('@'); // Basic email validation
+                            webhookPayload.clientEmail.includes('@') && // Basic email validation
+                            webhookPayload.quote > 0; // Ensure quote is valid
 
         if (!hasEssentialData || !hasValidData) {
-          console.log('Skipping webhook - missing or invalid essential data:', {
+          console.log('❌ Skipping session update webhook - missing or invalid essential data:', {
+            sessionId: webhookPayload.sessionId,
             hasSessionId: !!webhookPayload.sessionId,
             hasClientEmail: !!webhookPayload.clientEmail,
             hasSessionType: !!webhookPayload.sessionType,
@@ -211,12 +213,30 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
             validClientEmail: !!webhookPayload.clientEmail?.trim() && webhookPayload.clientEmail.includes('@'),
             validSessionType: !!webhookPayload.sessionType?.trim(),
             validBookingDate: !!webhookPayload.bookingDate?.trim(),
-            validBookingTime: !!webhookPayload.bookingTime?.trim()
+            validBookingTime: !!webhookPayload.bookingTime?.trim(),
+            validQuote: webhookPayload.quote > 0,
+            webhookPayload: webhookPayload
           });
           return;
         }
 
-        console.log('Sending webhook data to Make.com:', webhookPayload);
+        // Final validation before webhook call to prevent empty data
+        if (!webhookPayload.sessionId || !webhookPayload.clientEmail || !webhookPayload.sessionType ||
+            !webhookPayload.bookingDate || !webhookPayload.bookingTime || webhookPayload.quote <= 0) {
+          console.log('❌ Final check: Blocking booking terms webhook - invalid data detected');
+          return;
+        }
+
+        console.log('✅ Sending session update webhook data to Make.com:', {
+          timestamp: new Date().toISOString(),
+          sessionId: webhookPayload.sessionId,
+          clientEmail: webhookPayload.clientEmail,
+          sessionType: webhookPayload.sessionType,
+          bookingDate: webhookPayload.bookingDate,
+          bookingTime: webhookPayload.bookingTime,
+          quote: webhookPayload.quote,
+          payloadSize: JSON.stringify(webhookPayload).length
+        });
 
         const webhookResponse = await fetch('https://hook.eu1.make.com/yaoalfe77uqtw4xv9fbh5atf4okq14wm', {
           method: 'POST',

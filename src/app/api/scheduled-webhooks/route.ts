@@ -70,24 +70,69 @@ export async function POST() {
           createdAt: new Date().toISOString(),
           sendSessionEmail: true // Force email sending for scheduled webhooks
         };
-        
-        console.log(`Triggering both scheduled webhooks for session ${session.id}:`, webhookData);
+
+        // Validate essential data before triggering webhooks
+        const hasEssentialData = webhookData.sessionId &&
+                                webhookData.clientEmail &&
+                                webhookData.sessionType &&
+                                webhookData.bookingDate &&
+                                webhookData.bookingTime;
+
+        // Additional validation to prevent empty/invalid payloads
+        const hasValidData = webhookData.sessionId?.trim() &&
+                            webhookData.clientEmail?.trim() &&
+                            webhookData.sessionType?.trim() &&
+                            webhookData.bookingDate?.trim() &&
+                            webhookData.bookingTime?.trim() &&
+                            webhookData.clientEmail.includes('@') && // Basic email validation
+                            webhookData.quote > 0; // Ensure quote is valid
+
+        if (!hasEssentialData || !hasValidData) {
+          console.log(`❌ Skipping scheduled webhooks for session ${session.id} - missing or invalid essential data:`, {
+            hasSessionId: !!webhookData.sessionId,
+            hasClientEmail: !!webhookData.clientEmail,
+            hasSessionType: !!webhookData.sessionType,
+            hasBookingDate: !!webhookData.bookingDate,
+            hasBookingTime: !!webhookData.bookingTime,
+            validSessionId: !!webhookData.sessionId?.trim(),
+            validClientEmail: !!webhookData.clientEmail?.trim() && webhookData.clientEmail.includes('@'),
+            validSessionType: !!webhookData.sessionType?.trim(),
+            validBookingDate: !!webhookData.bookingDate?.trim(),
+            validBookingTime: !!webhookData.bookingTime?.trim(),
+            validQuote: webhookData.quote > 0
+          });
+
+          results.push({
+            sessionId: session.id,
+            status: 'skipped',
+            reason: 'Missing or invalid essential data',
+            webhookData: webhookData
+          });
+          continue;
+        }
+
+        console.log(`✅ Triggering both scheduled webhooks for session ${session.id}:`, webhookData);
 
         // Prepare both webhook promises for sessions that are exactly 4 days away
         const webhookPromises: Promise<Response>[] = [];
         const webhookNames: string[] = [];
 
-        // Trigger booking terms webhook
-        webhookPromises.push(
-          fetch('https://hook.eu1.make.com/yaoalfe77uqtw4xv9fbh5atf4okq14wm', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(webhookData)
-          })
-        );
-        webhookNames.push('booking terms webhook');
+        // Only trigger booking terms webhook if we have valid data
+        if (webhookData.sessionId && webhookData.clientEmail && webhookData.sessionType &&
+            webhookData.bookingDate && webhookData.bookingTime && webhookData.quote > 0) {
+          webhookPromises.push(
+            fetch('https://hook.eu1.make.com/yaoalfe77uqtw4xv9fbh5atf4okq14wm', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(webhookData)
+            })
+          );
+          webhookNames.push('booking terms webhook');
+        } else {
+          console.log('❌ Skipping booking terms webhook - invalid data');
+        }
 
         // Trigger session webhook with email flag enabled
         const webhookDataWithEmailFlag = {

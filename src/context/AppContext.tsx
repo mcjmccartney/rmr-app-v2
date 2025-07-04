@@ -729,17 +729,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
         const webhookPromises: Promise<Response>[] = [];
         const webhookNames: string[] = [];
 
-        // Trigger booking terms email webhook
-        webhookPromises.push(
-          fetch('https://hook.eu1.make.com/yaoalfe77uqtw4xv9fbh5atf4okq14wm', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(webhookData)
-          })
-        );
-        webhookNames.push('booking terms email webhook');
+        // Only trigger booking terms webhook if we have valid data
+        if (webhookData.sessionId && webhookData.clientEmail && webhookData.sessionType &&
+            webhookData.bookingDate && webhookData.bookingTime && webhookData.quote > 0) {
+          webhookPromises.push(
+            fetch('https://hook.eu1.make.com/yaoalfe77uqtw4xv9fbh5atf4okq14wm', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(webhookData)
+            })
+          );
+          webhookNames.push('booking terms email webhook');
+        } else {
+          console.log('❌ Skipping booking terms webhook - invalid data');
+        }
 
         // Trigger session webhook for calendar creation and emails
         const webhookDataWithEmailFlag = {
