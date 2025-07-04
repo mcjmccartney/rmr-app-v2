@@ -133,7 +133,16 @@ export async function POST(request: NextRequest) {
 // DELETE endpoint to clear document URL for regeneration
 export async function DELETE(request: NextRequest) {
   try {
-    const body = await request.json();
+    // Check if request has a body
+    let body;
+    try {
+      body = await request.json();
+    } catch (jsonError) {
+      return NextResponse.json(
+        { error: 'Invalid JSON in request body' },
+        { status: 400 }
+      );
+    }
 
     // Try multiple possible field names that Make.com might send
     const sessionId = body.sessionId || body.session_id || body.sessionid;
@@ -146,8 +155,18 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
+    // Create admin client and handle potential environment variable issues
+    let supabaseAdmin;
+    try {
+      supabaseAdmin = createSupabaseAdmin();
+    } catch (envError) {
+      return NextResponse.json(
+        { error: 'Server configuration error', details: 'Missing environment variables' },
+        { status: 500 }
+      );
+    }
+
     // Clear the document URL from the session plan
-    const supabaseAdmin = createSupabaseAdmin();
     const { data, error } = await supabaseAdmin
       .from('session_plans')
       .update({
@@ -160,7 +179,11 @@ export async function DELETE(request: NextRequest) {
 
     if (error) {
       return NextResponse.json(
-        { error: 'Failed to clear document URL' },
+        {
+          error: 'Database update failed',
+          details: error.message,
+          sessionId: sessionId
+        },
         { status: 500 }
       );
     }
@@ -173,7 +196,11 @@ export async function DELETE(request: NextRequest) {
 
   } catch (error) {
     return NextResponse.json(
-      { error: 'Internal server error' },
+      {
+        error: 'Internal server error',
+        details: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      },
       { status: 500 }
     );
   }
@@ -186,8 +213,6 @@ export async function GET(request: NextRequest) {
     const sessionId = searchParams.get('sessionId');
     const timestamp = searchParams.get('t'); // Cache busting parameter
 
-
-
     if (!sessionId) {
       return NextResponse.json(
         { error: 'Missing sessionId parameter' },
@@ -195,8 +220,18 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Create admin client and handle potential environment variable issues
+    let supabaseAdmin;
+    try {
+      supabaseAdmin = createSupabaseAdmin();
+    } catch (envError) {
+      return NextResponse.json(
+        { error: 'Server configuration error', details: 'Missing environment variables' },
+        { status: 500 }
+      );
+    }
+
     // Get the session plan with document URL
-    const supabaseAdmin = createSupabaseAdmin();
     const { data, error } = await supabaseAdmin
       .from('session_plans')
       .select('document_edit_url, updated_at')
@@ -205,7 +240,11 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       return NextResponse.json(
-        { error: 'Session plan not found' },
+        {
+          error: 'Database query failed',
+          details: error.message,
+          sessionId: sessionId
+        },
         { status: 404 }
       );
     }
@@ -223,7 +262,11 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     return NextResponse.json(
-      { error: 'Internal server error' },
+      {
+        error: 'Internal server error',
+        details: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      },
       { status: 500 }
     );
   }
