@@ -47,13 +47,6 @@ export async function POST(request: NextRequest) {
       ));
     }
 
-    // Convert date to month format expected by database (e.g., "January 2024")
-    const monthNames = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
-    ];
-    const monthYear = `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
-
     // Find client by email (including aliases) first
     let clientData = null;
     let clientError = null;
@@ -161,13 +154,11 @@ export async function POST(request: NextRequest) {
       clientError = error;
     }
 
-    // Now create the membership record (without client_id for now - database schema doesn't have it yet)
+    // Now create the membership record matching the actual database structure
     const membershipData = {
       email: email, // Already sanitized and normalized
-      month: monthYear, // Convert date to month format expected by database
-      amount: amount,
-      status: 'Paid', // Set status to Paid since this is a successful payment webhook
-      payment_date: date.toISOString().split('T')[0] // Store just the date part (YYYY-MM-DD)
+      date: date.toISOString().split('T')[0], // Store just the date part (YYYY-MM-DD)
+      amount: Number(amount) // Ensure amount is a number for the numeric column
     };
 
     console.log('Inserting membership data:', membershipData);
