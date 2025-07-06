@@ -194,7 +194,57 @@ export async function POST() {
   }
 }
 
-// GET endpoint for testing/manual triggering
+// GET endpoint for testing/manual triggering with debug info
 export async function GET() {
-  return POST();
+  try {
+    // Get all sessions for debugging
+    const sessions = await sessionService.getAll();
+    const clients = await clientService.getAll();
+
+    // Get current date and time
+    const now = new Date();
+    const currentDate = now.toISOString().split('T')[0]; // YYYY-MM-DD
+
+    // Calculate days until each session for debugging
+    const sessionDebugInfo = sessions
+      .filter(session => session.clientId && session.sessionType !== 'Group' && session.sessionType !== 'RMR Live')
+      .map(session => {
+        const sessionDate = new Date(session.bookingDate);
+        const timeDiff = sessionDate.getTime() - now.getTime();
+        const daysUntilSession = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+
+        const client = clients.find(c => c.id === session.clientId);
+
+        return {
+          sessionId: session.id,
+          clientName: client ? `${client.firstName} ${client.lastName}` : 'Unknown',
+          sessionType: session.sessionType,
+          bookingDate: session.bookingDate,
+          bookingTime: session.bookingTime,
+          daysUntilSession,
+          isExactly4Days: daysUntilSession === 4
+        };
+      })
+      .sort((a, b) => a.daysUntilSession - b.daysUntilSession);
+
+    // Also run the actual webhook logic
+    const webhookResult = await POST();
+    const webhookData = await webhookResult.json();
+
+    return NextResponse.json({
+      debug: true,
+      currentDate,
+      totalSessions: sessions.length,
+      eligibleSessions: sessionDebugInfo.length,
+      sessionsExactly4DaysAway: sessionDebugInfo.filter(s => s.isExactly4Days).length,
+      upcomingSessions: sessionDebugInfo.slice(0, 10), // Show first 10 upcoming sessions
+      webhookResult: webhookData
+    });
+
+  } catch (error) {
+    return NextResponse.json({
+      error: 'Debug failed',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 });
+  }
 }
