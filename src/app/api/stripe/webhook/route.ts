@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
 import { clientEmailAliasService } from '@/services/clientEmailAliasService';
 import { sanitizeEmail, sanitizeString, addSecurityHeaders } from '@/lib/security';
 
 export async function POST(request: NextRequest) {
   try {
+    // Create Supabase client with service role key to bypass RLS
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
     // Parse the JSON body from Make.com
     const body = await request.json();
 
