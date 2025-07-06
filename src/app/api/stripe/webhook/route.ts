@@ -172,6 +172,14 @@ export async function POST(request: NextRequest) {
 
     console.log('Inserting membership data:', membershipData);
 
+    // First, let's check what columns actually exist in the memberships table
+    const { data: tableInfo, error: tableError } = await supabase
+      .from('memberships')
+      .select('*')
+      .limit(1);
+
+    console.log('Memberships table structure check:', { tableInfo, tableError });
+
     // Insert into Supabase memberships table
     const { data, error } = await supabase
       .from('memberships')
