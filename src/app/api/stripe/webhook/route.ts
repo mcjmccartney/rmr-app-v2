@@ -167,15 +167,7 @@ export async function POST(request: NextRequest) {
       amount: Number(amount) // Ensure amount is a number for the numeric column
     };
 
-    console.log('Inserting membership data:', membershipData);
 
-    // First, let's check what columns actually exist in the memberships table
-    const { data: tableInfo, error: tableError } = await supabase
-      .from('memberships')
-      .select('*')
-      .limit(1);
-
-    console.log('Memberships table structure check:', { tableInfo, tableError });
 
     // Insert into Supabase memberships table
     const { data, error } = await supabase
@@ -184,23 +176,14 @@ export async function POST(request: NextRequest) {
       .select();
 
     if (error) {
-      console.error('Supabase error:', error);
-      console.error('Membership data that failed:', membershipData);
       return addSecurityHeaders(NextResponse.json(
-        {
-          error: 'Failed to save membership to database',
-          details: error.message // Temporarily include error details for debugging
-        },
+        { error: 'Failed to save membership to database' },
         { status: 500 }
       ));
     }
 
-    console.log('Successfully created membership:', data);
-
     if (clientError) {
-      console.error('Error updating client membership and active status:', clientError);
       // Don't fail the webhook if client update fails - membership is still recorded
-      console.log('Membership saved but client status not updated');
     }
 
     // Return success response
