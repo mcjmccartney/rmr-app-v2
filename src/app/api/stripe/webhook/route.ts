@@ -161,9 +161,8 @@ export async function POST(request: NextRequest) {
       clientError = error;
     }
 
-    // Now create the membership record with the proper client_id
+    // Now create the membership record (without client_id for now - database schema doesn't have it yet)
     const membershipData = {
-      client_id: foundClientId, // Use the found or created client ID
       email: email, // Already sanitized and normalized
       month: monthYear, // Convert date to month format expected by database
       amount: amount,
