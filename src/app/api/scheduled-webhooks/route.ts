@@ -1,12 +1,61 @@
 import { NextResponse } from 'next/server';
-import { sessionService } from '@/services/sessionService';
-import { clientService } from '@/services/clientService';
+import { createClient } from '@supabase/supabase-js';
 
 export async function POST() {
   try {
-    // Get all sessions
-    const sessions = await sessionService.getAll();
-    const clients = await clientService.getAll();
+    // Create Supabase client with service role key to ensure full database access
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
+    // Get all sessions directly with service role access
+    const { data: sessionsData, error: sessionsError } = await supabase
+      .from('sessions')
+      .select('*')
+      .order('booking_date', { ascending: false })
+      .order('booking_time', { ascending: false });
+
+    if (sessionsError) {
+      throw new Error(`Failed to fetch sessions: ${sessionsError.message}`);
+    }
+
+    // Get all clients directly with service role access
+    const { data: clientsData, error: clientsError } = await supabase
+      .from('clients')
+      .select('*');
+
+    if (clientsError) {
+      throw new Error(`Failed to fetch clients: ${clientsError.message}`);
+    }
+
+    // Convert database rows to proper format
+    const sessions = sessionsData?.map((row: any) => ({
+      id: row.id,
+      clientId: row.client_id,
+      dogName: row.dog_name,
+      sessionType: row.session_type,
+      bookingDate: row.booking_date,
+      bookingTime: row.booking_time?.substring(0, 5) || '00:00',
+      notes: row.notes,
+      quote: parseFloat(row.quote || '0'),
+      email: row.email,
+      sessionPaid: row.session_paid || false,
+      paymentConfirmedAt: row.payment_confirmed_at,
+      sessionPlanSent: row.session_plan_sent || false,
+      questionnaireBypass: row.questionnaire_bypass || false,
+      eventId: row.event_id,
+      googleMeetLink: row.google_meet_link,
+    })) || [];
+
+    const clients = clientsData?.map((row: any) => ({
+      id: row.id,
+      firstName: row.first_name,
+      lastName: row.last_name,
+      email: row.email,
+      dogName: row.dog_name,
+      // Add other client fields as needed
+    })) || [];
     
     // Get current date and time
     const now = new Date();
@@ -197,9 +246,59 @@ export async function POST() {
 // GET endpoint for testing/manual triggering with debug info
 export async function GET() {
   try {
-    // Get all sessions for debugging
-    const sessions = await sessionService.getAll();
-    const clients = await clientService.getAll();
+    // Create Supabase client with service role key to ensure full database access
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
+    // Get all sessions directly with service role access
+    const { data: sessionsData, error: sessionsError } = await supabase
+      .from('sessions')
+      .select('*')
+      .order('booking_date', { ascending: false })
+      .order('booking_time', { ascending: false });
+
+    if (sessionsError) {
+      throw new Error(`Failed to fetch sessions: ${sessionsError.message}`);
+    }
+
+    // Get all clients directly with service role access
+    const { data: clientsData, error: clientsError } = await supabase
+      .from('clients')
+      .select('*');
+
+    if (clientsError) {
+      throw new Error(`Failed to fetch clients: ${clientsError.message}`);
+    }
+
+    // Convert database rows to proper format
+    const sessions = sessionsData?.map((row: any) => ({
+      id: row.id,
+      clientId: row.client_id,
+      dogName: row.dog_name,
+      sessionType: row.session_type,
+      bookingDate: row.booking_date,
+      bookingTime: row.booking_time?.substring(0, 5) || '00:00',
+      notes: row.notes,
+      quote: parseFloat(row.quote || '0'),
+      email: row.email,
+      sessionPaid: row.session_paid || false,
+      paymentConfirmedAt: row.payment_confirmed_at,
+      sessionPlanSent: row.session_plan_sent || false,
+      questionnaireBypass: row.questionnaire_bypass || false,
+      eventId: row.event_id,
+      googleMeetLink: row.google_meet_link,
+    })) || [];
+
+    const clients = clientsData?.map((row: any) => ({
+      id: row.id,
+      firstName: row.first_name,
+      lastName: row.last_name,
+      email: row.email,
+      dogName: row.dog_name,
+      // Add other client fields as needed
+    })) || [];
 
     // Get current date and time
     const now = new Date();
