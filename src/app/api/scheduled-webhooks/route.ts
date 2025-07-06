@@ -75,25 +75,13 @@ export async function POST() {
           return isValidString(email) && email.includes('@') && email.includes('.') && email.length >= 5;
         };
 
-        const isValidDate = (date: any): boolean => {
-          return isValidString(date) && /^\d{4}-\d{2}-\d{2}$/.test(date);
-        };
-
-        const isValidTime = (time: any): boolean => {
-          return isValidString(time) && /^\d{2}:\d{2}$/.test(time);
-        };
-
-        // Validate all essential fields with strict checks
+        // Validate all essential fields with strict checks (removed booking date, time, and quote validations)
         const hasValidData =
           isValidString(webhookData.sessionId) &&
           isValidString(webhookData.clientId) &&
           isValidString(webhookData.clientName) &&
           isValidEmail(webhookData.clientEmail) &&
-          isValidString(webhookData.sessionType) &&
-          isValidDate(webhookData.bookingDate) &&
-          isValidTime(webhookData.bookingTime) &&
-          typeof webhookData.quote === 'number' &&
-          webhookData.quote >= 0;
+          isValidString(webhookData.sessionType);
 
         // Block webhook if any essential data is missing or invalid
         if (!hasValidData) {
@@ -110,12 +98,10 @@ export async function POST() {
         const webhookPromises: Promise<Response>[] = [];
         const webhookNames: string[] = [];
 
-        // Double-check validation before booking terms webhook (extra safety)
+        // Double-check validation before booking terms webhook (extra safety) - removed date/time validations
         if (isValidString(webhookData.sessionId) &&
             isValidEmail(webhookData.clientEmail) &&
-            isValidString(webhookData.sessionType) &&
-            isValidDate(webhookData.bookingDate) &&
-            isValidTime(webhookData.bookingTime)) {
+            isValidString(webhookData.sessionType)) {
           webhookPromises.push(
             fetch('https://hook.eu1.make.com/yaoalfe77uqtw4xv9fbh5atf4okq14wm', {
               method: 'POST',
