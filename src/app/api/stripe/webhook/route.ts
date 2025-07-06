@@ -73,10 +73,11 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error('Supabase error:', error);
+      console.error('Membership data that failed:', membershipData);
       return addSecurityHeaders(NextResponse.json(
         {
-          error: 'Failed to save membership to database'
-          // Remove error details for security
+          error: 'Failed to save membership to database',
+          details: error.message // Temporarily include error details for debugging
         },
         { status: 500 }
       ));
