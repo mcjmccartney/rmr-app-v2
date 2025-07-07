@@ -336,7 +336,7 @@ export async function GET() {
       totalSessions: sessions.length,
       eligibleSessions: sessionDebugInfo.length,
       sessionsExactly4DaysAway: sessionDebugInfo.filter(s => s.isExactly4Days).length,
-      upcomingSessions: sessionDebugInfo.slice(0, 10), // Show first 10 upcoming sessions
+      upcomingSessions: sessionDebugInfo.filter(s => s.daysUntilSession > 0 && s.daysUntilSession <= 10), // Show sessions 1-10 days away
       webhookResult: webhookData
     });
 
