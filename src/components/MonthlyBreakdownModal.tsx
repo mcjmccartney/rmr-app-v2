@@ -259,6 +259,7 @@ export default function MonthlyBreakdownModal({ finance, allFinancesForMonth, is
       'Coaching': '#2b4f6c',       // Dark blue
       'Training - 1hr': '#7aa37a', // Light green
       'Training - 30mins': '#9bb59b', // Lighter green
+      'Training - The Mount': '#6b8e6b', // Medium green (between 1hr and 30mins)
       'Memberships': '#0a91b1',    // Blue
       'Unknown': '#ecebdd'         // Light beige
     };

@@ -8,6 +8,8 @@ export const calculateQuote = (sessionType: Session['sessionType'], isMember: bo
       return isMember ? 50 : 60; // £50 for members, £60 for non-members
     case 'Training - 30mins':
       return 25; // Always £25 regardless of membership
+    case 'Training - The Mount':
+      return isMember ? 50 : 60; // Same pricing as Training - 1hr
     case 'In-Person':
       return isMember ? 75 : 95;
     case 'Online Catchup':

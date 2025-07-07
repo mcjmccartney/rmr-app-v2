@@ -54,6 +54,7 @@ export const sessionTypeOptions = [
   { value: 'Online', label: 'Online' },
   { value: 'Training - 1hr', label: 'Training - 1hr' },
   { value: 'Training - 30mins', label: 'Training - 30mins' },
+  { value: 'Training - The Mount', label: 'Training - The Mount' },
   { value: 'Online Catchup', label: 'Online Catchup' },
   { value: 'Group', label: 'Group' },
   { value: 'RMR Live', label: 'RMR Live' },

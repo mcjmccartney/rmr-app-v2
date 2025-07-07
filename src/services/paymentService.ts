@@ -34,6 +34,10 @@ const PAYMENT_CONFIG: PaymentLinkConfig = {
       member: 'https://monzo.com/pay/r/raising-my-rescue_qeDXP5wJpnqGln', // Using Online Catchup link (£30) as placeholder for £25
       nonMember: 'https://monzo.com/pay/r/raising-my-rescue_qeDXP5wJpnqGln' // Same link for both since price is fixed at £25
     },
+    'Training - The Mount': {
+      member: 'https://monzo.com/pay/r/raising-my-rescue_CD0E8avgp0XVzb', // £50 for members (same as Training - 1hr)
+      nonMember: 'https://monzo.com/pay/r/raising-my-rescue_wuOqWmgMVfXyXJ' // £60 for non-members (same as Training - 1hr)
+    },
     // Fallback for other session types - use Online rates
     'Group': {
       member: 'https://monzo.com/pay/r/raising-my-rescue_xzbkQ7E0rYwzSC',

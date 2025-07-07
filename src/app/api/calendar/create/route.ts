@@ -43,6 +43,9 @@ const calculateEndTime = (date: string, time: string, sessionType: string): stri
     case 'Training - 30mins':
       durationMinutes = 30; // 30 minutes
       break;
+    case 'Training - The Mount':
+      durationMinutes = 60; // 1 hour (same as Training - 1hr)
+      break;
     default:
       durationMinutes = 90; // 1.5 hours for all other session types
       break;
