@@ -105,6 +105,7 @@ export async function POST() {
           sessionId: session.id,
           clientId: session.clientId,
           clientName: `${client.firstName} ${client.lastName}`,
+          clientFirstName: client.firstName,
           clientEmail: client.email,
           dogName: session.dogName || client.dogName || 'Unknown Dog',
           sessionType: session.sessionType,
@@ -326,6 +327,7 @@ async function triggerManualWebhooks(sessionIds: string[]) {
           body: JSON.stringify({
             session,
             client,
+            clientFirstName: client.firstName,
             isMember: client.membership,
             sendSessionEmail: true
           })
