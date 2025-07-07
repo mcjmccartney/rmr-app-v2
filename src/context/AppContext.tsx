@@ -588,7 +588,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const isValidEmail = (email: any): boolean => {
-    return isValidString(email) && email.includes('@') && email.includes('.') && email.length >= 5;
+    if (!isValidString(email)) return false;
+    const emailStr = email.trim();
+    // More robust email validation
+    return emailStr.length >= 5 &&
+           emailStr.includes('@') &&
+           emailStr.includes('.') &&
+           emailStr.indexOf('@') > 0 &&
+           emailStr.indexOf('@') < emailStr.lastIndexOf('.') &&
+           emailStr.lastIndexOf('.') < emailStr.length - 1;
   };
 
   const isValidDate = (date: any): boolean => {
@@ -687,8 +695,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const webhookNames: string[] = [];
 
       // Always trigger booking terms webhook for all newly created sessions
+      // Additional validation to ensure clientEmail is not blank
       if (isValidString(webhookData.sessionId) &&
           isValidEmail(webhookData.clientEmail) &&
+          webhookData.clientEmail.trim().length > 0 &&
           isValidString(webhookData.sessionType) &&
           isValidDate(webhookData.bookingDate) &&
           isValidTime(webhookData.bookingTime)) {
@@ -815,8 +825,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       };
 
       // Validate data before sending webhook
+      // Additional validation to ensure clientEmail is not blank
       if (isValidString(webhookData.sessionId) &&
           isValidEmail(webhookData.clientEmail) &&
+          webhookData.clientEmail.trim().length > 0 &&
           isValidString(webhookData.sessionType) &&
           isValidDate(webhookData.bookingDate) &&
           isValidTime(webhookData.bookingTime)) {
