@@ -54,6 +54,7 @@ export async function POST() {
       lastName: row.last_name,
       email: row.email,
       dogName: row.dog_name,
+      membership: row.membership,
       // Add other client fields as needed
     })) || [];
     
@@ -111,6 +112,7 @@ export async function POST() {
           bookingTime: session.bookingTime,
           notes: session.notes || '',
           quote: session.quote,
+          isMember: client.membership,
           createdAt: new Date().toISOString(),
           sendSessionEmail: true // Force email sending for scheduled webhooks
         };
@@ -324,6 +326,7 @@ async function triggerManualWebhooks(sessionIds: string[]) {
           body: JSON.stringify({
             session,
             client,
+            isMember: client.membership,
             sendSessionEmail: true
           })
         });
@@ -334,7 +337,8 @@ async function triggerManualWebhooks(sessionIds: string[]) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             session,
-            client
+            client,
+            isMember: client.membership
           })
         });
 
