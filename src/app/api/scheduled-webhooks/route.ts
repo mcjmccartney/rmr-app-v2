@@ -166,10 +166,11 @@ export async function POST() {
           webhookNames.push('booking terms webhook');
         }
 
-        // Trigger session webhook with email flag enabled
+        // Trigger session webhook with email flag enabled but no calendar creation for cron jobs
         const webhookDataWithEmailFlag = {
           ...webhookData,
-          sendSessionEmail: true // Always true for scheduled webhooks (4 days away)
+          sendSessionEmail: true, // Always true for scheduled webhooks (4 days away)
+          createCalendarEvent: false // Don't create calendar events for cron job triggers
         };
 
         webhookPromises.push(
@@ -329,7 +330,8 @@ async function triggerManualWebhooks(sessionIds: string[]) {
             client,
             clientFirstName: client.firstName,
             isMember: client.membership,
-            sendSessionEmail: true
+            sendSessionEmail: true,
+            createCalendarEvent: false // Don't create calendar events for manual triggers
           })
         });
 

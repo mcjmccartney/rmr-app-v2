@@ -707,7 +707,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         // Trigger session webhook for calendar creation and emails
         const webhookDataWithEmailFlag = {
           ...webhookData,
-          sendSessionEmail: true // Always true for sessions ≤4 days away
+          sendSessionEmail: true, // Always true for sessions ≤4 days away
+          createCalendarEvent: true // Create calendar events for new sessions
         };
 
         webhookPromises.push(
