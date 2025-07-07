@@ -582,6 +582,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Validation helper functions for webhooks
+  const isValidString = (value: any): boolean => {
+    return value && typeof value === 'string' && value.trim().length > 0;
+  };
+
+  const isValidEmail = (email: any): boolean => {
+    return isValidString(email) && email.includes('@') && email.includes('.') && email.length >= 5;
+  };
+
+  const isValidDate = (date: any): boolean => {
+    return isValidString(date) && /^\d{4}-\d{2}-\d{2}$/.test(date);
+  };
+
+  const isValidTime = (time: any): boolean => {
+    return isValidString(time) && /^\d{2}:\d{2}$/.test(time);
+  };
+
   // Trigger Make.com webhooks for new session
   const triggerSessionWebhook = async (session: Session) => {
     try {
@@ -646,21 +663,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       };
 
       // Comprehensive validation to prevent blank/empty webhook data
-      const isValidString = (value: any): boolean => {
-        return value && typeof value === 'string' && value.trim().length > 0;
-      };
-
-      const isValidEmail = (email: any): boolean => {
-        return isValidString(email) && email.includes('@') && email.includes('.') && email.length >= 5;
-      };
-
-      const isValidDate = (date: any): boolean => {
-        return isValidString(date) && /^\d{4}-\d{2}-\d{2}$/.test(date);
-      };
-
-      const isValidTime = (time: any): boolean => {
-        return isValidString(time) && /^\d{2}:\d{2}$/.test(time);
-      };
 
       // Validate all essential fields with strict checks
       const hasValidData =
@@ -680,31 +682,30 @@ export function AppProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      // Only trigger webhooks if session is 4 days or less away
+      // Prepare webhook promises - trigger booking terms webhook for ALL sessions immediately
+      const webhookPromises: Promise<Response>[] = [];
+      const webhookNames: string[] = [];
+
+      // Always trigger booking terms webhook for all newly created sessions
+      if (isValidString(webhookData.sessionId) &&
+          isValidEmail(webhookData.clientEmail) &&
+          isValidString(webhookData.sessionType) &&
+          isValidDate(webhookData.bookingDate) &&
+          isValidTime(webhookData.bookingTime)) {
+        webhookPromises.push(
+          fetch('https://hook.eu1.make.com/yaoalfe77uqtw4xv9fbh5atf4okq14wm', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(webhookData)
+          })
+        );
+        webhookNames.push('booking terms email webhook');
+      }
+
+      // Only trigger session webhook for calendar creation and emails if session is ≤4 days away
       if (daysUntilSession <= 4) {
-        // Prepare webhook promises - trigger both webhooks for sessions ≤4 days away
-        const webhookPromises: Promise<Response>[] = [];
-        const webhookNames: string[] = [];
-
-        // Double-check validation before booking terms webhook (extra safety)
-        if (isValidString(webhookData.sessionId) &&
-            isValidEmail(webhookData.clientEmail) &&
-            isValidString(webhookData.sessionType) &&
-            isValidDate(webhookData.bookingDate) &&
-            isValidTime(webhookData.bookingTime)) {
-          webhookPromises.push(
-            fetch('https://hook.eu1.make.com/yaoalfe77uqtw4xv9fbh5atf4okq14wm', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify(webhookData)
-            })
-          );
-          webhookNames.push('booking terms email webhook');
-        }
-
-        // Trigger session webhook for calendar creation and emails
         const webhookDataWithEmailFlag = {
           ...webhookData,
           sendSessionEmail: true, // Always true for sessions ≤4 days away
@@ -721,11 +722,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
           })
         );
         webhookNames.push('session webhook (calendar + email)');
-
-        const responses = await Promise.allSettled(webhookPromises);
-      } else {
-        // Session is >4 days away - no webhooks triggered
       }
+
+      const responses = await Promise.allSettled(webhookPromises);
 
 
 
@@ -767,11 +766,83 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Trigger booking terms webhook for session updates
+  const triggerBookingTermsWebhookForUpdate = async (session: Session) => {
+    try {
+      // Find the client for this session (if any)
+      const client = session.clientId ? state.clients.find(c => c.id === session.clientId) : null;
+
+      // For Group and RMR Live sessions without clients, skip webhook
+      if (!session.clientId && (session.sessionType === 'Group' || session.sessionType === 'RMR Live')) {
+        return;
+      }
+
+      if (!client || !client.email) {
+        return;
+      }
+
+      // Check if client has already signed booking terms by looking in booking_terms table
+      const hasSignedBookingTerms = state.bookingTerms.some(bt =>
+        bt.email?.toLowerCase() === client.email?.toLowerCase()
+      );
+
+      // Check if client has filled questionnaire
+      const hasFilledQuestionnaire = state.behaviourQuestionnaires.some(bq =>
+        bq.email?.toLowerCase() === client.email?.toLowerCase()
+      );
+
+      // Prepare session data for booking terms webhook
+      const webhookData = {
+        sessionId: session.id,
+        clientId: session.clientId,
+        clientName: `${client.firstName} ${client.lastName}`.trim(),
+        clientFirstName: client.firstName,
+        clientEmail: client.email,
+        address: client.address || '',
+        dogName: client.dogName || '',
+        sessionType: session.sessionType,
+        bookingDate: session.bookingDate,
+        bookingTime: session.bookingTime.substring(0, 5),
+        quote: session.quote,
+        notes: session.notes || '',
+        createdAt: new Date().toISOString(),
+        hasSignedBookingTerms,
+        hasFilledQuestionnaire,
+        isMember: client.membership,
+        // Form URLs with email prefilled
+        bookingTermsUrl: `https://raising-my-rescue.vercel.app/booking-terms?email=${encodeURIComponent(client.email)}`,
+        questionnaireUrl: `https://raising-my-rescue.vercel.app/questionnaire?email=${encodeURIComponent(client.email)}`
+      };
+
+      // Validate data before sending webhook
+      if (isValidString(webhookData.sessionId) &&
+          isValidEmail(webhookData.clientEmail) &&
+          isValidString(webhookData.sessionType) &&
+          isValidDate(webhookData.bookingDate) &&
+          isValidTime(webhookData.bookingTime)) {
+
+        await fetch('https://hook.eu1.make.com/yaoalfe77uqtw4xv9fbh5atf4okq14wm', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(webhookData)
+        });
+      }
+    } catch (error) {
+      // Don't throw error - webhook failure shouldn't prevent session update
+    }
+  };
+
   // Update session in Supabase
   const updateSession = async (id: string, updates: Partial<Session>): Promise<Session> => {
     try {
       const session = await sessionService.update(id, updates);
       dispatch({ type: 'UPDATE_SESSION', payload: session });
+
+      // Trigger booking terms webhook for all session updates
+      await triggerBookingTermsWebhookForUpdate(session);
+
       return session;
     } catch (error) {
       console.error('Failed to update session:', error);

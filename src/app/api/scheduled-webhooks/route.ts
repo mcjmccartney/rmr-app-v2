@@ -146,64 +146,24 @@ export async function POST() {
           continue;
         }
 
-        // Prepare both webhook promises for sessions that are exactly 4 days away
-        const webhookPromises: Promise<Response>[] = [];
-        const webhookNames: string[] = [];
-
-        // Double-check validation before booking terms webhook (extra safety) - removed date/time validations
-        if (isValidString(webhookData.sessionId) &&
-            isValidEmail(webhookData.clientEmail) &&
-            isValidString(webhookData.sessionType)) {
-          webhookPromises.push(
-            fetch('https://hook.eu1.make.com/yaoalfe77uqtw4xv9fbh5atf4okq14wm', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify(webhookData)
-            })
-          );
-          webhookNames.push('booking terms webhook');
-        }
-
-        // Trigger session webhook with email flag enabled but no calendar creation for cron jobs
+        // Only trigger session webhook for sessions that are exactly 4 days away
+        // Booking terms webhook is now triggered immediately on session creation/update
         const webhookDataWithEmailFlag = {
           ...webhookData,
           sendSessionEmail: true, // Always true for scheduled webhooks (4 days away)
           createCalendarEvent: false // Don't create calendar events for cron job triggers
         };
 
-        webhookPromises.push(
-          fetch('https://hook.eu1.make.com/lipggo8kcd8kwq2vp6j6mr3gnxbx12h7', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(webhookDataWithEmailFlag)
-          })
-        );
-        webhookNames.push('session webhook');
-
-        const responses = await Promise.allSettled(webhookPromises);
-
-        // Check if both webhooks succeeded
-        let allSucceeded = true;
-        const errors: string[] = [];
-
-        responses.forEach((result, index) => {
-          const webhookName = webhookNames[index];
-          if (result.status === 'fulfilled' && result.value.ok) {
-            // Success - no logging needed
-          } else {
-            allSucceeded = false;
-            const error = result.status === 'fulfilled' ?
-              `${result.value.status} ${result.value.statusText}` :
-              result.reason;
-            errors.push(`${webhookName}: ${error}`);
-          }
+        const response = await fetch('https://hook.eu1.make.com/lipggo8kcd8kwq2vp6j6mr3gnxbx12h7', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(webhookDataWithEmailFlag)
         });
 
-        if (allSucceeded) {
+        // Check if session webhook succeeded
+        if (response.ok) {
           results.push({
             sessionId: session.id,
             clientName: `${client.firstName} ${client.lastName}`,
@@ -214,7 +174,7 @@ export async function POST() {
             sessionId: session.id,
             clientName: `${client.firstName} ${client.lastName}`,
             status: 'failed',
-            error: errors.join('; ')
+            error: `session webhook: ${response.status} ${response.statusText}`
           });
         }
         
@@ -317,9 +277,9 @@ async function triggerManualWebhooks(sessionIds: string[]) {
           continue;
         }
 
-        // Trigger both webhooks
+        // Only trigger session webhook for manual triggers
+        // Booking terms webhook is now triggered immediately on session creation/update
         const sessionWebhookUrl = 'https://hook.eu1.make.com/lipggo8kcd8kwq2vp6j6mr3gnxbx12h7';
-        const bookingTermsWebhookUrl = 'https://hook.eu1.make.com/yaoalfe77uqtw4xv9fbh5atf4okq14wm';
 
         // Session webhook
         await fetch(sessionWebhookUrl, {
@@ -332,17 +292,6 @@ async function triggerManualWebhooks(sessionIds: string[]) {
             isMember: client.membership,
             sendSessionEmail: true,
             createCalendarEvent: false // Don't create calendar events for manual triggers
-          })
-        });
-
-        // Booking terms webhook
-        await fetch(bookingTermsWebhookUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            session,
-            client,
-            isMember: client.membership
           })
         });
 
