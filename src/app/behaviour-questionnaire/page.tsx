@@ -3,8 +3,6 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { BehaviourQuestionnaire } from '@/types';
-import { behaviourQuestionnaireService } from '@/services/behaviourQuestionnaireService';
-import { clientService } from '@/services/clientService';
 import ThankYouPopup from '@/components/ui/ThankYouPopup';
 
 function BehaviourQuestionnaireForm() {
@@ -89,16 +87,8 @@ function BehaviourQuestionnaireForm() {
 
         try {
           // Check if this email already has a questionnaire submitted
-          const questionnaires = await behaviourQuestionnaireService.getAll();
-          const existingQuestionnaire = questionnaires.find(q =>
-            q.email?.toLowerCase() === emailParam.toLowerCase()
-          );
-
-          if (existingQuestionnaire) {
-            // Redirect to completion page
-            window.location.href = '/questionnaire-completed';
-            return;
-          }
+          // For now, skip this check to avoid RLS issues during initial load
+          // The API will handle duplicate prevention
         } catch (error) {
           console.error('Error checking existing questionnaire:', error);
           // Continue with form display even if check fails
@@ -130,109 +120,20 @@ function BehaviourQuestionnaireForm() {
     e.preventDefault();
 
     try {
-      // Try to find existing client by email using Supabase
-      const clients = await clientService.getAll();
-      const existingClient = clients.find(client =>
-        client.email?.toLowerCase() === formData.email.toLowerCase()
-      );
-
-      let clientId: string = '';
-      let shouldCreateClient = false;
-
-      if (existingClient) {
-        // Use existing client
-        clientId = existingClient.id;
-      } else {
-        // Will create new client
-        shouldCreateClient = true;
-        clientId = 'temp-client-id'; // Temporary, will be updated
-      }
-
-      // Create behaviour questionnaire using the service (this will generate a proper UUID)
-      const questionnaireData = {
-        clientId,
-        ownerFirstName: formData.ownerFirstName,
-        ownerLastName: formData.ownerLastName,
-        email: formData.email,
-        contactNumber: formData.contactNumber,
-        address1: formData.address1,
-        address2: formData.address2,
-        city: formData.city,
-        stateProvince: formData.stateProvince,
-        zipPostalCode: formData.zipPostalCode,
-        country: formData.country,
-        howDidYouHear: formData.howDidYouHear,
-        dogName: formData.dogName,
-        age: formData.age,
-        sex: formData.sex as 'Male' | 'Female',
-        breed: formData.breed,
-        neuteredSpayed: formData.neuteredSpayed,
-        mainHelp: formData.mainHelp,
-        firstNoticed: formData.firstNoticed,
-        whenWhereHow: formData.whenWhereHow,
-        recentChange: formData.recentChange,
-        canAnticipate: formData.canAnticipate,
-        whyThinking: formData.whyThinking,
-        whatDoneSoFar: formData.whatDoneSoFar,
-        idealGoal: formData.idealGoal,
-        anythingElse: formData.anythingElse,
-        medicalHistory: formData.medicalHistory,
-        vetAdvice: formData.vetAdvice,
-        whereGotDog: formData.whereGotDog,
-        rescueBackground: formData.rescueBackground,
-        ageWhenGot: formData.ageWhenGot,
-        whatFeed: formData.whatFeed,
-        foodMotivated: formData.foodMotivated,
-        mealtime: formData.mealtime,
-        treatRoutine: formData.treatRoutine,
-        happyWithTreats: formData.happyWithTreats,
-        typesOfPlay: formData.typesOfPlay,
-        affectionate: formData.affectionate,
-        exercise: formData.exercise,
-        useMuzzle: formData.useMuzzle,
-        familiarPeople: formData.familiarPeople,
-        unfamiliarPeople: formData.unfamiliarPeople,
-        housetrained: formData.housetrained,
-        likesToDo: formData.likesToDo,
-        likeAboutDog: formData.likeAboutDog,
-        mostChallenging: formData.mostChallenging,
-        howGood: formData.howGood,
-        favouriteRewards: formData.favouriteRewards,
-        howBad: formData.howBad,
-        effectOfBad: formData.effectOfBad,
-        professionalTraining: formData.professionalTraining,
-        sociabilityDogs: formData.sociabilityDogs as BehaviourQuestionnaire['sociabilityDogs'],
-        sociabilityPeople: formData.sociabilityPeople as BehaviourQuestionnaire['sociabilityPeople'],
-        anythingElseToKnow: formData.anythingElseToKnow,
-        timePerWeek: formData.timePerWeek,
-      };
-
-      if (shouldCreateClient) {
-        // Create new client first
-        const client = await clientService.create({
-          firstName: formData.ownerFirstName,
-          lastName: formData.ownerLastName,
-          dogName: formData.dogName,
-          phone: formData.contactNumber,
-          email: formData.email,
-          address: `${formData.address1}${formData.address2 ? ', ' + formData.address2 : ''}, ${formData.city}, ${formData.stateProvince} ${formData.zipPostalCode}, ${formData.country}`,
-          active: true,
-          membership: false,
-        });
-
-        // Update questionnaire data with actual client ID
-        questionnaireData.clientId = client.id;
-      }
-
-      // Create the questionnaire in Supabase using the service
-      const createdQuestionnaire = await behaviourQuestionnaireService.create(questionnaireData);
-
-      // Update client with questionnaire reference and dog name for easier lookup
-      const finalClientId = shouldCreateClient ? questionnaireData.clientId : existingClient!.id;
-      await clientService.update(finalClientId, {
-        behaviourQuestionnaireId: createdQuestionnaire.id,
-        dogName: formData.dogName, // Ensure dog name is set on client
+      // Submit to API endpoint that handles RLS properly
+      const response = await fetch('/api/behaviour-questionnaire', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
       });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to submit questionnaire');
+      }
 
       // Send email notification
       try {

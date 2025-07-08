@@ -2,7 +2,6 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { bookingTermsService } from '@/services/bookingTermsService';
 import ThankYouPopup from '@/components/ui/ThankYouPopup';
 
 function BookingTermsContent() {
@@ -21,16 +20,15 @@ function BookingTermsContent() {
         setEmail(decodedEmail);
 
         try {
-          // Check if this email already has booking terms signed
-          const bookingTerms = await bookingTermsService.getAll();
-          const existingBookingTerms = bookingTerms.find(bt =>
-            bt.email?.toLowerCase() === decodedEmail.toLowerCase()
-          );
-
-          if (existingBookingTerms) {
-            // Redirect to completion page
-            window.location.href = '/booking-terms-completed';
-            return;
+          // Check if this email already has booking terms signed using API
+          const response = await fetch(`/api/booking-terms?email=${encodeURIComponent(decodedEmail)}`);
+          if (response.ok) {
+            const result = await response.json();
+            if (result.exists) {
+              // Redirect to completion page
+              window.location.href = '/booking-terms-completed';
+              return;
+            }
           }
         } catch (error) {
           console.error('Error checking existing booking terms:', error);
@@ -58,17 +56,31 @@ function BookingTermsContent() {
     setIsSubmitting(true);
 
     try {
-      // Submit booking terms and update client profile
-      await bookingTermsService.submitAndUpdateClient({
-        email: email
+      // Submit booking terms using API endpoint
+      const response = await fetch('/api/booking-terms', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email })
       });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to submit booking terms');
+      }
 
       // Success - show thank you popup
       setShowThankYou(true);
 
     } catch (error) {
       console.error('Error:', error);
-      alert('An error occurred. Please try again.');
+      if (error instanceof Error) {
+        alert(error.message);
+      } else {
+        alert('An error occurred. Please try again.');
+      }
     } finally {
       setIsSubmitting(false);
     }
