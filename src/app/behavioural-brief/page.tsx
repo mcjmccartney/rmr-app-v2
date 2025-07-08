@@ -1,13 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { useApp } from '@/context/AppContext';
 import { BehaviouralBrief } from '@/types';
 import { behaviouralBriefService } from '@/services/behaviouralBriefService';
+import { clientService } from '@/services/clientService';
 import ThankYouPopup from '@/components/ui/ThankYouPopup';
 
 export default function BehaviouralBriefPage() {
-  const { createClient, dispatch } = useApp();
   const [formData, setFormData] = useState({
     ownerFirstName: '',
     ownerLastName: '',
@@ -44,7 +43,7 @@ export default function BehaviouralBriefPage() {
 
     try {
       // Create client with Supabase first
-      const client = await createClient({
+      const client = await clientService.create({
         firstName: formData.ownerFirstName,
         lastName: formData.ownerLastName,
         dogName: formData.dogName,
@@ -72,9 +71,6 @@ export default function BehaviouralBriefPage() {
 
       // Create the behavioural brief in Supabase using the service
       const createdBrief = await behaviouralBriefService.create(briefData);
-
-      // Add behavioural brief to local state
-      dispatch({ type: 'ADD_BEHAVIOURAL_BRIEF', payload: createdBrief });
 
       // Send email notification
       try {

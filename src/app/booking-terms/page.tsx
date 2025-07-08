@@ -3,12 +3,10 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { bookingTermsService } from '@/services/bookingTermsService';
-import { useApp } from '@/context/AppContext';
 import ThankYouPopup from '@/components/ui/ThankYouPopup';
 
 function BookingTermsContent() {
   const searchParams = useSearchParams();
-  const { state } = useApp();
   const [email, setEmail] = useState('');
   const [agreed, setAgreed] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -16,23 +14,33 @@ function BookingTermsContent() {
 
   // Get email from URL parameters and check if already completed
   useEffect(() => {
-    const emailParam = searchParams.get('email');
-    if (emailParam) {
-      const decodedEmail = decodeURIComponent(emailParam);
-      setEmail(decodedEmail);
+    const checkExistingBookingTerms = async () => {
+      const emailParam = searchParams.get('email');
+      if (emailParam) {
+        const decodedEmail = decodeURIComponent(emailParam);
+        setEmail(decodedEmail);
 
-      // Check if this email already has booking terms signed
-      const existingBookingTerms = state.bookingTerms.find(bt =>
-        bt.email?.toLowerCase() === decodedEmail.toLowerCase()
-      );
+        try {
+          // Check if this email already has booking terms signed
+          const bookingTerms = await bookingTermsService.getAll();
+          const existingBookingTerms = bookingTerms.find(bt =>
+            bt.email?.toLowerCase() === decodedEmail.toLowerCase()
+          );
 
-      if (existingBookingTerms) {
-        // Redirect to completion page
-        window.location.href = '/booking-terms-completed';
-        return;
+          if (existingBookingTerms) {
+            // Redirect to completion page
+            window.location.href = '/booking-terms-completed';
+            return;
+          }
+        } catch (error) {
+          console.error('Error checking existing booking terms:', error);
+          // Continue with form display even if check fails
+        }
       }
-    }
-  }, [searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
+    };
+
+    checkExistingBookingTerms();
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -2,13 +2,12 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { useApp } from '@/context/AppContext';
 import { BehaviourQuestionnaire } from '@/types';
 import { behaviourQuestionnaireService } from '@/services/behaviourQuestionnaireService';
+import { clientService } from '@/services/clientService';
 import ThankYouPopup from '@/components/ui/ThankYouPopup';
 
 function BehaviourQuestionnaireForm() {
-  const { dispatch, createClient, updateClient, findClientByEmail, state } = useApp();
   const searchParams = useSearchParams();
   const [formData, setFormData] = useState({
     // Owner Information
@@ -80,25 +79,35 @@ function BehaviourQuestionnaireForm() {
 
   // Check for email parameter in URL and prefill, also check if already completed
   useEffect(() => {
-    const emailParam = searchParams.get('email');
-    if (emailParam) {
-      setFormData(prev => ({
-        ...prev,
-        email: emailParam
-      }));
+    const checkExistingQuestionnaire = async () => {
+      const emailParam = searchParams.get('email');
+      if (emailParam) {
+        setFormData(prev => ({
+          ...prev,
+          email: emailParam
+        }));
 
-      // Check if this email already has a questionnaire submitted
-      const existingQuestionnaire = state.behaviourQuestionnaires.find(q =>
-        q.email?.toLowerCase() === emailParam.toLowerCase()
-      );
+        try {
+          // Check if this email already has a questionnaire submitted
+          const questionnaires = await behaviourQuestionnaireService.getAll();
+          const existingQuestionnaire = questionnaires.find(q =>
+            q.email?.toLowerCase() === emailParam.toLowerCase()
+          );
 
-      if (existingQuestionnaire) {
-        // Redirect to completion page
-        window.location.href = '/questionnaire-completed';
-        return;
+          if (existingQuestionnaire) {
+            // Redirect to completion page
+            window.location.href = '/questionnaire-completed';
+            return;
+          }
+        } catch (error) {
+          console.error('Error checking existing questionnaire:', error);
+          // Continue with form display even if check fails
+        }
       }
-    }
-  }, [searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
+    };
+
+    checkExistingQuestionnaire();
+  }, [searchParams]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -122,7 +131,10 @@ function BehaviourQuestionnaireForm() {
 
     try {
       // Try to find existing client by email using Supabase
-      const existingClient = await findClientByEmail(formData.email);
+      const clients = await clientService.getAll();
+      const existingClient = clients.find(client =>
+        client.email?.toLowerCase() === formData.email.toLowerCase()
+      );
 
       let clientId: string = '';
       let shouldCreateClient = false;
@@ -197,7 +209,7 @@ function BehaviourQuestionnaireForm() {
 
       if (shouldCreateClient) {
         // Create new client first
-        const client = await createClient({
+        const client = await clientService.create({
           firstName: formData.ownerFirstName,
           lastName: formData.ownerLastName,
           dogName: formData.dogName,
@@ -215,12 +227,9 @@ function BehaviourQuestionnaireForm() {
       // Create the questionnaire in Supabase using the service
       const createdQuestionnaire = await behaviourQuestionnaireService.create(questionnaireData);
 
-      // Add questionnaire to state
-      dispatch({ type: 'ADD_BEHAVIOUR_QUESTIONNAIRE', payload: createdQuestionnaire });
-
       // Update client with questionnaire reference and dog name for easier lookup
       const finalClientId = shouldCreateClient ? questionnaireData.clientId : existingClient!.id;
-      await updateClient(finalClientId, {
+      await clientService.update(finalClientId, {
         behaviourQuestionnaireId: createdQuestionnaire.id,
         dogName: formData.dogName, // Ensure dog name is set on client
       });
