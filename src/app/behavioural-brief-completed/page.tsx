@@ -28,7 +28,7 @@ export default function BehaviouralBriefCompletedPage() {
               </p>
               
               <button
-                onClick={() => window.location.href = '/'}
+                onClick={() => window.location.href = 'https://www.raisingmyrescue.co.uk'}
                 className="w-full text-white font-medium py-3 px-6 rounded transition-colors"
                 style={{ backgroundColor: '#4f6749' }}
                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3d5237'}
