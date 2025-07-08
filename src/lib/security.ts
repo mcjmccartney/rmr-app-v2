@@ -67,15 +67,24 @@ export function rateLimit(
   };
 }
 
-export function addSecurityHeaders(response: NextResponse): NextResponse {
+export function addSecurityHeaders(response: NextResponse, allowEmbedding: boolean = false): NextResponse {
   // Security headers
   response.headers.set('X-Content-Type-Options', 'nosniff');
-  response.headers.set('X-Frame-Options', 'DENY');
+
+  // Allow embedding for specific pages, deny for others
+  if (allowEmbedding) {
+    response.headers.set('X-Frame-Options', 'SAMEORIGIN');
+  } else {
+    response.headers.set('X-Frame-Options', 'DENY');
+  }
+
   response.headers.set('X-XSS-Protection', '1; mode=block');
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
   response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
-  
-  // Content Security Policy
+
+  // Content Security Policy - adjust frame-ancestors based on embedding allowance
+  const frameAncestors = allowEmbedding ? "frame-ancestors 'self' *" : "frame-ancestors 'none'";
+
   const csp = [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live",
@@ -83,7 +92,7 @@ export function addSecurityHeaders(response: NextResponse): NextResponse {
     "font-src 'self' https://fonts.gstatic.com",
     "img-src 'self' data: https:",
     "connect-src 'self' https://*.supabase.co https://hook.eu1.make.com",
-    "frame-ancestors 'none'",
+    frameAncestors,
     "base-uri 'self'",
     "form-action 'self'"
   ].join('; ');

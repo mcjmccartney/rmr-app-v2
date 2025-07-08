@@ -73,7 +73,8 @@ export async function middleware(req: NextRequest) {
   // Public routes that don't require authentication
   const publicRoutes = ['/login', '/behavioural-brief', '/behavioural-brief-completed', '/behaviour-questionnaire', '/booking-terms', '/booking-terms-completed', '/questionnaire-completed', '/pay-confirm', '/payment-confirmed', '/payment-error'];
 
-
+  // Embeddable form pages that should allow iframe embedding
+  const embeddableRoutes = ['/behavioural-brief', '/behaviour-questionnaire', '/booking-terms'];
 
   // Check if current path is public (including dynamic routes)
   const isPublicRoute = publicRoutes.some(route => {
@@ -83,25 +84,28 @@ export async function middleware(req: NextRequest) {
     return false;
   });
 
+  // Check if current path should allow embedding
+  const allowEmbedding = embeddableRoutes.includes(req.nextUrl.pathname);
+
   // If user is not signed in and the current path is not a public route, redirect to /login
   if (!session && !isPublicRoute) {
     const redirectResponse = NextResponse.redirect(new URL('/login', req.url));
-    return addSecurityHeaders(redirectResponse);
+    return addSecurityHeaders(redirectResponse, false);
   }
 
   // If user is signed in and the current path is /login, redirect to /calendar
   if (session && req.nextUrl.pathname === '/login') {
     const redirectResponse = NextResponse.redirect(new URL('/calendar', req.url));
-    return addSecurityHeaders(redirectResponse);
+    return addSecurityHeaders(redirectResponse, false);
   }
 
   // If user is signed in and on root path, redirect to /calendar
   if (session && req.nextUrl.pathname === '/') {
     const redirectResponse = NextResponse.redirect(new URL('/calendar', req.url));
-    return addSecurityHeaders(redirectResponse);
+    return addSecurityHeaders(redirectResponse, false);
   }
 
-  return addSecurityHeaders(response)
+  return addSecurityHeaders(response, allowEmbedding)
 }
 
 export const config = {
