@@ -2,9 +2,10 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { BehaviouralBrief } from '@/types';
+import { BehaviouralBrief, Client } from '@/types';
 import { behaviouralBriefService } from '@/services/behaviouralBriefService';
 import { clientService } from '@/services/clientService';
+import { ClientEmailAliasService } from '@/services/clientEmailAliasService';
 import ThankYouPopup from '@/components/ui/ThankYouPopup';
 
 function BehaviouralBriefForm() {
@@ -75,17 +76,81 @@ function BehaviouralBriefForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Client-side validation
+    if (!formData.ownerFirstName.trim() || !formData.ownerLastName.trim() ||
+        !formData.email.trim() || !formData.contactNumber.trim() ||
+        !formData.postcode.trim() || !formData.dogName.trim() ||
+        !formData.sex || !formData.breed.trim() ||
+        !formData.lifeWithDog.trim() || !formData.bestOutcome.trim() ||
+        !formData.sessionType) {
+      alert('Please fill in all required fields.');
+      return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      alert('Please enter a valid email address.');
+      return;
+    }
+
     try {
-      // Create client with Supabase first
-      const client = await clientService.create({
-        firstName: formData.ownerFirstName,
-        lastName: formData.ownerLastName,
-        dogName: formData.dogName,
-        phone: formData.contactNumber,
-        email: formData.email,
-        active: true,
-        membership: false,
-      });
+      // First, try to find existing client by email in main clients table
+      let existingClient = await clientService.findByEmail(formData.email);
+
+      // If not found in main table, check email aliases
+      if (!existingClient) {
+        const clientId = await ClientEmailAliasService.findClientByEmail(formData.email);
+        if (clientId) {
+          existingClient = await clientService.getById(clientId);
+        }
+      }
+
+      let client: Client;
+
+      if (existingClient) {
+        // Use existing client and potentially add new dog
+        client = existingClient;
+
+        // Check if this is a new dog for the existing client
+        const currentDogs = [
+          ...(client.dogName ? [client.dogName] : []),
+          ...(client.otherDogs || [])
+        ];
+
+        const isNewDog = !currentDogs.some(dog =>
+          dog.toLowerCase().trim() === formData.dogName.toLowerCase().trim()
+        );
+
+        if (isNewDog) {
+          // Add the new dog to the client's other dogs
+          const updatedOtherDogs = [...(client.otherDogs || [])];
+
+          if (!client.dogName) {
+            // If client has no primary dog, make this the primary dog
+            client = await clientService.update(client.id, {
+              dogName: formData.dogName
+            });
+          } else {
+            // Add to other dogs array
+            updatedOtherDogs.push(formData.dogName);
+            client = await clientService.update(client.id, {
+              otherDogs: updatedOtherDogs
+            });
+          }
+        }
+      } else {
+        // Create new client
+        client = await clientService.create({
+          firstName: formData.ownerFirstName,
+          lastName: formData.ownerLastName,
+          dogName: formData.dogName,
+          phone: formData.contactNumber,
+          email: formData.email,
+          active: true,
+          membership: false,
+        });
+      }
 
       // Create behavioural brief data
       const briefData = {
@@ -128,7 +193,26 @@ function BehaviouralBriefForm() {
       setShowThankYou(true);
     } catch (error) {
       console.error('Error submitting form:', error);
-      alert('There was an error submitting your form. Please try again.');
+
+      // Show more specific error message if available
+      let errorMessage = 'There was an error submitting your form. Please try again.';
+
+      if (error instanceof Error) {
+        // Check for specific database constraint errors
+        if (error.message.includes('violates check constraint')) {
+          if (error.message.includes('sex')) {
+            errorMessage = 'Please select a valid sex for your dog (Male or Female).';
+          } else if (error.message.includes('session_type')) {
+            errorMessage = 'Please select a valid session type.';
+          }
+        } else if (error.message.includes('violates not-null constraint')) {
+          errorMessage = 'Please fill in all required fields.';
+        } else if (error.message.includes('violates foreign key constraint')) {
+          errorMessage = 'There was an issue creating your client profile. Please try again.';
+        }
+      }
+
+      alert(errorMessage);
     }
   };
 
