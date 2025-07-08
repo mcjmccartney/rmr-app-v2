@@ -2,10 +2,8 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { BehaviouralBrief, Client } from '@/types';
+import { BehaviouralBrief } from '@/types';
 import { behaviouralBriefService } from '@/services/behaviouralBriefService';
-import { clientService } from '@/services/clientService';
-import { ClientEmailAliasService } from '@/services/clientEmailAliasService';
 import ThankYouPopup from '@/components/ui/ThankYouPopup';
 
 function BehaviouralBriefForm() {
@@ -95,81 +93,20 @@ function BehaviouralBriefForm() {
     }
 
     try {
-      // First, try to find existing client by email in main clients table
-      let existingClient = await clientService.findByEmail(formData.email);
+      // Submit to API endpoint that handles RLS properly
+      const response = await fetch('/api/behavioural-brief', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+      });
 
-      // If not found in main table, check email aliases
-      if (!existingClient) {
-        const clientId = await ClientEmailAliasService.findClientByEmail(formData.email);
-        if (clientId) {
-          existingClient = await clientService.getById(clientId);
-        }
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to submit form');
       }
-
-      let client: Client;
-
-      if (existingClient) {
-        // Use existing client and potentially add new dog
-        client = existingClient;
-
-        // Check if this is a new dog for the existing client
-        const currentDogs = [
-          ...(client.dogName ? [client.dogName] : []),
-          ...(client.otherDogs || [])
-        ];
-
-        const isNewDog = !currentDogs.some(dog =>
-          dog.toLowerCase().trim() === formData.dogName.toLowerCase().trim()
-        );
-
-        if (isNewDog) {
-          // Add the new dog to the client's other dogs
-          const updatedOtherDogs = [...(client.otherDogs || [])];
-
-          if (!client.dogName) {
-            // If client has no primary dog, make this the primary dog
-            client = await clientService.update(client.id, {
-              dogName: formData.dogName
-            });
-          } else {
-            // Add to other dogs array
-            updatedOtherDogs.push(formData.dogName);
-            client = await clientService.update(client.id, {
-              otherDogs: updatedOtherDogs
-            });
-          }
-        }
-      } else {
-        // Create new client
-        client = await clientService.create({
-          firstName: formData.ownerFirstName,
-          lastName: formData.ownerLastName,
-          dogName: formData.dogName,
-          phone: formData.contactNumber,
-          email: formData.email,
-          active: true,
-          membership: false,
-        });
-      }
-
-      // Create behavioural brief data
-      const briefData = {
-        clientId: client.id,
-        ownerFirstName: formData.ownerFirstName,
-        ownerLastName: formData.ownerLastName,
-        email: formData.email,
-        contactNumber: formData.contactNumber,
-        postcode: formData.postcode,
-        dogName: formData.dogName,
-        sex: formData.sex as 'Male' | 'Female',
-        breed: formData.breed,
-        lifeWithDog: formData.lifeWithDog,
-        bestOutcome: formData.bestOutcome,
-        sessionType: formData.sessionType as BehaviouralBrief['sessionType'],
-      };
-
-      // Create the behavioural brief in Supabase using the service
-      const createdBrief = await behaviouralBriefService.create(briefData);
 
       // Send email notification
       try {
