@@ -89,8 +89,7 @@ function BookingTermsContent() {
     <div className="min-h-screen" style={{ backgroundColor: '#4f6749' }}>
       {/* Header */}
       <div className="text-center pt-6 pb-4">
-        <h1 className="text-3xl font-bold text-white mb-2">Booking Terms</h1>
-        <p className="text-white/90">Please review and agree to our terms and conditions</p>
+        <h1 className="text-3xl font-bold text-white">Booking Terms</h1>
       </div>
 
       <div className="flex items-center justify-center min-h-screen p-4 pt-0">

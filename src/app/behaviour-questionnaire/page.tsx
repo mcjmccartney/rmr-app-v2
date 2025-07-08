@@ -166,8 +166,7 @@ function BehaviourQuestionnaireForm() {
         <div className="max-w-2xl mx-auto">
           {/* Header */}
           <div className="text-center mb-6">
-            <h1 className="text-3xl font-bold text-white mb-2">Behaviour Questionnaire</h1>
-            <p className="text-white/90">Help us understand your dog's behaviour and training needs</p>
+            <h1 className="text-3xl font-bold text-white">Behaviour Questionnaire</h1>
           </div>
 
           <div className="rounded-lg p-6" style={{ backgroundColor: '#ebeadf' }}>
