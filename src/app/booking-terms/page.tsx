@@ -2,14 +2,13 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import ThankYouPopup from '@/components/ui/ThankYouPopup';
 
 function BookingTermsContent() {
   const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
   const [agreed, setAgreed] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showThankYou, setShowThankYou] = useState(false);
+
 
   // Get email from URL parameters and check if already completed
   useEffect(() => {
@@ -71,8 +70,8 @@ function BookingTermsContent() {
         throw new Error(result.error || 'Failed to submit booking terms');
       }
 
-      // Success - show thank you popup
-      setShowThankYou(true);
+      // Redirect directly to completion page
+      window.location.href = '/booking-terms-completed';
 
     } catch (error) {
       console.error('Error:', error);
@@ -88,12 +87,18 @@ function BookingTermsContent() {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#4f6749' }}>
-      <div className="flex items-center justify-center min-h-screen p-4">
+      {/* Header */}
+      <div className="text-center pt-6 pb-4">
+        <h1 className="text-3xl font-bold text-white mb-2">Booking Terms</h1>
+        <p className="text-white/90">Please review and agree to our terms and conditions</p>
+      </div>
+
+      <div className="flex items-center justify-center min-h-screen p-4 pt-0">
         <div className="w-full max-w-4xl rounded-lg shadow-lg" style={{ backgroundColor: '#ebeadf' }}>
           <div className="p-8">
-            <h1 className="text-3xl font-bold text-center mb-8" style={{ color: '#4f6749' }}>
-              Booking Terms & Service Agreement
-            </h1>
+            <h2 className="text-2xl font-bold text-center mb-8" style={{ color: '#4f6749' }}>
+              Service Agreement
+            </h2>
 
             <div className="space-y-6 text-gray-800 mb-8 max-h-96 overflow-y-auto">
               <div>
@@ -212,15 +217,7 @@ function BookingTermsContent() {
         </div>
       </div>
 
-      {/* Thank You Popup */}
-      <ThankYouPopup
-        isOpen={showThankYou}
-        onClose={() => setShowThankYou(false)}
-        title="Thank You!"
-        message="Your booking terms have been successfully submitted. We appreciate you taking the time to review and agree to our terms and conditions."
-        redirectUrl="/booking-terms-completed"
-        redirectDelay={3000}
-      />
+
     </div>
   );
 }

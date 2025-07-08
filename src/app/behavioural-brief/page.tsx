@@ -4,7 +4,6 @@ import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { BehaviouralBrief } from '@/types';
 import { behaviouralBriefService } from '@/services/behaviouralBriefService';
-import ThankYouPopup from '@/components/ui/ThankYouPopup';
 
 function BehaviouralBriefForm() {
   const searchParams = useSearchParams();
@@ -22,7 +21,7 @@ function BehaviouralBriefForm() {
     sessionType: '' as BehaviouralBrief['sessionType'] | '',
   });
 
-  const [showThankYou, setShowThankYou] = useState(false);
+
 
   // Check for email parameter in URL and prefill, also check if already completed
   useEffect(() => {
@@ -126,8 +125,8 @@ function BehaviouralBriefForm() {
         // Don't fail the form submission if email fails
       }
 
-      // Show thank you popup
-      setShowThankYou(true);
+      // Redirect directly to completion page
+      window.location.href = '/behavioural-brief-completed';
     } catch (error) {
       console.error('Error submitting form:', error);
 
@@ -157,6 +156,12 @@ function BehaviouralBriefForm() {
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#4f6749' }}>
       <div className="flex-1 px-4 py-6">
         <div className="max-w-2xl mx-auto">
+          {/* Header */}
+          <div className="text-center mb-6">
+            <h1 className="text-3xl font-bold text-white mb-2">Behavioural Brief</h1>
+            <p className="text-white/90">Please provide information about your dog's training needs</p>
+          </div>
+
           <div className="rounded-lg p-6" style={{ backgroundColor: '#ebeadf' }}>
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Contact Information Section */}
@@ -381,15 +386,7 @@ function BehaviouralBriefForm() {
         </div>
       </div>
 
-      {/* Thank You Popup */}
-      <ThankYouPopup
-        isOpen={showThankYou}
-        onClose={() => setShowThankYou(false)}
-        title="Thank You!"
-        message="Your behavioural brief has been successfully submitted. We appreciate the information you've provided about your training goals. We'll be in touch soon to discuss the next steps."
-        redirectUrl="/behavioural-brief-completed"
-        redirectDelay={3500}
-      />
+
     </div>
   );
 }

@@ -3,7 +3,6 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { BehaviourQuestionnaire } from '@/types';
-import ThankYouPopup from '@/components/ui/ThankYouPopup';
 
 function BehaviourQuestionnaireForm() {
   const searchParams = useSearchParams();
@@ -73,7 +72,7 @@ function BehaviourQuestionnaireForm() {
     timePerWeek: '',
   });
 
-  const [showThankYou, setShowThankYou] = useState(false);
+
 
   // Check for email parameter in URL and prefill, also check if already completed
   useEffect(() => {
@@ -153,8 +152,8 @@ function BehaviourQuestionnaireForm() {
         // Don't fail the form submission if email fails
       }
 
-      // Show thank you popup
-      setShowThankYou(true);
+      // Redirect directly to completion page
+      window.location.href = '/questionnaire-completed';
     } catch (error) {
       console.error('Error submitting questionnaire:', error);
       alert('There was an error submitting your questionnaire. Please try again.');
@@ -165,6 +164,12 @@ function BehaviourQuestionnaireForm() {
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#4f6749' }}>
       <div className="flex-1 px-4 py-6">
         <div className="max-w-2xl mx-auto">
+          {/* Header */}
+          <div className="text-center mb-6">
+            <h1 className="text-3xl font-bold text-white mb-2">Behaviour Questionnaire</h1>
+            <p className="text-white/90">Help us understand your dog's behaviour and training needs</p>
+          </div>
+
           <div className="rounded-lg p-6" style={{ backgroundColor: '#ebeadf' }}>
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Owner Information Section */}
@@ -1092,15 +1097,7 @@ function BehaviourQuestionnaireForm() {
         </div>
       </div>
 
-      {/* Thank You Popup */}
-      <ThankYouPopup
-        isOpen={showThankYou}
-        onClose={() => setShowThankYou(false)}
-        title="Thank You!"
-        message="Your behaviour questionnaire has been successfully submitted. We appreciate the detailed information you've provided about your dog. This will help us create the best training plan for you and your furry friend."
-        redirectUrl="/questionnaire-completed"
-        redirectDelay={4000}
-      />
+
     </div>
   );
 }
