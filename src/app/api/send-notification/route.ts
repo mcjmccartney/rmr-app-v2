@@ -373,11 +373,13 @@ function formatBehaviouralBriefEmail(data: any): string {
   `;
 
   const headerStyle = `
-    color: #1f2937;
-    font-size: 18px;
+    background-color: #973b00;
+    color: white;
+    font-size: 16px;
     font-weight: bold;
-    margin-bottom: 12px;
-    margin: 0 0 12px 0;
+    padding: 12px 16px;
+    margin: 0 0 16px 0;
+    border-radius: 0;
   `;
 
   const questionStyle = `
@@ -438,7 +440,7 @@ function formatBehaviouralBriefEmail(data: any): string {
   </div>
 
   <div style="${sectionStyle}">
-    <div style="${headerStyle}">Consultation Details</div>
+    <div style="${headerStyle}">Brief Details</div>
 
     <div style="${questionStyle}">In general, how is life with your dog, and what would you like help with? (New puppy, new dog, new rescue, general training, behaviour concern, etc.)</div>
     <div style="${answerStyle}">${data.lifeWithDog || 'Not provided'}</div>
@@ -450,7 +452,7 @@ function formatBehaviouralBriefEmail(data: any): string {
     <div style="${answerStyle}">${data.sessionType || 'Not provided'}</div>
   </div>
 
-  <div style="text-align: center; margin-top: 30px; padding: 20px; background-color: #f9fafb; color: #374151;">
+  <div style="text-align: center; margin-top: 30px; padding: 20px; background-color: #973b00; color: white;">
     <p style="margin: 0; font-size: 14px;">Submitted: ${new Date().toLocaleString()}</p>
   </div>
 
