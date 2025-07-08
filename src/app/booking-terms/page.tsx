@@ -87,12 +87,7 @@ function BookingTermsContent() {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#4f6749' }}>
-      {/* Header */}
-      <div className="text-center pt-6 pb-4">
-        <h1 className="text-3xl font-bold text-white">Booking Terms</h1>
-      </div>
-
-      <div className="flex items-center justify-center min-h-screen p-4 pt-0">
+      <div className="flex items-center justify-center min-h-screen p-4">
         <div className="w-full max-w-4xl rounded-lg shadow-lg" style={{ backgroundColor: '#ebeadf' }}>
           <div className="p-8">
             <h2 className="text-2xl font-bold text-center mb-8" style={{ color: '#4f6749' }}>
