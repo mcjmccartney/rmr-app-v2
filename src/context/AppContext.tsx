@@ -849,15 +849,35 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Update session in Supabase
   const updateSession = async (id: string, updates: Partial<Session>): Promise<Session> => {
     try {
+      console.log(`[UPDATE_SESSION] Starting update for session ID: ${id} ONLY`);
+      console.log(`[UPDATE_SESSION] Updates:`, updates);
+
+      // Update only this specific session in the database
       const session = await sessionService.update(id, updates);
+      console.log(`[UPDATE_SESSION] Database updated for session ${id}`);
+
+      // Update only this specific session in the state
       dispatch({ type: 'UPDATE_SESSION', payload: session });
+      console.log(`[UPDATE_SESSION] State updated for session ${id} ONLY`);
 
-      // Trigger booking terms webhook for all session updates
-      await triggerBookingTermsWebhookForUpdate(session);
+      // Skip booking terms webhook if this is just an internal system update
+      // This prevents duplicate webhooks when calendar events are created or updated
+      const isInternalSystemUpdate = Object.keys(updates).length === 1 &&
+        ('eventId' in updates || 'googleMeetLink' in updates);
 
+      if (!isInternalSystemUpdate) {
+        // Trigger booking terms webhook ONLY for this specific session
+        console.log(`[UPDATE_SESSION] Triggering webhook for session ${id} ONLY`);
+        await triggerBookingTermsWebhookForUpdate(session);
+        console.log(`[UPDATE_SESSION] Webhook completed for session ${id}`);
+      } else {
+        console.log(`[UPDATE_SESSION] Skipping webhook for internal system update on session ${id}`);
+      }
+
+      console.log(`[UPDATE_SESSION] Update complete for session ${id} - NO OTHER SESSIONS AFFECTED`);
       return session;
     } catch (error) {
-      console.error('Failed to update session:', error);
+      console.error(`[UPDATE_SESSION] Failed to update session ${id}:`, error);
       throw error;
     }
   };
