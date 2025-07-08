@@ -44,10 +44,10 @@ export async function POST(request: NextRequest) {
     let subject = '';
 
     if (type === 'behaviour_questionnaire') {
-      subject = `New Behaviour Questionnaire Submitted - ${data.dogName}`;
+      subject = `Behaviour Questionnaire Submitted - ${data.dogName}`;
       emailContent = formatBehaviourQuestionnaireEmail(data);
     } else if (type === 'behavioural_brief') {
-      subject = `New Behavioural Brief Submitted - ${data.dogName}`;
+      subject = `Behavioural Brief Submitted - ${data.dogName}`;
       emailContent = formatBehaviouralBriefEmail(data);
     } else {
       return NextResponse.json(
@@ -176,11 +176,11 @@ function formatBehaviourQuestionnaireEmail(data: any): string {
 <html>
 <head>
   <meta charset="utf-8">
-  <title>New Behaviour Questionnaire Submission</title>
+  <title>Behaviour Questionnaire Submission</title>
 </head>
 <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; background-color: #ffffff;">
 
-  <h1 style="color: #973b00; text-align: center; margin-bottom: 30px; font-size: 24px;">New Behaviour Questionnaire Submission</h1>
+  <h1 style="color: #973b00; text-align: center; margin-bottom: 30px; font-size: 24px;">Behaviour Questionnaire Submission</h1>
 
   <div style="${sectionStyle}">
     <div style="${headerStyle}">Owner Information</div>
@@ -402,11 +402,11 @@ function formatBehaviouralBriefEmail(data: any): string {
 <html>
 <head>
   <meta charset="utf-8">
-  <title>New Behavioural Brief Submission</title>
+  <title>Behavioural Brief Submission</title>
 </head>
 <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; background-color: #ffffff;">
 
-  <h1 style="color: #973b00; text-align: center; margin-bottom: 30px; font-size: 24px;">New Behavioural Brief Submission</h1>
+  <h1 style="color: #973b00; text-align: center; margin-bottom: 30px; font-size: 24px;">Behavioural Brief Submission</h1>
 
   <div style="${sectionStyle}">
     <div style="${headerStyle}">Owner Information</div>
