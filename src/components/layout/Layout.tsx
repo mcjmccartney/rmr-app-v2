@@ -59,7 +59,7 @@ export default function Layout({ children }: LayoutProps) {
   }, [pathname, router]);
 
   // Public routes that don't require authentication
-  const publicRoutes = ['/login', '/behavioural-brief', '/behaviour-questionnaire', '/booking-terms', '/booking-terms-completed', '/questionnaire-completed'];
+  const publicRoutes = ['/login', '/behavioural-brief', '/behavioural-brief-completed', '/behaviour-questionnaire', '/booking-terms', '/booking-terms-completed', '/questionnaire-completed'];
   const isPublicRoute = publicRoutes.includes(pathname);
 
   // If it's a public route or user is not authenticated, render without protection

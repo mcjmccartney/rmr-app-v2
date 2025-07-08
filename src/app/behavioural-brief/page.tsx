@@ -1,12 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { BehaviouralBrief } from '@/types';
 import { behaviouralBriefService } from '@/services/behaviouralBriefService';
 import { clientService } from '@/services/clientService';
 import ThankYouPopup from '@/components/ui/ThankYouPopup';
 
-export default function BehaviouralBriefPage() {
+function BehaviouralBriefForm() {
+  const searchParams = useSearchParams();
   const [formData, setFormData] = useState({
     ownerFirstName: '',
     ownerLastName: '',
@@ -22,6 +24,38 @@ export default function BehaviouralBriefPage() {
   });
 
   const [showThankYou, setShowThankYou] = useState(false);
+
+  // Check for email parameter in URL and prefill, also check if already completed
+  useEffect(() => {
+    const checkExistingBrief = async () => {
+      const emailParam = searchParams.get('email');
+      if (emailParam) {
+        setFormData(prev => ({
+          ...prev,
+          email: emailParam
+        }));
+
+        try {
+          // Check if this email already has a behavioural brief submitted
+          const briefs = await behaviouralBriefService.getAll();
+          const existingBrief = briefs.find(b =>
+            b.email?.toLowerCase() === emailParam.toLowerCase()
+          );
+
+          if (existingBrief) {
+            // Redirect to completion page
+            window.location.href = '/behavioural-brief-completed';
+            return;
+          }
+        } catch (error) {
+          console.error('Error checking existing behavioural brief:', error);
+          // Continue with form display even if check fails
+        }
+      }
+    };
+
+    checkExistingBrief();
+  }, [searchParams]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -332,9 +366,19 @@ export default function BehaviouralBriefPage() {
         onClose={() => setShowThankYou(false)}
         title="Thank You!"
         message="Your behavioural brief has been successfully submitted. We appreciate the information you've provided about your training goals. We'll be in touch soon to discuss the next steps."
-        redirectUrl="/"
+        redirectUrl="/behavioural-brief-completed"
         redirectDelay={3500}
       />
     </div>
+  );
+}
+
+export default function BehaviouralBriefPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#4f6749' }}>
+      <div className="text-white">Loading...</div>
+    </div>}>
+      <BehaviouralBriefForm />
+    </Suspense>
   );
 }
