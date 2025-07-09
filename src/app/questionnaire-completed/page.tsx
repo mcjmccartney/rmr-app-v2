@@ -13,19 +13,11 @@ export default function QuestionnaireCompletedPage() {
                 </svg>
               </div>
               <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                Questionnaire Already Completed
+                Behaviour Questionnaire Submitted
               </h1>
-              <p className="text-gray-700">
-                Thank you! Your behaviour questionnaire has already been submitted. 
-                We have all the information we need for your consultation.
-              </p>
             </div>
-            
+
             <div className="space-y-4">
-              <p className="text-sm text-gray-600">
-                If you need to make any changes or have additional information to share, 
-                please contact us directly.
-              </p>
               
               <button
                 onClick={() => window.location.href = 'https://www.raisingmyrescue.co.uk'}

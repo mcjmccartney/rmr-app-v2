@@ -13,19 +13,11 @@ export default function BehaviouralBriefCompletedPage() {
                 </svg>
               </div>
               <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                Behavioural Brief Already Submitted
+                Behavioural Brief Submitted
               </h1>
-              <p className="text-gray-700">
-                Thank you! Your behavioural brief has already been submitted. 
-                We have received your information and will be in touch soon to discuss your training goals.
-              </p>
             </div>
-            
+
             <div className="space-y-4">
-              <p className="text-sm text-gray-600">
-                If you need to make any changes or have additional information to share, 
-                please contact us directly.
-              </p>
               
               <button
                 onClick={() => window.location.href = 'https://www.raisingmyrescue.co.uk'}

@@ -13,19 +13,11 @@ export default function BookingTermsCompletedPage() {
                 </svg>
               </div>
               <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                Booking Terms Already Signed
+                Booking Terms Submitted
               </h1>
-              <p className="text-gray-700">
-                Thank you! Your booking terms have already been signed and submitted. 
-                You're all set for your upcoming sessions.
-              </p>
             </div>
-            
+
             <div className="space-y-4">
-              <p className="text-sm text-gray-600">
-                If you have any questions about your booking or need to make changes, 
-                please contact us directly.
-              </p>
               
               <button
                 onClick={() => window.location.href = 'https://www.raisingmyrescue.co.uk'}
