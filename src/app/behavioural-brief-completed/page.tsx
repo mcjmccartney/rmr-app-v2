@@ -13,8 +13,11 @@ export default function BehaviouralBriefCompletedPage() {
                 </svg>
               </div>
               <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                Behavioural Brief Submitted
+                Behavioural Brief
               </h1>
+              <p className="text-gray-700">
+                Thank you! Your behavioural brief has successfully submitted. You may now close this window or Return to Home.
+              </p>
             </div>
 
             <div className="space-y-4">

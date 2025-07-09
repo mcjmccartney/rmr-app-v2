@@ -13,8 +13,11 @@ export default function QuestionnaireCompletedPage() {
                 </svg>
               </div>
               <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                Behaviour Questionnaire Submitted
+                Behaviour Questionnaire
               </h1>
+              <p className="text-gray-700">
+                Thank you! Your behaviour questionnaire has successfully submitted. You may now close this window or Return to Home.
+              </p>
             </div>
 
             <div className="space-y-4">

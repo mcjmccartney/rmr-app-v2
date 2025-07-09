@@ -13,8 +13,11 @@ export default function BookingTermsCompletedPage() {
                 </svg>
               </div>
               <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                Booking Terms Submitted
+                Booking Terms
               </h1>
+              <p className="text-gray-700">
+                Thank you! Your booking terms has successfully submitted. You may now close this window or Return to Home.
+              </p>
             </div>
 
             <div className="space-y-4">
