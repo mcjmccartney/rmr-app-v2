@@ -585,17 +585,34 @@ export default function CalendarPage() {
           backgroundColor: (() => {
             if (!firstSession) return '#973b00';
 
-            // For Group and RMR Live sessions without a specific client, use default color
-            if (!firstSessionClient) return '#e17100'; // Use ready color for group sessions
+            // Use the same color logic as calendar sessions
+            const client = firstSessionClient;
 
-            // Check if first session client has both booking terms signed and questionnaire filled
-            const clientEmails = getClientEmails(firstSessionClient, state.clientEmailAliases || {});
+            // Check client status
+            const clientEmails = client ? getClientEmails(client, state.clientEmailAliases || {}) : [];
             const hasSignedBookingTerms = clientEmails.length > 0 ?
               state.bookingTerms.some(bt => clientEmails.includes(bt.email?.toLowerCase() || '')) : false;
-            const hasFilledQuestionnaire = firstSessionClient ?
-              state.behaviourQuestionnaires.some(q => q.clientId === firstSessionClient.id) : false;
+            const hasFilledQuestionnaire = client ?
+              state.behaviourQuestionnaires.some(q => q.clientId === client.id) : false;
 
-            return (hasSignedBookingTerms && (hasFilledQuestionnaire || firstSession.questionnaireBypass)) ? '#e17100' : '#973b00';
+            // Priority: No Client (charcoal grey) > Session Plan Sent (charcoal grey) > Paid (green) > Terms + Questionnaire (amber) > Default (amber-800)
+            const isFullyCompleted = hasSignedBookingTerms && (hasFilledQuestionnaire || firstSession.questionnaireBypass);
+            const isPaid = firstSession.sessionPaid;
+            const isSessionPlanSent = firstSession.sessionPlanSent;
+
+            if (!client || isSessionPlanSent) {
+              // No client or session plan sent = dark charcoal grey background (highest priority)
+              return '#36454F';
+            } else if (isPaid) {
+              // Paid = green background (overrides amber/red but not charcoal grey)
+              return '#4f6749';
+            } else if (isFullyCompleted) {
+              // Terms + Questionnaire (but not paid) = amber background
+              return '#e17100';
+            } else {
+              // Default = amber-800 background
+              return '#973b00';
+            }
           })()
         }}
       >
