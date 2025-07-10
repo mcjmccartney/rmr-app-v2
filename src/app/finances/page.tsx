@@ -29,6 +29,77 @@ export default function FinancesPage() {
     fetchAllData();
   }, []);
 
+  // Helper function to get month name from number
+  const getMonthName = (monthNumber: number): string => {
+    const months = ['January', 'February', 'March', 'April', 'May', 'June',
+                   'July', 'August', 'September', 'October', 'November', 'December'];
+    return months[monthNumber - 1];
+  };
+
+  // Auto-create finance entries for months with sessions but no existing finance entry
+  const autoCreateFinanceEntries = async (sessions: any[], existingFinances: any[]) => {
+    try {
+      // Get unique month/year combinations from sessions
+      const sessionMonths = new Set<string>();
+      sessions.forEach(session => {
+        if (session.booking_date) {
+          const sessionDate = new Date(session.booking_date);
+          const month = getMonthName(sessionDate.getMonth() + 1);
+          const year = sessionDate.getFullYear();
+          sessionMonths.add(`${month}-${year}`);
+        }
+      });
+
+      // Get existing month/year combinations from finances
+      const existingMonths = new Set<string>();
+      existingFinances.forEach(finance => {
+        existingMonths.add(`${finance.month}-${finance.year}`);
+      });
+
+      // Find months that have sessions but no finance entry
+      const missingMonths = Array.from(sessionMonths).filter(monthYear =>
+        !existingMonths.has(monthYear)
+      );
+
+      console.log('Session months found:', Array.from(sessionMonths));
+      console.log('Existing finance months:', Array.from(existingMonths));
+      console.log('Missing finance entries for months:', missingMonths);
+
+      // Create finance entries for missing months
+      const newFinanceEntries = [];
+      for (const monthYear of missingMonths) {
+        const [month, year] = monthYear.split('-');
+        const newEntry = {
+          month,
+          year: parseInt(year),
+          expected_amount: 0, // Default to 0, user can update later
+          actual_amount: 0
+        };
+
+        console.log('Creating finance entry for:', newEntry);
+
+        const { data, error } = await supabase
+          .from('finances')
+          .insert([newEntry])
+          .select('id, month, year, expected_amount as expected, created_at')
+          .single();
+
+        if (error) {
+          console.error('Error creating finance entry:', error);
+        } else {
+          console.log('Successfully created finance entry:', data);
+          newFinanceEntries.push(data);
+        }
+      }
+
+      // Return combined existing and new finance entries
+      return [...existingFinances, ...newFinanceEntries];
+    } catch (error) {
+      console.error('Error in autoCreateFinanceEntries:', error);
+      return existingFinances; // Return original data if there's an error
+    }
+  };
+
   const fetchAllData = async () => {
     try {
       console.log('Fetching finances data...');
@@ -41,7 +112,17 @@ export default function FinancesPage() {
 
       console.log('Connection test result:', { testData, testError });
 
-      // Fetch finances
+      // Fetch sessions first to determine which months need finance entries
+      const { data: sessionsData, error: sessionsError } = await supabase
+        .from('sessions')
+        .select('session_type, booking_date, quote')
+        .order('booking_date', { ascending: false });
+
+      if (sessionsError) {
+        console.error('Sessions error:', sessionsError);
+      }
+
+      // Fetch existing finances
       const { data: financesData, error: financesError } = await supabase
         .from('finances')
         .select('id, month, year, expected, created_at')
@@ -49,17 +130,7 @@ export default function FinancesPage() {
         .order('month');
 
       if (financesError) {
-        // Don't throw error, just continue with empty data
-      }
-
-      // Fetch sessions
-      const { data: sessionsData, error: sessionsError } = await supabase
-        .from('sessions')
-        .select('session_type, booking_date, quote')
-        .order('booking_date', { ascending: false });
-
-      if (sessionsError) {
-        // Don't throw error for sessions
+        console.error('Finances error:', financesError);
       }
 
       // Fetch memberships
@@ -70,14 +141,16 @@ export default function FinancesPage() {
 
       if (membershipsError) {
         console.error('Memberships error:', membershipsError);
-        // Don't throw error for memberships, just log it
       }
 
-      console.log('Raw finances data from Supabase:', financesData);
-      console.log('Number of finance entries:', financesData?.length || 0);
+      // Auto-create finance entries for months with sessions but no finance entry
+      const updatedFinancesData = await autoCreateFinanceEntries(sessionsData || [], financesData || []);
+
+      console.log('Raw finances data from Supabase:', updatedFinancesData);
+      console.log('Number of finance entries:', updatedFinancesData?.length || 0);
 
       // Map database fields to interface fields
-      const mappedFinances = (financesData || []).map(finance => ({
+      const mappedFinances = (updatedFinancesData || []).map(finance => ({
         ...finance,
         expected: finance.expected || 0,
         actual: 0 // We'll calculate this from sessions/memberships
