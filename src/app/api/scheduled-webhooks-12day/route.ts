@@ -2,12 +2,36 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
 export async function POST() {
+  const executionTime = new Date().toISOString();
+
   try {
+    // Log that the cron job is running
+    console.log(`[12-DAY WEBHOOK] Cron job triggered at ${executionTime}`);
+
+    // Log to our tracking endpoint
+    try {
+      await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/cron-log`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          source: '12-day-webhook',
+          message: 'Cron job execution started',
+          timestamp: executionTime
+        })
+      });
+    } catch (logError) {
+      console.warn('[12-DAY WEBHOOK] Failed to log execution:', logError);
+    }
+
     // Create Supabase client with service role key to ensure full database access
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
+
+    // Log environment check
+    console.log(`[12-DAY WEBHOOK] Environment check - Supabase URL exists: ${!!process.env.NEXT_PUBLIC_SUPABASE_URL}`);
+    console.log(`[12-DAY WEBHOOK] Environment check - Service role key exists: ${!!process.env.SUPABASE_SERVICE_ROLE_KEY}`);
 
     // Get all sessions directly with service role access
     const { data: sessionsData, error: sessionsError } = await supabase
@@ -77,11 +101,15 @@ export async function POST() {
       return daysUntilSession === 12;
     });
 
+    console.log(`[12-DAY WEBHOOK] Found ${sessionsToTrigger.length} sessions exactly 12 days away`);
+
     if (sessionsToTrigger.length === 0) {
+      console.log(`[12-DAY WEBHOOK] No sessions to process today`);
       return NextResponse.json({
         success: true,
         message: 'No sessions found that need 12-day webhooks triggered today',
-        sessionsProcessed: 0
+        sessionsProcessed: 0,
+        timestamp: new Date().toISOString()
       });
     }
     
@@ -144,6 +172,8 @@ export async function POST() {
         }
 
         // Trigger the 12-day webhook
+        console.log(`[12-DAY WEBHOOK] Triggering webhook for session ${session.id} - ${client.firstName} ${client.lastName}`);
+
         const response = await fetch('https://hook.eu1.make.com/ylqa8ukjtj6ok1qxxv5ttsqxsp3gwe1y', {
           method: 'POST',
           headers: {
@@ -151,6 +181,8 @@ export async function POST() {
           },
           body: JSON.stringify(webhookData)
         });
+
+        console.log(`[12-DAY WEBHOOK] Webhook response status: ${response.status}`);
 
         // Check if webhook succeeded
         if (response.ok) {
@@ -180,20 +212,25 @@ export async function POST() {
     const successCount = results.filter(r => r.status === 'success').length;
     const failureCount = results.length - successCount;
 
+    console.log(`[12-DAY WEBHOOK] Completed processing: ${successCount} success, ${failureCount} failures`);
+
     return NextResponse.json({
       success: true,
       message: `Processed ${results.length} sessions for 12-day webhook`,
       sessionsProcessed: results.length,
       successCount,
       failureCount,
-      results
+      results,
+      timestamp: new Date().toISOString()
     });
     
   } catch (error) {
+    console.error(`[12-DAY WEBHOOK] Error occurred:`, error);
     return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Unknown error occurred' 
+      {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        timestamp: new Date().toISOString()
       },
       { status: 500 }
     );
