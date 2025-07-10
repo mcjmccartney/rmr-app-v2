@@ -50,8 +50,8 @@ ORDER BY
   EXTRACT(MONTH FROM s.booking_date) DESC;
 
 -- Step 2: Insert finance entries for missing months
--- This will create entries with expected_amount = 0 (you can update these manually later)
-INSERT INTO finances (month, year, expected_amount, actual_amount)
+-- This will create entries with expected = 0 (you can update these manually later)
+INSERT INTO finances (month, year, expected)
 SELECT DISTINCT
   CASE EXTRACT(MONTH FROM s.booking_date)
     WHEN 1 THEN 'January'
@@ -68,8 +68,7 @@ SELECT DISTINCT
     WHEN 12 THEN 'December'
   END as month,
   EXTRACT(YEAR FROM s.booking_date)::INTEGER as year,
-  0.00 as expected_amount, -- Default to 0, update manually as needed
-  0.00 as actual_amount    -- Will be calculated dynamically in the app
+  0.00 as expected -- Default to 0, update manually as needed
 FROM sessions s
 WHERE s.booking_date IS NOT NULL
   AND NOT EXISTS (
@@ -95,7 +94,7 @@ WHERE s.booking_date IS NOT NULL
 SELECT
   f.month,
   f.year,
-  f.expected_amount,
+  f.expected,
   COUNT(s.id) as session_count,
   COALESCE(SUM(s.quote), 0) as total_session_value,
   'Newly created' as status
@@ -116,8 +115,8 @@ LEFT JOIN sessions s ON
     WHEN 'December' THEN 12
   END
   AND EXTRACT(YEAR FROM s.booking_date) = f.year
-WHERE f.expected_amount = 0 -- Only show the newly created entries (assuming they start with 0)
-GROUP BY f.month, f.year, f.expected_amount
+WHERE f.expected = 0 -- Only show the newly created entries (assuming they start with 0)
+GROUP BY f.month, f.year, f.expected
 ORDER BY f.year DESC,
   CASE f.month
     WHEN 'January' THEN 1

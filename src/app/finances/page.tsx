@@ -72,8 +72,7 @@ export default function FinancesPage() {
         const newEntry = {
           month,
           year: parseInt(year),
-          expected_amount: 0, // Default to 0, user can update later
-          actual_amount: 0
+          expected: 0 // Default to 0, user can update later
         };
 
         console.log('Creating finance entry for:', newEntry);
@@ -81,7 +80,7 @@ export default function FinancesPage() {
         const { data, error } = await supabase
           .from('finances')
           .insert([newEntry])
-          .select('id, month, year, expected_amount as expected, created_at')
+          .select('id, month, year, expected, created_at')
           .single();
 
         if (error) {
