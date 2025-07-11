@@ -89,6 +89,7 @@ export async function POST() {
     const sessionsToTrigger = sessions.filter(session => {
       // Skip sessions without clients or Group/RMR Live sessions
       if (!session.clientId || session.sessionType === 'Group' || session.sessionType === 'RMR Live') {
+        console.log(`[12-DAY WEBHOOK] Skipping session ${session.id}: ${!session.clientId ? 'No clientId' : 'Group/RMR Live session'}`);
         return false;
       }
 
@@ -96,6 +97,11 @@ export async function POST() {
       const sessionDate = new Date(session.bookingDate);
       const timeDiff = sessionDate.getTime() - now.getTime();
       const daysUntilSession = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+
+      // Log calculation details for debugging
+      if (daysUntilSession >= 10 && daysUntilSession <= 14) {
+        console.log(`[12-DAY WEBHOOK] Session ${session.id} (${session.dogName || 'Unknown'}): ${daysUntilSession} days away (target: 12)`);
+      }
 
       // We want sessions that are exactly 12 days away
       return daysUntilSession === 12;
@@ -120,8 +126,15 @@ export async function POST() {
       try {
         // Find the client for this session
         const client = clients.find(c => c.id === session.clientId);
-        
+
         if (!client || !client.email) {
+          console.log(`[12-DAY WEBHOOK] Skipping session ${session.id}: ${!client ? 'Client not found' : 'Client has no email'}`);
+          results.push({
+            sessionId: session.id,
+            status: 'skipped',
+            reason: !client ? 'Client not found' : 'Client has no email',
+            clientId: session.clientId
+          });
           continue;
         }
         
@@ -162,6 +175,20 @@ export async function POST() {
 
         // Block webhook if any essential data is missing or invalid
         if (!hasValidData) {
+          console.log(`[12-DAY WEBHOOK] Skipping session ${session.id} due to invalid data:`, {
+            sessionId: isValidString(webhookData.sessionId),
+            clientId: isValidString(webhookData.clientId),
+            clientName: isValidString(webhookData.clientName),
+            clientEmail: isValidEmail(webhookData.clientEmail),
+            sessionType: isValidString(webhookData.sessionType),
+            actualData: {
+              sessionId: webhookData.sessionId,
+              clientId: webhookData.clientId,
+              clientName: webhookData.clientName,
+              clientEmail: webhookData.clientEmail,
+              sessionType: webhookData.sessionType
+            }
+          });
           results.push({
             sessionId: session.id,
             status: 'skipped',
