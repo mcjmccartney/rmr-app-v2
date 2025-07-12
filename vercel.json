@@ -9,7 +9,7 @@
     },
     {
       "path": "/api/scheduled-webhooks-12day",
-      "schedule": "0 8 * * *"
+      "schedule": "0 9 * * *"
     }
   ]
 }
