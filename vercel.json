@@ -4,11 +4,7 @@
   ],
   "crons": [
     {
-      "path": "/api/scheduled-webhooks",
-      "schedule": "0 8 * * *"
-    },
-    {
-      "path": "/api/scheduled-webhooks-12day",
+      "path": "/api/scheduled-webhooks-combined",
       "schedule": "0 8 * * *"
     }
   ]
