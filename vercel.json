@@ -1,15 +1,11 @@
 {
   "alias": [
-    "raising-my-rescue.vercel.app"
+    "rmr.vercel.app"
   ],
   "crons": [
     {
-      "path": "/api/scheduled-webhooks",
+      "path": "/api/scheduled-webhooks-combined",
       "schedule": "0 8 * * *"
-    },
-    {
-      "path": "/api/scheduled-webhooks-12day",
-      "schedule": "0 9 * * *"
     }
   ]
 }

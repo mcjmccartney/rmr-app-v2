@@ -12,7 +12,7 @@ export interface PaymentLinkConfig {
 
 // Your specific Monzo payment links for different session types
 const PAYMENT_CONFIG: PaymentLinkConfig = {
-  appBaseUrl: process.env.NEXT_PUBLIC_APP_URL || 'https://raising-my-rescue.vercel.app',
+  appBaseUrl: process.env.NEXT_PUBLIC_APP_URL || 'https://rmr.vercel.app',
   monzoLinks: {
     'Online Catchup': {
       member: 'https://monzo.com/pay/r/raising-my-rescue_qeDXP5wJpnqGln',
