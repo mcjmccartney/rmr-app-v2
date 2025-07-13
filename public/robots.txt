@@ -1,26 +1,33 @@
 User-agent: *
 Disallow: /
+Crawl-delay: 86400
 
-# Block all search engines from indexing this application
-# This is a private business application and should not appear in search results
+# URGENT: This site should be removed from all search engine indexes
+# This is a private business application and must not appear in search results
 
 User-agent: Googlebot
 Disallow: /
+Crawl-delay: 86400
 
 User-agent: Bingbot
 Disallow: /
+Crawl-delay: 86400
 
 User-agent: Slurp
 Disallow: /
+Crawl-delay: 86400
 
 User-agent: DuckDuckBot
 Disallow: /
+Crawl-delay: 86400
 
 User-agent: Baiduspider
 Disallow: /
+Crawl-delay: 86400
 
 User-agent: YandexBot
 Disallow: /
+Crawl-delay: 86400
 
 User-agent: facebookexternalhit
 Disallow: /
@@ -31,4 +38,5 @@ Disallow: /
 User-agent: LinkedInBot
 Disallow: /
 
-# No sitemap provided intentionally
+# No sitemap provided - site should not be indexed
+# Request immediate removal from search indexes
