@@ -82,6 +82,12 @@ export function addSecurityHeaders(response: NextResponse, allowEmbedding: boole
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
   response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
 
+  // Anti-indexing headers to prevent search engine crawling
+  response.headers.set('X-Robots-Tag', 'noindex, nofollow, nosnippet, noarchive, noimageindex');
+  response.headers.set('Cache-Control', 'private, no-cache, no-store, must-revalidate');
+  response.headers.set('Pragma', 'no-cache');
+  response.headers.set('Expires', '0');
+
   // Content Security Policy - adjust frame-ancestors based on embedding allowance
   const frameAncestors = allowEmbedding ? "frame-ancestors 'self' *" : "frame-ancestors 'none'";
 

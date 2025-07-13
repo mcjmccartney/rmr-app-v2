@@ -15,6 +15,19 @@ export const metadata: Metadata = {
   description: "Dog training and behavioural consultation management system",
   manifest: "/manifest.json",
   themeColor: "#6B8E6B",
+  robots: {
+    index: false,
+    follow: false,
+    nocache: true,
+    googleBot: {
+      index: false,
+      follow: false,
+      noimageindex: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'none',
+      'max-snippet': -1,
+    },
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",

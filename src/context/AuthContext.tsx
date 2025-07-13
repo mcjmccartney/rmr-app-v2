@@ -11,6 +11,10 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
+  enrollMFA: () => Promise<{ data: any; error: any }>;
+  verifyMFA: (factorId: string, code: string) => Promise<{ error: any }>;
+  unenrollMFA: (factorId: string) => Promise<{ error: any }>;
+  getMFAFactors: () => Promise<{ data: any; error: any }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -63,6 +67,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await supabase.auth.signOut();
   };
 
+  const enrollMFA = async () => {
+    const { data, error } = await supabase.auth.mfa.enroll({
+      factorType: 'totp',
+      friendlyName: 'Raising My Rescue 2FA'
+    });
+    return { data, error };
+  };
+
+  const verifyMFA = async (factorId: string, code: string) => {
+    const { error } = await supabase.auth.mfa.verify({
+      factorId,
+      challengeId: '', // This will be set during the challenge process
+      code
+    });
+    return { error };
+  };
+
+  const unenrollMFA = async (factorId: string) => {
+    const { error } = await supabase.auth.mfa.unenroll({ factorId });
+    return { error };
+  };
+
+  const getMFAFactors = async () => {
+    const { data, error } = await supabase.auth.mfa.listFactors();
+    return { data, error };
+  };
+
   const value = {
     user,
     session,
@@ -70,6 +101,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signIn,
     signUp,
     signOut,
+    enrollMFA,
+    verifyMFA,
+    unenrollMFA,
+    getMFAFactors,
   };
 
   return (
