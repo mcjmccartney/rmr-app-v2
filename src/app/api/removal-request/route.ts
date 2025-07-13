@@ -5,9 +5,9 @@ export async function GET() {
     message: "URGENT REMOVAL REQUEST",
     status: "PRIVATE_APPLICATION",
     request: "Please remove this domain from your search index immediately",
-    domain: "raising-my-rescue.vercel.app",
+    domain: "rmrcms.vercel.app",
     reason: "This is a private business application not intended for public access",
-    robots_txt: "https://raising-my-rescue.vercel.app/robots.txt",
+    robots_txt: "https://rmrcms.vercel.app/robots.txt",
     contact: "This site should never appear in search results",
     instructions: {
       google: "Use Google Search Console removal tool",
@@ -30,7 +30,7 @@ export async function POST() {
   return NextResponse.json({
     message: "REMOVAL REQUEST ACKNOWLEDGED",
     action: "Please remove this domain from search indexes",
-    domain: "raising-my-rescue.vercel.app",
+    domain: "rmrcms.vercel.app",
     timestamp: new Date().toISOString()
   }, {
     status: 200,

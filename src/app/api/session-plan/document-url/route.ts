@@ -21,7 +21,7 @@ const createSupabaseAdmin = () => {
 // OPTIONS handler for CORS preflight requests
 export async function OPTIONS() {
   const allowedOrigins = [
-    'https://raising-my-rescue.vercel.app',
+    'https://rmrcms.vercel.app',
     'https://hook.eu1.make.com',
     ...(process.env.NODE_ENV === 'development' ? ['http://localhost:3000'] : [])
   ];
