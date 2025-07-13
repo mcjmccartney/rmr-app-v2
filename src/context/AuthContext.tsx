@@ -11,10 +11,6 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
-  enrollMFA: () => Promise<{ data: any; error: any }>;
-  verifyMFA: (factorId: string, code: string) => Promise<{ error: any }>;
-  unenrollMFA: (factorId: string) => Promise<{ error: any }>;
-  getMFAFactors: () => Promise<{ data: any; error: any }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -67,52 +63,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await supabase.auth.signOut();
   };
 
-  const enrollMFA = async () => {
-    // Generate a unique friendly name with timestamp to avoid conflicts
-    const timestamp = new Date().toISOString().slice(0, 16).replace('T', ' ');
-    const friendlyName = `Raising My Rescue 2FA (${timestamp})`;
-
-    const { data, error } = await supabase.auth.mfa.enroll({
-      factorType: 'totp',
-      friendlyName: friendlyName
-    });
-    return { data, error };
-  };
-
-  const verifyMFA = async (factorId: string, code: string) => {
-    try {
-      // First, create a challenge for the factor
-      const { data: challengeData, error: challengeError } = await supabase.auth.mfa.challenge({
-        factorId
-      });
-
-      if (challengeError) {
-        return { error: challengeError };
-      }
-
-      // Then verify the code with the challenge
-      const { error } = await supabase.auth.mfa.verify({
-        factorId,
-        challengeId: challengeData.id,
-        code
-      });
-
-      return { error };
-    } catch (error) {
-      return { error };
-    }
-  };
-
-  const unenrollMFA = async (factorId: string) => {
-    const { error } = await supabase.auth.mfa.unenroll({ factorId });
-    return { error };
-  };
-
-  const getMFAFactors = async () => {
-    const { data, error } = await supabase.auth.mfa.listFactors();
-    return { data, error };
-  };
-
   const value = {
     user,
     session,
@@ -120,10 +70,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signIn,
     signUp,
     signOut,
-    enrollMFA,
-    verifyMFA,
-    unenrollMFA,
-    getMFAFactors,
   };
 
   return (

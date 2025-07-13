@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Calendar, Edit3, Star, Users, PieChart, Menu, X, Settings } from 'lucide-react';
+import { Calendar, Edit3, Star, Users, PieChart, Menu, X } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useModal } from '@/context/ModalContext';
 
@@ -12,7 +12,6 @@ const navItems = [
   { icon: Star, label: 'Memberships', path: '/memberships' },
   { icon: Users, label: 'Clients', path: '/clients' },
   { icon: PieChart, label: 'Finances', path: '/finances' },
-  { icon: Settings, label: 'Settings', path: '/settings' },
 ];
 
 export default function FloatingActionButton() {
