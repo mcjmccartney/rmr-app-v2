@@ -68,20 +68,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const enrollMFA = async () => {
+    // Generate a unique friendly name with timestamp to avoid conflicts
+    const timestamp = new Date().toISOString().slice(0, 16).replace('T', ' ');
+    const friendlyName = `Raising My Rescue 2FA (${timestamp})`;
+
     const { data, error } = await supabase.auth.mfa.enroll({
       factorType: 'totp',
-      friendlyName: 'Raising My Rescue 2FA'
+      friendlyName: friendlyName
     });
     return { data, error };
   };
 
   const verifyMFA = async (factorId: string, code: string) => {
-    const { error } = await supabase.auth.mfa.verify({
-      factorId,
-      challengeId: '', // This will be set during the challenge process
-      code
-    });
-    return { error };
+    try {
+      // First, create a challenge for the factor
+      const { data: challengeData, error: challengeError } = await supabase.auth.mfa.challenge({
+        factorId
+      });
+
+      if (challengeError) {
+        return { error: challengeError };
+      }
+
+      // Then verify the code with the challenge
+      const { error } = await supabase.auth.mfa.verify({
+        factorId,
+        challengeId: challengeData.id,
+        code
+      });
+
+      return { error };
+    } catch (error) {
+      return { error };
+    }
   };
 
   const unenrollMFA = async (factorId: string) => {

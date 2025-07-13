@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { Shield, Smartphone, Key, AlertTriangle, CheckCircle, X } from 'lucide-react';
+import { Shield, Smartphone, Key, AlertTriangle, CheckCircle, X, RefreshCw } from 'lucide-react';
 
 interface TwoFactorAuthProps {
   onClose: () => void;
@@ -26,6 +26,8 @@ export default function TwoFactorAuth({ onClose }: TwoFactorAuthProps) {
 
   const loadFactors = async () => {
     setLoading(true);
+    setError('');
+    setSuccess('');
     const { data, error } = await getMFAFactors();
     if (error) {
       setError(error.message);
@@ -35,13 +37,36 @@ export default function TwoFactorAuth({ onClose }: TwoFactorAuthProps) {
     setLoading(false);
   };
 
+  const resetState = () => {
+    setStep('list');
+    setQrCode('');
+    setSecret('');
+    setFactorId('');
+    setVerificationCode('');
+    setError('');
+    setSuccess('');
+  };
+
   const handleEnroll = async () => {
     setLoading(true);
     setError('');
-    
+
+    // Check if user already has MFA factors
+    const { data: existingFactors } = await getMFAFactors();
+    if (existingFactors?.totp && existingFactors.totp.length > 0) {
+      setError('2FA is already enabled on your account. Please disable it first if you want to set up a new one.');
+      setLoading(false);
+      return;
+    }
+
     const { data, error } = await enrollMFA();
     if (error) {
-      setError(error.message);
+      if (error.message.includes('already exists')) {
+        setError('2FA is already set up. Please refresh the page to see your current 2FA status.');
+        loadFactors(); // Refresh the factors list
+      } else {
+        setError(error.message);
+      }
     } else {
       setQrCode(data.totp.qr_code);
       setSecret(data.totp.secret);
@@ -59,14 +84,14 @@ export default function TwoFactorAuth({ onClose }: TwoFactorAuthProps) {
 
     setLoading(true);
     setError('');
-    
+
     const { error } = await verifyMFA(factorId, verificationCode);
     if (error) {
-      setError(error.message);
+      setError(error.message || 'Verification failed. Please try again.');
     } else {
       setSuccess('2FA has been successfully enabled!');
-      setStep('list');
-      loadFactors();
+      resetState();
+      await loadFactors();
     }
     setLoading(false);
   };
@@ -99,12 +124,22 @@ export default function TwoFactorAuth({ onClose }: TwoFactorAuthProps) {
               <Shield className="w-6 h-6 text-blue-600" />
               <h2 className="text-xl font-semibold text-gray-900">Two-Factor Authentication</h2>
             </div>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600"
-            >
-              <X className="w-6 h-6" />
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={loadFactors}
+                disabled={loading}
+                className="text-gray-400 hover:text-gray-600 disabled:opacity-50"
+                title="Refresh"
+              >
+                <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+              </button>
+              <button
+                onClick={onClose}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
           </div>
 
           {/* Error/Success Messages */}
@@ -214,10 +249,10 @@ export default function TwoFactorAuth({ onClose }: TwoFactorAuthProps) {
 
               <div className="flex gap-3">
                 <button
-                  onClick={() => setStep('list')}
+                  onClick={resetState}
                   className="flex-1 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
                 >
-                  Cancel
+                  Start Over
                 </button>
                 <button
                   onClick={handleVerify}
