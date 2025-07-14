@@ -1,108 +1,122 @@
-// Built-in cron job scheduler for the application
+// Simple built-in webhook scheduler for the application
 import { createClient } from '@supabase/supabase-js';
 
-interface CronJob {
-  name: string;
-  schedule: string; // Cron expression
-  handler: () => Promise<void>;
-  lastRun?: Date;
-  nextRun?: Date;
-}
-
-class CronScheduler {
-  private jobs: CronJob[] = [];
-  private intervalId: NodeJS.Timeout | null = null;
+class SimpleWebhookScheduler {
+  private static instance: SimpleWebhookScheduler;
+  private lastRunDate: string | null = null;
   private isRunning = false;
 
-  constructor() {
-    this.setupJobs();
+  private constructor() {
+    // Private constructor for singleton
   }
 
-  private setupJobs() {
-    // Daily webhook job at 8:00 AM UTC
-    this.addJob({
-      name: 'daily-webhooks',
-      schedule: '0 8 * * *', // 8:00 AM UTC daily
-      handler: this.runDailyWebhooks.bind(this)
-    });
-  }
-
-  private addJob(job: CronJob) {
-    job.nextRun = this.calculateNextRun(job.schedule);
-    this.jobs.push(job);
-    console.log(`[CRON] Scheduled job "${job.name}" for ${job.nextRun?.toISOString()}`);
-  }
-
-  private calculateNextRun(cronExpression: string): Date {
-    // Simple cron parser for "0 8 * * *" format (minute hour day month dayOfWeek)
-    const [minute, hour] = cronExpression.split(' ').map(Number);
-    
-    const now = new Date();
-    const nextRun = new Date();
-    nextRun.setUTCHours(hour, minute, 0, 0);
-    
-    // If the time has already passed today, schedule for tomorrow
-    if (nextRun <= now) {
-      nextRun.setUTCDate(nextRun.getUTCDate() + 1);
+  static getInstance(): SimpleWebhookScheduler {
+    if (!SimpleWebhookScheduler.instance) {
+      SimpleWebhookScheduler.instance = new SimpleWebhookScheduler();
     }
-    
-    return nextRun;
+    return SimpleWebhookScheduler.instance;
+  }
+
+  // Check if we should run today's webhooks
+  async checkAndRunDaily(): Promise<{ ran: boolean; message: string; results?: any }> {
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+
+    // If we already ran today, skip
+    if (this.lastRunDate === today) {
+      return { ran: false, message: 'Already ran today' };
+    }
+
+    // If currently running, skip
+    if (this.isRunning) {
+      return { ran: false, message: 'Already running' };
+    }
+
+    // Check if it's past 8:00 AM UTC today
+    const now = new Date();
+    const todayAt8AM = new Date();
+    todayAt8AM.setUTCHours(8, 0, 0, 0);
+
+    if (now < todayAt8AM) {
+      return { ran: false, message: 'Too early - waiting for 8:00 AM UTC' };
+    }
+
+    // Run the daily webhooks
+    console.log('[WEBHOOK-SCHEDULER] Running daily webhooks...');
+    this.isRunning = true;
+
+    try {
+      const results = await this.runDailyWebhooks();
+      this.lastRunDate = today;
+      console.log('[WEBHOOK-SCHEDULER] Daily webhooks completed successfully');
+      return { ran: true, message: 'Daily webhooks completed', results };
+    } catch (error) {
+      console.error('[WEBHOOK-SCHEDULER] Daily webhooks failed:', error);
+      return { ran: false, message: `Failed: ${error instanceof Error ? error.message : 'Unknown error'}` };
+    } finally {
+      this.isRunning = false;
+    }
   }
 
   private async runDailyWebhooks() {
-    console.log('[CRON] Starting daily webhooks job...');
-    
-    try {
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-      );
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
 
-      // Get all sessions and clients
-      const { data: sessionsData, error: sessionsError } = await supabase
-        .from('sessions')
-        .select('*')
-        .order('booking_date', { ascending: false });
+    // Get all sessions and clients
+    const { data: sessionsData, error: sessionsError } = await supabase
+      .from('sessions')
+      .select('*')
+      .order('booking_date', { ascending: false });
 
-      if (sessionsError) {
-        throw new Error(`Failed to fetch sessions: ${sessionsError.message}`);
-      }
-
-      const { data: clientsData, error: clientsError } = await supabase
-        .from('clients')
-        .select('*');
-
-      if (clientsError) {
-        throw new Error(`Failed to fetch clients: ${clientsError.message}`);
-      }
-
-      const sessions = sessionsData || [];
-      const clients = clientsData || [];
-
-      // Process 4-day webhooks
-      console.log('[CRON] Processing 4-day webhooks...');
-      const fourDayResult = await this.processWebhooks(
-        sessions, 
-        clients, 
-        4, 
-        'https://hook.eu1.make.com/lipggo8kcd8kwq2vp6j6mr3gnxbx12h7'
-      );
-
-      // Process 12-day webhooks
-      console.log('[CRON] Processing 12-day webhooks...');
-      const twelveDayResult = await this.processWebhooks(
-        sessions, 
-        clients, 
-        12, 
-        'https://hook.eu1.make.com/ylqa8ukjtj6ok1qxxv5ttsqxsp3gwe1y'
-      );
-
-      const totalProcessed = fourDayResult.length + twelveDayResult.length;
-      console.log(`[CRON] Daily webhooks completed: ${totalProcessed} sessions processed`);
-
-    } catch (error) {
-      console.error('[CRON] Daily webhooks failed:', error);
+    if (sessionsError) {
+      throw new Error(`Failed to fetch sessions: ${sessionsError.message}`);
     }
+
+    const { data: clientsData, error: clientsError } = await supabase
+      .from('clients')
+      .select('*');
+
+    if (clientsError) {
+      throw new Error(`Failed to fetch clients: ${clientsError.message}`);
+    }
+
+    const sessions = sessionsData || [];
+    const clients = clientsData || [];
+
+    // Process 4-day webhooks
+    console.log('[WEBHOOK-SCHEDULER] Processing 4-day webhooks...');
+    const fourDayResult = await this.processWebhooks(
+      sessions,
+      clients,
+      4,
+      'https://hook.eu1.make.com/lipggo8kcd8kwq2vp6j6mr3gnxbx12h7'
+    );
+
+    // Process 12-day webhooks
+    console.log('[WEBHOOK-SCHEDULER] Processing 12-day webhooks...');
+    const twelveDayResult = await this.processWebhooks(
+      sessions,
+      clients,
+      12,
+      'https://hook.eu1.make.com/ylqa8ukjtj6ok1qxxv5ttsqxsp3gwe1y'
+    );
+
+    const totalProcessed = fourDayResult.length + twelveDayResult.length;
+    const totalSuccess = [...fourDayResult, ...twelveDayResult].filter(r => r.status === 'success').length;
+    const totalFailure = [...fourDayResult, ...twelveDayResult].filter(r => r.status === 'failed' || r.status === 'error').length;
+
+    return {
+      fourDaySessionsProcessed: fourDayResult.length,
+      twelveDaySessionsProcessed: twelveDayResult.length,
+      totalProcessed,
+      successCount: totalSuccess,
+      failureCount: totalFailure,
+      results: {
+        fourDayWebhooks: fourDayResult,
+        twelveDayWebhooks: twelveDayResult
+      }
+    };
   }
 
   private async processWebhooks(sessions: any[], clients: any[], targetDays: number, webhookUrl: string) {
@@ -195,65 +209,40 @@ class CronScheduler {
     return results;
   }
 
-  start() {
-    if (this.isRunning) {
-      console.log('[CRON] Scheduler already running');
-      return;
-    }
-
+  // Manual trigger for testing
+  async triggerNow(): Promise<any> {
+    console.log('[WEBHOOK-SCHEDULER] Manual trigger requested');
     this.isRunning = true;
-    console.log('[CRON] Starting cron scheduler...');
 
-    // Check every minute for jobs that need to run
-    this.intervalId = setInterval(() => {
-      this.checkAndRunJobs();
-    }, 60000); // Check every minute
-
-    console.log('[CRON] Cron scheduler started');
-  }
-
-  stop() {
-    if (this.intervalId) {
-      clearInterval(this.intervalId);
-      this.intervalId = null;
-    }
-    this.isRunning = false;
-    console.log('[CRON] Cron scheduler stopped');
-  }
-
-  private checkAndRunJobs() {
-    const now = new Date();
-    
-    for (const job of this.jobs) {
-      if (job.nextRun && now >= job.nextRun) {
-        console.log(`[CRON] Running job: ${job.name}`);
-        
-        // Run the job
-        job.handler().catch(error => {
-          console.error(`[CRON] Job "${job.name}" failed:`, error);
-        });
-
-        // Update last run and calculate next run
-        job.lastRun = now;
-        job.nextRun = this.calculateNextRun(job.schedule);
-        
-        console.log(`[CRON] Job "${job.name}" completed. Next run: ${job.nextRun.toISOString()}`);
-      }
+    try {
+      const results = await this.runDailyWebhooks();
+      console.log('[WEBHOOK-SCHEDULER] Manual trigger completed successfully');
+      return results;
+    } catch (error) {
+      console.error('[WEBHOOK-SCHEDULER] Manual trigger failed:', error);
+      throw error;
+    } finally {
+      this.isRunning = false;
     }
   }
 
   getStatus() {
+    const today = new Date().toISOString().split('T')[0];
+    const now = new Date();
+    const todayAt8AM = new Date();
+    todayAt8AM.setUTCHours(8, 0, 0, 0);
+
     return {
       isRunning: this.isRunning,
-      jobs: this.jobs.map(job => ({
-        name: job.name,
-        schedule: job.schedule,
-        lastRun: job.lastRun?.toISOString(),
-        nextRun: job.nextRun?.toISOString()
-      }))
+      lastRunDate: this.lastRunDate,
+      hasRunToday: this.lastRunDate === today,
+      currentTime: now.toISOString(),
+      nextScheduledTime: todayAt8AM.toISOString(),
+      canRunNow: now >= todayAt8AM,
+      status: this.lastRunDate === today ? 'completed' : (now >= todayAt8AM ? 'ready' : 'waiting')
     };
   }
 }
 
 // Export singleton instance
-export const cronScheduler = new CronScheduler();
+export const webhookScheduler = SimpleWebhookScheduler.getInstance();

@@ -7,6 +7,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import Layout from "@/components/layout/Layout";
 
 import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
+import WebhookScheduler from "@/components/WebhookScheduler";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -103,6 +104,7 @@ export default function RootLayout({
                 {children}
               </Layout>
               <ServiceWorkerRegistration />
+              <WebhookScheduler />
             </ModalProvider>
           </AppProvider>
         </AuthProvider>
