@@ -8,22 +8,54 @@ async function processWebhooks(sessions: any[], clients: any[], targetDays: numb
   let failureCount = 0;
 
   const targetSessions = sessions.filter(session => {
-    if (!session.client_id || session.session_type === 'Group' || session.session_type === 'RMR Live') {
+    // Skip sessions without client_id
+    if (!session.client_id) {
+      console.log(`[SESSION-FILTER] Skipping session ${session.id} - no client_id`);
       return false;
     }
 
+    // Skip Group and RMR Live sessions
+    if (session.session_type === 'Group' || session.session_type === 'RMR Live') {
+      console.log(`[SESSION-FILTER] Skipping session ${session.id} - session type: ${session.session_type}`);
+      return false;
+    }
+
+    // Check if session is exactly targetDays away
     const sessionDate = new Date(session.booking_date);
     const timeDiff = sessionDate.getTime() - now.getTime();
     const daysUntilSession = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
 
-    return daysUntilSession === targetDays;
+    const isTargetDay = daysUntilSession === targetDays;
+    if (isTargetDay) {
+      console.log(`[SESSION-FILTER] Including session ${session.id} - ${daysUntilSession} days away (target: ${targetDays})`);
+    }
+
+    return isTargetDay;
   });
+
+  console.log(`[WEBHOOK-PROCESSING] Found ${targetSessions.length} sessions exactly ${targetDays} days away`);
 
   for (const session of targetSessions) {
     try {
       const client = clients.find((c: any) => c.id === session.client_id);
 
-      if (!client || !client.email) {
+      if (!client) {
+        console.log(`[CLIENT-VALIDATION] BLOCKED - No client found for session ${session.id} with client_id: ${session.client_id}`);
+        results.push({
+          sessionId: session.id,
+          status: 'skipped',
+          reason: 'Client not found'
+        });
+        continue;
+      }
+
+      if (!client.email || client.email.trim() === '') {
+        console.log(`[CLIENT-VALIDATION] BLOCKED - No email for client ${client.id} (${client.first_name} ${client.last_name})`);
+        results.push({
+          sessionId: session.id,
+          status: 'skipped',
+          reason: 'Client has no email'
+        });
         continue;
       }
 
@@ -41,20 +73,55 @@ async function processWebhooks(sessions: any[], clients: any[], targetDays: numb
         ...(targetDays === 4 && { sendSessionEmail: true, createCalendarEvent: false })
       };
 
-      // Validate essential data
-      const hasValidData = webhookData.clientFirstName &&
-                         webhookData.clientLastName &&
-                         webhookData.clientEmail &&
-                         webhookData.sessionType &&
-                         webhookData.bookingDate &&
-                         webhookData.bookingTime &&
+      // Enhanced validation - check for both null/undefined AND empty strings
+      const isValidString = (value: any) => value !== null && value !== undefined && value !== '' && String(value).trim() !== '';
+
+      const hasValidData = isValidString(webhookData.clientFirstName) &&
+                         isValidString(webhookData.clientLastName) &&
+                         isValidString(webhookData.clientEmail) &&
+                         isValidString(webhookData.sessionType) &&
+                         isValidString(webhookData.bookingDate) &&
+                         isValidString(webhookData.bookingTime) &&
                          (targetDays === 12 || (webhookData.quote !== null && webhookData.quote !== undefined));
 
       if (!hasValidData) {
+        console.log(`[WEBHOOK-VALIDATION] BLOCKED - Invalid data for session ${session.id}:`, {
+          clientFirstName: webhookData.clientFirstName,
+          clientLastName: webhookData.clientLastName,
+          clientEmail: webhookData.clientEmail,
+          sessionType: webhookData.sessionType,
+          bookingDate: webhookData.bookingDate,
+          bookingTime: webhookData.bookingTime,
+          quote: webhookData.quote,
+          targetDays
+        });
         results.push({
           sessionId: session.id,
           status: 'skipped',
-          reason: 'Missing or invalid essential data'
+          reason: 'Missing or invalid essential data',
+          invalidFields: {
+            clientFirstName: !isValidString(webhookData.clientFirstName),
+            clientLastName: !isValidString(webhookData.clientLastName),
+            clientEmail: !isValidString(webhookData.clientEmail),
+            sessionType: !isValidString(webhookData.sessionType),
+            bookingDate: !isValidString(webhookData.bookingDate),
+            bookingTime: !isValidString(webhookData.bookingTime),
+            quote: targetDays === 4 && (webhookData.quote === null || webhookData.quote === undefined)
+          }
+        });
+        continue;
+      }
+
+      console.log(`[WEBHOOK-VALIDATION] VALID - Sending webhook for session ${session.id} (${client.first_name} ${client.last_name})`);
+
+      // Additional safety check - ensure no empty object is being sent
+      const webhookDataString = JSON.stringify(webhookData);
+      if (webhookDataString === '{}' || webhookDataString.length < 50) {
+        console.log(`[WEBHOOK-VALIDATION] BLOCKED - Webhook data too small/empty for session ${session.id}:`, webhookDataString);
+        results.push({
+          sessionId: session.id,
+          status: 'skipped',
+          reason: 'Webhook data too small or empty'
         });
         continue;
       }
