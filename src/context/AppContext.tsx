@@ -607,6 +607,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return isValidString(time) && /^\d{2}:\d{2}$/.test(time);
   };
 
+  const isValidWebhookData = (data: any): boolean => {
+    // Check if all required fields are present and valid
+    return isValidString(data.sessionId) &&
+           isValidEmail(data.clientEmail) &&
+           data.clientEmail.trim().length > 0 &&
+           isValidString(data.sessionType) &&
+           isValidDate(data.bookingDate) &&
+           isValidTime(data.bookingTime) &&
+           isValidString(data.clientFirstName) &&
+           isValidString(data.clientLastName) &&
+           data.quote !== null &&
+           data.quote !== undefined &&
+           typeof data.quote === 'number';
+  };
+
   // Trigger Make.com webhooks for new session
   const triggerSessionWebhook = async (session: Session) => {
     try {
@@ -695,13 +710,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const webhookNames: string[] = [];
 
       // Always trigger booking terms webhook for all newly created sessions
-      // Additional validation to ensure clientEmail is not blank
-      if (isValidString(webhookData.sessionId) &&
-          isValidEmail(webhookData.clientEmail) &&
-          webhookData.clientEmail.trim().length > 0 &&
-          isValidString(webhookData.sessionType) &&
-          isValidDate(webhookData.bookingDate) &&
-          isValidTime(webhookData.bookingTime)) {
+      // Comprehensive validation to prevent blank/empty webhook data
+      if (isValidWebhookData(webhookData)) {
+        console.log(`[BOOKING_TERMS_WEBHOOK] Adding to queue for new session ${webhookData.sessionId} - ${webhookData.clientFirstName} ${webhookData.clientLastName}`);
         webhookPromises.push(
           fetch('https://hook.eu1.make.com/yaoalfe77uqtw4xv9fbh5atf4okq14wm', {
             method: 'POST',
@@ -712,6 +723,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
           })
         );
         webhookNames.push('booking terms email webhook');
+      } else {
+        console.log(`[BOOKING_TERMS_WEBHOOK] BLOCKED - Invalid data for new session ${newSession.id}. Webhook data:`, webhookData);
       }
 
       // Only trigger session webhook for calendar creation and emails if session is ≤4 days away
@@ -824,15 +837,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         questionnaireUrl: `https://rmrcms.vercel.app/questionnaire?email=${encodeURIComponent(client.email)}`
       };
 
-      // Validate data before sending webhook
-      // Additional validation to ensure clientEmail is not blank
-      if (isValidString(webhookData.sessionId) &&
-          isValidEmail(webhookData.clientEmail) &&
-          webhookData.clientEmail.trim().length > 0 &&
-          isValidString(webhookData.sessionType) &&
-          isValidDate(webhookData.bookingDate) &&
-          isValidTime(webhookData.bookingTime)) {
-
+      // Comprehensive validation to prevent blank/empty webhook data
+      if (isValidWebhookData(webhookData)) {
+        console.log(`[BOOKING_TERMS_WEBHOOK] Triggering for session ${webhookData.sessionId} - ${webhookData.clientFirstName} ${webhookData.clientLastName}`);
         await fetch('https://hook.eu1.make.com/yaoalfe77uqtw4xv9fbh5atf4okq14wm', {
           method: 'POST',
           headers: {
@@ -840,6 +847,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
           },
           body: JSON.stringify(webhookData)
         });
+      } else {
+        console.log(`[BOOKING_TERMS_WEBHOOK] BLOCKED - Invalid data for session ${session.id}. Webhook data:`, webhookData);
       }
     } catch (error) {
       // Don't throw error - webhook failure shouldn't prevent session update
