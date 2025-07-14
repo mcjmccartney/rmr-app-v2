@@ -89,7 +89,7 @@ export async function POST() {
             sessionType: session.session_type,
             bookingDate: session.booking_date,
             bookingTime: session.booking_time,
-            dogName: session.dog_name,
+            dogName: session.dog_name || client.dog_name,
             quote: session.quote,
             ...(targetDays === 4 && { sendSessionEmail: true, createCalendarEvent: false })
           };

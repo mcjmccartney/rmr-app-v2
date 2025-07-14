@@ -14,8 +14,13 @@ export function initializeApp() {
   // Start the built-in cron scheduler
   if (typeof window === 'undefined') {
     // Only run on server side
-    cronScheduler.start();
-    console.log('[STARTUP] Cron scheduler started');
+    try {
+      cronScheduler.start();
+      console.log('[STARTUP] Cron scheduler started successfully');
+    } catch (error) {
+      console.error('[STARTUP] Failed to start cron scheduler:', error);
+      // Continue initialization even if cron fails
+    }
   }
 
   isInitialized = true;

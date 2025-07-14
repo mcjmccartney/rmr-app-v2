@@ -666,6 +666,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         clientId: session.clientId,
         clientName: `${client.firstName} ${client.lastName}`.trim(),
         clientFirstName: client.firstName,
+        clientLastName: client.lastName,
         clientEmail: client.email,
         address: client.address || '',
         dogName: client.dogName || '',
@@ -693,6 +694,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         isValidString(webhookData.clientId) &&
         isValidString(webhookData.clientName) &&
         isValidString(webhookData.clientFirstName) &&
+        isValidString(webhookData.clientLastName) &&
         isValidEmail(webhookData.clientEmail) &&
         isValidString(webhookData.sessionType) &&
         isValidDate(webhookData.bookingDate) &&
@@ -820,6 +822,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         clientId: session.clientId,
         clientName: `${client.firstName} ${client.lastName}`.trim(),
         clientFirstName: client.firstName,
+        clientLastName: client.lastName,
         clientEmail: client.email,
         address: client.address || '',
         dogName: client.dogName || '',
