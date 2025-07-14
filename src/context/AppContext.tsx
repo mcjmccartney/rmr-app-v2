@@ -867,7 +867,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         'googleMeetLink',
         'sessionPaid',
         'paymentConfirmedAt',
-        'participants' // For group session participant payment updates
+        'participants', // For group session participant payment updates
+        'notes' // Session notes updates
       ];
       const isInternalSystemUpdate = Object.keys(updates).every(key => internalSystemFields.includes(key));
 
