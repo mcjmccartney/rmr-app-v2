@@ -726,7 +726,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         );
         webhookNames.push('booking terms email webhook');
       } else {
-        console.log(`[BOOKING_TERMS_WEBHOOK] BLOCKED - Invalid data for new session ${newSession.id}. Webhook data:`, webhookData);
+        console.log(`[BOOKING_TERMS_WEBHOOK] BLOCKED - Invalid data for session ${session.id}. Webhook data:`, webhookData);
       }
 
       // Only trigger session webhook for calendar creation and emails if session is ≤4 days away
