@@ -861,9 +861,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
       console.log(`[UPDATE_SESSION] State updated for session ${id} ONLY`);
 
       // Skip booking terms webhook if this is just an internal system update
-      // This prevents duplicate webhooks when calendar events are created or updated
-      const isInternalSystemUpdate = Object.keys(updates).length === 1 &&
-        ('eventId' in updates || 'googleMeetLink' in updates);
+      // This prevents duplicate webhooks when calendar events are created/updated or payment status changes
+      const internalSystemFields = [
+        'eventId',
+        'googleMeetLink',
+        'sessionPaid',
+        'paymentConfirmedAt',
+        'participants' // For group session participant payment updates
+      ];
+      const isInternalSystemUpdate = Object.keys(updates).every(key => internalSystemFields.includes(key));
 
       if (!isInternalSystemUpdate) {
         // Trigger booking terms webhook ONLY for this specific session
