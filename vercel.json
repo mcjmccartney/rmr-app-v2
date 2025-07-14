@@ -1,11 +1,5 @@
 {
   "alias": [
     "rmrcms.vercel.app"
-  ],
-  "crons": [
-    {
-      "path": "/api/scheduled-webhooks-combined",
-      "schedule": "0 8 * * *"
-    }
   ]
 }
