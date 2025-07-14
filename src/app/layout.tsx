@@ -8,9 +8,6 @@ import Layout from "@/components/layout/Layout";
 
 import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
 
-// Initialize built-in cron scheduler
-import "@/lib/startup";
-
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {

@@ -1,15 +1,16 @@
 import { NextResponse } from 'next/server';
-import { cronScheduler } from '@/lib/cronScheduler';
 
-// GET endpoint to check cron status
+// GET endpoint to check daily webhook status
 export async function GET() {
   try {
-    const status = cronScheduler.getStatus();
-    
     return NextResponse.json({
       success: true,
-      message: 'Built-in cron scheduler status',
-      ...status,
+      message: 'Daily webhook endpoint ready',
+      description: 'Call POST /api/cron-status to trigger daily webhooks',
+      webhooks: {
+        fourDay: 'https://hook.eu1.make.com/lipggo8kcd8kwq2vp6j6mr3gnxbx12h7',
+        twelveDay: 'https://hook.eu1.make.com/ylqa8ukjtj6ok1qxxv5ttsqxsp3gwe1y'
+      },
       timestamp: new Date().toISOString()
     });
   } catch (error) {
