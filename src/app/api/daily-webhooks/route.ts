@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-// Simple daily webhook endpoint - call this manually at 8:00 AM daily
+// Daily webhook endpoint - triggered by Supabase cron job at 8:00 AM UTC
 export async function POST() {
   try {
     console.log('[DAILY-WEBHOOKS] Starting daily webhook processing...');
