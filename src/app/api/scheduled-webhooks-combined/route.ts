@@ -202,14 +202,13 @@ export async function POST() {
       failureCount: 0
     };
 
-    // Process 12-day webhooks
-    console.log('[COMBINED WEBHOOKS] Processing 12-day webhooks...');
-    const twelveDayResult = await processWebhooks(
-      sessions,
-      clients,
-      12,
-      'https://hook.eu1.make.com/ylqa8ukjtj6ok1qxxv5ttsqxsp3gwe1y'
-    );
+    // 12-day webhooks are now disabled
+    console.log('[COMBINED WEBHOOKS] 12-day webhooks disabled');
+    const twelveDayResult = {
+      results: [],
+      successCount: 0,
+      failureCount: 0
+    };
 
     const totalProcessed = fourDayResult.results.length + twelveDayResult.results.length;
     const totalSuccess = fourDayResult.successCount + twelveDayResult.successCount;
@@ -300,7 +299,7 @@ export async function GET() {
       totalSessions: sessions.length,
       upcomingSessions1to15Days: upcomingSessions,
       sessionsExactly4DaysAway: upcomingSessions.filter(s => s.isExactly4Days),
-      sessionsExactly12DaysAway: upcomingSessions.filter(s => s.isExactly12Days)
+      sessionsExactly12DaysAway: [] // Disabled
     });
 
   } catch (error) {

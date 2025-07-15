@@ -19,7 +19,7 @@ export async function POST() {
 
     return NextResponse.json({
       success: true,
-      message: 'Manually triggered combined webhook (4-day + 12-day)',
+      message: 'Manually triggered combined webhook (4-day disabled, 12-day disabled)',
       webhookResult: result,
       timestamp: new Date().toISOString()
     });
@@ -40,7 +40,7 @@ export async function POST() {
 export async function GET() {
   return NextResponse.json({
     message: 'Test endpoint for combined webhook cron job - use POST to trigger',
-    description: 'This will trigger both 4-day and 12-day webhooks in a single job',
+    description: 'This endpoint is now mostly disabled as both 4-day and 12-day webhooks are removed',
     timestamp: new Date().toISOString()
   });
 }

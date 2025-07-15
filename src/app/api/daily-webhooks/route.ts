@@ -84,7 +84,7 @@ export async function POST() {
                              webhookData.sessionType && 
                              webhookData.bookingDate && 
                              webhookData.bookingTime &&
-                             (targetDays === 12 || (webhookData.quote !== null && webhookData.quote !== undefined));
+                             (webhookData.quote !== null && webhookData.quote !== undefined);
 
           if (!hasValidData) {
             results.push({
@@ -137,18 +137,13 @@ export async function POST() {
     console.log('[DAILY-WEBHOOKS] 4-day webhooks disabled - webhook only triggers on new session creation');
     const fourDayResult: any[] = [];
 
-    // Process 12-day webhooks
-    console.log('[DAILY-WEBHOOKS] Processing 12-day webhooks...');
-    const twelveDayResult = await processWebhooks(
-      sessions, 
-      clients, 
-      12, 
-      'https://hook.eu1.make.com/ylqa8ukjtj6ok1qxxv5ttsqxsp3gwe1y'
-    );
+    // 12-day webhooks are now disabled
+    console.log('[DAILY-WEBHOOKS] 12-day webhooks disabled');
+    const twelveDayResult: any[] = [];
 
     const totalProcessed = fourDayResult.length + twelveDayResult.length;
-    const totalSuccess = [...fourDayResult, ...twelveDayResult].filter(r => r.status === 'success').length;
-    const totalFailure = [...fourDayResult, ...twelveDayResult].filter(r => r.status === 'failed' || r.status === 'error').length;
+    const totalSuccess = fourDayResult.filter(r => r.status === 'success').length;
+    const totalFailure = fourDayResult.filter(r => r.status === 'failed' || r.status === 'error').length;
 
     console.log(`[DAILY-WEBHOOKS] Completed: ${totalProcessed} sessions processed, ${totalSuccess} successful, ${totalFailure} failed`);
 
@@ -157,14 +152,14 @@ export async function POST() {
       message: `Daily webhooks completed: ${totalProcessed} sessions processed`,
       summary: {
         fourDaySessionsProcessed: fourDayResult.length,
-        twelveDaySessionsProcessed: twelveDayResult.length,
+        twelveDaySessionsProcessed: 0, // Disabled
         totalProcessed,
         successCount: totalSuccess,
         failureCount: totalFailure
       },
       results: {
         fourDayWebhooks: fourDayResult,
-        twelveDayWebhooks: twelveDayResult
+        twelveDayWebhooks: [] // Disabled
       },
       timestamp: new Date().toISOString()
     });
@@ -218,23 +213,8 @@ export async function GET() {
       };
     });
 
-    // Find sessions 12 days away
-    const twelveDaySessions = sessions.filter(session => {
-      if (!session.client_id || session.session_type === 'Group' || session.session_type === 'RMR Live') {
-        return false;
-      }
-      const sessionDate = new Date(session.booking_date);
-      const daysUntilSession = Math.ceil((sessionDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-      return daysUntilSession === 12;
-    }).map(session => {
-      const client = clients.find(c => c.id === session.client_id);
-      return {
-        sessionId: session.id,
-        clientName: client ? `${client.first_name} ${client.last_name}` : 'Unknown',
-        sessionDate: session.booking_date,
-        sessionType: session.session_type
-      };
-    });
+    // 12-day sessions are disabled
+    const twelveDaySessions: any[] = [];
 
     return NextResponse.json({
       success: true,
@@ -242,13 +222,13 @@ export async function GET() {
       currentTime: now.toISOString(),
       sessionsToProcess: {
         fourDaySessions: fourDaySessions,
-        twelveDaySessions: twelveDaySessions,
-        totalSessions: fourDaySessions.length + twelveDaySessions.length
+        twelveDaySessions: [], // Disabled
+        totalSessions: fourDaySessions.length
       },
       instructions: 'Call POST /api/daily-webhooks to process these sessions',
       webhooks: {
         fourDay: 'DISABLED - webhook only triggers on new session creation',
-        twelveDay: 'https://hook.eu1.make.com/ylqa8ukjtj6ok1qxxv5ttsqxsp3gwe1y'
+        twelveDay: 'DISABLED - 12-day webhook removed'
       }
     });
 
