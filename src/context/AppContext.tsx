@@ -886,31 +886,47 @@ export function AppProvider({ children }: { children: ReactNode }) {
       console.log(`[UPDATE_SESSION] State updated for session ${id} ONLY`);
 
       // Check if Date, Time, or Session Type changed
-      const dateChanged = updates.bookingDate && originalSession.bookingDate !== updates.bookingDate;
-      const timeChanged = updates.bookingTime && originalSession.bookingTime !== updates.bookingTime;
-      const sessionTypeChanged = updates.sessionType && originalSession.sessionType !== updates.sessionType;
+      const dateChanged = updates.bookingDate !== undefined && originalSession.bookingDate !== updates.bookingDate;
+      const timeChanged = updates.bookingTime !== undefined && originalSession.bookingTime !== updates.bookingTime;
+      const sessionTypeChanged = updates.sessionType !== undefined && originalSession.sessionType !== updates.sessionType;
       const calendarRelevantChange = dateChanged || timeChanged || sessionTypeChanged;
 
       console.log(`[UPDATE_SESSION] Calendar relevant changes:`, {
         dateChanged,
         timeChanged,
         sessionTypeChanged,
-        calendarRelevantChange
+        calendarRelevantChange,
+        originalDate: originalSession.bookingDate,
+        newDate: updates.bookingDate,
+        originalTime: originalSession.bookingTime,
+        newTime: updates.bookingTime,
+        originalType: originalSession.sessionType,
+        newType: updates.sessionType,
+        sessionEventId: session.eventId
       });
 
       // Handle calendar updates for Date, Time, or Session Type changes
       if (calendarRelevantChange) {
         console.log(`[UPDATE_SESSION] Calendar relevant change detected, handling calendar update`);
 
-        if (session.eventId) {
-          // Update existing calendar event
-          console.log(`[UPDATE_SESSION] Updating existing calendar event: ${session.eventId}`);
-          await updateCalendarEvent(session);
-        } else {
-          // Create new calendar event if none exists
-          console.log(`[UPDATE_SESSION] No eventId found, creating new calendar event`);
-          await createCalendarEvent(session);
+        try {
+          if (session.eventId) {
+            // Update existing calendar event
+            console.log(`[UPDATE_SESSION] Updating existing calendar event: ${session.eventId}`);
+            await updateCalendarEvent(session);
+            console.log(`[UPDATE_SESSION] Calendar event updated successfully`);
+          } else {
+            // Create new calendar event if none exists
+            console.log(`[UPDATE_SESSION] No eventId found, creating new calendar event`);
+            await createCalendarEvent(session);
+            console.log(`[UPDATE_SESSION] Calendar event created successfully`);
+          }
+        } catch (calendarError) {
+          console.error(`[UPDATE_SESSION] Calendar update failed:`, calendarError);
+          // Don't throw the error - calendar failure shouldn't prevent session update
         }
+      } else {
+        console.log(`[UPDATE_SESSION] No calendar relevant changes detected, skipping calendar update`);
       }
 
       // Skip booking terms webhook if this is just an internal system update
