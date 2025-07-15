@@ -110,10 +110,13 @@ export default function WebhookLogsPage() {
                 </code>
               </div>
               <div>
-                <span className="text-sm font-medium">Session Creation:</span>
+                <span className="text-sm font-medium">Session Creation (New Sessions Only):</span>
                 <code className="bg-gray-100 p-2 rounded text-sm block">
                   https://hook.eu1.make.com/lipggo8kcd8kwq2vp6j6mr3gnxbx12h7
                 </code>
+                <p className="text-xs text-gray-600 mt-1">
+                  Triggers only when new sessions are created (including Group and RMR Live sessions)
+                </p>
               </div>
             </div>
           </div>

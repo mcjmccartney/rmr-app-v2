@@ -628,9 +628,30 @@ export function AppProvider({ children }: { children: ReactNode }) {
       // Find the client for this session (if any)
       const client = session.clientId ? state.clients.find(c => c.id === session.clientId) : null;
 
-      // For Group and RMR Live sessions without clients, skip webhook
+      // For Group and RMR Live sessions without clients, create minimal webhook data
       if (!session.clientId && (session.sessionType === 'Group' || session.sessionType === 'RMR Live')) {
-        console.log('Group/RMR Live session without client, skipping webhook');
+        console.log('Group/RMR Live session without client, triggering webhook with minimal data');
+
+        const minimalWebhookData = {
+          sessionId: session.id,
+          sessionType: session.sessionType,
+          bookingDate: session.bookingDate,
+          bookingTime: session.bookingTime.substring(0, 5),
+          quote: session.quote,
+          notes: session.notes || '',
+          createdAt: new Date().toISOString(),
+          isGroupOrRMRLive: true
+        };
+
+        // Trigger the webhook for Group/RMR Live sessions
+        await fetch('https://hook.eu1.make.com/lipggo8kcd8kwq2vp6j6mr3gnxbx12h7', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(minimalWebhookData)
+        });
+
         return;
       }
 
@@ -730,25 +751,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
         console.log(`[BOOKING_TERMS_WEBHOOK] BLOCKED - Invalid data for session ${session.id}. Webhook data:`, webhookData);
       }
 
-      // Only trigger session webhook for calendar creation and emails if session is ≤4 days away
-      if (daysUntilSession <= 4) {
-        const webhookDataWithEmailFlag = {
-          ...webhookData,
-          sendSessionEmail: true, // Always true for sessions ≤4 days away
-          createCalendarEvent: true // Create calendar events for new sessions
-        };
+      // Always trigger session webhook for all new sessions
+      const webhookDataWithFlags = {
+        ...webhookData,
+        sendSessionEmail: daysUntilSession <= 4, // Only send email if ≤4 days away
+        createCalendarEvent: true // Always create calendar events for new sessions
+      };
 
-        webhookPromises.push(
-          fetch('https://hook.eu1.make.com/lipggo8kcd8kwq2vp6j6mr3gnxbx12h7', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(webhookDataWithEmailFlag)
-          })
-        );
-        webhookNames.push('session webhook (calendar + email)');
-      }
+      webhookPromises.push(
+        fetch('https://hook.eu1.make.com/lipggo8kcd8kwq2vp6j6mr3gnxbx12h7', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(webhookDataWithFlags)
+        })
+      );
+      webhookNames.push('session webhook (new session created)');
 
       const responses = await Promise.allSettled(webhookPromises);
 

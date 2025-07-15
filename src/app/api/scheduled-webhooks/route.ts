@@ -146,37 +146,15 @@ export async function POST() {
           continue;
         }
 
-        // Only trigger session webhook for sessions that are exactly 4 days away
-        // Booking terms webhook is now triggered immediately on session creation/update
-        const webhookDataWithEmailFlag = {
-          ...webhookData,
-          sendSessionEmail: true, // Always true for scheduled webhooks (4 days away)
-          createCalendarEvent: false // Don't create calendar events for cron job triggers
-        };
+        // Scheduled webhooks are now disabled - webhook only triggers on new session creation
+        console.log(`[SCHEDULED-WEBHOOKS] Webhook disabled for session ${session.id} - webhook only triggers on new session creation`);
 
-        const response = await fetch('https://hook.eu1.make.com/lipggo8kcd8kwq2vp6j6mr3gnxbx12h7', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(webhookDataWithEmailFlag)
+        results.push({
+          sessionId: session.id,
+          clientName: `${client.firstName} ${client.lastName}`,
+          status: 'disabled',
+          message: 'Webhook only triggers on new session creation'
         });
-
-        // Check if session webhook succeeded
-        if (response.ok) {
-          results.push({
-            sessionId: session.id,
-            clientName: `${client.firstName} ${client.lastName}`,
-            status: 'success'
-          });
-        } else {
-          results.push({
-            sessionId: session.id,
-            clientName: `${client.firstName} ${client.lastName}`,
-            status: 'failed',
-            error: `session webhook: ${response.status} ${response.statusText}`
-          });
-        }
         
       } catch (error) {
         results.push({
