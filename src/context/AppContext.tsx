@@ -755,7 +755,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const webhookDataWithFlags = {
         ...webhookData,
         sendSessionEmail: daysUntilSession <= 4, // Only send email if ≤4 days away
-        createCalendarEvent: true // Always create calendar events for new sessions
+        createCalendarEvent: false // Don't create calendar events for new sessions
       };
 
       webhookPromises.push(
@@ -788,21 +788,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       // Trigger the booking terms email webhook (which should also create calendar event)
       await triggerSessionWebhook(session);
 
-      // Fallback: Create calendar event directly if Make.com webhook doesn't provide eventId within 10 seconds
-      setTimeout(async () => {
-        try {
-          // Check if the session now has an eventId (from Make.com webhook)
-          const updatedSession = await sessionService.getById(session.id);
-          if (!updatedSession?.eventId) {
-            console.log('No eventId found after 10 seconds, creating calendar event directly as fallback');
-            await createCalendarEvent(session);
-          } else {
-            console.log('Session already has eventId from webhook, skipping fallback calendar creation');
-          }
-        } catch (error) {
-          console.error('Error in fallback calendar creation:', error);
-        }
-      }, 10000); // Wait 10 seconds for Make.com webhook to complete
+      // Calendar events are no longer created automatically for new sessions
+      // They will only be created when the user updates Date, Time, or Session Type
 
       return session;
     } catch (error) {
@@ -884,6 +871,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       console.log(`[UPDATE_SESSION] Starting update for session ID: ${id} ONLY`);
       console.log(`[UPDATE_SESSION] Updates:`, updates);
 
+      // Get the original session data to detect changes
+      const originalSession = state.sessions.find(s => s.id === id);
+      if (!originalSession) {
+        throw new Error(`Session ${id} not found in state`);
+      }
+
       // Update only this specific session in the database
       const session = await sessionService.update(id, updates);
       console.log(`[UPDATE_SESSION] Database updated for session ${id}`);
@@ -891,6 +884,34 @@ export function AppProvider({ children }: { children: ReactNode }) {
       // Update only this specific session in the state
       dispatch({ type: 'UPDATE_SESSION', payload: session });
       console.log(`[UPDATE_SESSION] State updated for session ${id} ONLY`);
+
+      // Check if Date, Time, or Session Type changed
+      const dateChanged = updates.bookingDate && originalSession.bookingDate !== updates.bookingDate;
+      const timeChanged = updates.bookingTime && originalSession.bookingTime !== updates.bookingTime;
+      const sessionTypeChanged = updates.sessionType && originalSession.sessionType !== updates.sessionType;
+      const calendarRelevantChange = dateChanged || timeChanged || sessionTypeChanged;
+
+      console.log(`[UPDATE_SESSION] Calendar relevant changes:`, {
+        dateChanged,
+        timeChanged,
+        sessionTypeChanged,
+        calendarRelevantChange
+      });
+
+      // Handle calendar updates for Date, Time, or Session Type changes
+      if (calendarRelevantChange) {
+        console.log(`[UPDATE_SESSION] Calendar relevant change detected, handling calendar update`);
+
+        if (session.eventId) {
+          // Update existing calendar event
+          console.log(`[UPDATE_SESSION] Updating existing calendar event: ${session.eventId}`);
+          await updateCalendarEvent(session);
+        } else {
+          // Create new calendar event if none exists
+          console.log(`[UPDATE_SESSION] No eventId found, creating new calendar event`);
+          await createCalendarEvent(session);
+        }
+      }
 
       // Skip booking terms webhook if this is just an internal system update
       // This prevents duplicate webhooks when calendar events are created/updated or payment status changes

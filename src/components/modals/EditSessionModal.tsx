@@ -17,7 +17,7 @@ interface EditSessionModalProps {
 }
 
 export default function EditSessionModal({ session, isOpen, onClose }: EditSessionModalProps) {
-  const { state, updateSession, updateCalendarEvent } = useApp();
+  const { state, updateSession } = useApp();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     clientId: '',
@@ -107,30 +107,13 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
     };
 
     try {
-      // Check what has changed
-      const dateChanged = session.bookingDate !== formData.date;
-      const timeChanged = session.bookingTime !== formData.time;
-      const sessionTypeChanged = session.sessionType !== formData.sessionType;
-      const dateTimeChanged = dateChanged || timeChanged;
+      console.log('Updating session...');
 
-      console.log('Updating session...', { dateTimeChanged, dateChanged, timeChanged, sessionTypeChanged });
-
-      // Always update the session first
-      const updatedSession = await updateSession(session.id, updates);
-
-      // Update the calendar event for any changes EXCEPT when session type changes
-      if (!sessionTypeChanged && updatedSession.eventId) {
-        console.log('Session updated (not session type), updating calendar event');
-        await updateCalendarEvent(updatedSession);
-        console.log('Calendar event updated');
-      } else if (sessionTypeChanged) {
-        console.log('Session type changed, skipping calendar update');
-      } else {
-        console.log('No eventId found, skipping calendar update');
-      }
+      // Update the session - calendar updates are now handled automatically in updateSession
+      await updateSession(session.id, updates);
 
       // Booking terms webhook is now automatically triggered by updateSession in AppContext
-      // No need for manual webhook call here
+      // Calendar updates are also handled automatically for Date, Time, and Session Type changes
 
       onClose();
     } catch (error) {
