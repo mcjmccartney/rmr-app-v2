@@ -196,7 +196,11 @@ export async function POST() {
 
     // 4-day webhooks are now disabled - webhook only triggers on new session creation
     console.log('[COMBINED WEBHOOKS] 4-day webhooks disabled - webhook only triggers on new session creation');
-    const fourDayResult: any[] = [];
+    const fourDayResult = {
+      results: [],
+      successCount: 0,
+      failureCount: 0
+    };
 
     // Process 12-day webhooks
     console.log('[COMBINED WEBHOOKS] Processing 12-day webhooks...');
