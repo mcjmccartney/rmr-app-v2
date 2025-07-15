@@ -929,25 +929,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
         console.log(`[UPDATE_SESSION] No calendar relevant changes detected, skipping calendar update`);
       }
 
-      // Skip booking terms webhook if this is just an internal system update
-      // This prevents duplicate webhooks when calendar events are created/updated or payment status changes
-      const internalSystemFields = [
-        'eventId',
-        'googleMeetLink',
-        'sessionPaid',
-        'paymentConfirmedAt',
-        'participants', // For group session participant payment updates
-        'notes' // Session notes updates
+      // Only trigger booking terms webhook for Session Type, Date, or Time changes
+      // This prevents webhooks for internal updates like payment status, notes, etc.
+      const bookingTermsRelevantFields = [
+        'sessionType',
+        'bookingDate',
+        'bookingTime'
       ];
-      const isInternalSystemUpdate = Object.keys(updates).every(key => internalSystemFields.includes(key));
+      const hasBookingTermsRelevantChange = Object.keys(updates).some(key => bookingTermsRelevantFields.includes(key));
 
-      if (!isInternalSystemUpdate) {
-        // Trigger booking terms webhook ONLY for this specific session
-        console.log(`[UPDATE_SESSION] Triggering webhook for session ${id} ONLY`);
+      if (hasBookingTermsRelevantChange) {
+        console.log(`[UPDATE_SESSION] Booking terms relevant change detected, triggering webhook for session ${id}`);
+        console.log(`[UPDATE_SESSION] Changed fields:`, Object.keys(updates).filter(key => bookingTermsRelevantFields.includes(key)));
         await triggerBookingTermsWebhookForUpdate(session);
-        console.log(`[UPDATE_SESSION] Webhook completed for session ${id}`);
+        console.log(`[UPDATE_SESSION] Booking terms webhook completed for session ${id}`);
       } else {
-        console.log(`[UPDATE_SESSION] Skipping webhook for internal system update on session ${id}`);
+        console.log(`[UPDATE_SESSION] No booking terms relevant changes, skipping webhook for session ${id}`);
+        console.log(`[UPDATE_SESSION] Updated fields:`, Object.keys(updates));
       }
 
       console.log(`[UPDATE_SESSION] Update complete for session ${id} - NO OTHER SESSIONS AFFECTED`);
