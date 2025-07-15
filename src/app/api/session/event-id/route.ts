@@ -13,7 +13,15 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     console.log('Received Event ID update from Make.com:', body);
 
-    const { sessionId, eventId, googleMeetLink } = body;
+    const { sessionId, eventId, google_meet_link } = body;
+    const googleMeetLink = google_meet_link; // For backward compatibility
+
+    console.log('Extracted values:', {
+      sessionId,
+      eventId,
+      google_meet_link,
+      googleMeetLink
+    });
 
     // Validate required fields
     if (!sessionId || !eventId) {
@@ -31,6 +39,8 @@ export async function POST(request: NextRequest) {
     if (googleMeetLink) {
       updateData.google_meet_link = googleMeetLink; // Use snake_case for database field
     }
+
+    console.log('Update data being sent to database:', updateData);
 
     const { data: updatedSession, error } = await supabase
       .from('sessions')
@@ -54,6 +64,11 @@ export async function POST(request: NextRequest) {
       sessionId,
       eventId,
       googleMeetLink: googleMeetLink || 'not provided'
+    });
+
+    console.log('Database returned session data:', {
+      event_id: updatedSession.event_id,
+      google_meet_link: updatedSession.google_meet_link
     });
 
     // Return the updated session data so the frontend can update its state if needed
