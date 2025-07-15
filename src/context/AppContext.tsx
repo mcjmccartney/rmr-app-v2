@@ -675,6 +675,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         bookingTime: session.bookingTime.substring(0, 5), // Ensure HH:mm format (remove seconds)
         quote: session.quote,
         notes: session.notes || '',
+        membershipStatus: client.membership,
         createdAt: new Date().toISOString(),
         // Form completion status
         hasSignedBookingTerms,
