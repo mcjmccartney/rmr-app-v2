@@ -930,7 +930,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
 
       // Only trigger booking terms webhook for Session Type, Date, or Time changes
-      // This prevents webhooks for internal updates like payment status, notes, etc.
+      // This prevents webhooks for internal updates like payment status, notes, session plan sent status, etc.
       const bookingTermsRelevantFields = [
         'sessionType',
         'bookingDate',
@@ -938,14 +938,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
       ];
       const hasBookingTermsRelevantChange = Object.keys(updates).some(key => bookingTermsRelevantFields.includes(key));
 
+      console.log(`[UPDATE_SESSION] Booking terms webhook check for session ${id}:`, {
+        updatedFields: Object.keys(updates),
+        bookingTermsRelevantFields,
+        hasBookingTermsRelevantChange,
+        willTriggerWebhook: hasBookingTermsRelevantChange
+      });
+
       if (hasBookingTermsRelevantChange) {
-        console.log(`[UPDATE_SESSION] Booking terms relevant change detected, triggering webhook for session ${id}`);
-        console.log(`[UPDATE_SESSION] Changed fields:`, Object.keys(updates).filter(key => bookingTermsRelevantFields.includes(key)));
+        console.log(`[UPDATE_SESSION] ✅ TRIGGERING booking terms webhook for session ${id}`);
+        console.log(`[UPDATE_SESSION] Relevant changed fields:`, Object.keys(updates).filter(key => bookingTermsRelevantFields.includes(key)));
         await triggerBookingTermsWebhookForUpdate(session);
         console.log(`[UPDATE_SESSION] Booking terms webhook completed for session ${id}`);
       } else {
-        console.log(`[UPDATE_SESSION] No booking terms relevant changes, skipping webhook for session ${id}`);
-        console.log(`[UPDATE_SESSION] Updated fields:`, Object.keys(updates));
+        console.log(`[UPDATE_SESSION] ❌ SKIPPING booking terms webhook for session ${id} - no relevant changes`);
+        console.log(`[UPDATE_SESSION] Updated fields (not relevant):`, Object.keys(updates));
       }
 
       console.log(`[UPDATE_SESSION] Update complete for session ${id} - NO OTHER SESSIONS AFFECTED`);
