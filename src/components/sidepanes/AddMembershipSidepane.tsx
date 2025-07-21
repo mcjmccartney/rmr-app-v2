@@ -2,7 +2,9 @@
 
 import { useState } from 'react';
 import { useApp } from '@/context/AppContext';
+import { Client } from '@/types';
 import SlideUpModal from '@/components/modals/SlideUpModal';
+import SearchableDropdown from '@/components/ui/SearchableDropdown';
 
 interface AddMembershipSidepaneProps {
   isOpen: boolean;
@@ -10,12 +12,13 @@ interface AddMembershipSidepaneProps {
 }
 
 export default function AddMembershipSidepane({ isOpen, onClose }: AddMembershipSidepaneProps) {
-  const { createMembership } = useApp();
+  const { state, createMembership } = useApp();
   const [formData, setFormData] = useState({
-    email: '',
+    clientId: '',
     date: '',
     amount: ''
   });
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -26,18 +29,25 @@ export default function AddMembershipSidepane({ isOpen, onClose }: AddMembership
     }));
   };
 
+  const handleClientChange = (clientId: string) => {
+    const client = state.clients.find(c => c.id === clientId);
+    setSelectedClient(client || null);
+    setFormData(prev => ({
+      ...prev,
+      clientId
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!formData.email.trim() || !formData.date || !formData.amount) {
-      alert('Please fill in all required fields.');
+
+    if (!formData.clientId || !formData.date || !formData.amount) {
+      alert('Please fill in all fields.');
       return;
     }
 
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) {
-      alert('Please enter a valid email address.');
+    if (!selectedClient?.email) {
+      alert('Selected client must have an email address.');
       return;
     }
 
@@ -52,17 +62,18 @@ export default function AddMembershipSidepane({ isOpen, onClose }: AddMembership
 
     try {
       await createMembership({
-        email: formData.email.trim(),
+        email: selectedClient.email,
         date: formData.date, // YYYY-MM-DD format
         amount: amount
       });
 
       // Reset form
       setFormData({
-        email: '',
+        clientId: '',
         date: '',
         amount: ''
       });
+      setSelectedClient(null);
 
       onClose();
     } catch (error) {
@@ -76,10 +87,11 @@ export default function AddMembershipSidepane({ isOpen, onClose }: AddMembership
   const handleClose = () => {
     if (!isSubmitting) {
       setFormData({
-        email: '',
+        clientId: '',
         date: '',
         amount: ''
       });
+      setSelectedClient(null);
       onClose();
     }
   };
@@ -91,30 +103,28 @@ export default function AddMembershipSidepane({ isOpen, onClose }: AddMembership
       title="Add New Membership"
     >
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Email Field */}
+        {/* Client Field */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Email Address <span className="text-red-500">*</span>
+            Client
           </label>
-          <input
-            type="email"
-            name="email"
-            value={formData.email}
-            onChange={handleInputChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-            placeholder="client@example.com"
-            required
+          <SearchableDropdown
+            value={formData.clientId}
+            onChange={handleClientChange}
+            options={state.clients.map((client) => ({
+              value: client.id,
+              label: `${client.firstName} ${client.lastName}${client.dogName ? ` w/ ${client.dogName}` : ''}`
+            }))}
+            placeholder="Select a client"
+            searchPlaceholder="Search clients..."
             disabled={isSubmitting}
           />
-          <p className="text-xs text-gray-500 mt-1">
-            The email address associated with this membership payment
-          </p>
         </div>
 
         {/* Date Field */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Payment Date <span className="text-red-500">*</span>
+            Payment Date
           </label>
           <input
             type="date"
@@ -122,18 +132,14 @@ export default function AddMembershipSidepane({ isOpen, onClose }: AddMembership
             value={formData.date}
             onChange={handleInputChange}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-            required
             disabled={isSubmitting}
           />
-          <p className="text-xs text-gray-500 mt-1">
-            The date when the membership payment was received
-          </p>
         </div>
 
         {/* Amount Field */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Amount (£) <span className="text-red-500">*</span>
+            Amount (£)
           </label>
           <input
             type="number"
@@ -144,12 +150,8 @@ export default function AddMembershipSidepane({ isOpen, onClose }: AddMembership
             placeholder="50.00"
             min="0"
             step="0.01"
-            required
             disabled={isSubmitting}
           />
-          <p className="text-xs text-gray-500 mt-1">
-            The membership payment amount in pounds
-          </p>
         </div>
 
         {/* Submit Button */}
