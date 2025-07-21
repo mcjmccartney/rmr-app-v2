@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useApp } from '@/context/AppContext';
 import Header from '@/components/layout/Header';
 import { Membership } from '@/types';
-import { ChevronDown, ChevronRight, CreditCard, TrendingUp, TrendingDown, Star } from 'lucide-react';
+import { ChevronDown, ChevronRight, CreditCard, TrendingUp, TrendingDown, Plus } from 'lucide-react';
 import AddMembershipSidepane from '@/components/sidepanes/AddMembershipSidepane';
 
 export default function MembershipsPage() {
@@ -117,7 +117,7 @@ export default function MembershipsPage() {
           title="Memberships"
           buttons={[
             {
-              icon: Star,
+              icon: Plus,
               onClick: handleAddMembership,
               title: 'Add New Membership',
               iconOnly: true
