@@ -190,7 +190,7 @@ function BehaviourQuestionnaireForm() {
                           name="ownerFirstName"
                           value={formData.ownerFirstName}
                           onChange={handleInputChange}
-                          className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                          className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black form-input"
                           style={{ backgroundColor: '#ebeadf' }}
                           required
                         />
@@ -202,7 +202,7 @@ function BehaviourQuestionnaireForm() {
                           name="ownerLastName"
                           value={formData.ownerLastName}
                           onChange={handleInputChange}
-                          className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                          className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black form-input"
                           style={{ backgroundColor: '#ebeadf' }}
                           required
                         />
@@ -220,7 +220,7 @@ function BehaviourQuestionnaireForm() {
                         name="email"
                         value={formData.email}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                        className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black form-input"
                         style={{ backgroundColor: '#ebeadf' }}
                         required
                       />
@@ -241,7 +241,7 @@ function BehaviourQuestionnaireForm() {
                       name="contactNumber"
                       value={formData.contactNumber}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black form-input"
                       style={{ backgroundColor: '#ebeadf' }}
                       required
                     />
@@ -259,7 +259,7 @@ function BehaviourQuestionnaireForm() {
                           name="address1"
                           value={formData.address1}
                           onChange={handleInputChange}
-                          className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                          className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black form-input"
                           style={{ backgroundColor: '#ebeadf' }}
                           required
                         />
@@ -271,7 +271,7 @@ function BehaviourQuestionnaireForm() {
                           name="address2"
                           value={formData.address2}
                           onChange={handleInputChange}
-                          className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                          className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black form-input"
                           style={{ backgroundColor: '#ebeadf' }}
                         />
                       </div>
@@ -283,7 +283,7 @@ function BehaviourQuestionnaireForm() {
                             name="city"
                             value={formData.city}
                             onChange={handleInputChange}
-                            className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                            className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black form-input"
                             style={{ backgroundColor: '#ebeadf' }}
                             required
                           />
@@ -295,7 +295,7 @@ function BehaviourQuestionnaireForm() {
                             name="stateProvince"
                             value={formData.stateProvince}
                             onChange={handleInputChange}
-                            className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                            className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black form-input"
                             style={{ backgroundColor: '#ebeadf' }}
                             required
                           />
@@ -309,7 +309,7 @@ function BehaviourQuestionnaireForm() {
                             name="zipPostalCode"
                             value={formData.zipPostalCode}
                             onChange={handleInputChange}
-                            className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                            className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black form-input"
                             style={{ backgroundColor: '#ebeadf' }}
                             required
                           />
@@ -321,7 +321,7 @@ function BehaviourQuestionnaireForm() {
                             name="country"
                             value={formData.country}
                             onChange={handleInputChange}
-                            className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                            className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black form-input"
                             style={{ backgroundColor: '#ebeadf' }}
                             required
                           />
@@ -339,7 +339,7 @@ function BehaviourQuestionnaireForm() {
                       name="howDidYouHear"
                       value={formData.howDidYouHear}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black form-input"
                       style={{ backgroundColor: '#ebeadf' }}
                     />
                   </div>
@@ -365,7 +365,7 @@ function BehaviourQuestionnaireForm() {
                       name="dogName"
                       value={formData.dogName}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black form-input"
                       style={{ backgroundColor: '#ebeadf' }}
                       required
                     />
@@ -380,7 +380,7 @@ function BehaviourQuestionnaireForm() {
                       name="age"
                       value={formData.age}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black form-input"
                       style={{ backgroundColor: '#ebeadf' }}
                       required
                     />
@@ -425,7 +425,7 @@ function BehaviourQuestionnaireForm() {
                       name="breed"
                       value={formData.breed}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black form-input"
                       style={{ backgroundColor: '#ebeadf' }}
                       required
                     />
@@ -440,7 +440,7 @@ function BehaviourQuestionnaireForm() {
                       name="neuteredSpayed"
                       value={formData.neuteredSpayed}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black form-input"
                       style={{ backgroundColor: '#ebeadf' }}
                       required
                     />
@@ -455,7 +455,7 @@ function BehaviourQuestionnaireForm() {
                       value={formData.mainHelp}
                       onChange={handleInputChange}
                       rows={3}
-                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black form-input"
                       style={{ backgroundColor: '#ebeadf' }}
                     />
                   </div>
@@ -469,7 +469,7 @@ function BehaviourQuestionnaireForm() {
                       value={formData.firstNoticed}
                       onChange={handleInputChange}
                       rows={3}
-                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black form-input"
                       style={{ backgroundColor: '#ebeadf' }}
                     />
                   </div>
@@ -483,7 +483,7 @@ function BehaviourQuestionnaireForm() {
                       value={formData.whenWhereHow}
                       onChange={handleInputChange}
                       rows={3}
-                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black form-input"
                       style={{ backgroundColor: '#ebeadf' }}
                     />
                   </div>
@@ -498,7 +498,7 @@ function BehaviourQuestionnaireForm() {
                       value={formData.recentChange}
                       onChange={handleInputChange}
                       rows={3}
-                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black form-input"
                       style={{ backgroundColor: '#ebeadf' }}
                     />
                   </div>
@@ -513,7 +513,7 @@ function BehaviourQuestionnaireForm() {
                       value={formData.canAnticipate}
                       onChange={handleInputChange}
                       rows={3}
-                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black form-input"
                       style={{ backgroundColor: '#ebeadf' }}
                     />
                   </div>
@@ -527,7 +527,7 @@ function BehaviourQuestionnaireForm() {
                       value={formData.whyThinking}
                       onChange={handleInputChange}
                       rows={3}
-                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black form-input"
                       style={{ backgroundColor: '#ebeadf' }}
                     />
                   </div>
@@ -541,7 +541,7 @@ function BehaviourQuestionnaireForm() {
                       value={formData.whatDoneSoFar}
                       onChange={handleInputChange}
                       rows={3}
-                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black form-input"
                       style={{ backgroundColor: '#ebeadf' }}
                     />
                   </div>
@@ -555,7 +555,7 @@ function BehaviourQuestionnaireForm() {
                       value={formData.idealGoal}
                       onChange={handleInputChange}
                       rows={3}
-                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black form-input"
                       style={{ backgroundColor: '#ebeadf' }}
                     />
                   </div>
@@ -569,7 +569,7 @@ function BehaviourQuestionnaireForm() {
                       value={formData.anythingElse}
                       onChange={handleInputChange}
                       rows={3}
-                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black form-input"
                       style={{ backgroundColor: '#ebeadf' }}
                     />
                   </div>
@@ -593,7 +593,7 @@ function BehaviourQuestionnaireForm() {
                       value={formData.medicalHistory}
                       onChange={handleInputChange}
                       rows={3}
-                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black form-input"
                       style={{ backgroundColor: '#ebeadf' }}
                     />
                   </div>
@@ -607,7 +607,7 @@ function BehaviourQuestionnaireForm() {
                       value={formData.vetAdvice}
                       onChange={handleInputChange}
                       rows={3}
-                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black form-input"
                       style={{ backgroundColor: '#ebeadf' }}
                     />
                   </div>
@@ -631,7 +631,7 @@ function BehaviourQuestionnaireForm() {
                       name="whereGotDog"
                       value={formData.whereGotDog}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black form-input"
                       style={{ backgroundColor: '#ebeadf' }}
                     />
                   </div>
@@ -645,7 +645,7 @@ function BehaviourQuestionnaireForm() {
                       value={formData.rescueBackground}
                       onChange={handleInputChange}
                       rows={3}
-                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black form-input"
                       style={{ backgroundColor: '#ebeadf' }}
                     />
                   </div>
@@ -659,7 +659,7 @@ function BehaviourQuestionnaireForm() {
                       name="ageWhenGot"
                       value={formData.ageWhenGot}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black form-input"
                       style={{ backgroundColor: '#ebeadf' }}
                     />
                   </div>
@@ -683,7 +683,7 @@ function BehaviourQuestionnaireForm() {
                       value={formData.whatFeed}
                       onChange={handleInputChange}
                       rows={3}
-                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black form-input"
                       style={{ backgroundColor: '#ebeadf' }}
                     />
                   </div>
@@ -720,7 +720,7 @@ function BehaviourQuestionnaireForm() {
                       value={formData.mealtime}
                       onChange={handleInputChange}
                       rows={3}
-                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black form-input"
                       style={{ backgroundColor: '#ebeadf' }}
                     />
                   </div>
@@ -735,7 +735,7 @@ function BehaviourQuestionnaireForm() {
                       value={formData.treatRoutine}
                       onChange={handleInputChange}
                       rows={3}
-                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black form-input"
                       style={{ backgroundColor: '#ebeadf' }}
                     />
                   </div>
@@ -749,7 +749,7 @@ function BehaviourQuestionnaireForm() {
                       value={formData.happyWithTreats}
                       onChange={handleInputChange}
                       rows={2}
-                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black form-input"
                       style={{ backgroundColor: '#ebeadf' }}
                     />
                   </div>
@@ -772,7 +772,7 @@ function BehaviourQuestionnaireForm() {
                       value={formData.typesOfPlay}
                       onChange={handleInputChange}
                       rows={3}
-                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black form-input"
                       style={{ backgroundColor: '#ebeadf' }}
                     />
                   </div>
@@ -786,7 +786,7 @@ function BehaviourQuestionnaireForm() {
                       value={formData.affectionate}
                       onChange={handleInputChange}
                       rows={3}
-                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black form-input"
                       style={{ backgroundColor: '#ebeadf' }}
                     />
                   </div>
@@ -800,7 +800,7 @@ function BehaviourQuestionnaireForm() {
                       value={formData.exercise}
                       onChange={handleInputChange}
                       rows={3}
-                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black form-input"
                       style={{ backgroundColor: '#ebeadf' }}
                     />
                   </div>
@@ -814,7 +814,7 @@ function BehaviourQuestionnaireForm() {
                       value={formData.useMuzzle}
                       onChange={handleInputChange}
                       rows={2}
-                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black form-input"
                       style={{ backgroundColor: '#ebeadf' }}
                     />
                   </div>
@@ -829,7 +829,7 @@ function BehaviourQuestionnaireForm() {
                       value={formData.familiarPeople}
                       onChange={handleInputChange}
                       rows={3}
-                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black form-input"
                       style={{ backgroundColor: '#ebeadf' }}
                     />
                   </div>
@@ -844,7 +844,7 @@ function BehaviourQuestionnaireForm() {
                       value={formData.unfamiliarPeople}
                       onChange={handleInputChange}
                       rows={3}
-                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black form-input"
                       style={{ backgroundColor: '#ebeadf' }}
                     />
                   </div>
@@ -858,7 +858,7 @@ function BehaviourQuestionnaireForm() {
                       value={formData.housetrained}
                       onChange={handleInputChange}
                       rows={2}
-                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black form-input"
                       style={{ backgroundColor: '#ebeadf' }}
                     />
                   </div>
@@ -873,7 +873,7 @@ function BehaviourQuestionnaireForm() {
                       value={formData.likesToDo}
                       onChange={handleInputChange}
                       rows={3}
-                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black form-input"
                       style={{ backgroundColor: '#ebeadf' }}
                     />
                   </div>
@@ -896,7 +896,7 @@ function BehaviourQuestionnaireForm() {
                       value={formData.likeAboutDog}
                       onChange={handleInputChange}
                       rows={3}
-                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black form-input"
                       style={{ backgroundColor: '#ebeadf' }}
                     />
                   </div>
@@ -910,7 +910,7 @@ function BehaviourQuestionnaireForm() {
                       value={formData.mostChallenging}
                       onChange={handleInputChange}
                       rows={3}
-                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black form-input"
                       style={{ backgroundColor: '#ebeadf' }}
                     />
                   </div>
@@ -933,7 +933,7 @@ function BehaviourQuestionnaireForm() {
                       value={formData.howGood}
                       onChange={handleInputChange}
                       rows={3}
-                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black form-input"
                       style={{ backgroundColor: '#ebeadf' }}
                     />
                   </div>
@@ -947,7 +947,7 @@ function BehaviourQuestionnaireForm() {
                       value={formData.favouriteRewards}
                       onChange={handleInputChange}
                       rows={3}
-                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black form-input"
                       style={{ backgroundColor: '#ebeadf' }}
                     />
                   </div>
@@ -961,7 +961,7 @@ function BehaviourQuestionnaireForm() {
                       value={formData.howBad}
                       onChange={handleInputChange}
                       rows={3}
-                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black form-input"
                       style={{ backgroundColor: '#ebeadf' }}
                     />
                   </div>
@@ -976,7 +976,7 @@ function BehaviourQuestionnaireForm() {
                       value={formData.effectOfBad}
                       onChange={handleInputChange}
                       rows={3}
-                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black form-input"
                       style={{ backgroundColor: '#ebeadf' }}
                     />
                   </div>
@@ -991,7 +991,7 @@ function BehaviourQuestionnaireForm() {
                       value={formData.professionalTraining}
                       onChange={handleInputChange}
                       rows={4}
-                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black form-input"
                       style={{ backgroundColor: '#ebeadf' }}
                     />
                   </div>
@@ -1058,7 +1058,7 @@ function BehaviourQuestionnaireForm() {
                       value={formData.anythingElseToKnow}
                       onChange={handleInputChange}
                       rows={4}
-                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black form-input"
                       style={{ backgroundColor: '#ebeadf' }}
                     />
                   </div>
@@ -1072,7 +1072,7 @@ function BehaviourQuestionnaireForm() {
                       name="timePerWeek"
                       value={formData.timePerWeek}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black form-input"
                       style={{ backgroundColor: '#ebeadf' }}
                     />
                   </div>

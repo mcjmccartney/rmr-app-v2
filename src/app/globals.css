@@ -69,6 +69,11 @@ body {
   min-width: 44px;
 }
 
+/* Form input styles to ensure consistent text color across all devices */
+.form-input {
+  color: #000000 !important;
+}
+
 /* Smooth scrolling for better mobile experience */
 html {
   scroll-behavior: smooth;

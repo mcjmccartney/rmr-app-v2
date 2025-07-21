@@ -4,12 +4,14 @@ import { useState } from 'react';
 import { useApp } from '@/context/AppContext';
 import Header from '@/components/layout/Header';
 import { Membership } from '@/types';
-import { ChevronDown, ChevronRight, CreditCard, TrendingUp, TrendingDown } from 'lucide-react';
+import { ChevronDown, ChevronRight, CreditCard, TrendingUp, TrendingDown, Star } from 'lucide-react';
+import AddMembershipSidepane from '@/components/sidepanes/AddMembershipSidepane';
 
 export default function MembershipsPage() {
   const { state } = useApp();
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedMonths, setExpandedMonths] = useState<Set<string>>(new Set());
+  const [showAddMembershipSidepane, setShowAddMembershipSidepane] = useState(false);
 
   const filteredMemberships = state.memberships.filter(membership => {
     const searchTerm = searchQuery.toLowerCase();
@@ -49,6 +51,14 @@ export default function MembershipsPage() {
 
     return monthIndexB - monthIndexA;
   });
+
+  const handleAddMembership = () => {
+    setShowAddMembershipSidepane(true);
+  };
+
+  const handleCloseMembershipSidepane = () => {
+    setShowAddMembershipSidepane(false);
+  };
 
   const toggleMonth = (monthKey: string) => {
     const newExpandedMonths = new Set(expandedMonths);
@@ -105,6 +115,14 @@ export default function MembershipsPage() {
       <div className="bg-amber-800">
         <Header
           title="Memberships"
+          buttons={[
+            {
+              icon: Star,
+              onClick: handleAddMembership,
+              title: 'Add New Membership',
+              iconOnly: true
+            }
+          ]}
           showSearch
           onSearch={setSearchQuery}
           searchPlaceholder="Search by email"
@@ -205,6 +223,11 @@ export default function MembershipsPage() {
           </div>
         )}
       </div>
+
+      <AddMembershipSidepane
+        isOpen={showAddMembershipSidepane}
+        onClose={handleCloseMembershipSidepane}
+      />
     </div>
   );
 }

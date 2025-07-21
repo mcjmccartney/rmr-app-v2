@@ -182,7 +182,7 @@ function BehaviouralBriefForm() {
                           name="ownerFirstName"
                           value={formData.ownerFirstName}
                           onChange={handleInputChange}
-                          className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                          className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black form-input"
                           style={{ backgroundColor: '#ebeadf' }}
                           required
                         />
@@ -194,7 +194,7 @@ function BehaviouralBriefForm() {
                           name="ownerLastName"
                           value={formData.ownerLastName}
                           onChange={handleInputChange}
-                          className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                          className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black form-input"
                           style={{ backgroundColor: '#ebeadf' }}
                           required
                         />
@@ -211,7 +211,7 @@ function BehaviouralBriefForm() {
                       name="email"
                       value={formData.email}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black form-input"
                       style={{ backgroundColor: '#ebeadf' }}
                       required
                     />
@@ -226,7 +226,7 @@ function BehaviouralBriefForm() {
                       name="contactNumber"
                       value={formData.contactNumber}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-400 rounded bg-white focus:outline-none focus:ring-2 focus:ring-black"
+                      className="w-full px-3 py-2 border border-gray-400 rounded bg-white focus:outline-none focus:ring-2 focus:ring-black form-input"
                       style={{ backgroundColor: '#ebeadf' }}
                       required
                     />
@@ -241,7 +241,7 @@ function BehaviouralBriefForm() {
                       name="postcode"
                       value={formData.postcode}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black form-input"
                       style={{ backgroundColor: '#ebeadf' }}
                       required
                     />
@@ -268,7 +268,7 @@ function BehaviouralBriefForm() {
                       name="dogName"
                       value={formData.dogName}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black form-input"
                       style={{ backgroundColor: '#ebeadf' }}
                       required
                     />
@@ -282,7 +282,7 @@ function BehaviouralBriefForm() {
                       name="sex"
                       value={formData.sex}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black form-input"
                       style={{ backgroundColor: '#ebeadf' }}
                       required
                     >
@@ -302,7 +302,7 @@ function BehaviouralBriefForm() {
                       name="breed"
                       value={formData.breed}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black form-input"
                       style={{ backgroundColor: '#ebeadf' }}
                       required
                     />
@@ -318,7 +318,7 @@ function BehaviouralBriefForm() {
                       value={formData.lifeWithDog}
                       onChange={handleInputChange}
                       rows={4}
-                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black form-input"
                       style={{ backgroundColor: '#ebeadf' }}
                       required
                     />
@@ -334,7 +334,7 @@ function BehaviouralBriefForm() {
                       value={formData.bestOutcome}
                       onChange={handleInputChange}
                       rows={4}
-                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                      className="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:ring-2 focus:ring-black form-input"
                       style={{ backgroundColor: '#ebeadf' }}
                       required
                     />

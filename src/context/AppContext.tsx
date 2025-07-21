@@ -259,6 +259,9 @@ const AppContext = createContext<{
   getMembershipsByClientId: (clientId: string) => Promise<Membership[]>;
   getMembershipsByEmail: (email: string) => Promise<Membership[]>;
   getMembershipsByClientIdWithAliases: (clientId: string) => Promise<Membership[]>;
+  createMembership: (membership: Omit<Membership, 'id'>) => Promise<Membership>;
+  updateMembership: (id: string, updates: Partial<Membership>) => Promise<Membership>;
+  deleteMembership: (id: string) => Promise<void>;
   createSessionParticipant: (participant: Omit<SessionParticipant, 'id'>) => Promise<SessionParticipant>;
   updateSessionParticipant: (id: string, updates: Partial<SessionParticipant>) => Promise<SessionParticipant>;
   deleteSessionParticipant: (id: string) => Promise<void>;
@@ -1348,6 +1351,41 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Create membership in Supabase
+  const createMembership = async (membershipData: Omit<Membership, 'id'>): Promise<Membership> => {
+    try {
+      const membership = await membershipService.create(membershipData);
+      dispatch({ type: 'ADD_MEMBERSHIP', payload: membership });
+      return membership;
+    } catch (error) {
+      console.error('Failed to create membership:', error);
+      throw error;
+    }
+  };
+
+  // Update membership in Supabase
+  const updateMembership = async (id: string, updates: Partial<Membership>): Promise<Membership> => {
+    try {
+      const membership = await membershipService.update(id, updates);
+      dispatch({ type: 'UPDATE_MEMBERSHIP', payload: membership });
+      return membership;
+    } catch (error) {
+      console.error('Failed to update membership:', error);
+      throw error;
+    }
+  };
+
+  // Delete membership in Supabase
+  const deleteMembership = async (id: string): Promise<void> => {
+    try {
+      await membershipService.delete(id);
+      dispatch({ type: 'DELETE_MEMBERSHIP', payload: id });
+    } catch (error) {
+      console.error('Failed to delete membership:', error);
+      throw error;
+    }
+  };
+
   // Membership Pairing
   const pairMembershipsWithClients = async () => {
     try {
@@ -1426,6 +1464,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       getMembershipsByClientId,
       getMembershipsByEmail,
       getMembershipsByClientIdWithAliases,
+      createMembership,
+      updateMembership,
+      deleteMembership,
       createSessionParticipant,
       updateSessionParticipant,
       deleteSessionParticipant,
