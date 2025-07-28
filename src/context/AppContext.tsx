@@ -852,19 +852,45 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       // Comprehensive validation to prevent blank/empty webhook data
       if (isValidWebhookData(webhookData)) {
-        console.log(`[BOOKING_TERMS_WEBHOOK] Triggering for session ${webhookData.sessionId} - ${webhookData.clientFirstName} ${webhookData.clientLastName}`);
+        const webhookTimestamp = new Date().toISOString();
+        console.log(`[BOOKING_TERMS_WEBHOOK] Triggering for session ${webhookData.sessionId} - ${webhookData.clientFirstName} ${webhookData.clientLastName} at ${webhookTimestamp}`);
         await fetch('https://hook.eu1.make.com/yaoalfe77uqtw4xv9fbh5atf4okq14wm', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(webhookData)
+          body: JSON.stringify({
+            ...webhookData,
+            webhookTimestamp
+          })
         });
+        console.log(`[BOOKING_TERMS_WEBHOOK] Completed for session ${webhookData.sessionId} at ${new Date().toISOString()}`);
       } else {
         console.log(`[BOOKING_TERMS_WEBHOOK] BLOCKED - Invalid data for session ${session.id}. Webhook data:`, webhookData);
       }
     } catch (error) {
       // Don't throw error - webhook failure shouldn't prevent session update
+    }
+  };
+
+  // Internal update session function that bypasses webhook triggers (for system updates like eventId)
+  const updateSessionInternal = async (id: string, updates: Partial<Session>): Promise<Session> => {
+    try {
+      console.log(`[UPDATE_SESSION_INTERNAL] Starting internal update for session ID: ${id}`);
+      console.log(`[UPDATE_SESSION_INTERNAL] Updates:`, updates);
+
+      // Update only this specific session in the database
+      const session = await sessionService.update(id, updates);
+      console.log(`[UPDATE_SESSION_INTERNAL] Database updated for session ${id}`);
+
+      // Update only this specific session in the state
+      dispatch({ type: 'UPDATE_SESSION', payload: session });
+      console.log(`[UPDATE_SESSION_INTERNAL] State updated for session ${id} - NO WEBHOOKS TRIGGERED`);
+
+      return session;
+    } catch (error) {
+      console.error(`[UPDATE_SESSION_INTERNAL] Failed to update session ${id}:`, error);
+      throw error;
     }
   };
 
@@ -933,7 +959,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
 
       // Only trigger booking terms webhook for Session Type, Date, or Time changes
-      // This prevents webhooks for internal updates like payment status, notes, session plan sent status, etc.
+      // This prevents webhooks for internal updates like payment status, notes, session plan sent status, eventId, etc.
       const bookingTermsRelevantFields = [
         'sessionType',
         'bookingDate',
@@ -951,8 +977,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (hasBookingTermsRelevantChange) {
         console.log(`[UPDATE_SESSION] ✅ TRIGGERING booking terms webhook for session ${id}`);
         console.log(`[UPDATE_SESSION] Relevant changed fields:`, Object.keys(updates).filter(key => bookingTermsRelevantFields.includes(key)));
+        console.log(`[UPDATE_SESSION] Webhook timestamp:`, new Date().toISOString());
         await triggerBookingTermsWebhookForUpdate(session);
-        console.log(`[UPDATE_SESSION] Booking terms webhook completed for session ${id}`);
+        console.log(`[UPDATE_SESSION] Booking terms webhook completed for session ${id} at`, new Date().toISOString());
       } else {
         console.log(`[UPDATE_SESSION] ❌ SKIPPING booking terms webhook for session ${id} - no relevant changes`);
         console.log(`[UPDATE_SESSION] Updated fields (not relevant):`, Object.keys(updates));
@@ -1023,10 +1050,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
             const result = await calendarResponse.json();
             console.log('[CALENDAR_CREATE] Successfully created calendar event:', result.eventId);
 
-            // Update the session with the new eventId
+            // Update the session with the new eventId using internal update (no webhooks)
             if (result.eventId) {
-              await updateSession(session.id, { eventId: result.eventId });
-              console.log('[CALENDAR_CREATE] Updated session with eventId:', result.eventId);
+              await updateSessionInternal(session.id, { eventId: result.eventId });
+              console.log('[CALENDAR_CREATE] Updated session with eventId (internal):', result.eventId);
             }
             return true;
           } else {
