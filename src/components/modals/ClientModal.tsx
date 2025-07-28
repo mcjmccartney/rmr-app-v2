@@ -151,12 +151,19 @@ export default function ClientModal({ client, isOpen, onClose, onEditClient, onV
   };
 
   const handleSendBookingTermsUpdate = async () => {
-    if (!currentClient?.firstName || !currentClient?.email) {
+    if (!currentClient?.firstName?.trim() || !currentClient?.email?.trim()) {
       alert('Client must have both first name and email address to send booking terms update.');
       return;
     }
 
-    if (!confirm(`Send booking terms update email to ${currentClient.firstName} (${currentClient.email})?`)) {
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(currentClient.email.trim())) {
+      alert('Client must have a valid email address to send booking terms update.');
+      return;
+    }
+
+    if (!confirm(`Send booking terms update email to ${currentClient.firstName.trim()} (${currentClient.email.trim()})?`)) {
       return;
     }
 
@@ -168,8 +175,8 @@ export default function ClientModal({ client, isOpen, onClose, onEditClient, onV
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          firstName: currentClient.firstName,
-          email: currentClient.email
+          firstName: currentClient.firstName.trim(),
+          email: currentClient.email.trim()
         })
       });
 
@@ -317,7 +324,7 @@ export default function ClientModal({ client, isOpen, onClose, onEditClient, onV
         </div>
 
         {/* Send Booking Terms Update Button */}
-        {currentClient?.firstName && currentClient?.email && (
+        {currentClient?.firstName?.trim() && currentClient?.email?.trim() && (
           <div className="pt-4">
             <button
               onClick={handleSendBookingTermsUpdate}
