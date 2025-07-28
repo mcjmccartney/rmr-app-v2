@@ -14,17 +14,25 @@ function BookingTermsContent() {
   useEffect(() => {
     const checkExistingBookingTerms = async () => {
       const emailParam = searchParams.get('email');
+      const isUpdate = searchParams.get('update') === 'true';
+
       if (emailParam) {
         const decodedEmail = decodeURIComponent(emailParam);
         setEmail(decodedEmail);
 
+        // If this is an update request, skip the completion check and show the form
+        if (isUpdate) {
+          console.log('Booking terms update request - showing form for re-signing');
+          return;
+        }
+
         try {
-          // Check if this email already has booking terms signed using API
+          // Only check for existing booking terms if this is NOT an update request
           const response = await fetch(`/api/booking-terms?email=${encodeURIComponent(decodedEmail)}`);
           if (response.ok) {
             const result = await response.json();
             if (result.exists) {
-              // Redirect to completion page
+              // Redirect to completion page only for non-update requests
               window.location.href = '/booking-terms-completed';
               return;
             }
