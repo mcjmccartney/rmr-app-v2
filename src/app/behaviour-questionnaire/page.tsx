@@ -6,6 +6,7 @@ import { BehaviourQuestionnaire } from '@/types';
 
 function BehaviourQuestionnaireForm() {
   const searchParams = useSearchParams();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     // Owner Information
     ownerFirstName: '',
@@ -118,6 +119,13 @@ function BehaviourQuestionnaireForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Prevent double submission
+    if (isSubmitting) {
+      return;
+    }
+
+    setIsSubmitting(true);
+
     try {
       // Submit to API endpoint that handles RLS properly
       const response = await fetch('/api/behaviour-questionnaire', {
@@ -157,6 +165,7 @@ function BehaviourQuestionnaireForm() {
     } catch (error) {
       console.error('Error submitting questionnaire:', error);
       alert('There was an error submitting your questionnaire. Please try again.');
+      setIsSubmitting(false); // Re-enable button on error
     }
   };
 
@@ -1083,12 +1092,21 @@ function BehaviourQuestionnaireForm() {
               <div className="pt-4">
                 <button
                   type="submit"
-                  className="w-full text-white font-medium py-3 px-6 rounded transition-colors"
-                  style={{ backgroundColor: '#4f6749' }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3d5237'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#4f6749'}
+                  disabled={isSubmitting}
+                  className="w-full text-white font-medium py-3 px-6 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ backgroundColor: isSubmitting ? '#6b7c63' : '#4f6749' }}
+                  onMouseEnter={(e) => {
+                    if (!isSubmitting) {
+                      e.currentTarget.style.backgroundColor = '#3d5237';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isSubmitting) {
+                      e.currentTarget.style.backgroundColor = '#4f6749';
+                    }
+                  }}
                 >
-                  Submit
+                  {isSubmitting ? 'Submitting...' : 'Submit'}
                 </button>
               </div>
             </form>

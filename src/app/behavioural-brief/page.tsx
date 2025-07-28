@@ -7,6 +7,7 @@ import { behaviouralBriefService } from '@/services/behaviouralBriefService';
 
 function BehaviouralBriefForm() {
   const searchParams = useSearchParams();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     ownerFirstName: '',
     ownerLastName: '',
@@ -73,6 +74,11 @@ function BehaviouralBriefForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Prevent double submission
+    if (isSubmitting) {
+      return;
+    }
+
     // Client-side validation
     if (!formData.ownerFirstName.trim() || !formData.ownerLastName.trim() ||
         !formData.email.trim() || !formData.contactNumber.trim() ||
@@ -90,6 +96,8 @@ function BehaviouralBriefForm() {
       alert('Please enter a valid email address.');
       return;
     }
+
+    setIsSubmitting(true);
 
     try {
       // Submit to API endpoint that handles RLS properly
@@ -129,6 +137,7 @@ function BehaviouralBriefForm() {
       window.location.href = '/behavioural-brief-completed';
     } catch (error) {
       console.error('Error submitting form:', error);
+      setIsSubmitting(false); // Re-enable button on error
 
       // Show more specific error message if available
       let errorMessage = 'There was an error submitting your form. Please try again.';
@@ -372,12 +381,21 @@ function BehaviouralBriefForm() {
               <div className="pt-4">
                 <button
                   type="submit"
-                  className="w-full text-white font-medium py-3 px-6 rounded transition-colors"
-                  style={{ backgroundColor: '#4f6749' }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3d5237'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#4f6749'}
+                  disabled={isSubmitting}
+                  className="w-full text-white font-medium py-3 px-6 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ backgroundColor: isSubmitting ? '#6b7c63' : '#4f6749' }}
+                  onMouseEnter={(e) => {
+                    if (!isSubmitting) {
+                      e.currentTarget.style.backgroundColor = '#3d5237';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isSubmitting) {
+                      e.currentTarget.style.backgroundColor = '#4f6749';
+                    }
+                  }}
                 >
-                  Submit
+                  {isSubmitting ? 'Submitting...' : 'Submit'}
                 </button>
               </div>
             </form>
