@@ -24,6 +24,7 @@ export default function ClientModal({ client, isOpen, onClose, onEditClient, onV
   const [isTabExpanded, setIsTabExpanded] = useState(false);
   const [isUpdatingActive, setIsUpdatingActive] = useState(false);
   const [isUpdatingMembership, setIsUpdatingMembership] = useState(false);
+  const [isSendingBookingTermsUpdate, setIsSendingBookingTermsUpdate] = useState(false);
 
   // Get the fresh client data from state to ensure we have the latest updates
   const currentClient = client ? (state.clients.find(c => c.id === client.id) || client) : null;
@@ -147,6 +148,44 @@ export default function ClientModal({ client, isOpen, onClose, onEditClient, onV
   const handleEditClick = () => {
     if (!currentClient) return;
     onEditClient(currentClient);
+  };
+
+  const handleSendBookingTermsUpdate = async () => {
+    if (!currentClient?.firstName || !currentClient?.email) {
+      alert('Client must have both first name and email address to send booking terms update.');
+      return;
+    }
+
+    if (!confirm(`Send booking terms update email to ${currentClient.firstName} (${currentClient.email})?`)) {
+      return;
+    }
+
+    setIsSendingBookingTermsUpdate(true);
+    try {
+      const response = await fetch('/api/send-booking-terms-update', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          firstName: currentClient.firstName,
+          email: currentClient.email
+        })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to send booking terms update email');
+      }
+
+      alert(`Booking terms update email sent successfully to ${currentClient.firstName}!`);
+    } catch (error) {
+      console.error('Error sending booking terms update email:', error);
+      alert('Failed to send booking terms update email. Please try again.');
+    } finally {
+      setIsSendingBookingTermsUpdate(false);
+    }
   };
 
   // Early return after all hooks - ensure we have valid client data
@@ -276,6 +315,19 @@ export default function ClientModal({ client, isOpen, onClose, onEditClient, onV
             </div>
           </div>
         </div>
+
+        {/* Send Booking Terms Update Button */}
+        {currentClient?.firstName && currentClient?.email && (
+          <div className="pt-4">
+            <button
+              onClick={handleSendBookingTermsUpdate}
+              disabled={isSendingBookingTermsUpdate}
+              className="w-full bg-amber-800 text-white py-3 px-4 rounded-lg font-medium hover:bg-amber-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSendingBookingTermsUpdate ? 'Sending...' : 'Send Booking Terms Update'}
+            </button>
+          </div>
+        )}
 
         {/* Behavioural Brief and Behaviour Questionnaire Buttons */}
         {(behaviouralBrief || behaviourQuestionnaire) && (

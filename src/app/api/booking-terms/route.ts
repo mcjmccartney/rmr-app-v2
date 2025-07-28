@@ -42,22 +42,46 @@ export async function POST(request: NextRequest) {
       .eq('email', email.toLowerCase().trim())
       .single();
 
-    if (existingBookingTerms && !checkError) {
+    // Check if this is an update request (overwrite existing)
+    const isUpdate = request.headers.get('x-booking-terms-update') === 'true';
+
+    if (existingBookingTerms && !checkError && !isUpdate) {
       return NextResponse.json(
         { error: 'Booking terms have already been signed for this email address.' },
         { status: 400 }
       );
     }
 
-    // Create new booking terms entry
-    const { data: bookingTerms, error: createError } = await supabaseServiceRole
-      .from('booking_terms')
-      .insert([{
-        email: email.toLowerCase().trim(),
-        submitted: new Date().toISOString()
-      }])
-      .select()
-      .single();
+    let bookingTerms;
+    let createError;
+
+    if (existingBookingTerms && isUpdate) {
+      // Update existing booking terms
+      const { data: updatedBookingTerms, error: updateError } = await supabaseServiceRole
+        .from('booking_terms')
+        .update({
+          submitted: new Date().toISOString()
+        })
+        .eq('email', email.toLowerCase().trim())
+        .select()
+        .single();
+
+      bookingTerms = updatedBookingTerms;
+      createError = updateError;
+    } else {
+      // Create new booking terms entry
+      const { data: newBookingTerms, error: insertError } = await supabaseServiceRole
+        .from('booking_terms')
+        .insert([{
+          email: email.toLowerCase().trim(),
+          submitted: new Date().toISOString()
+        }])
+        .select()
+        .single();
+
+      bookingTerms = newBookingTerms;
+      createError = insertError;
+    }
 
     if (createError) throw createError;
 

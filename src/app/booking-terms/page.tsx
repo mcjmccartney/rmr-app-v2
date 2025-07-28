@@ -55,12 +55,22 @@ function BookingTermsContent() {
     setIsSubmitting(true);
 
     try {
+      // Check if this is an update request
+      const isUpdate = searchParams.get('update') === 'true';
+
       // Submit booking terms using API endpoint
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+
+      // Add update header if this is an update request
+      if (isUpdate) {
+        headers['x-booking-terms-update'] = 'true';
+      }
+
       const response = await fetch('/api/booking-terms', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify({ email })
       });
 
