@@ -173,7 +173,7 @@ export class DuplicateDetectionService {
     if (client.phone) score += 2;
     if (client.address) score += 1;
     if (client.behaviouralBriefId) score += 1;
-    if (client.behaviourQuestionnaireId) score += 1;
+    // behaviourQuestionnaireId removed - clients can now have multiple questionnaires
     return score;
   }
 

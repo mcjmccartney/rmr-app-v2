@@ -59,15 +59,6 @@ export default function ClientModal({ client, isOpen, onClose, onEditClient, onV
     ? state.behaviourQuestionnaires.filter(q => q.client_id === currentClient.id)
     : [];
 
-  // Legacy support: if client has behaviourQuestionnaireId but no client_id matches, include it
-  const legacyQuestionnaire = currentClient?.behaviourQuestionnaireId
-    ? state.behaviourQuestionnaires.find(q => q.id === currentClient.behaviourQuestionnaireId)
-    : null;
-
-  if (legacyQuestionnaire && !behaviourQuestionnaires.some(q => q.id === legacyQuestionnaire.id)) {
-    behaviourQuestionnaires.push(legacyQuestionnaire);
-  }
-
   // Load client sessions and membership data when modal opens
   useEffect(() => {
     const loadClientData = async () => {
