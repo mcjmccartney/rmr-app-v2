@@ -10,7 +10,7 @@ import CustomDropdown from '@/components/ui/CustomDropdown';
 import CustomDatePicker from '@/components/ui/CustomDatePicker';
 import SearchableDropdown from '@/components/ui/SearchableDropdown';
 import { generateHourOptions, generateMinuteOptions, sessionTypeOptions } from '@/utils/timeOptions';
-import { formatClientWithAllDogs } from '@/utils/dateFormatting';
+import { formatClientWithAllDogs, formatClientWithSelectedDog } from '@/utils/dateFormatting';
 
 
 interface AddModalProps {
@@ -272,7 +272,9 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
             ),
             ...state.clients.map((client) => ({
               value: client.id,
-              label: formatClientWithAllDogs(client)
+              label: client.id === formData.clientId && formData.dogName
+                ? formatClientWithSelectedDog(client, formData.dogName)
+                : formatClientWithAllDogs(client)
             }))
           ]}
           placeholder={

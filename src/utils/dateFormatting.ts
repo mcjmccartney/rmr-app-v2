@@ -118,6 +118,12 @@ export const getClientDogsPart = (client: { firstName: string; lastName: string;
   return ` w/ ${allDogs.join(', ')} & ${lastDog}`;
 };
 
+// Format client name with specific selected dog (for session forms)
+export const formatClientWithSelectedDog = (client: { firstName: string; lastName: string }, selectedDogName?: string): string => {
+  if (!selectedDogName) return `${client.firstName} ${client.lastName}`;
+  return `${client.firstName} ${client.lastName} w/ ${selectedDogName}`;
+};
+
 // Format for HTML date input (yyyy-MM-dd)
 export const formatForDateInput = (date: Date | string): string => {
   const dateObj = typeof date === 'string' ? new Date(date) : date;
