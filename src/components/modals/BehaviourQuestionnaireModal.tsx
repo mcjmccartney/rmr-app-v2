@@ -18,20 +18,17 @@ export default function BehaviourQuestionnaireModal({ behaviourQuestionnaire, is
   if (!behaviourQuestionnaire) return null;
 
   // Find the client for this behaviour questionnaire
-  const client = state.clients.find(c => c.behaviourQuestionnaireId === behaviourQuestionnaire.id);
+  const client = state.clients.find(c =>
+    c.id === behaviourQuestionnaire.client_id || c.id === behaviourQuestionnaire.clientId
+  );
 
   const handleDelete = () => {
     // Show confirmation dialog
     if (window.confirm('Are you sure you want to delete this behaviour questionnaire? This action cannot be undone.')) {
       dispatch({ type: 'DELETE_BEHAVIOUR_QUESTIONNAIRE', payload: behaviourQuestionnaire.id });
-      
-      // Also update the client to remove the behaviour questionnaire reference
-      if (client) {
-        dispatch({ 
-          type: 'UPDATE_CLIENT', 
-          payload: { ...client, behaviourQuestionnaireId: undefined } 
-        });
-      }
+
+      // Note: No need to update client since questionnaires are now linked via client_id
+      // The questionnaire deletion will automatically remove the relationship
       
       onClose();
     }

@@ -55,7 +55,6 @@ export default function SessionModal({ session, isOpen, onClose, onEditSession, 
 
   const behaviourQuestionnaire = client
     ? state.behaviourQuestionnaires.find(q => q.client_id === client.id) ||
-      (client.behaviourQuestionnaireId ? state.behaviourQuestionnaires.find(q => q.id === client.behaviourQuestionnaireId) : null) ||
       (client.email && client.dogName ? state.behaviourQuestionnaires.find(q =>
         q.email?.toLowerCase() === client.email?.toLowerCase() &&
         q.dogName?.toLowerCase() === client.dogName?.toLowerCase()
