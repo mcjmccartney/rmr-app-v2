@@ -39,17 +39,18 @@ export default function SessionPlanPreview({
   onSavePDF
 }: SessionPlanPreviewProps) {
   const { state } = useApp();
-  const dogName = client.dogName || 'Unknown Dog';
+  // Get session-specific dog name (session.dogName takes priority over client.dogName)
+  const dogName = session.dogName || client.dogName || 'Unknown Dog';
   const sessionNumber = sessionPlan.sessionNumber || 1;
   const ownerName = `${client.firstName} ${client.lastName}`;
 
   // Get dog's gender from questionnaire for proper pronoun replacement
   const getDogGender = (): 'Male' | 'Female' => {
-    if (!client?.email || !client?.dogName) return 'Male';
+    if (!client?.email || !dogName) return 'Male';
 
     const questionnaire = state.behaviourQuestionnaires.find(q =>
       q.email?.toLowerCase() === client.email?.toLowerCase() &&
-      q.dogName?.toLowerCase() === client.dogName?.toLowerCase()
+      q.dogName?.toLowerCase() === dogName.toLowerCase()
     );
 
     return questionnaire?.sex || 'Male';

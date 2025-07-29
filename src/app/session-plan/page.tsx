@@ -262,6 +262,11 @@ function SessionPlanContent() {
   const currentSession = session || fallbackSession;
   const currentClient = client || fallbackClient;
 
+  // Get the session-specific dog name (session.dogName takes priority over client.dogName)
+  const getSessionDogName = (): string => {
+    return currentSession?.dogName || currentClient?.dogName || 'Unknown Dog';
+  };
+
   // Save function that navigates away (for the main Save button)
   const handleSave = async () => {
     if (!currentSession || !currentClient) return;
@@ -333,11 +338,12 @@ function SessionPlanContent() {
 
   // Get dog's gender from questionnaire for proper pronoun replacement
   const getDogGender = (): 'Male' | 'Female' => {
-    if (!currentClient?.email || !currentClient?.dogName) return 'Male';
+    const sessionDogName = getSessionDogName();
+    if (!currentClient?.email || !sessionDogName) return 'Male';
 
     const questionnaire = state.behaviourQuestionnaires.find(q =>
       q.email?.toLowerCase() === currentClient.email?.toLowerCase() &&
-      q.dogName?.toLowerCase() === currentClient.dogName?.toLowerCase()
+      q.dogName?.toLowerCase() === sessionDogName.toLowerCase()
     );
 
     return questionnaire?.sex || 'Male';
@@ -473,11 +479,11 @@ function SessionPlanContent() {
       sessionId: currentSession.id,
 
       // Document title
-      title: `Session ${sessionNumber} - ${currentClient.dogName || 'Unknown Dog'}`,
+      title: `Session ${sessionNumber} - ${getSessionDogName()}`,
 
       // Basic session info
       sessionNumber: sessionNumber.toString(),
-      dogName: currentClient.dogName || 'Unknown Dog',
+      dogName: getSessionDogName(),
       clientName: `${currentClient.firstName} ${currentClient.lastName}`.trim(),
       sessionType: currentSession.sessionType,
       sessionDate: new Date(currentSession.bookingDate).toLocaleDateString('en-GB'),
@@ -508,7 +514,7 @@ function SessionPlanContent() {
 
         const personalizedActionPoint = personalizeActionPoint(
           actionPoint,
-          currentClient?.dogName || 'Dog',
+          getSessionDogName(),
           getDogGender()
         );
 

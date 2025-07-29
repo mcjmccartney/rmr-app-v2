@@ -153,7 +153,8 @@ export const googleDocsService = {
 
   // Create the document content structure
   createDocumentContent(sessionPlan: SessionPlan, session: Session, client: Client, actionPoints: ActionPoint[]) {
-    const dogName = client.dogName || 'Unknown Dog';
+    // Get session-specific dog name (session.dogName takes priority over client.dogName)
+    const dogName = session.dogName || client.dogName || 'Unknown Dog';
     const dogGender = 'Male'; // You might want to add this to your client data
     const sessionNumber = sessionPlan.sessionNumber;
     const ownerName = `${client.firstName} ${client.lastName}`;
