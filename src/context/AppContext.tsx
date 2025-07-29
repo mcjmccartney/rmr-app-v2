@@ -678,11 +678,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
         bt.email?.toLowerCase() === client.email?.toLowerCase()
       );
 
-      // Check if client has filled questionnaire
-      // Look for questionnaire with matching client_id
-      const hasFilledQuestionnaire = state.behaviourQuestionnaires.some(q =>
-        q.clientId === client.id
-      );
+      // Check if client has filled questionnaire for the specific dog in this session
+      const sessionDogName = session.dogName || client.dogName;
+      const hasFilledQuestionnaire = sessionDogName ?
+        state.behaviourQuestionnaires.some(q =>
+          (q.client_id === client.id || q.clientId === client.id) &&
+          q.dogName === sessionDogName
+        ) : false;
 
       // Prepare session data for Make.com
       const webhookData = {
@@ -693,7 +695,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         clientLastName: client.lastName,
         clientEmail: client.email,
         address: client.address || '',
-        dogName: client.dogName || '',
+        dogName: sessionDogName || '',
         sessionType: session.sessionType,
         bookingDate: session.bookingDate, // YYYY-MM-DD format
         bookingTime: session.bookingTime.substring(0, 5), // Ensure HH:mm format (remove seconds)
@@ -821,10 +823,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
         bt.email?.toLowerCase() === client.email?.toLowerCase()
       );
 
-      // Check if client has filled questionnaire
-      const hasFilledQuestionnaire = state.behaviourQuestionnaires.some(bq =>
-        bq.email?.toLowerCase() === client.email?.toLowerCase()
-      );
+      // Check if client has filled questionnaire for the specific dog in this session
+      const sessionDogName = session.dogName || client.dogName;
+      const hasFilledQuestionnaire = sessionDogName ?
+        state.behaviourQuestionnaires.some(bq =>
+          (bq.client_id === client.id || bq.clientId === client.id) &&
+          bq.dogName === sessionDogName
+        ) : false;
 
       // Prepare session data for booking terms webhook
       const webhookData = {
@@ -835,7 +840,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         clientLastName: client.lastName,
         clientEmail: client.email,
         address: client.address || '',
-        dogName: client.dogName || '',
+        dogName: sessionDogName || '',
         sessionType: session.sessionType,
         bookingDate: session.bookingDate,
         bookingTime: session.bookingTime.substring(0, 5),
