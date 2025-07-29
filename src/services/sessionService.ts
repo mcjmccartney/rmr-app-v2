@@ -21,6 +21,7 @@ function dbRowToSession(row: Record<string, any>): Session {
   return {
     id: row.id,
     clientId: row.client_id,
+    dogName: row.dog_name,
     sessionType: row.session_type,
     bookingDate,
     bookingTime,
