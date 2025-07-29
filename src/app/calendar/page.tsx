@@ -54,6 +54,16 @@ const getClientEmails = (client: any, clientEmailAliases: { [clientId: string]: 
   return emails;
 };
 
+// Helper function to check if a questionnaire exists for a specific client and dog
+const hasQuestionnaireForDog = (client: any, dogName: string | undefined, behaviourQuestionnaires: any[]): boolean => {
+  if (!client || !dogName) return false;
+
+  return behaviourQuestionnaires.some(q =>
+    (q.client_id === client.id || q.clientId === client.id) &&
+    q.dogName === dogName
+  );
+};
+
 export default function CalendarPage() {
   const { state, updateClient, pairMembershipsWithClients } = useApp();
   const router = useRouter();
@@ -504,8 +514,7 @@ export default function CalendarPage() {
                         state.bookingTerms.some(bt =>
                           clientEmails.includes(bt.email?.toLowerCase() || '')
                         ) : false;
-                      const hasFilledQuestionnaire = client ?
-                        state.behaviourQuestionnaires.some(q => q.clientId === client.id) : false;
+                      const hasFilledQuestionnaire = hasQuestionnaireForDog(client, session.dogName, state.behaviourQuestionnaires);
 
 
 
@@ -592,8 +601,7 @@ export default function CalendarPage() {
             const clientEmails = client ? getClientEmails(client, state.clientEmailAliases || {}) : [];
             const hasSignedBookingTerms = clientEmails.length > 0 ?
               state.bookingTerms.some(bt => clientEmails.includes(bt.email?.toLowerCase() || '')) : false;
-            const hasFilledQuestionnaire = client ?
-              state.behaviourQuestionnaires.some(q => q.clientId === client.id) : false;
+            const hasFilledQuestionnaire = hasQuestionnaireForDog(client, firstSession.dogName, state.behaviourQuestionnaires);
 
             // Priority: No Client (charcoal grey) > Session Plan Sent (charcoal grey) > Paid (green) > Terms + Questionnaire (amber) > Default (amber-800)
             const isFullyCompleted = hasSignedBookingTerms && (hasFilledQuestionnaire || firstSession.questionnaireBypass);
@@ -732,8 +740,7 @@ export default function CalendarPage() {
                 const clientEmails = getClientEmails(client, state.clientEmailAliases || {});
                 const hasSignedBookingTerms = clientEmails.length > 0 ?
                   state.bookingTerms.some(bt => clientEmails.includes(bt.email?.toLowerCase() || '')) : false;
-                const hasFilledQuestionnaire = client ?
-                  state.behaviourQuestionnaires.some(q => q.clientId === client.id) : false;
+                const hasFilledQuestionnaire = hasQuestionnaireForDog(client, session.dogName, state.behaviourQuestionnaires);
                 const isPaid = session.sessionPaid;
                 const isFullyCompleted = hasSignedBookingTerms && (hasFilledQuestionnaire || session.questionnaireBypass);
                 const isSessionPlanSent = session.sessionPlanSent;
@@ -816,8 +823,7 @@ export default function CalendarPage() {
                   const clientEmails = getClientEmails(client, state.clientEmailAliases || {});
                   const hasSignedBookingTerms = clientEmails.length > 0 ?
                     state.bookingTerms.some(bt => clientEmails.includes(bt.email?.toLowerCase() || '')) : false;
-                  const hasFilledQuestionnaire = client ?
-                    state.behaviourQuestionnaires.some(q => q.clientId === client.id) : false;
+                  const hasFilledQuestionnaire = hasQuestionnaireForDog(client, session.dogName, state.behaviourQuestionnaires);
                   const isPaid = session.sessionPaid;
                   const isFullyCompleted = hasSignedBookingTerms && (hasFilledQuestionnaire || session.questionnaireBypass);
                   const isSessionPlanSent = session.sessionPlanSent;

@@ -24,7 +24,7 @@ function dbRowToClient(row: Record<string, any>): Client {
     membership: row.membership,
     avatar: row.avatar,
     behaviouralBriefId: row.behavioural_brief_id,
-    behaviourQuestionnaireId: row.behaviour_questionnaire_id,
+    // behaviourQuestionnaireId removed - clients can now have multiple questionnaires
     booking_terms_signed: row.booking_terms_signed,
     booking_terms_signed_date: row.booking_terms_signed_date,
   };
@@ -46,7 +46,7 @@ function clientToDbRow(client: Partial<Client>) {
     membership: client.membership,
     avatar: client.avatar,
     behavioural_brief_id: client.behaviouralBriefId,
-    behaviour_questionnaire_id: client.behaviourQuestionnaireId,
+    // behaviour_questionnaire_id removed - clients can now have multiple questionnaires
     booking_terms_signed: client.booking_terms_signed,
     booking_terms_signed_date: client.booking_terms_signed_date,
   };
@@ -179,6 +179,21 @@ export async function POST(request: NextRequest) {
 
     if (existingClient) {
       client = existingClient;
+
+      // Check if this client already has a questionnaire for this specific dog
+      const { data: existingQuestionnaire, error: questionnaireCheckError } = await supabaseServiceRole
+        .from('behaviour_questionnaires')
+        .select('id, dog_name')
+        .eq('client_id', client.id)
+        .eq('dog_name', formData.dogName)
+        .single();
+
+      if (existingQuestionnaire && !questionnaireCheckError) {
+        return NextResponse.json(
+          { error: `A behaviour questionnaire has already been submitted for ${formData.dogName}. Each dog can only have one questionnaire per client.` },
+          { status: 400 }
+        );
+      }
     } else {
       shouldCreateClient = true;
       // Will create client after questionnaire
@@ -281,15 +296,18 @@ export async function POST(request: NextRequest) {
 
     if (questionnaireError) throw questionnaireError;
 
-    // Update client with questionnaire reference and dog name for easier lookup
+    // Update client with dog name for easier lookup (if it's their first/primary dog)
     const finalClientId = client.id;
-    await supabaseServiceRole
-      .from('clients')
-      .update({
-        behaviour_questionnaire_id: createdQuestionnaire.id,
-        dog_name: formData.dogName, // Ensure dog name is set on client
-      })
-      .eq('id', finalClientId);
+
+    // Only update the client's primary dog name if they don't have one set yet
+    if (!client.dogName) {
+      await supabaseServiceRole
+        .from('clients')
+        .update({
+          dog_name: formData.dogName, // Set as primary dog if none exists
+        })
+        .eq('id', finalClientId);
+    }
 
     return NextResponse.json({ 
       success: true, 

@@ -202,7 +202,7 @@ export interface Client {
   membership: boolean;
   avatar?: string;
   behaviouralBriefId?: string;
-  behaviourQuestionnaireId?: string;
+  // behaviourQuestionnaireId removed - clients can now have multiple questionnaires
   booking_terms_signed?: boolean;
   booking_terms_signed_date?: string;
 }

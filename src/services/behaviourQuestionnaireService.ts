@@ -252,5 +252,41 @@ export const behaviourQuestionnaireService = {
       console.error('Error deleting behaviour questionnaire:', error);
       throw error;
     }
+  },
+
+  // Get questionnaires by client ID
+  async getByClientId(clientId: string): Promise<BehaviourQuestionnaire[]> {
+    const { data, error } = await supabase
+      .from('behaviour_questionnaires')
+      .select('*')
+      .eq('client_id', clientId)
+      .order('submitted_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching questionnaires by client ID:', error);
+      throw error;
+    }
+
+    return (data || []).map(dbRowToBehaviourQuestionnaire);
+  },
+
+  // Get questionnaire by client ID and dog name
+  async getByClientAndDog(clientId: string, dogName: string): Promise<BehaviourQuestionnaire | null> {
+    const { data, error } = await supabase
+      .from('behaviour_questionnaires')
+      .select('*')
+      .eq('client_id', clientId)
+      .eq('dog_name', dogName)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return null; // Not found
+      }
+      console.error('Error fetching questionnaire by client and dog:', error);
+      throw error;
+    }
+
+    return dbRowToBehaviourQuestionnaire(data);
   }
 };

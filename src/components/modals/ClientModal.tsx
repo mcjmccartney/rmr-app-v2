@@ -54,11 +54,19 @@ export default function ClientModal({ client, isOpen, onClose, onEditClient, onV
       (currentClient.behaviouralBriefId ? state.behaviouralBriefs.find(b => b.id === currentClient.behaviouralBriefId) : null)
     : null;
 
-  // Find the behaviour questionnaire for this client - look for questionnaires with matching client_id
-  const behaviourQuestionnaire = currentClient
-    ? state.behaviourQuestionnaires.find(q => q.client_id === currentClient.id) ||
-      (currentClient.behaviourQuestionnaireId ? state.behaviourQuestionnaires.find(q => q.id === currentClient.behaviourQuestionnaireId) : null)
+  // Find all behaviour questionnaires for this client - look for questionnaires with matching client_id
+  const behaviourQuestionnaires = currentClient
+    ? state.behaviourQuestionnaires.filter(q => q.client_id === currentClient.id)
+    : [];
+
+  // Legacy support: if client has behaviourQuestionnaireId but no client_id matches, include it
+  const legacyQuestionnaire = currentClient?.behaviourQuestionnaireId
+    ? state.behaviourQuestionnaires.find(q => q.id === currentClient.behaviourQuestionnaireId)
     : null;
+
+  if (legacyQuestionnaire && !behaviourQuestionnaires.some(q => q.id === legacyQuestionnaire.id)) {
+    behaviourQuestionnaires.push(legacyQuestionnaire);
+  }
 
   // Load client sessions and membership data when modal opens
   useEffect(() => {
@@ -337,7 +345,7 @@ export default function ClientModal({ client, isOpen, onClose, onEditClient, onV
         )}
 
         {/* Behavioural Brief and Behaviour Questionnaire Buttons */}
-        {(behaviouralBrief || behaviourQuestionnaire) && (
+        {(behaviouralBrief || behaviourQuestionnaires.length > 0) && (
           <div className="space-y-3">
             {behaviouralBrief && onViewBehaviouralBrief && (
               <button
@@ -351,16 +359,38 @@ export default function ClientModal({ client, isOpen, onClose, onEditClient, onV
               </button>
             )}
 
-            {behaviourQuestionnaire && onViewBehaviourQuestionnaire && (
-              <button
-                onClick={() => onViewBehaviourQuestionnaire(behaviourQuestionnaire.id)}
-                className="w-full text-white py-3 px-4 rounded-lg font-medium transition-colors"
-                style={{ backgroundColor: '#4f6749' }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3d5237'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#4f6749'}
-              >
-                View Behaviour Questionnaire
-              </button>
+            {behaviourQuestionnaires.length > 0 && onViewBehaviourQuestionnaire && (
+              <div className="space-y-2">
+                {behaviourQuestionnaires.length === 1 ? (
+                  <button
+                    onClick={() => onViewBehaviourQuestionnaire(behaviourQuestionnaires[0].id)}
+                    className="w-full text-white py-3 px-4 rounded-lg font-medium transition-colors"
+                    style={{ backgroundColor: '#4f6749' }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3d5237'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#4f6749'}
+                  >
+                    View Behaviour Questionnaire
+                  </button>
+                ) : (
+                  <>
+                    <div className="text-sm font-medium text-gray-700 mb-2">
+                      Behaviour Questionnaires ({behaviourQuestionnaires.length})
+                    </div>
+                    {behaviourQuestionnaires.map((questionnaire) => (
+                      <button
+                        key={questionnaire.id}
+                        onClick={() => onViewBehaviourQuestionnaire(questionnaire.id)}
+                        className="w-full text-white py-2.5 px-4 rounded-lg font-medium transition-colors text-sm"
+                        style={{ backgroundColor: '#4f6749' }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3d5237'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#4f6749'}
+                      >
+                        View Questionnaire - {questionnaire.dogName}
+                      </button>
+                    ))}
+                  </>
+                )}
+              </div>
             )}
           </div>
         )}
