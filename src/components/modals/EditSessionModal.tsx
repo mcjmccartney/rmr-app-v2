@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Session } from '@/types';
+import { Session, Client } from '@/types';
 import { useApp } from '@/context/AppContext';
 import SlideUpModal from './SlideUpModal';
 import CustomDropdown from '@/components/ui/CustomDropdown';
@@ -22,12 +22,15 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     clientId: '',
+    dogName: '',
     sessionType: 'In-Person',
     date: '',
     time: '',
     quote: '',
     notes: ''
   });
+
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
 
   // Helper function to check if session is in the past
   const isSessionInPast = (date: string, time: string) => {
@@ -81,8 +84,12 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
 
   useEffect(() => {
     if (session) {
+      const client = state.clients.find(c => c.id === session.clientId);
+      setSelectedClient(client || null);
+
       setFormData({
         clientId: session.clientId || '', // Handle optional clientId for Group/RMR Live sessions
+        dogName: session.dogName || '',
         sessionType: session.sessionType,
         date: session.bookingDate, // Already in YYYY-MM-DD format
         time: session.bookingTime.substring(0, 5), // Ensure HH:mm format (remove seconds)
@@ -90,7 +97,27 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
         notes: session.notes || ''
       });
     }
-  }, [session]);
+  }, [session, state.clients]);
+
+  const handleClientChange = (clientId: string) => {
+    const client = state.clients.find(c => c.id === clientId);
+    setSelectedClient(client || null);
+
+    // Set default dog name to primary dog if available, or keep current if it's valid for the new client
+    const allDogs = [
+      ...(client?.dogName ? [client.dogName] : []),
+      ...(client?.otherDogs || [])
+    ];
+
+    const currentDogIsValid = formData.dogName && allDogs.includes(formData.dogName);
+    const defaultDogName = currentDogIsValid ? formData.dogName : (client?.dogName || '');
+
+    setFormData({
+      ...formData,
+      clientId,
+      dogName: defaultDogName
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -100,6 +127,7 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
 
     const updates: Partial<Session> = {
       clientId: formData.clientId || undefined, // Allow undefined for Group/RMR Live sessions
+      dogName: formData.dogName || undefined,
       sessionType: formData.sessionType as Session['sessionType'],
       bookingDate: formData.date, // YYYY-MM-DD format
       bookingTime: formData.time, // HH:mm format
@@ -140,7 +168,7 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
           </label>
           <SearchableDropdown
             value={formData.clientId}
-            onChange={(value) => setFormData({ ...formData, clientId: value })}
+            onChange={handleClientChange}
             options={[
               ...(formData.sessionType === 'Group' || formData.sessionType === 'RMR Live'
                 ? [{ value: '', label: 'No client (Group/RMR Live session)' }]
@@ -159,6 +187,25 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
             searchPlaceholder="Search clients..."
           />
         </div>
+
+        {/* Dog Selection - Only show if client has multiple dogs */}
+        {selectedClient && (selectedClient.dogName || (selectedClient.otherDogs && selectedClient.otherDogs.length > 0)) && (
+          <div>
+            <label className="block text-gray-700 text-sm font-medium mb-2">
+              Dog
+            </label>
+            <CustomDropdown
+              value={formData.dogName}
+              onChange={(value) => setFormData({ ...formData, dogName: value })}
+              options={[
+                ...(selectedClient.dogName ? [{ value: selectedClient.dogName, label: `${selectedClient.dogName} (Primary)` }] : []),
+                ...(selectedClient.otherDogs?.map((dog: string) => ({ value: dog, label: dog })) || [])
+              ]}
+              placeholder="Select a dog"
+              className="w-full"
+            />
+          </div>
+        )}
 
         <div>
           <label className="block text-gray-700 text-sm font-medium mb-2">
