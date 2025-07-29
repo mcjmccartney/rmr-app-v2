@@ -24,7 +24,7 @@ function dbRowToClient(row: Record<string, any>): Client {
     membership: row.membership,
     avatar: row.avatar,
     behaviouralBriefId: row.behavioural_brief_id,
-    behaviourQuestionnaireId: row.behaviour_questionnaire_id,
+    // behaviourQuestionnaireId removed - clients can now have multiple questionnaires
     booking_terms_signed: row.booking_terms_signed,
     booking_terms_signed_date: row.booking_terms_signed_date,
   };
@@ -46,7 +46,7 @@ function clientToDbRow(client: Partial<Client>) {
     membership: client.membership,
     avatar: client.avatar,
     behavioural_brief_id: client.behaviouralBriefId,
-    behaviour_questionnaire_id: client.behaviourQuestionnaireId,
+    // behaviour_questionnaire_id removed - clients can now have multiple questionnaires
     booking_terms_signed: client.booking_terms_signed,
     booking_terms_signed_date: client.booking_terms_signed_date,
   };
