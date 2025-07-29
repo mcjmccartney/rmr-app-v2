@@ -21,7 +21,7 @@ function dbRowToSession(row: Record<string, any>): Session {
   return {
     id: row.id,
     clientId: row.client_id,
-    dogName: row.dog_name,
+    dogName: row.dog_name || undefined, // Handle case where column doesn't exist yet
     sessionType: row.session_type,
     bookingDate,
     bookingTime,
@@ -42,7 +42,6 @@ function sessionToDbRow(session: Partial<Session>) {
   const dbRow: Record<string, any> = {
     id: session.id,
     client_id: session.clientId,
-    dog_name: session.dogName,
     session_type: session.sessionType,
     notes: session.notes,
     quote: session.quote,
@@ -54,6 +53,11 @@ function sessionToDbRow(session: Partial<Session>) {
     event_id: session.eventId,
     google_meet_link: session.googleMeetLink,
   };
+
+  // Only include dog_name if it's provided (for backward compatibility)
+  if (session.dogName !== undefined) {
+    dbRow.dog_name = session.dogName;
+  }
 
   // Handle both old and new database formats
   if (session.bookingDate && session.bookingTime) {
@@ -161,7 +165,7 @@ export const sessionService = {
   // Update existing session
   async update(id: string, updates: Partial<Session>): Promise<Session> {
     const dbRow = sessionToDbRow(updates)
-    
+
     const { data, error } = await supabase
       .from('sessions')
       .update(dbRow)
@@ -170,6 +174,26 @@ export const sessionService = {
       .single()
 
     if (error) {
+      // If dog_name column doesn't exist yet, retry without it
+      if (error.code === 'PGRST204' && error.message.includes('dog_name')) {
+        console.warn('dog_name column not found, retrying without it')
+        const { dog_name, ...dbRowWithoutDogName } = dbRow
+
+        const { data: retryData, error: retryError } = await supabase
+          .from('sessions')
+          .update(dbRowWithoutDogName)
+          .eq('id', id)
+          .select()
+          .single()
+
+        if (retryError) {
+          console.error('Error updating session (retry):', retryError)
+          throw retryError
+        }
+
+        return dbRowToSession(retryData)
+      }
+
       console.error('Error updating session:', error)
       throw error
     }

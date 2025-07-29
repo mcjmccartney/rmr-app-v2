@@ -53,11 +53,14 @@ export default function SessionModal({ session, isOpen, onClose, onEditSession, 
       (client.behaviouralBriefId ? state.behaviouralBriefs.find(b => b.id === client.behaviouralBriefId) : null)
     : null;
 
-  const behaviourQuestionnaire = client
+  // Get the specific dog name for this session (session.dogName takes priority over client.dogName)
+  const sessionDogName = session.dogName || client?.dogName;
+
+  const behaviourQuestionnaire = client && sessionDogName
     ? state.behaviourQuestionnaires.find(q => q.client_id === client.id) ||
-      (client.email && client.dogName ? state.behaviourQuestionnaires.find(q =>
+      (client.email ? state.behaviourQuestionnaires.find(q =>
         q.email?.toLowerCase() === client.email?.toLowerCase() &&
-        q.dogName?.toLowerCase() === client.dogName?.toLowerCase()
+        q.dogName?.toLowerCase() === sessionDogName.toLowerCase()
       ) : null)
     : null;
 
@@ -169,7 +172,7 @@ export default function SessionModal({ session, isOpen, onClose, onEditSession, 
   // For Group and RMR Live sessions, show session type instead of "Unknown Client"
   const isGroupOrRMRLive = session.sessionType === 'Group' || session.sessionType === 'RMR Live';
   const displayName = client
-    ? formatClientWithAllDogs(client)
+    ? `${client.firstName} ${client.lastName}${sessionDogName ? ` w/ ${sessionDogName}` : ''}`
     : isGroupOrRMRLive
     ? session.sessionType
     : 'Unknown Client';
