@@ -103,6 +103,21 @@ export const formatClientWithAllDogs = (client: { firstName: string; lastName: s
   return `${client.firstName} ${client.lastName} w/ ${allDogs.join(', ')} & ${lastDog}`;
 };
 
+// Get formatted dog names part only (for styling separately)
+export const getClientDogsPart = (client: { firstName: string; lastName: string; dogName?: string; otherDogs?: string[] }): string => {
+  const allDogs = [
+    ...(client.dogName ? [client.dogName] : []),
+    ...(client.otherDogs || [])
+  ].filter(dog => dog.trim() !== '');
+
+  if (allDogs.length === 0) return '';
+  if (allDogs.length === 1) return ` w/ ${allDogs[0]}`;
+  if (allDogs.length === 2) return ` w/ ${allDogs[0]} & ${allDogs[1]}`;
+
+  const lastDog = allDogs.pop();
+  return ` w/ ${allDogs.join(', ')} & ${lastDog}`;
+};
+
 // Format for HTML date input (yyyy-MM-dd)
 export const formatForDateInput = (date: Date | string): string => {
   const dateObj = typeof date === 'string' ? new Date(date) : date;

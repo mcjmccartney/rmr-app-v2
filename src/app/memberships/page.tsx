@@ -6,7 +6,7 @@ import Header from '@/components/layout/Header';
 import { Membership } from '@/types';
 import { ChevronDown, ChevronRight, CreditCard, TrendingUp, TrendingDown, Plus } from 'lucide-react';
 import AddMembershipSidepane from '@/components/sidepanes/AddMembershipSidepane';
-import { formatClientWithAllDogs } from '@/utils/dateFormatting';
+import { formatClientWithAllDogs, getClientDogsPart } from '@/utils/dateFormatting';
 
 export default function MembershipsPage() {
   const { state } = useApp();
@@ -191,9 +191,6 @@ export default function MembershipsPage() {
                       {monthMemberships.map((membership) => {
                         // Find client by email
                         const client = state.clients.find(c => c.email === membership.email);
-                        const displayName = client
-                          ? formatClientWithAllDogs(client)
-                          : membership.email;
 
                         return (
                           <div
@@ -202,7 +199,16 @@ export default function MembershipsPage() {
                           >
                             <div className="flex justify-between items-start">
                               <div>
-                                <h3 className="font-medium text-gray-900">{displayName}</h3>
+                                <h3 className="font-medium text-gray-900">
+                                  {client ? (
+                                    <>
+                                      {client.firstName} {client.lastName}
+                                      <span className="text-sm font-normal text-gray-500">
+                                        {getClientDogsPart(client)}
+                                      </span>
+                                    </>
+                                  ) : membership.email}
+                                </h3>
                                 <p className="text-sm text-gray-500">
                                   {new Date(membership.date).toLocaleDateString('en-GB')}
                                 </p>

@@ -10,7 +10,7 @@ import EditClientModal from '@/components/modals/EditClientModal';
 import AddModal from '@/components/AddModal';
 import { Session, Client } from '@/types';
 
-import { formatDateTime, formatFullMonthYear, formatClientWithAllDogs } from '@/utils/dateFormatting';
+import { formatDateTime, formatFullMonthYear, formatClientWithAllDogs, getClientDogsPart } from '@/utils/dateFormatting';
 import { Calendar, UserPlus, ChevronDown, ChevronRight, Target, Edit3 } from 'lucide-react';
 
 export default function SessionsPage() {
@@ -187,11 +187,6 @@ export default function SessionsPage() {
 
                       // For Group and RMR Live sessions, show session type instead of "Unknown Client"
                       const isGroupOrRMRLive = session.sessionType === 'Group' || session.sessionType === 'RMR Live';
-                      const displayName = client
-                        ? formatClientWithAllDogs(client)
-                        : isGroupOrRMRLive
-                        ? session.sessionType
-                        : 'Unknown Client';
 
                       // Check if this session has a session plan
                       const hasSessionPlan = state.sessionPlans.some(plan => plan.sessionId === session.id);
@@ -205,7 +200,16 @@ export default function SessionsPage() {
                           <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-3 flex-1">
                               <div>
-                                <h3 className="font-medium text-gray-900">{displayName}</h3>
+                                <h3 className="font-medium text-gray-900">
+                                  {client ? (
+                                    <>
+                                      {client.firstName} {client.lastName}
+                                      <span className="text-sm font-normal text-gray-500">
+                                        {getClientDogsPart(client)}
+                                      </span>
+                                    </>
+                                  ) : isGroupOrRMRLive ? session.sessionType : 'Unknown Client'}
+                                </h3>
                                 <p className="text-sm text-gray-500">
                                   {formatDateTime(session.bookingDate, session.bookingTime)} · {session.sessionType}
                                 </p>
