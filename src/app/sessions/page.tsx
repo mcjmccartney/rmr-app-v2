@@ -10,7 +10,7 @@ import EditClientModal from '@/components/modals/EditClientModal';
 import AddModal from '@/components/AddModal';
 import { Session, Client } from '@/types';
 
-import { formatDateTime, formatFullMonthYear } from '@/utils/dateFormatting';
+import { formatDateTime, formatFullMonthYear, formatClientWithAllDogs } from '@/utils/dateFormatting';
 import { Calendar, UserPlus, ChevronDown, ChevronRight, Target, Edit3 } from 'lucide-react';
 
 export default function SessionsPage() {
@@ -188,7 +188,7 @@ export default function SessionsPage() {
                       // For Group and RMR Live sessions, show session type instead of "Unknown Client"
                       const isGroupOrRMRLive = session.sessionType === 'Group' || session.sessionType === 'RMR Live';
                       const displayName = client
-                        ? `${client.firstName} ${client.lastName}${client.dogName ? ` w/ ${client.dogName}` : ''}`
+                        ? formatClientWithAllDogs(client)
                         : isGroupOrRMRLive
                         ? session.sessionType
                         : 'Unknown Client';

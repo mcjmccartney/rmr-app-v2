@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Session } from '@/types';
 import { useApp } from '@/context/AppContext';
 import SlideUpModal from './SlideUpModal';
-import { formatDateTime } from '@/utils/dateFormatting';
+import { formatDateTime, formatClientWithAllDogs } from '@/utils/dateFormatting';
 import { paymentService } from '@/services/paymentService';
 import { sessionService } from '@/services/sessionService';
 
@@ -169,7 +169,7 @@ export default function SessionModal({ session, isOpen, onClose, onEditSession, 
   // For Group and RMR Live sessions, show session type instead of "Unknown Client"
   const isGroupOrRMRLive = session.sessionType === 'Group' || session.sessionType === 'RMR Live';
   const displayName = client
-    ? `${client.firstName} ${client.lastName}${client.dogName ? ` w/ ${client.dogName}` : ''}`
+    ? formatClientWithAllDogs(client)
     : isGroupOrRMRLive
     ? session.sessionType
     : 'Unknown Client';

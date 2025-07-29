@@ -6,6 +6,7 @@ import Header from '@/components/layout/Header';
 import { Membership } from '@/types';
 import { ChevronDown, ChevronRight, CreditCard, TrendingUp, TrendingDown, Plus } from 'lucide-react';
 import AddMembershipSidepane from '@/components/sidepanes/AddMembershipSidepane';
+import { formatClientWithAllDogs } from '@/utils/dateFormatting';
 
 export default function MembershipsPage() {
   const { state } = useApp();
@@ -191,7 +192,7 @@ export default function MembershipsPage() {
                         // Find client by email
                         const client = state.clients.find(c => c.email === membership.email);
                         const displayName = client
-                          ? `${client.firstName} ${client.lastName}${client.dogName ? ` w/ ${client.dogName}` : ''}`
+                          ? formatClientWithAllDogs(client)
                           : membership.email;
 
                         return (

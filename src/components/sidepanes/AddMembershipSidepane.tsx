@@ -5,6 +5,7 @@ import { useApp } from '@/context/AppContext';
 import { Client } from '@/types';
 import SlideUpModal from '@/components/modals/SlideUpModal';
 import SearchableDropdown from '@/components/ui/SearchableDropdown';
+import { formatClientWithAllDogs } from '@/utils/dateFormatting';
 
 interface AddMembershipSidepaneProps {
   isOpen: boolean;
@@ -113,7 +114,7 @@ export default function AddMembershipSidepane({ isOpen, onClose }: AddMembership
             onChange={handleClientChange}
             options={state.clients.map((client) => ({
               value: client.id,
-              label: `${client.firstName} ${client.lastName}${client.dogName ? ` w/ ${client.dogName}` : ''}`
+              label: formatClientWithAllDogs(client)
             }))}
             placeholder="Select a client"
             searchPlaceholder="Search clients..."

@@ -88,6 +88,21 @@ export const formatDayDate = (dateString: string): string => {
   }
 };
 
+// Format client name with all their dogs
+export const formatClientWithAllDogs = (client: { firstName: string; lastName: string; dogName?: string; otherDogs?: string[] }): string => {
+  const allDogs = [
+    ...(client.dogName ? [client.dogName] : []),
+    ...(client.otherDogs || [])
+  ].filter(dog => dog.trim() !== '');
+
+  if (allDogs.length === 0) return `${client.firstName} ${client.lastName}`;
+  if (allDogs.length === 1) return `${client.firstName} ${client.lastName} w/ ${allDogs[0]}`;
+  if (allDogs.length === 2) return `${client.firstName} ${client.lastName} w/ ${allDogs[0]} & ${allDogs[1]}`;
+
+  const lastDog = allDogs.pop();
+  return `${client.firstName} ${client.lastName} w/ ${allDogs.join(', ')} & ${lastDog}`;
+};
+
 // Format for HTML date input (yyyy-MM-dd)
 export const formatForDateInput = (date: Date | string): string => {
   const dateObj = typeof date === 'string' ? new Date(date) : date;

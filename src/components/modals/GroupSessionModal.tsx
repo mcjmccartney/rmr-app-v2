@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Session, SessionParticipant, Client } from '@/types';
 import { useApp } from '@/context/AppContext';
 import SlideUpModal from './SlideUpModal';
-import { formatDateTime } from '@/utils/dateFormatting';
+import { formatDateTime, formatClientWithAllDogs } from '@/utils/dateFormatting';
 import { Users, Plus, Trash2, Check, X } from 'lucide-react';
 import SearchableDropdown from '../ui/SearchableDropdown';
 
@@ -106,7 +106,7 @@ export default function GroupSessionModal({ session, isOpen, onClose, onEditSess
 
   const getClientName = (clientId: string) => {
     const client = state.clients.find(c => c.id === clientId);
-    return client ? `${client.firstName} ${client.lastName}${client.dogName ? ` w/ ${client.dogName}` : ''}` : 'Unknown Client';
+    return client ? formatClientWithAllDogs(client) : 'Unknown Client';
   };
 
   const availableClients = state.clients.filter(client => 
@@ -115,7 +115,7 @@ export default function GroupSessionModal({ session, isOpen, onClose, onEditSess
 
   const clientOptions = availableClients.map(client => ({
     value: client.id,
-    label: `${client.firstName} ${client.lastName}${client.dogName ? ` w/ ${client.dogName}` : ''}`
+    label: formatClientWithAllDogs(client)
   }));
 
   const totalAmount = participants.reduce((sum, p) => sum + p.individualQuote, 0);

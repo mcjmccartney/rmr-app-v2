@@ -13,6 +13,7 @@ import RMRLogo from '@/components/RMRLogo';
 import { Client, Session, BehaviouralBrief, BehaviourQuestionnaire, Membership } from '@/types';
 import { Calendar, UserPlus, Users, UserCheck, ClipboardList, FileQuestion, Star, Edit3, Download } from 'lucide-react';
 import { groupCoachingResetService } from '@/services/groupCoachingResetService';
+import { formatClientWithAllDogs } from '@/utils/dateFormatting';
 
 function ClientsPageContent() {
   const router = useRouter();
@@ -511,12 +512,7 @@ function ClientsPageContent() {
                     )}
                     <div className={client.membership ? '' : 'ml-0'}>
                       <h3 className={`font-medium ${client.active ? 'text-gray-900' : 'text-gray-600'}`}>
-                        {client.firstName} {client.lastName}
-                        {client.dogName && (
-                          <span className={`text-sm font-normal ${client.active ? 'text-gray-500' : 'text-gray-400'}`}>
-                            {' '}w/ {client.dogName}
-                          </span>
-                        )}
+                        {formatClientWithAllDogs(client)}
                       </h3>
                     </div>
                   </div>
