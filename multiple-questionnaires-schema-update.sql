@@ -18,16 +18,44 @@ ON behaviour_questionnaires(client_id, dog_name);
 CREATE INDEX IF NOT EXISTS idx_behaviour_questionnaires_email 
 ON behaviour_questionnaires(email);
 
--- Step 3: Add unique constraint to prevent duplicate questionnaires for same client+dog
--- This ensures one questionnaire per dog per client
-ALTER TABLE behaviour_questionnaires 
+-- Step 3: Clean up duplicate questionnaires before adding unique constraint
+-- First, let's identify and remove duplicates, keeping only the most recent one for each client+dog combination
+
+-- Create a temporary table with the IDs of questionnaires to keep (most recent per client+dog)
+WITH questionnaires_to_keep AS (
+  SELECT DISTINCT ON (client_id, dog_name) id
+  FROM behaviour_questionnaires
+  WHERE client_id IS NOT NULL AND dog_name IS NOT NULL
+  ORDER BY client_id, dog_name, submitted_at DESC
+)
+-- Delete duplicate questionnaires (keep only the most recent one per client+dog)
+DELETE FROM behaviour_questionnaires
+WHERE client_id IS NOT NULL
+  AND dog_name IS NOT NULL
+  AND id NOT IN (SELECT id FROM questionnaires_to_keep);
+
+-- Now add the unique constraint to prevent future duplicates
+ALTER TABLE behaviour_questionnaires
 DROP CONSTRAINT IF EXISTS unique_client_dog_questionnaire;
 
-ALTER TABLE behaviour_questionnaires 
-ADD CONSTRAINT unique_client_dog_questionnaire 
+ALTER TABLE behaviour_questionnaires
+ADD CONSTRAINT unique_client_dog_questionnaire
 UNIQUE (client_id, dog_name);
 
--- Step 4: Verify the current structure
+-- Step 4: Show what duplicates were found and removed
+SELECT 'Duplicate questionnaires analysis:' as info;
+SELECT
+  client_id,
+  dog_name,
+  COUNT(*) as questionnaire_count,
+  STRING_AGG(id::text, ', ' ORDER BY submitted_at DESC) as questionnaire_ids,
+  MAX(submitted_at) as most_recent_submission
+FROM behaviour_questionnaires
+WHERE client_id IS NOT NULL AND dog_name IS NOT NULL
+GROUP BY client_id, dog_name
+ORDER BY questionnaire_count DESC, client_id, dog_name;
+
+-- Step 5: Verify the current structure
 SELECT 'Current behaviour_questionnaires structure:' as info;
 SELECT 
   column_name,
@@ -39,7 +67,7 @@ WHERE table_name = 'behaviour_questionnaires'
   AND table_schema = 'public'
 ORDER BY ordinal_position;
 
--- Step 5: Show current clients structure (should no longer have behaviour_questionnaire_id)
+-- Step 6: Show current clients structure (should no longer have behaviour_questionnaire_id)
 SELECT 'Current clients structure:' as info;
 SELECT 
   column_name,
@@ -51,7 +79,7 @@ WHERE table_name = 'clients'
   AND table_schema = 'public'
 ORDER BY ordinal_position;
 
--- Step 6: Show existing questionnaires grouped by client
+-- Step 7: Show existing questionnaires grouped by client
 SELECT 'Existing questionnaires by client:' as info;
 SELECT 
   c.first_name,
