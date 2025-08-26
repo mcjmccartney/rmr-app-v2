@@ -84,11 +84,14 @@ export function useRobustAutoSave({
       });
 
       onSaveSuccess?.();
-      console.log('✅ Auto-save completed successfully');
+      // Silent auto-save - only log errors
       return true;
 
     } catch (error) {
-      console.error(`Auto-save attempt ${retryCount + 1} failed:`, error);
+      // Only log errors, not routine save attempts
+      if (retryCount === 0) {
+        console.error('Auto-save failed, retrying...', error);
+      }
       
       if (retryCount < AUTO_SAVE_CONFIG.MAX_RETRIES) {
         const delay = AUTO_SAVE_CONFIG.RETRY_DELAYS[retryCount] || 5000;
@@ -192,10 +195,9 @@ export function useRobustAutoSave({
       
       // Process queued saves when back online
       if (saveQueueRef.current.length > 0) {
-        console.log('📶 Back online - processing queued saves');
         const queue = [...saveQueueRef.current];
         saveQueueRef.current = [];
-        
+
         queue.forEach(async (queuedSave) => {
           try {
             await queuedSave();
@@ -208,7 +210,7 @@ export function useRobustAutoSave({
 
     const handleOffline = () => {
       setAutoSaveState(prev => ({ ...prev, isOnline: false }));
-      console.log('📵 Gone offline - saves will be queued');
+      // Silent offline handling
     };
 
     window.addEventListener('online', handleOnline);
@@ -224,7 +226,7 @@ export function useRobustAutoSave({
   useEffect(() => {
     const handleVisibilityChange = async () => {
       if (document.hidden && autoSaveState.hasUnsavedChanges && !autoSaveState.isSaving) {
-        console.log('📱 App going to background - saving...');
+        // Silent background save
         await robustSave();
       }
     };

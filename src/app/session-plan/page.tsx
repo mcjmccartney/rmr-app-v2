@@ -9,7 +9,6 @@ import { sessionPlanService } from '@/services/sessionPlanService';
 import { clientService } from '@/services/clientService';
 import { sessionService } from '@/services/sessionService';
 import { useRobustAutoSave } from '@/hooks/useRobustAutoSave';
-import { AutoSaveStatus } from '@/components/AutoSaveStatus';
 import type { SessionPlan, Client, Session } from '@/types';
 // import SessionPlanPreviewModal from '@/components/modals/SessionPlanPreviewModal';
 
@@ -91,8 +90,10 @@ function SessionPlanContent() {
       sessionNumber: sessionNumber
     };
 
-    console.log(isAutoSave ? '🔄 Robust auto-save triggered:' : '💾 Manual save triggered:', sessionPlanData);
-    console.log('📝 Edited action points being saved:', editableActionPoints);
+    // Silent auto-save - minimal logging
+    if (!isAutoSave) {
+      console.log('💾 Manual save triggered:', sessionPlanData);
+    }
 
     let savedPlan;
     if (existingSessionPlan) {
@@ -104,7 +105,7 @@ function SessionPlanContent() {
       setExistingSessionPlan(savedPlan);
     }
 
-    console.log('✅ Session plan saved successfully:', savedPlan);
+    // Silent save success
     return savedPlan;
   }, [currentSession, currentClient, formData, selectedActionPoints, editableActionPoints, sessionNumber, existingSessionPlan]);
 
@@ -112,12 +113,13 @@ function SessionPlanContent() {
   const { autoSaveState, changeState, trackChange, forceSave, clearUnsavedChanges } = useRobustAutoSave({
     saveFunction,
     onSaveSuccess: () => {
-      console.log('🎉 Auto-save success callback');
+      // Silent success handling
       setLegacyLastSaved(new Date());
       setLegacyHasUnsavedChanges(false);
     },
     onSaveError: (error) => {
-      console.error('❌ Auto-save error callback:', error);
+      // Only log actual errors
+      console.error('Auto-save error:', error);
     },
     enablePeriodicSave: true,
     enableCriticalSave: true,
@@ -223,7 +225,6 @@ function SessionPlanContent() {
     if (existingSessionPlan && !autoSaveState.hasUnsavedChanges) {
       // Clear unsaved changes when session plan is loaded
       clearUnsavedChanges();
-      console.log('🔄 Session plan loaded - cleared unsaved changes');
     }
   }, [existingSessionPlan, clearUnsavedChanges, autoSaveState.hasUnsavedChanges]);
 
@@ -261,8 +262,6 @@ function SessionPlanContent() {
     // Track change with robust auto-save
     const isCritical = field === 'explanationOfBehaviour'; // Mark explanation as critical
     trackChange('hasTextChanges', isCritical);
-
-    console.log(`📝 Input changed: ${field} (${value.length} chars)${isCritical ? ' [CRITICAL]' : ''}`);
   }, [trackChange]);
 
   // Poll for document URL from the API endpoint
@@ -487,8 +486,6 @@ function SessionPlanContent() {
 
     // Track action point selection change
     trackChange('hasActionPointChanges', false);
-
-    console.log(`📝 Action point toggled: ${actionPointId}`);
   }, [trackChange]);
 
   // Initialize editable action point with personalized content
@@ -524,8 +521,6 @@ function SessionPlanContent() {
 
     // Track action point change with robust auto-save
     trackChange('hasActionPointChanges', false);
-
-    console.log(`📝 Action point changed: ${actionPointId}.${field} (${value.length} chars)`);
   }, [trackChange]);
 
   // Move action point up or down
@@ -545,8 +540,6 @@ function SessionPlanContent() {
 
     // Track action point reordering
     trackChange('hasActionPointChanges', false);
-
-    console.log(`📝 Action point moved: ${actionPointId} ${direction}`);
   }, [selectedActionPoints, trackChange]);
 
   const handlePreviewAndEdit = async () => {
@@ -848,12 +841,10 @@ function SessionPlanContent() {
             <h1 className="text-xl font-semibold text-gray-900">
               {existingSessionPlan ? 'Edit Session Plan' : 'Create Session Plan'}
             </h1>
-            {/* Enhanced auto-save status */}
-            <AutoSaveStatus
-              autoSaveState={autoSaveState}
-              changeState={changeState}
-              className="mt-1"
-            />
+            {/* Silent auto-save - no visible status */}
+            <div className="text-xs text-gray-500 mt-1">
+              {existingSessionPlan ? 'Edit Session Plan' : 'Create Session Plan'}
+            </div>
           </div>
           <div className="w-16"></div>
         </div>
