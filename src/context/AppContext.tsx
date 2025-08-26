@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useReducer, ReactNode, useEffect } from 'react';
+import React, { createContext, useContext, useReducer, ReactNode, useEffect, useCallback, useRef } from 'react';
 import { AppState, AppAction, Session, Client, Membership, BookingTerms, ActionPoint, SessionParticipant } from '@/types';
 import { clientService } from '@/services/clientService';
 import { sessionService } from '@/services/sessionService';
@@ -9,12 +9,53 @@ import { behaviouralBriefService } from '@/services/behaviouralBriefService';
 import { behaviourQuestionnaireService } from '@/services/behaviourQuestionnaireService';
 import { bookingTermsService } from '@/services/bookingTermsService';
 import { sessionPlanService } from '@/services/sessionPlanService';
+import { supabase } from '@/lib/supabase';
 import { DuplicateDetectionService } from '@/services/duplicateDetectionService';
 import { dismissedDuplicatesService } from '@/services/dismissedDuplicatesService';
 import { membershipExpirationService } from '@/services/membershipExpirationService';
 import { ClientEmailAliasService, ClientEmailAlias } from '@/services/clientEmailAliasService';
 import { sessionParticipantService } from '@/services/sessionParticipantService';
 import { membershipPairingService } from '@/services/membershipPairingService';
+
+// Helper function for comprehensive questionnaire matching
+const findQuestionnaireForClient = (client: any, dogName: string, questionnaires: any[]) => {
+  if (!client || !dogName) return false;
+
+  // Method 1: Match by client_id and dog name (case-insensitive)
+  let hasQuestionnaire = questionnaires.some(q =>
+    (q.client_id === client.id || q.clientId === client.id) &&
+    q.dogName?.toLowerCase() === dogName.toLowerCase()
+  );
+  if (hasQuestionnaire) return true;
+
+  // Method 2: Match by email and dog name (case-insensitive)
+  if (client.email) {
+    hasQuestionnaire = questionnaires.some(q =>
+      q.email?.toLowerCase() === client.email?.toLowerCase() &&
+      q.dogName?.toLowerCase() === dogName.toLowerCase()
+    );
+    if (hasQuestionnaire) return true;
+  }
+
+  // Method 3: Match by partial dog name (case-insensitive)
+  hasQuestionnaire = questionnaires.some(q =>
+    (q.client_id === client.id || q.clientId === client.id) &&
+    (q.dogName?.toLowerCase().includes(dogName.toLowerCase()) ||
+     dogName.toLowerCase().includes(q.dogName?.toLowerCase() || ''))
+  );
+  if (hasQuestionnaire) return true;
+
+  // Method 4: Match by email and partial dog name (case-insensitive)
+  if (client.email) {
+    hasQuestionnaire = questionnaires.some(q =>
+      q.email?.toLowerCase() === client.email?.toLowerCase() &&
+      (q.dogName?.toLowerCase().includes(dogName.toLowerCase()) ||
+       dogName.toLowerCase().includes(q.dogName?.toLowerCase() || ''))
+    );
+  }
+
+  return hasQuestionnaire;
+};
 
 const initialState: AppState = {
   sessions: [],
@@ -150,6 +191,12 @@ function appReducer(state: AppState, action: AppAction): AppState {
     case 'ADD_BOOKING_TERMS':
       return { ...state, bookingTerms: [...state.bookingTerms, action.payload] };
 
+    case 'DELETE_BOOKING_TERMS':
+      return {
+        ...state,
+        bookingTerms: state.bookingTerms.filter(terms => terms.id !== action.payload),
+      };
+
     case 'SET_CLIENT_EMAIL_ALIASES':
       return { ...state, clientEmailAliases: action.payload };
 
@@ -220,6 +267,26 @@ function appReducer(state: AppState, action: AppAction): AppState {
         sessionParticipants: state.sessionParticipants.filter(participant => participant.id !== action.payload),
       };
 
+    case 'SET_SESSION_PLANS':
+      return { ...state, sessionPlans: action.payload };
+
+    case 'ADD_SESSION_PLAN':
+      return { ...state, sessionPlans: [...state.sessionPlans, action.payload] };
+
+    case 'UPDATE_SESSION_PLAN':
+      return {
+        ...state,
+        sessionPlans: state.sessionPlans.map(plan =>
+          plan.id === action.payload.id ? action.payload : plan
+        ),
+      };
+
+    case 'DELETE_SESSION_PLAN':
+      return {
+        ...state,
+        sessionPlans: state.sessionPlans.filter(plan => plan.id !== action.payload),
+      };
+
     default:
       return state;
   }
@@ -272,13 +339,58 @@ const AppContext = createContext<{
 export function AppProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(appReducer, initialState);
 
-  // Load clients from Supabase
-  const loadClients = async () => {
+  // Performance optimization: Track subscription status to prevent duplicate subscriptions
+  const subscriptionsRef = useRef<{ [key: string]: any }>({});
+  const isInitializedRef = useRef(false);
+
+  // Performance optimization: Debounce rapid updates
+  const updateTimeoutsRef = useRef<{ [key: string]: NodeJS.Timeout }>({});
+
+  // Performance optimization: Prevent duplicate webhook calls
+  const recentWebhookCallsRef = useRef<{ [sessionId: string]: number }>({});
+
+  // Performance optimization: Debounced dispatch to prevent rapid state updates
+  const debouncedDispatch = useCallback((action: AppAction, delay: number = 100) => {
+    const key = action.type;
+    if (updateTimeoutsRef.current[key]) {
+      clearTimeout(updateTimeoutsRef.current[key]);
+    }
+    updateTimeoutsRef.current[key] = setTimeout(() => {
+      dispatch(action);
+      delete updateTimeoutsRef.current[key];
+    }, delay);
+  }, []);
+
+  // Performance optimization: Prevent duplicate webhook calls within 5 seconds
+  const shouldSkipWebhookCall = useCallback((sessionId: string, webhookType: string): boolean => {
+    const key = `${sessionId}-${webhookType}`;
+    const now = Date.now();
+    const lastCall = recentWebhookCallsRef.current[key];
+
+    if (lastCall && (now - lastCall) < 5000) { // 5 second window
+      console.log(`🚫 DUPLICATE WEBHOOK BLOCKED: ${webhookType} for session ${sessionId} (last call ${now - lastCall}ms ago)`);
+      return true;
+    }
+
+    recentWebhookCallsRef.current[key] = now;
+
+    // Clean up old entries (older than 10 seconds)
+    Object.keys(recentWebhookCallsRef.current).forEach(k => {
+      if (now - recentWebhookCallsRef.current[k] > 10000) {
+        delete recentWebhookCallsRef.current[k];
+      }
+    });
+
+    return false;
+  }, []);
+
+  // Load clients from Supabase with performance optimization
+  const loadClients = useCallback(async () => {
     try {
       const clients = await clientService.getAll();
       dispatch({ type: 'SET_CLIENTS', payload: clients });
 
-      // Detect duplicates after loading clients
+      // Detect duplicates after loading clients (debounced)
       setTimeout(async () => {
         try {
           const allDuplicates = DuplicateDetectionService.detectDuplicates(clients);
@@ -299,28 +411,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
           const activeDuplicates = allDuplicates.filter(dup => !dismissedIds.includes(dup.id));
 
-          dispatch({ type: 'SET_POTENTIAL_DUPLICATES', payload: activeDuplicates });
+          debouncedDispatch({ type: 'SET_POTENTIAL_DUPLICATES', payload: activeDuplicates }, 200);
         } catch (error) {
-          dispatch({ type: 'SET_POTENTIAL_DUPLICATES', payload: [] });
+          debouncedDispatch({ type: 'SET_POTENTIAL_DUPLICATES', payload: [] }, 200);
         }
       }, 100);
     } catch (error) {
-      // Failed to load clients
+      console.error('Failed to load clients:', error);
     }
-  };
+  }, [debouncedDispatch]);
 
-  // Load sessions from Supabase
-  const loadSessions = async () => {
+  // Load sessions from Supabase with performance optimization
+  const loadSessions = useCallback(async () => {
     try {
       const sessions = await sessionService.getAll();
       dispatch({ type: 'SET_SESSIONS', payload: sessions });
     } catch (error) {
-      // Failed to load sessions
+      console.error('Failed to load sessions:', error);
     }
-  };
+  }, []);
 
-  // Load memberships from Supabase
-  const loadMemberships = async () => {
+  // Load memberships from Supabase with performance optimization
+  const loadMemberships = useCallback(async () => {
     try {
       console.log('Loading memberships...');
       const memberships = await membershipService.getAll();
@@ -329,10 +441,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('Failed to load memberships:', error);
     }
-  };
+  }, []);
 
-  // Load behavioural briefs from Supabase
-  const loadBehaviouralBriefs = async () => {
+  // Load behavioural briefs from Supabase with performance optimization
+  const loadBehaviouralBriefs = useCallback(async () => {
     try {
       console.log('Loading behavioural briefs...');
       const briefs = await behaviouralBriefService.getAll();
@@ -341,10 +453,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('Failed to load behavioural briefs:', error);
     }
-  };
+  }, []);
 
-  // Load behaviour questionnaires from Supabase
-  const loadBehaviourQuestionnaires = async () => {
+  // Load behaviour questionnaires from Supabase with performance optimization
+  const loadBehaviourQuestionnaires = useCallback(async () => {
     try {
       console.log('Loading behaviour questionnaires...');
       const questionnaires = await behaviourQuestionnaireService.getAll();
@@ -353,10 +465,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('Failed to load behaviour questionnaires:', error);
     }
-  };
+  }, []);
 
-  // Load booking terms from Supabase
-  const loadBookingTerms = async () => {
+  // Load booking terms from Supabase with performance optimization
+  const loadBookingTerms = useCallback(async () => {
     try {
       console.log('Loading booking terms...');
       const bookingTerms = await bookingTermsService.getAll();
@@ -365,20 +477,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('Failed to load booking terms:', error);
     }
-  };
+  }, []);
 
-  // Load client email aliases from Supabase
-  const loadClientEmailAliases = async () => {
+  // Load client email aliases from Supabase with performance optimization
+  const loadClientEmailAliases = useCallback(async () => {
     try {
       const aliases = await ClientEmailAliasService.getAllClientsWithAliases();
       dispatch({ type: 'SET_CLIENT_EMAIL_ALIASES', payload: aliases });
     } catch (error) {
       console.error('Failed to load client email aliases:', error);
     }
-  };
+  }, []);
 
-  // Load action points from Supabase
-  const loadActionPoints = async () => {
+  // Load action points from Supabase with performance optimization
+  const loadActionPoints = useCallback(async () => {
     try {
       console.log('Loading action points...');
       const actionPoints = await sessionPlanService.getAllActionPoints();
@@ -387,10 +499,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('Failed to load action points:', error);
     }
-  };
+  }, []);
 
-  // Load session participants from Supabase
-  const loadSessionParticipants = async () => {
+  // Load session participants from Supabase with performance optimization
+  const loadSessionParticipants = useCallback(async () => {
     try {
       console.log('Loading session participants...');
       const participants = await sessionParticipantService.getAll();
@@ -399,10 +511,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('Failed to load session participants:', error);
     }
-  };
+  }, []);
 
-  // Load session plans from Supabase
-  const loadSessionPlans = async () => {
+  // Load session plans from Supabase with performance optimization
+  const loadSessionPlans = useCallback(async () => {
     try {
       console.log('Loading session plans...');
       const sessionPlans = await sessionPlanService.getAll();
@@ -411,7 +523,252 @@ export function AppProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('Failed to load session plans:', error);
     }
-  };
+  }, []);
+
+  // Real-time subscription management with performance optimization
+  const setupRealtimeSubscriptions = useCallback(() => {
+    console.log('🔄 Setting up real-time subscriptions...');
+
+    // Prevent duplicate subscriptions
+    if (Object.keys(subscriptionsRef.current).length > 0) {
+      console.log('⚠️ Subscriptions already exist, skipping setup');
+      return;
+    }
+
+    // Clients table subscription
+    const clientsSubscription = supabase
+      .channel('public:clients')
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'clients' },
+        (payload) => {
+          console.log('🔄 Real-time client change:', payload);
+
+          if (payload.eventType === 'INSERT') {
+            const newClient = payload.new as any;
+            const client = {
+              id: newClient.id,
+              firstName: newClient.first_name,
+              lastName: newClient.last_name,
+              partnerName: newClient.partner_name || undefined,
+              dogName: newClient.dog_name || undefined,
+              otherDogs: newClient.other_dogs,
+              phone: newClient.phone,
+              email: newClient.email,
+              address: newClient.address,
+              active: newClient.active,
+              membership: newClient.membership,
+              avatar: newClient.avatar,
+              behaviouralBriefId: newClient.behavioural_brief_id,
+              booking_terms_signed: newClient.booking_terms_signed,
+              booking_terms_signed_date: newClient.booking_terms_signed_date,
+            };
+            debouncedDispatch({ type: 'ADD_CLIENT', payload: client }, 50);
+          } else if (payload.eventType === 'UPDATE') {
+            const updatedClient = payload.new as any;
+            const client = {
+              id: updatedClient.id,
+              firstName: updatedClient.first_name,
+              lastName: updatedClient.last_name,
+              partnerName: updatedClient.partner_name || undefined,
+              dogName: updatedClient.dog_name || undefined,
+              otherDogs: updatedClient.other_dogs,
+              phone: updatedClient.phone,
+              email: updatedClient.email,
+              address: updatedClient.address,
+              active: updatedClient.active,
+              membership: updatedClient.membership,
+              avatar: updatedClient.avatar,
+              behaviouralBriefId: updatedClient.behavioural_brief_id,
+              booking_terms_signed: updatedClient.booking_terms_signed,
+              booking_terms_signed_date: updatedClient.booking_terms_signed_date,
+            };
+            debouncedDispatch({ type: 'UPDATE_CLIENT', payload: client }, 50);
+          } else if (payload.eventType === 'DELETE') {
+            debouncedDispatch({ type: 'DELETE_CLIENT', payload: payload.old.id }, 50);
+          }
+        }
+      )
+      .subscribe();
+
+    subscriptionsRef.current.clients = clientsSubscription;
+
+    // Sessions table subscription
+    const sessionsSubscription = supabase
+      .channel('public:sessions')
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'sessions' },
+        (payload) => {
+          console.log('🔄 Real-time session change:', payload);
+
+          if (payload.eventType === 'INSERT') {
+            const newSession = payload.new as any;
+            const session = {
+              id: newSession.id,
+              clientId: newSession.client_id,
+              dogName: newSession.dog_name,
+              sessionType: newSession.session_type,
+              bookingDate: newSession.booking_date,
+              bookingTime: newSession.booking_time,
+              notes: newSession.notes,
+              quote: newSession.quote,
+              email: newSession.email,
+              sessionPaid: newSession.session_paid,
+              paymentConfirmedAt: newSession.payment_confirmed_at,
+              sessionPlanSent: newSession.session_plan_sent,
+              questionnaireBypass: newSession.questionnaire_bypass,
+              eventId: newSession.event_id,
+              googleMeetLink: newSession.google_meet_link,
+              participants: newSession.participants,
+              individualQuote: newSession.individual_quote,
+            };
+            debouncedDispatch({ type: 'ADD_SESSION', payload: session }, 50);
+          } else if (payload.eventType === 'UPDATE') {
+            const updatedSession = payload.new as any;
+            const session = {
+              id: updatedSession.id,
+              clientId: updatedSession.client_id,
+              dogName: updatedSession.dog_name,
+              sessionType: updatedSession.session_type,
+              bookingDate: updatedSession.booking_date,
+              bookingTime: updatedSession.booking_time,
+              notes: updatedSession.notes,
+              quote: updatedSession.quote,
+              email: updatedSession.email,
+              sessionPaid: updatedSession.session_paid,
+              paymentConfirmedAt: updatedSession.payment_confirmed_at,
+              sessionPlanSent: updatedSession.session_plan_sent,
+              questionnaireBypass: updatedSession.questionnaire_bypass,
+              eventId: updatedSession.event_id,
+              googleMeetLink: updatedSession.google_meet_link,
+              participants: updatedSession.participants,
+              individualQuote: updatedSession.individual_quote,
+            };
+            debouncedDispatch({ type: 'UPDATE_SESSION', payload: session }, 50);
+          } else if (payload.eventType === 'DELETE') {
+            debouncedDispatch({ type: 'DELETE_SESSION', payload: payload.old.id }, 50);
+          }
+        }
+      )
+      .subscribe();
+
+    subscriptionsRef.current.sessions = sessionsSubscription;
+
+    // Behaviour questionnaires table subscription
+    const questionnaireSubscription = supabase
+      .channel('public:behaviour_questionnaires')
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'behaviour_questionnaires' },
+        (payload) => {
+          console.log('🔄 Real-time questionnaire change:', payload);
+
+          if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+            // Reload questionnaires to get the latest data
+            loadBehaviourQuestionnaires();
+          } else if (payload.eventType === 'DELETE') {
+            debouncedDispatch({ type: 'DELETE_BEHAVIOUR_QUESTIONNAIRE', payload: payload.old.id }, 50);
+          }
+        }
+      )
+      .subscribe();
+
+    subscriptionsRef.current.questionnaires = questionnaireSubscription;
+
+    // Behavioural briefs table subscription
+    const briefsSubscription = supabase
+      .channel('public:behavioural_briefs')
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'behavioural_briefs' },
+        (payload) => {
+          console.log('🔄 Real-time brief change:', payload);
+
+          if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+            // Reload briefs to get the latest data
+            loadBehaviouralBriefs();
+          } else if (payload.eventType === 'DELETE') {
+            debouncedDispatch({ type: 'DELETE_BEHAVIOURAL_BRIEF', payload: payload.old.id }, 50);
+          }
+        }
+      )
+      .subscribe();
+
+    subscriptionsRef.current.briefs = briefsSubscription;
+
+    // Booking terms table subscription
+    const bookingTermsSubscription = supabase
+      .channel('public:booking_terms')
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'booking_terms' },
+        (payload) => {
+          console.log('🔄 Real-time booking terms change:', payload);
+
+          if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+            // Reload booking terms to get the latest data
+            loadBookingTerms();
+          } else if (payload.eventType === 'DELETE') {
+            debouncedDispatch({ type: 'DELETE_BOOKING_TERMS', payload: payload.old.id }, 50);
+          }
+        }
+      )
+      .subscribe();
+
+    subscriptionsRef.current.bookingTerms = bookingTermsSubscription;
+
+    // Memberships table subscription
+    const membershipsSubscription = supabase
+      .channel('public:memberships')
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'memberships' },
+        (payload) => {
+          console.log('🔄 Real-time membership change:', payload);
+
+          if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+            // Reload memberships to get the latest data
+            loadMemberships();
+          } else if (payload.eventType === 'DELETE') {
+            debouncedDispatch({ type: 'DELETE_MEMBERSHIP', payload: payload.old.id }, 50);
+          }
+        }
+      )
+      .subscribe();
+
+    subscriptionsRef.current.memberships = membershipsSubscription;
+
+    // Session plans table subscription
+    const sessionPlansSubscription = supabase
+      .channel('public:session_plans')
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'session_plans' },
+        (payload) => {
+          console.log('🔄 Real-time session plan change:', payload);
+
+          if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+            // Reload session plans to get the latest data
+            loadSessionPlans();
+          } else if (payload.eventType === 'DELETE') {
+            debouncedDispatch({ type: 'DELETE_SESSION_PLAN', payload: payload.old.id }, 50);
+          }
+        }
+      )
+      .subscribe();
+
+    subscriptionsRef.current.sessionPlans = sessionPlansSubscription;
+
+    console.log('✅ Real-time subscriptions setup complete');
+  }, [debouncedDispatch, loadBehaviourQuestionnaires, loadBehaviouralBriefs, loadBookingTerms, loadMemberships, loadSessionPlans]);
+
+  // Cleanup subscriptions
+  const cleanupSubscriptions = useCallback(() => {
+    console.log('🧹 Cleaning up real-time subscriptions...');
+
+    Object.values(subscriptionsRef.current).forEach(subscription => {
+      if (subscription) {
+        supabase.removeChannel(subscription);
+      }
+    });
+
+    subscriptionsRef.current = {};
+    console.log('✅ Subscriptions cleanup complete');
+  }, []);
 
   // Create action point in Supabase
   const createActionPoint = async (actionPointData: Omit<ActionPoint, 'id'>): Promise<ActionPoint> => {
@@ -680,11 +1037,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       // Check if client has filled questionnaire for the specific dog in this session
       const sessionDogName = session.dogName || client.dogName;
-      const hasFilledQuestionnaire = sessionDogName ?
-        state.behaviourQuestionnaires.some(q =>
-          (q.client_id === client.id || q.clientId === client.id) &&
-          q.dogName === sessionDogName
-        ) : false;
+      const hasFilledQuestionnaire = sessionDogName
+        ? findQuestionnaireForClient(client, sessionDogName, state.behaviourQuestionnaires)
+        : false;
 
       // Prepare session data for Make.com
       const webhookData = {
@@ -740,7 +1095,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       // Always trigger booking terms webhook for all newly created sessions
       // Comprehensive validation to prevent blank/empty webhook data
-      if (isValidWebhookData(webhookData)) {
+      if (isValidWebhookData(webhookData) && !shouldSkipWebhookCall(session.id, 'booking-terms')) {
         console.log(`[BOOKING_TERMS_WEBHOOK] Adding to queue for new session ${webhookData.sessionId} - ${webhookData.clientFirstName} ${webhookData.clientLastName}`);
         webhookPromises.push(
           fetch('https://hook.eu1.make.com/yaoalfe77uqtw4xv9fbh5atf4okq14wm', {
@@ -752,8 +1107,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
           })
         );
         webhookNames.push('booking terms email webhook');
-      } else {
+      } else if (!isValidWebhookData(webhookData)) {
         console.log(`[BOOKING_TERMS_WEBHOOK] BLOCKED - Invalid data for session ${session.id}. Webhook data:`, webhookData);
+      } else {
+        console.log(`[BOOKING_TERMS_WEBHOOK] BLOCKED - Duplicate call prevented for session ${session.id}`);
       }
 
       // Always trigger session webhook for all new sessions
@@ -825,11 +1182,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       // Check if client has filled questionnaire for the specific dog in this session
       const sessionDogName = session.dogName || client.dogName;
-      const hasFilledQuestionnaire = sessionDogName ?
-        state.behaviourQuestionnaires.some(bq =>
-          (bq.client_id === client.id || bq.clientId === client.id) &&
-          bq.dogName === sessionDogName
-        ) : false;
+      const hasFilledQuestionnaire = sessionDogName
+        ? findQuestionnaireForClient(client, sessionDogName, state.behaviourQuestionnaires)
+        : false;
 
       // Prepare session data for booking terms webhook
       const webhookData = {
@@ -856,7 +1211,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       };
 
       // Comprehensive validation to prevent blank/empty webhook data
-      if (isValidWebhookData(webhookData)) {
+      if (isValidWebhookData(webhookData) && !shouldSkipWebhookCall(session.id, 'booking-terms-update')) {
         const webhookTimestamp = new Date().toISOString();
         console.log(`[BOOKING_TERMS_WEBHOOK] Triggering for session ${webhookData.sessionId} - ${webhookData.clientFirstName} ${webhookData.clientLastName} at ${webhookTimestamp}`);
         await fetch('https://hook.eu1.make.com/yaoalfe77uqtw4xv9fbh5atf4okq14wm', {
@@ -870,8 +1225,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
           })
         });
         console.log(`[BOOKING_TERMS_WEBHOOK] Completed for session ${webhookData.sessionId} at ${new Date().toISOString()}`);
-      } else {
+      } else if (!isValidWebhookData(webhookData)) {
         console.log(`[BOOKING_TERMS_WEBHOOK] BLOCKED - Invalid data for session ${session.id}. Webhook data:`, webhookData);
+      } else {
+        console.log(`[BOOKING_TERMS_WEBHOOK] BLOCKED - Duplicate update call prevented for session ${session.id}`);
       }
     } catch (error) {
       // Don't throw error - webhook failure shouldn't prevent session update
@@ -1440,27 +1797,64 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Load initial data on mount
+  // Load initial data and setup real-time subscriptions
   useEffect(() => {
-    console.log('AppContext: Loading initial data...');
-    const initializeApp = async () => {
-      await loadClients();
-      await loadSessions();
-      await loadMemberships();
-      await loadBehaviouralBriefs();
-      await loadBehaviourQuestionnaires();
-      await loadBookingTerms();
-      await loadClientEmailAliases();
-      await loadActionPoints();
-      await loadSessionParticipants();
-      await loadSessionPlans();
+    if (isInitializedRef.current) return;
 
-      // Membership status updates now handled by daily cron job via /api/membership-expiration
-      console.log('✅ Initial data loading complete');
+    console.log('🚀 AppContext: Initializing app with real-time updates...');
+    const initializeApp = async () => {
+      try {
+        // Load initial data in parallel for better performance
+        await Promise.all([
+          loadClients(),
+          loadSessions(),
+          loadMemberships(),
+          loadBehaviouralBriefs(),
+          loadBehaviourQuestionnaires(),
+          loadBookingTerms(),
+          loadClientEmailAliases(),
+          loadActionPoints(),
+          loadSessionParticipants(),
+          loadSessionPlans(),
+        ]);
+
+        console.log('✅ Initial data loading complete');
+
+        // Setup real-time subscriptions after initial data load
+        setupRealtimeSubscriptions();
+
+        isInitializedRef.current = true;
+        console.log('🎉 App initialization complete with real-time updates');
+      } catch (error) {
+        console.error('❌ Failed to initialize app:', error);
+      }
     };
 
     initializeApp();
-  }, []);
+
+    // Cleanup subscriptions on unmount
+    return () => {
+      cleanupSubscriptions();
+      // Clear any pending timeouts
+      Object.values(updateTimeoutsRef.current).forEach(timeout => {
+        clearTimeout(timeout);
+      });
+      updateTimeoutsRef.current = {};
+    };
+  }, [
+    loadClients,
+    loadSessions,
+    loadMemberships,
+    loadBehaviouralBriefs,
+    loadBehaviourQuestionnaires,
+    loadBookingTerms,
+    loadClientEmailAliases,
+    loadActionPoints,
+    loadSessionParticipants,
+    loadSessionPlans,
+    setupRealtimeSubscriptions,
+    cleanupSubscriptions
+  ]);
 
   return (
     <AppContext.Provider value={{

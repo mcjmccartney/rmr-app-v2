@@ -56,12 +56,69 @@ export default function SessionModal({ session, isOpen, onClose, onEditSession, 
   // Get the specific dog name for this session (session.dogName takes priority over client.dogName)
   const sessionDogName = session.dogName || client?.dogName;
 
-  const behaviourQuestionnaire = client && sessionDogName
-    ? state.behaviourQuestionnaires.find(q => q.client_id === client.id) ||
-      (client.email ? state.behaviourQuestionnaires.find(q =>
+  // Comprehensive questionnaire matching function
+  const findQuestionnaireForSession = (client: any, dogName: string, questionnaires: any[]) => {
+    if (!client || !dogName) return null;
+
+    // Method 1: Match by client_id and dog name (case-insensitive)
+    let questionnaire = questionnaires.find(q =>
+      (q.client_id === client.id || q.clientId === client.id) &&
+      q.dogName?.toLowerCase() === dogName.toLowerCase()
+    );
+
+    if (questionnaire) return questionnaire;
+
+    // Method 2: Match by email and dog name (case-insensitive)
+    if (client.email) {
+      questionnaire = questionnaires.find(q =>
         q.email?.toLowerCase() === client.email?.toLowerCase() &&
-        q.dogName?.toLowerCase() === sessionDogName.toLowerCase()
-      ) : null)
+        q.dogName?.toLowerCase() === dogName.toLowerCase()
+      );
+    }
+
+    if (questionnaire) return questionnaire;
+
+    // Method 3: Match by client_id and dog name (exact case)
+    questionnaire = questionnaires.find(q =>
+      (q.client_id === client.id || q.clientId === client.id) &&
+      q.dogName === dogName
+    );
+
+    if (questionnaire) return questionnaire;
+
+    // Method 4: Match by email and dog name (exact case)
+    if (client.email) {
+      questionnaire = questionnaires.find(q =>
+        q.email === client.email &&
+        q.dogName === dogName
+      );
+    }
+
+    if (questionnaire) return questionnaire;
+
+    // Method 5: Match by partial dog name (case-insensitive)
+    questionnaire = questionnaires.find(q =>
+      (q.client_id === client.id || q.clientId === client.id) &&
+      (q.dogName?.toLowerCase().includes(dogName.toLowerCase()) ||
+       dogName.toLowerCase().includes(q.dogName?.toLowerCase() || ''))
+    );
+
+    if (questionnaire) return questionnaire;
+
+    // Method 6: Match by email and partial dog name (case-insensitive)
+    if (client.email) {
+      questionnaire = questionnaires.find(q =>
+        q.email?.toLowerCase() === client.email?.toLowerCase() &&
+        (q.dogName?.toLowerCase().includes(dogName.toLowerCase()) ||
+         dogName.toLowerCase().includes(q.dogName?.toLowerCase() || ''))
+      );
+    }
+
+    return questionnaire || null;
+  };
+
+  const behaviourQuestionnaire = sessionDogName
+    ? findQuestionnaireForSession(client, sessionDogName, state.behaviourQuestionnaires)
     : null;
 
   const handleDelete = async () => {

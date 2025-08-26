@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase';
-import { SessionPlan, ActionPoint } from '@/types';
+import { SessionPlan, ActionPoint, EditableActionPoint } from '@/types';
 
 // Convert database row to SessionPlan type
 function dbRowToSessionPlan(row: Record<string, any>): SessionPlan {
@@ -13,6 +13,7 @@ function dbRowToSessionPlan(row: Record<string, any>): SessionPlan {
     mainGoal4: row.main_goal_4,
     explanationOfBehaviour: row.explanation_of_behaviour,
     actionPoints: row.action_points || [],
+    editedActionPoints: row.edited_action_points || {},
     documentEditUrl: row.document_edit_url,
     createdAt: new Date(row.created_at),
     updatedAt: new Date(row.updated_at),
@@ -31,6 +32,7 @@ function sessionPlanToDbRow(sessionPlan: Partial<SessionPlan>) {
     main_goal_4: sessionPlan.mainGoal4,
     explanation_of_behaviour: sessionPlan.explanationOfBehaviour,
     action_points: sessionPlan.actionPoints,
+    edited_action_points: sessionPlan.editedActionPoints || {},
     document_edit_url: sessionPlan.documentEditUrl,
   };
 }

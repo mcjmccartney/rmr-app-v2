@@ -21,9 +21,10 @@ CREATE TABLE IF NOT EXISTS session_plans (
     main_goal_4 TEXT,
     explanation_of_behaviour TEXT,
     action_points TEXT[], -- Array of action point IDs
+    edited_action_points JSONB, -- Custom edited action point content
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    
+
     -- Ensure one session plan per session
     UNIQUE(session_id)
 );

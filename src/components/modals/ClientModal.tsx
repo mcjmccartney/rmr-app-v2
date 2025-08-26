@@ -216,9 +216,31 @@ export default function ClientModal({ client, isOpen, onClose, onEditClient, onV
           )}
 
           {currentClient.email && (
-            <div className="flex justify-between items-center py-4">
+            <div className="flex justify-between items-start py-4">
               <span className="text-gray-600 font-medium">Email</span>
-              <span className="font-semibold text-gray-900 text-right break-all">{currentClient.email}</span>
+              <div className="text-right">
+                <div className="font-semibold text-gray-900 break-all">{currentClient.email}</div>
+                {(() => {
+                  // Get email aliases for this client
+                  const aliases = state.clientEmailAliases?.[currentClient.id];
+                  const aliasEmails = aliases?.filter(alias =>
+                    alias.email.toLowerCase() !== currentClient.email?.toLowerCase() && !alias.isPrimary
+                  ) || [];
+
+                  if (aliasEmails.length > 0) {
+                    return (
+                      <div className="mt-1 space-y-1">
+                        {aliasEmails.map((alias, index) => (
+                          <div key={alias.id} className="text-sm text-gray-500 break-all">
+                            {alias.email}
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
+              </div>
             </div>
           )}
 

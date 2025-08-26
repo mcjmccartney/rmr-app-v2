@@ -46,13 +46,49 @@ export default function SessionPlanPreview({
 
   // Get dog's gender from questionnaire for proper pronoun replacement
   const getDogGender = (): 'Male' | 'Female' => {
-    if (!client?.email || !dogName) return 'Male';
+    if (!client || !dogName) return 'Male';
 
-    const questionnaire = state.behaviourQuestionnaires.find(q =>
-      q.email?.toLowerCase() === client.email?.toLowerCase() &&
-      q.dogName?.toLowerCase() === dogName.toLowerCase()
-    );
+    // Comprehensive questionnaire matching function
+    const findQuestionnaireForClient = (client: any, dogName: string, questionnaires: any[]) => {
+      if (!client || !dogName) return null;
 
+      // Method 1: Match by client_id and dog name (case-insensitive)
+      let questionnaire = questionnaires.find(q =>
+        (q.client_id === client.id || q.clientId === client.id) &&
+        q.dogName?.toLowerCase() === dogName.toLowerCase()
+      );
+      if (questionnaire) return questionnaire;
+
+      // Method 2: Match by email and dog name (case-insensitive)
+      if (client.email) {
+        questionnaire = questionnaires.find(q =>
+          q.email?.toLowerCase() === client.email?.toLowerCase() &&
+          q.dogName?.toLowerCase() === dogName.toLowerCase()
+        );
+        if (questionnaire) return questionnaire;
+      }
+
+      // Method 3: Match by partial dog name (case-insensitive)
+      questionnaire = questionnaires.find(q =>
+        (q.client_id === client.id || q.clientId === client.id) &&
+        (q.dogName?.toLowerCase().includes(dogName.toLowerCase()) ||
+         dogName.toLowerCase().includes(q.dogName?.toLowerCase() || ''))
+      );
+      if (questionnaire) return questionnaire;
+
+      // Method 4: Match by email and partial dog name (case-insensitive)
+      if (client.email) {
+        questionnaire = questionnaires.find(q =>
+          q.email?.toLowerCase() === client.email?.toLowerCase() &&
+          (q.dogName?.toLowerCase().includes(dogName.toLowerCase()) ||
+           dogName.toLowerCase().includes(q.dogName?.toLowerCase() || ''))
+        );
+      }
+
+      return questionnaire || null;
+    };
+
+    const questionnaire = findQuestionnaireForClient(client, dogName, state.behaviourQuestionnaires);
     return questionnaire?.sex || 'Male';
   };
 

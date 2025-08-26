@@ -14,7 +14,7 @@ import AddModal from '@/components/AddModal';
 import { Session, Client, BehaviouralBrief, BehaviourQuestionnaire, SessionPlan } from '@/types';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek } from 'date-fns';
 import { formatTime, formatDayDate, formatMonthYear, combineDateAndTime } from '@/utils/dateFormatting';
-import { ChevronLeft, ChevronRight, Calendar, UserPlus, X, Users, CalendarDays, Edit3, FileText } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar, UserPlus, X, Users, CalendarDays, Edit3, FileText, Search } from 'lucide-react';
 
 // Helper function to check if a session plan has meaningful content
 const sessionPlanHasContent = (sessionPlan: SessionPlan): boolean => {
@@ -55,13 +55,69 @@ const getClientEmails = (client: any, clientEmailAliases: { [clientId: string]: 
 };
 
 // Helper function to check if a questionnaire exists for a specific client and dog
-const hasQuestionnaireForDog = (client: any, dogName: string | undefined, behaviourQuestionnaires: any[]): boolean => {
-  if (!client || !dogName) return false;
+const hasQuestionnaireForDog = (client: any, session: any, behaviourQuestionnaires: any[]): boolean => {
+  if (!client) return false;
 
-  return behaviourQuestionnaires.some(q =>
+  // Use the same fallback logic as the rest of the app
+  const dogName = session.dogName || client.dogName;
+  if (!dogName) return false;
+
+  // Comprehensive questionnaire matching - try multiple methods
+  // Method 1: Match by client_id and dog name (case-insensitive)
+  let hasQuestionnaire = behaviourQuestionnaires.some(q =>
+    (q.client_id === client.id || q.clientId === client.id) &&
+    q.dogName?.toLowerCase() === dogName.toLowerCase()
+  );
+
+  if (hasQuestionnaire) return true;
+
+  // Method 2: Match by email and dog name (case-insensitive)
+  if (client.email) {
+    hasQuestionnaire = behaviourQuestionnaires.some(q =>
+      q.email?.toLowerCase() === client.email?.toLowerCase() &&
+      q.dogName?.toLowerCase() === dogName.toLowerCase()
+    );
+  }
+
+  if (hasQuestionnaire) return true;
+
+  // Method 3: Match by client_id and dog name (exact case)
+  hasQuestionnaire = behaviourQuestionnaires.some(q =>
     (q.client_id === client.id || q.clientId === client.id) &&
     q.dogName === dogName
   );
+
+  if (hasQuestionnaire) return true;
+
+  // Method 4: Match by email and dog name (exact case)
+  if (client.email) {
+    hasQuestionnaire = behaviourQuestionnaires.some(q =>
+      q.email === client.email &&
+      q.dogName === dogName
+    );
+  }
+
+  if (hasQuestionnaire) return true;
+
+  // Method 5: Match by partial dog name (case-insensitive)
+  hasQuestionnaire = behaviourQuestionnaires.some(q =>
+    (q.client_id === client.id || q.clientId === client.id) &&
+    (q.dogName?.toLowerCase().includes(dogName.toLowerCase()) ||
+     dogName.toLowerCase().includes(q.dogName?.toLowerCase() || ''))
+  );
+
+  if (hasQuestionnaire) return true;
+
+  // Method 6: Match by email and partial dog name (case-insensitive)
+  if (client.email) {
+    hasQuestionnaire = behaviourQuestionnaires.some(q =>
+      q.email?.toLowerCase() === client.email?.toLowerCase() &&
+      (q.dogName?.toLowerCase().includes(dogName.toLowerCase()) ||
+       dogName.toLowerCase().includes(q.dogName?.toLowerCase() || ''))
+    );
+  }
+
+  return hasQuestionnaire;
 };
 
 export default function CalendarPage() {
@@ -86,6 +142,7 @@ export default function CalendarPage() {
   const [selectedDaySessions, setSelectedDaySessions] = useState<Session[]>([]);
   const [selectedDayDate, setSelectedDayDate] = useState<Date | null>(null);
   const [hideWeekends, setHideWeekends] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Disabled automatic membership pairing - now using manual override system
   // useEffect(() => {
@@ -121,7 +178,36 @@ export default function CalendarPage() {
 
       try {
         const sessionDateTime = combineDateAndTime(session.bookingDate, session.bookingTime);
-        return isSameDay(sessionDateTime, day);
+        const isCorrectDay = isSameDay(sessionDateTime, day);
+
+        // If no search query, return all sessions for this day
+        if (!searchQuery.trim()) {
+          return isCorrectDay;
+        }
+
+        // If there's a search query, also check if session matches search
+        if (isCorrectDay) {
+          const client = state.clients.find(c => c.id === session.clientId);
+          const searchLower = searchQuery.toLowerCase().trim();
+
+          // Search in client name
+          const clientName = client ? `${client.firstName} ${client.lastName}`.toLowerCase() : '';
+          if (clientName.includes(searchLower)) return true;
+
+          // Search in dog name
+          const dogName = (session.dogName || client?.dogName || '').toLowerCase();
+          if (dogName.includes(searchLower)) return true;
+
+          // Search in session type
+          if (session.sessionType.toLowerCase().includes(searchLower)) return true;
+
+          // Search in notes
+          if (session.notes && session.notes.toLowerCase().includes(searchLower)) return true;
+
+          return false;
+        }
+
+        return false;
       } catch (error) {
         console.warn('Error processing session date:', session, error);
         return false;
@@ -180,6 +266,8 @@ export default function CalendarPage() {
 
   const handleEditSession = (session: Session) => {
     setSelectedSession(session);
+    // Close group session modal if it's open
+    setShowGroupSessionModal(false);
     setShowEditSessionModal(true);
   };
 
@@ -341,7 +429,36 @@ export default function CalendarPage() {
 
       try {
         const sessionDateTime = combineDateAndTime(session.bookingDate, session.bookingTime);
-        return sessionDateTime >= new Date();
+        const isFuture = sessionDateTime >= new Date();
+
+        // If no search query, return all future sessions
+        if (!searchQuery.trim()) {
+          return isFuture;
+        }
+
+        // If there's a search query, also check if session matches search
+        if (isFuture) {
+          const client = state.clients.find(c => c.id === session.clientId);
+          const searchLower = searchQuery.toLowerCase().trim();
+
+          // Search in client name
+          const clientName = client ? `${client.firstName} ${client.lastName}`.toLowerCase() : '';
+          if (clientName.includes(searchLower)) return true;
+
+          // Search in dog name
+          const dogName = (session.dogName || client?.dogName || '').toLowerCase();
+          if (dogName.includes(searchLower)) return true;
+
+          // Search in session type
+          if (session.sessionType.toLowerCase().includes(searchLower)) return true;
+
+          // Search in notes
+          if (session.notes && session.notes.toLowerCase().includes(searchLower)) return true;
+
+          return false;
+        }
+
+        return false;
       } catch (error) {
         console.warn('Error processing upcoming session:', session, error);
         return false;
@@ -388,8 +505,29 @@ export default function CalendarPage() {
           </button>
         </div>
 
-        {/* Right: Action Buttons */}
+        {/* Right: Search Bar (Desktop Only) and Action Buttons */}
         <div className="flex items-center gap-2">
+          {/* Search Bar - Desktop Only (hidden on mobile and tablet) */}
+          <div className="hidden xl:block">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+              <input
+                type="text"
+                placeholder="Search sessions, clients, dogs..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-80 pl-10 pr-4 py-2 rounded-lg border-0 bg-white/90 backdrop-blur-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white/50 focus:bg-white transition-all"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <X size={16} />
+                </button>
+              )}
+            </div>
+          </div>
           {/* Weekend toggle button */}
           <button
             onClick={() => setHideWeekends(!hideWeekends)}
@@ -498,6 +636,21 @@ export default function CalendarPage() {
                         });
                       }
 
+                      // Debug logging for Becky Cuthbertson session
+                      if (client && client.firstName === 'Becky' && client.lastName === 'Cuthbertson') {
+                        console.log('🔍 Becky Cuthbertson session debug:', {
+                          sessionId: session.id,
+                          sessionDogName: session.dogName,
+                          clientDogName: client.dogName,
+                          clientOtherDogs: client.otherDogs,
+                          sessionPlan,
+                          hasContent: hasSessionPlanWithContent,
+                          sessionType: session.sessionType,
+                          bookingDate: session.bookingDate,
+                          bookingTime: session.bookingTime
+                        });
+                      }
+
                       // For Group and RMR Live sessions, show session type instead of "Unknown Client"
                       const isGroupOrRMRLive = session.sessionType === 'Group' || session.sessionType === 'RMR Live';
                       const fullDisplayText = client
@@ -514,12 +667,12 @@ export default function CalendarPage() {
                         state.bookingTerms.some(bt =>
                           clientEmails.includes(bt.email?.toLowerCase() || '')
                         ) : false;
-                      const hasFilledQuestionnaire = hasQuestionnaireForDog(client, session.dogName, state.behaviourQuestionnaires);
+                      const hasFilledQuestionnaire = hasQuestionnaireForDog(client, session, state.behaviourQuestionnaires);
 
 
 
 
-                      // Priority: No Client (charcoal grey) > Session Plan Sent (charcoal grey) > Paid (green) > Terms + Questionnaire (amber) > Default (amber-800)
+                      // Priority: No Client (charcoal grey) > Session Plan Sent (charcoal grey) > Fully Complete + Paid (green) > Terms + Questionnaire (amber) > Default (amber-800)
                       const isFullyCompleted = hasSignedBookingTerms && (hasFilledQuestionnaire || session.questionnaireBypass);
                       const isPaid = session.sessionPaid;
                       const isSessionPlanSent = session.sessionPlanSent;
@@ -531,8 +684,8 @@ export default function CalendarPage() {
                         // No client or session plan sent = dark charcoal grey background (highest priority)
                         buttonStyle = { backgroundColor: '#36454F' };
                         buttonClasses = "w-full text-white text-xs px-2 py-1 rounded text-left transition-colors flex-shrink-0 hover:opacity-80";
-                      } else if (isPaid) {
-                        // Paid = green background (overrides amber/red but not charcoal grey)
+                      } else if (isFullyCompleted && isPaid) {
+                        // Fully completed AND paid = green background
                         buttonStyle = { backgroundColor: '#4f6749' };
                         buttonClasses = "w-full text-white text-xs px-2 py-1 rounded text-left transition-colors flex-shrink-0 hover:opacity-80";
                       } else if (isFullyCompleted) {
@@ -601,9 +754,9 @@ export default function CalendarPage() {
             const clientEmails = client ? getClientEmails(client, state.clientEmailAliases || {}) : [];
             const hasSignedBookingTerms = clientEmails.length > 0 ?
               state.bookingTerms.some(bt => clientEmails.includes(bt.email?.toLowerCase() || '')) : false;
-            const hasFilledQuestionnaire = hasQuestionnaireForDog(client, firstSession.dogName, state.behaviourQuestionnaires);
+            const hasFilledQuestionnaire = hasQuestionnaireForDog(client, firstSession, state.behaviourQuestionnaires);
 
-            // Priority: No Client (charcoal grey) > Session Plan Sent (charcoal grey) > Paid (green) > Terms + Questionnaire (amber) > Default (amber-800)
+            // Priority: No Client (charcoal grey) > Session Plan Sent (charcoal grey) > Fully Complete + Paid (green) > Terms + Questionnaire (amber) > Default (amber-800)
             const isFullyCompleted = hasSignedBookingTerms && (hasFilledQuestionnaire || firstSession.questionnaireBypass);
             const isPaid = firstSession.sessionPaid;
             const isSessionPlanSent = firstSession.sessionPlanSent;
@@ -611,8 +764,8 @@ export default function CalendarPage() {
             if (!client || isSessionPlanSent) {
               // No client or session plan sent = dark charcoal grey background (highest priority)
               return '#36454F';
-            } else if (isPaid) {
-              // Paid = green background (overrides amber/red but not charcoal grey)
+            } else if (isFullyCompleted && isPaid) {
+              // Fully completed AND paid = green background
               return '#4f6749';
             } else if (isFullyCompleted) {
               // Terms + Questionnaire (but not paid) = amber background
@@ -736,11 +889,11 @@ export default function CalendarPage() {
                 const sessionPlan = state.sessionPlans.find(plan => plan.sessionId === session.id);
                 const hasSessionPlanWithContent = sessionPlan && sessionPlanHasContent(sessionPlan);
 
-                // Determine button style - priority: session plan sent (black) > paid (green) > default
+                // Determine button style - priority: session plan sent (black) > fully complete + paid (green) > terms + questionnaire (amber) > default
                 const clientEmails = getClientEmails(client, state.clientEmailAliases || {});
                 const hasSignedBookingTerms = clientEmails.length > 0 ?
                   state.bookingTerms.some(bt => clientEmails.includes(bt.email?.toLowerCase() || '')) : false;
-                const hasFilledQuestionnaire = hasQuestionnaireForDog(client, session.dogName, state.behaviourQuestionnaires);
+                const hasFilledQuestionnaire = hasQuestionnaireForDog(client, session, state.behaviourQuestionnaires);
                 const isPaid = session.sessionPaid;
                 const isFullyCompleted = hasSignedBookingTerms && (hasFilledQuestionnaire || session.questionnaireBypass);
                 const isSessionPlanSent = session.sessionPlanSent;
@@ -751,7 +904,7 @@ export default function CalendarPage() {
                 if (!client || isSessionPlanSent) {
                   buttonClass = "w-full text-white p-4 rounded-lg text-left transition-colors hover:opacity-80";
                   buttonStyle = { backgroundColor: '#36454F' };
-                } else if (isPaid) {
+                } else if (isFullyCompleted && isPaid) {
                   buttonClass = "w-full text-white p-4 rounded-lg text-left transition-colors hover:opacity-80";
                   buttonStyle = { backgroundColor: '#4f6749' };
                 } else if (isFullyCompleted) {
@@ -819,11 +972,11 @@ export default function CalendarPage() {
                   const sessionPlan = state.sessionPlans.find(plan => plan.sessionId === session.id);
                   const hasSessionPlanWithContent = sessionPlan && sessionPlanHasContent(sessionPlan);
 
-                  // Determine button style - priority: session plan sent (black) > paid (green) > default
+                  // Determine button style - priority: session plan sent (black) > fully complete + paid (green) > terms + questionnaire (amber) > default
                   const clientEmails = getClientEmails(client, state.clientEmailAliases || {});
                   const hasSignedBookingTerms = clientEmails.length > 0 ?
                     state.bookingTerms.some(bt => clientEmails.includes(bt.email?.toLowerCase() || '')) : false;
-                  const hasFilledQuestionnaire = hasQuestionnaireForDog(client, session.dogName, state.behaviourQuestionnaires);
+                  const hasFilledQuestionnaire = hasQuestionnaireForDog(client, session, state.behaviourQuestionnaires);
                   const isPaid = session.sessionPaid;
                   const isFullyCompleted = hasSignedBookingTerms && (hasFilledQuestionnaire || session.questionnaireBypass);
                   const isSessionPlanSent = session.sessionPlanSent;
@@ -834,7 +987,7 @@ export default function CalendarPage() {
                   if (!client || isSessionPlanSent) {
                     buttonClass = "w-full text-white p-4 rounded-lg text-left transition-colors hover:opacity-80";
                     buttonStyle = { backgroundColor: '#36454F' };
-                  } else if (isPaid) {
+                  } else if (isFullyCompleted && isPaid) {
                     buttonClass = "w-full text-white p-4 rounded-lg text-left transition-colors hover:opacity-80";
                     buttonStyle = { backgroundColor: '#4f6749' };
                   } else if (isFullyCompleted) {

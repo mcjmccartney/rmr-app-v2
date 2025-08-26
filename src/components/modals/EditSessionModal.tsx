@@ -18,7 +18,7 @@ interface EditSessionModalProps {
 }
 
 export default function EditSessionModal({ session, isOpen, onClose }: EditSessionModalProps) {
-  const { state, updateSession } = useApp();
+  const { state, updateSession, deleteSession } = useApp();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     clientId: '',
@@ -148,6 +148,32 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
     } catch (error) {
       console.error('Failed to update session:', error);
       alert('Failed to update session. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!session || isSubmitting) return;
+
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete this ${session.sessionType} session?\n\n` +
+      `Date: ${session.bookingDate}\n` +
+      `Time: ${session.bookingTime}\n\n` +
+      `This action cannot be undone and will also delete the associated Google Calendar event.`
+    );
+
+    if (!confirmDelete) return;
+
+    setIsSubmitting(true);
+
+    try {
+      console.log('Deleting session...');
+      await deleteSession(session.id);
+      onClose();
+    } catch (error) {
+      console.error('Failed to delete session:', error);
+      alert('Failed to delete session. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -293,17 +319,32 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
           />
         </div>
 
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className={`w-full py-3 px-6 rounded-lg font-medium transition-colors ${
-            isSubmitting
-              ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
-              : 'bg-amber-800 text-white hover:bg-amber-700'
-          }`}
-        >
-          {isSubmitting ? 'Updating...' : 'Update Session'}
-        </button>
+        <div className="flex gap-3">
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className={`flex-1 py-3 px-6 rounded-lg font-medium transition-colors ${
+              isSubmitting
+                ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
+                : 'bg-amber-800 text-white hover:bg-amber-700'
+            }`}
+          >
+            {isSubmitting ? 'Updating...' : 'Update Session'}
+          </button>
+
+          <button
+            type="button"
+            onClick={handleDelete}
+            disabled={isSubmitting}
+            className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+              isSubmitting
+                ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
+                : 'bg-red-600 text-white hover:bg-red-700'
+            }`}
+          >
+            {isSubmitting ? 'Deleting...' : 'Delete'}
+          </button>
+        </div>
       </form>
     </SlideUpModal>
   );

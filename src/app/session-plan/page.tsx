@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { ChevronUp, ChevronDown } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
@@ -8,6 +8,8 @@ import { predefinedActionPoints, personalizeActionPoint } from '@/data/actionPoi
 import { sessionPlanService } from '@/services/sessionPlanService';
 import { clientService } from '@/services/clientService';
 import { sessionService } from '@/services/sessionService';
+import { useRobustAutoSave } from '@/hooks/useRobustAutoSave';
+import { AutoSaveStatus } from '@/components/AutoSaveStatus';
 import type { SessionPlan, Client, Session } from '@/types';
 // import SessionPlanPreviewModal from '@/components/modals/SessionPlanPreviewModal';
 
@@ -25,15 +27,17 @@ function SessionPlanContent() {
   // Use action points from state (loaded from Supabase) or fallback to predefined ones
   const actionPoints = state.actionPoints.length > 0 ? state.actionPoints : predefinedActionPoints;
 
-  // Debug logging for Lisa Gebler issue
+  // Debug logging for session plan page loading
   useEffect(() => {
     if (sessionId && session) {
-      console.log('Session Plan Debug:', {
+      console.log('📋 Session Plan Page Loaded:', {
         sessionId,
         session,
         sessionClientId: session.clientId,
+        sessionDogName: session.dogName,
         availableClients: state.clients.map(c => ({ id: c.id, name: `${c.firstName} ${c.lastName}` })),
-        foundClient: client
+        foundClient: client,
+        clientName: client ? `${client.firstName} ${client.lastName}` : 'Unknown Client'
       });
     }
   }, [sessionId, session, client, state.clients]);
@@ -46,10 +50,10 @@ function SessionPlanContent() {
     explanationOfBehaviour: '',
   });
 
-  // Auto-save state
-  const [lastSaved, setLastSaved] = useState<Date | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  // Legacy state (will be replaced by robust auto-save)
+  const [legacyLastSaved, setLegacyLastSaved] = useState<Date | null>(null);
+  const [legacyIsSaving, setLegacyIsSaving] = useState(false);
+  const [legacyHasUnsavedChanges, setLegacyHasUnsavedChanges] = useState(false);
 
   const [selectedActionPoints, setSelectedActionPoints] = useState<string[]>([]);
   const [showActionPoints, setShowActionPoints] = useState(false);
@@ -64,6 +68,65 @@ function SessionPlanContent() {
   const [generatedDocUrl, setGeneratedDocUrl] = useState<string | null>(null);
   const [isPollingForUrl, setIsPollingForUrl] = useState(false);
   // const [showPreviewModal, setShowPreviewModal] = useState(false);
+
+  // Use fallback data if state data is not available (moved up for scope)
+  const currentSession = session || fallbackSession;
+  const currentClient = client || fallbackClient;
+
+  // Create the save function for robust auto-save
+  const saveFunction = useCallback(async (isAutoSave = false) => {
+    if (!currentSession || !currentClient) {
+      throw new Error('Session or client not available');
+    }
+
+    const sessionPlanData = {
+      sessionId: currentSession.id,
+      mainGoal1: formData.mainGoal1,
+      mainGoal2: formData.mainGoal2,
+      mainGoal3: formData.mainGoal3,
+      mainGoal4: formData.mainGoal4,
+      explanationOfBehaviour: formData.explanationOfBehaviour,
+      actionPoints: selectedActionPoints,
+      editedActionPoints: editableActionPoints,
+      sessionNumber: sessionNumber
+    };
+
+    console.log(isAutoSave ? '🔄 Robust auto-save triggered:' : '💾 Manual save triggered:', sessionPlanData);
+    console.log('📝 Edited action points being saved:', editableActionPoints);
+
+    let savedPlan;
+    if (existingSessionPlan) {
+      console.log('Updating existing session plan with ID:', existingSessionPlan.id);
+      savedPlan = await sessionPlanService.update(existingSessionPlan.id, sessionPlanData);
+    } else {
+      console.log('Creating new session plan');
+      savedPlan = await sessionPlanService.create(sessionPlanData);
+      setExistingSessionPlan(savedPlan);
+    }
+
+    console.log('✅ Session plan saved successfully:', savedPlan);
+    return savedPlan;
+  }, [currentSession, currentClient, formData, selectedActionPoints, editableActionPoints, sessionNumber, existingSessionPlan]);
+
+  // Initialize robust auto-save
+  const { autoSaveState, changeState, trackChange, forceSave, clearUnsavedChanges } = useRobustAutoSave({
+    saveFunction,
+    onSaveSuccess: () => {
+      console.log('🎉 Auto-save success callback');
+      setLegacyLastSaved(new Date());
+      setLegacyHasUnsavedChanges(false);
+    },
+    onSaveError: (error) => {
+      console.error('❌ Auto-save error callback:', error);
+    },
+    enablePeriodicSave: true,
+    enableCriticalSave: true,
+  });
+
+  // Sync legacy state with robust auto-save state
+  const isSaving = autoSaveState.isSaving || legacyIsSaving;
+  const hasUnsavedChanges = autoSaveState.hasUnsavedChanges || legacyHasUnsavedChanges;
+  const lastSaved = autoSaveState.lastSaved || legacyLastSaved;
 
   // Load existing session plan and calculate session number
   useEffect(() => {
@@ -118,15 +181,21 @@ function SessionPlanContent() {
 
           setExistingSessionPlan(existingPlan);
           setFormData({
-            mainGoal1: existingPlan.mainGoal1 || '',
-            mainGoal2: existingPlan.mainGoal2 || '',
-            mainGoal3: existingPlan.mainGoal3 || '',
-            mainGoal4: existingPlan.mainGoal4 || '',
-            explanationOfBehaviour: existingPlan.explanationOfBehaviour || '',
+            mainGoal1: replaceDogNames(existingPlan.mainGoal1 || ''),
+            mainGoal2: replaceDogNames(existingPlan.mainGoal2 || ''),
+            mainGoal3: replaceDogNames(existingPlan.mainGoal3 || ''),
+            mainGoal4: replaceDogNames(existingPlan.mainGoal4 || ''),
+            explanationOfBehaviour: replaceDogNames(existingPlan.explanationOfBehaviour || ''),
           });
           setSelectedActionPoints(existingPlan.actionPoints || []);
           // Use existing session number if plan already exists
           setSessionNumber(existingPlan.sessionNumber);
+
+          // Restore edited action points if they exist
+          if (existingPlan.editedActionPoints) {
+            setEditableActionPoints(existingPlan.editedActionPoints);
+            console.log('📝 Restored edited action points:', existingPlan.editedActionPoints);
+          }
 
           // Check if document URL exists
           if (existingPlan.documentEditUrl) {
@@ -134,8 +203,8 @@ function SessionPlanContent() {
           }
 
           // Set last saved time and mark as no unsaved changes
-          setLastSaved(existingPlan.updatedAt);
-          setHasUnsavedChanges(false);
+          setLegacyLastSaved(existingPlan.updatedAt);
+          setLegacyHasUnsavedChanges(false);
         } else {
           console.log('No existing session plan found for sessionId:', sessionId);
         }
@@ -149,30 +218,30 @@ function SessionPlanContent() {
     loadExistingSessionPlan();
   }, [sessionId]); // Only depend on sessionId to prevent unnecessary re-runs
 
-  // Auto-save effect - saves every 30 seconds if there are unsaved changes
+  // Initialize robust auto-save when data is loaded
   useEffect(() => {
-    if (!hasUnsavedChanges || isSaving || !currentSession || !currentClient) return;
-
-    const autoSaveTimer = setTimeout(async () => {
-      try {
-        await saveSessionPlan(true);
-      } catch (error) {
-        console.error('Auto-save failed:', error);
-      }
-    }, 30000); // 30 seconds
-
-    return () => clearTimeout(autoSaveTimer);
-  }, [hasUnsavedChanges, isSaving, formData, selectedActionPoints]);
-
-  // Track form changes to trigger auto-save
-  useEffect(() => {
-    // Only mark as unsaved if we have actual content and it's not the initial load
-    if (lastSaved !== null || formData.mainGoal1 || formData.mainGoal2 || formData.mainGoal3 || formData.mainGoal4 || formData.explanationOfBehaviour || selectedActionPoints.length > 0) {
-      setHasUnsavedChanges(true);
+    if (existingSessionPlan && !autoSaveState.hasUnsavedChanges) {
+      // Clear unsaved changes when session plan is loaded
+      clearUnsavedChanges();
+      console.log('🔄 Session plan loaded - cleared unsaved changes');
     }
-  }, [formData, selectedActionPoints]);
+  }, [existingSessionPlan, clearUnsavedChanges, autoSaveState.hasUnsavedChanges]);
 
-  const handleBack = () => {
+  const handleBack = async () => {
+    // Save current state if there are any changes or content
+    if (hasUnsavedChanges || formData.mainGoal1 || formData.mainGoal2 ||
+        formData.mainGoal3 || formData.mainGoal4 || formData.explanationOfBehaviour ||
+        selectedActionPoints.length > 0 || Object.keys(editableActionPoints).length > 0) {
+      try {
+        await saveSessionPlan();
+        console.log('✅ Auto-saved before navigation');
+      } catch (error) {
+        console.error('❌ Failed to save before navigation:', error);
+        // Continue with navigation even if save fails
+      }
+    }
+
+    // Then navigate as usual
     const from = searchParams.get('from');
     const clientId = searchParams.get('clientId');
 
@@ -185,10 +254,16 @@ function SessionPlanContent() {
     }
   };
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = useCallback((field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    setHasUnsavedChanges(true);
-  };
+    setLegacyHasUnsavedChanges(true);
+
+    // Track change with robust auto-save
+    const isCritical = field === 'explanationOfBehaviour'; // Mark explanation as critical
+    trackChange('hasTextChanges', isCritical);
+
+    console.log(`📝 Input changed: ${field} (${value.length} chars)${isCritical ? ' [CRITICAL]' : ''}`);
+  }, [trackChange]);
 
   // Poll for document URL from the API endpoint
   const pollForDocumentUrl = async (sessionId: string, maxAttempts = 30) => {
@@ -258,13 +333,22 @@ function SessionPlanContent() {
     setTimeout(poll, 3000);
   };
 
-  // Use fallback data if state data is not available
-  const currentSession = session || fallbackSession;
-  const currentClient = client || fallbackClient;
+  // (currentSession and currentClient moved up for scope)
 
   // Get the session-specific dog name (session.dogName takes priority over client.dogName)
   const getSessionDogName = (): string => {
-    return currentSession?.dogName || currentClient?.dogName || 'Unknown Dog';
+    const sessionDogName = currentSession?.dogName || currentClient?.dogName || 'Unknown Dog';
+
+    // Debug logging to help identify dog name issues
+    console.log('🐕 Dog Name Debug:', {
+      sessionDogName: currentSession?.dogName,
+      clientDogName: currentClient?.dogName,
+      clientOtherDogs: currentClient?.otherDogs,
+      finalDogName: sessionDogName,
+      clientName: currentClient ? `${currentClient.firstName} ${currentClient.lastName}` : 'Unknown Client'
+    });
+
+    return sessionDogName;
   };
 
   // Save function that navigates away (for the main Save button)
@@ -280,76 +364,109 @@ function SessionPlanContent() {
     }
   };
 
-  // Internal save function that doesn't navigate (for auto-save)
+  // Legacy save function for manual saves and backward compatibility
   const saveSessionPlan = async (isAutoSave = false) => {
-    if (!currentSession || !currentClient) return;
-
     if (isAutoSave) {
-      setIsSaving(true);
+      // For auto-save, use the robust auto-save system
+      return await forceSave();
+    } else {
+      // For manual saves, use the robust save function directly
+      return await saveFunction(false);
+    }
+  };
+
+  // Replace dog names in text content (for stored session plan content)
+  const replaceDogNames = (text: string): string => {
+    if (!text) return '';
+
+    const currentDogName = getSessionDogName();
+    let result = text;
+
+    // Replace the client's primary dog name with the session dog name
+    if (currentClient?.dogName && currentClient.dogName !== currentDogName) {
+      const regex = new RegExp(`\\b${currentClient.dogName}\\b`, 'gi');
+      result = result.replace(regex, currentDogName);
     }
 
-    try {
-      const sessionPlanData = {
-        sessionId: currentSession.id,
-        mainGoal1: formData.mainGoal1,
-        mainGoal2: formData.mainGoal2,
-        mainGoal3: formData.mainGoal3,
-        mainGoal4: formData.mainGoal4,
-        explanationOfBehaviour: formData.explanationOfBehaviour,
-        actionPoints: selectedActionPoints,
-        sessionNumber: sessionNumber
-      };
-
-      console.log(isAutoSave ? 'Auto-saving session plan data:' : 'Saving session plan data:', sessionPlanData);
-      console.log('Existing session plan:', existingSessionPlan);
-
-      let savedPlan;
-      if (existingSessionPlan) {
-        console.log('Updating existing session plan with ID:', existingSessionPlan.id);
-        savedPlan = await sessionPlanService.update(existingSessionPlan.id, sessionPlanData);
-      } else {
-        console.log('Creating new session plan');
-        savedPlan = await sessionPlanService.create(sessionPlanData);
-        // Update the existingSessionPlan state so subsequent saves will be updates
-        setExistingSessionPlan(savedPlan);
-      }
-
-      console.log('Session plan saved successfully:', savedPlan);
-
-      if (isAutoSave) {
-        setLastSaved(new Date());
-        setHasUnsavedChanges(false);
-        console.log('✅ Auto-save completed');
-      }
-
-      return savedPlan;
-    } catch (error) {
-      console.error('Error saving session plan:', error);
-      if (isAutoSave) {
-        console.error('❌ Auto-save failed');
-      }
-      throw error;
-    } finally {
-      if (isAutoSave) {
-        setIsSaving(false);
-      }
+    // Also replace any other dogs from the client's other_dogs array
+    if (currentClient?.otherDogs && Array.isArray(currentClient.otherDogs)) {
+      currentClient.otherDogs.forEach(otherDog => {
+        if (otherDog !== currentDogName) {
+          const regex = new RegExp(`\\b${otherDog}\\b`, 'gi');
+          result = result.replace(regex, currentDogName);
+        }
+      });
     }
+
+    return result;
   };
 
   // Get dog's gender from questionnaire for proper pronoun replacement
   const getDogGender = (): 'Male' | 'Female' => {
     const sessionDogName = getSessionDogName();
-    if (!currentClient?.email || !sessionDogName) return 'Male';
+    if (!currentClient || !sessionDogName) return 'Male';
 
-    const questionnaire = state.behaviourQuestionnaires.find(q =>
-      q.email?.toLowerCase() === currentClient.email?.toLowerCase() &&
-      q.dogName?.toLowerCase() === sessionDogName.toLowerCase()
-    );
+    // Comprehensive questionnaire matching function
+    const findQuestionnaireForClient = (client: any, dogName: string, questionnaires: any[]) => {
+      if (!client || !dogName) return null;
 
+      // Method 1: Match by client_id and dog name (case-insensitive)
+      let questionnaire = questionnaires.find(q =>
+        (q.client_id === client.id || q.clientId === client.id) &&
+        q.dogName?.toLowerCase() === dogName.toLowerCase()
+      );
+      if (questionnaire) return questionnaire;
+
+      // Method 2: Match by email and dog name (case-insensitive)
+      if (client.email) {
+        questionnaire = questionnaires.find(q =>
+          q.email?.toLowerCase() === client.email?.toLowerCase() &&
+          q.dogName?.toLowerCase() === dogName.toLowerCase()
+        );
+        if (questionnaire) return questionnaire;
+      }
+
+      // Method 3: Match by client_id and dog name (exact case)
+      questionnaire = questionnaires.find(q =>
+        (q.client_id === client.id || q.clientId === client.id) &&
+        q.dogName === dogName
+      );
+      if (questionnaire) return questionnaire;
+
+      // Method 4: Match by email and dog name (exact case)
+      if (client.email) {
+        questionnaire = questionnaires.find(q =>
+          q.email === client.email &&
+          q.dogName === dogName
+        );
+        if (questionnaire) return questionnaire;
+      }
+
+      // Method 5: Match by partial dog name (case-insensitive)
+      questionnaire = questionnaires.find(q =>
+        (q.client_id === client.id || q.clientId === client.id) &&
+        (q.dogName?.toLowerCase().includes(dogName.toLowerCase()) ||
+         dogName.toLowerCase().includes(q.dogName?.toLowerCase() || ''))
+      );
+      if (questionnaire) return questionnaire;
+
+      // Method 6: Match by email and partial dog name (case-insensitive)
+      if (client.email) {
+        questionnaire = questionnaires.find(q =>
+          q.email?.toLowerCase() === client.email?.toLowerCase() &&
+          (q.dogName?.toLowerCase().includes(dogName.toLowerCase()) ||
+           dogName.toLowerCase().includes(q.dogName?.toLowerCase() || ''))
+        );
+      }
+
+      return questionnaire || null;
+    };
+
+    const questionnaire = findQuestionnaireForClient(currentClient, sessionDogName, state.behaviourQuestionnaires);
     return questionnaire?.sex || 'Male';
   };
 
-  const handleActionPointToggle = (actionPointId: string) => {
+  const handleActionPointToggle = useCallback((actionPointId: string) => {
     setSelectedActionPoints(prev => {
       const newSelected = prev.includes(actionPointId)
         ? prev.filter(id => id !== actionPointId)
@@ -366,8 +483,13 @@ function SessionPlanContent() {
 
       return newSelected;
     });
-    setHasUnsavedChanges(true);
-  };
+    setLegacyHasUnsavedChanges(true);
+
+    // Track action point selection change
+    trackChange('hasActionPointChanges', false);
+
+    console.log(`📝 Action point toggled: ${actionPointId}`);
+  }, [trackChange]);
 
   // Initialize editable action point with personalized content
   const initializeEditableActionPoint = (actionPointId: string) => {
@@ -376,7 +498,7 @@ function SessionPlanContent() {
 
     const personalizedActionPoint = personalizeActionPoint(
       actionPoint,
-      currentClient?.dogName || 'Dog',
+      getSessionDogName(),
       getDogGender()
     );
 
@@ -390,7 +512,7 @@ function SessionPlanContent() {
   };
 
   // Update editable action point
-  const updateEditableActionPoint = (actionPointId: string, field: 'header' | 'details', value: string) => {
+  const updateEditableActionPoint = useCallback((actionPointId: string, field: 'header' | 'details', value: string) => {
     setEditableActionPoints(prev => ({
       ...prev,
       [actionPointId]: {
@@ -398,11 +520,16 @@ function SessionPlanContent() {
         [field]: value
       }
     }));
-    setHasUnsavedChanges(true);
-  };
+    setLegacyHasUnsavedChanges(true);
+
+    // Track action point change with robust auto-save
+    trackChange('hasActionPointChanges', false);
+
+    console.log(`📝 Action point changed: ${actionPointId}.${field} (${value.length} chars)`);
+  }, [trackChange]);
 
   // Move action point up or down
-  const moveActionPoint = (actionPointId: string, direction: 'up' | 'down') => {
+  const moveActionPoint = useCallback((actionPointId: string, direction: 'up' | 'down') => {
     const currentIndex = selectedActionPoints.indexOf(actionPointId);
     if (currentIndex === -1) return;
 
@@ -414,8 +541,13 @@ function SessionPlanContent() {
     [newSelectedActionPoints[newIndex], newSelectedActionPoints[currentIndex]];
 
     setSelectedActionPoints(newSelectedActionPoints);
-    setHasUnsavedChanges(true);
-  };
+    setLegacyHasUnsavedChanges(true);
+
+    // Track action point reordering
+    trackChange('hasActionPointChanges', false);
+
+    console.log(`📝 Action point moved: ${actionPointId} ${direction}`);
+  }, [selectedActionPoints, trackChange]);
 
   const handlePreviewAndEdit = async () => {
     if (!currentSession || !currentClient) return;
@@ -716,18 +848,12 @@ function SessionPlanContent() {
             <h1 className="text-xl font-semibold text-gray-900">
               {existingSessionPlan ? 'Edit Session Plan' : 'Create Session Plan'}
             </h1>
-            {/* Auto-save status */}
-            <div className="text-xs text-gray-500 mt-1">
-              {isSaving ? (
-                <span className="text-blue-600">💾 Saving...</span>
-              ) : hasUnsavedChanges ? (
-                <span className="text-amber-600">● Unsaved changes</span>
-              ) : lastSaved ? (
-                <span className="text-green-600">✓ Saved {new Date(lastSaved).toLocaleTimeString()}</span>
-              ) : (
-                <span>Ready to save</span>
-              )}
-            </div>
+            {/* Enhanced auto-save status */}
+            <AutoSaveStatus
+              autoSaveState={autoSaveState}
+              changeState={changeState}
+              className="mt-1"
+            />
           </div>
           <div className="w-16"></div>
         </div>
@@ -743,7 +869,7 @@ function SessionPlanContent() {
             <div>
               <div className="border-b border-gray-200 pb-4 mb-6">
                 <h2 className="text-lg font-semibold text-gray-900 mb-2">
-                  {currentClient?.dogName || 'Unknown Dog'} - Session Plan
+                  {getSessionDogName()} - Session Plan
                 </h2>
                 <p className="text-gray-600">
                   {currentClient?.firstName} {currentClient?.lastName} • {currentSession?.sessionType}
@@ -956,7 +1082,7 @@ function SessionPlanContent() {
                       const isSelected = selectedActionPoints.includes(actionPoint.id);
                       const personalizedActionPoint = personalizeActionPoint(
                         actionPoint,
-                        client?.dogName || 'Dog',
+                        getSessionDogName(),
                         getDogGender()
                       );
 

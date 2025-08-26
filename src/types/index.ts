@@ -35,6 +35,11 @@ export interface ActionPoint {
   details: string;
 }
 
+export interface EditableActionPoint {
+  header: string;
+  details: string;
+}
+
 export interface SessionPlan {
   id: string;
   sessionId: string;
@@ -45,6 +50,7 @@ export interface SessionPlan {
   mainGoal4?: string;
   explanationOfBehaviour?: string;
   actionPoints: string[]; // Array of ActionPoint IDs
+  editedActionPoints?: { [actionPointId: string]: EditableActionPoint }; // Custom edited action point content
   documentEditUrl?: string; // Google Doc edit URL from Make.com
   createdAt: Date;
   updatedAt: Date;
@@ -261,6 +267,7 @@ export type AppAction =
   | { type: 'DELETE_MEMBERSHIP'; payload: string }
   | { type: 'SET_BOOKING_TERMS'; payload: BookingTerms[] }
   | { type: 'ADD_BOOKING_TERMS'; payload: BookingTerms }
+  | { type: 'DELETE_BOOKING_TERMS'; payload: string }
   | { type: 'SET_CLIENT_EMAIL_ALIASES'; payload: { [clientId: string]: ClientEmailAlias[] } }
   | { type: 'SET_ACTION_POINTS'; payload: ActionPoint[] }
   | { type: 'ADD_ACTION_POINT'; payload: ActionPoint }

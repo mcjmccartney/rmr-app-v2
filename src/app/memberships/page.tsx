@@ -189,8 +189,18 @@ export default function MembershipsPage() {
                   {isExpanded && (
                     <div className="border-t border-gray-100">
                       {monthMemberships.map((membership) => {
-                        // Find client by email
-                        const client = state.clients.find(c => c.email === membership.email);
+                        // Find client by email (including aliases)
+                        let client = state.clients.find(c => c.email === membership.email);
+
+                        // If not found by primary email, check email aliases
+                        if (!client) {
+                          client = state.clients.find(clientRecord => {
+                            const aliases = state.clientEmailAliases?.[clientRecord.id];
+                            return aliases?.some(alias =>
+                              alias.email.toLowerCase() === membership.email.toLowerCase()
+                            );
+                          });
+                        }
 
                         return (
                           <div
@@ -212,6 +222,11 @@ export default function MembershipsPage() {
                                 <p className="text-sm text-gray-500">
                                   {new Date(membership.date).toLocaleDateString('en-GB')}
                                 </p>
+                                {client && client.email !== membership.email && (
+                                  <p className="text-xs text-gray-400">
+                                    via {membership.email}
+                                  </p>
+                                )}
                               </div>
                               <div className="text-right">
                                 <div className="font-medium text-gray-900">
