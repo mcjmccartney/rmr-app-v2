@@ -21,30 +21,22 @@ export default function FloatingActionButton() {
   const { isAnyModalOpen } = useModal();
 
   const toggleExpanded = () => {
-    console.log('🔘 FAB Toggle clicked:', { isExpanded, pathname });
     setIsExpanded(!isExpanded);
   };
 
   const handleNavigation = async (path: string) => {
-    console.log('🔘 FAB Navigation clicked:', { path, currentPathname: pathname });
-
     try {
       await router.push(path);
-      console.log('✅ FAB Router navigation completed:', { path });
 
       // Check if navigation actually happened after a brief delay
       setTimeout(() => {
         if (window.location.pathname === pathname) {
-          console.log('⚠️ FAB Router navigation completed but page did not change - forcing with window.location');
           window.location.href = path;
-        } else {
-          console.log('✅ FAB Navigation successful - page changed to:', window.location.pathname);
         }
       }, 100);
 
       setIsExpanded(false);
     } catch (error) {
-      console.error('❌ FAB Router navigation failed, forcing with window.location:', { path, error });
       window.location.href = path;
       setIsExpanded(false);
     }

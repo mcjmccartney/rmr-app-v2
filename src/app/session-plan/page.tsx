@@ -287,37 +287,13 @@ function SessionPlanContent() {
 
   // Save function that navigates away (for the main Save button)
   const handleSave = async () => {
-    console.log('🔘 Save & Go Back clicked');
-    console.log('📊 Current state:', {
-      currentSession: !!currentSession,
-      currentClient: !!currentClient,
-      sessionId: currentSession?.id,
-      clientId: currentClient?.id,
-      isLoading,
-      searchParams: {
-        from: searchParams.get('from'),
-        clientId: searchParams.get('clientId'),
-        returnSessionId: searchParams.get('returnSessionId')
-      }
-    });
-
-    // Add a small delay to see if there are any timing issues
-    setTimeout(() => {
-      console.log('⏰ 2 seconds after Save & Go Back clicked - checking if still on session-plan page');
-      console.log('📍 Current pathname:', window.location.pathname);
-    }, 2000);
-
     if (!currentSession || !currentClient) {
-      console.log('❌ Missing session or client data');
       return;
     }
 
-    console.log('💾 Attempting to save...');
     try {
       await saveFunction(false);
-      console.log('✅ Save completed successfully');
     } catch (error) {
-      console.error('❌ Save failed:', error);
       // Continue with navigation even if save fails
     }
 
@@ -328,62 +304,48 @@ function SessionPlanContent() {
     // Navigate based on where user came from
     const returnSessionId = searchParams.get('returnSessionId');
 
-    console.log('🧭 Navigation params:', { from, clientId, returnSessionId });
-
     // Force navigation using window.location as fallback since router.push() is being blocked
     let targetUrl = '';
 
     if (from === 'clients' && clientId) {
       targetUrl = `/clients?openClient=${clientId}`;
-      console.log('🔄 Navigating to clients page with modal');
     } else if (from === 'calendar') {
       // Include returnSessionId to restore the session sidepane
       if (returnSessionId) {
         targetUrl = `/calendar?returnSessionId=${returnSessionId}`;
-        console.log('🔄 Navigating to calendar with session restoration');
       } else {
         targetUrl = '/calendar';
-        console.log('🔄 Navigating to calendar');
       }
     } else if (from === 'sessions') {
       // Include returnSessionId to restore the session sidepane
       if (returnSessionId) {
         targetUrl = `/sessions?returnSessionId=${returnSessionId}`;
-        console.log('🔄 Navigating to sessions with session restoration');
       } else {
         targetUrl = '/sessions';
-        console.log('🔄 Navigating to sessions');
       }
     } else {
       // Fallback: if no 'from' parameter, try to determine best navigation
       // If we have a client, go to clients page with that client open
       if (currentClient) {
         targetUrl = `/clients?openClient=${currentClient.id}`;
-        console.log('🔄 Fallback: Navigating to clients with current client');
       } else {
         // Default fallback to calendar
         targetUrl = '/calendar';
-        console.log('🔄 Fallback: Navigating to calendar');
       }
     }
 
     // Try router.push() first, then force with window.location if it fails to actually navigate
     try {
       await router.push(targetUrl);
-      console.log('✅ Router navigation completed');
 
       // Check if navigation actually happened after a brief delay
       setTimeout(() => {
         if (window.location.pathname === '/session-plan') {
-          console.log('⚠️ Router navigation completed but page did not change - forcing with window.location');
           window.location.href = targetUrl;
-        } else {
-          console.log('✅ Navigation successful - page changed to:', window.location.pathname);
         }
       }, 100);
 
     } catch (error) {
-      console.error('❌ Router navigation failed, forcing with window.location:', error);
       window.location.href = targetUrl;
     }
   };
