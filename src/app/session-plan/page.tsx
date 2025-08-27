@@ -26,20 +26,7 @@ function SessionPlanContent() {
   // Use action points from state (loaded from Supabase) or fallback to predefined ones
   const actionPoints = state.actionPoints.length > 0 ? state.actionPoints : predefinedActionPoints;
 
-  // Debug logging for session plan page loading
-  useEffect(() => {
-    if (sessionId && session) {
-      console.log('📋 Session Plan Page Loaded:', {
-        sessionId,
-        session,
-        sessionClientId: session.clientId,
-        sessionDogName: session.dogName,
-        availableClients: state.clients.map(c => ({ id: c.id, name: `${c.firstName} ${c.lastName}` })),
-        foundClient: client,
-        clientName: client ? `${client.firstName} ${client.lastName}` : 'Unknown Client'
-      });
-    }
-  }, [sessionId, session, client, state.clients]);
+
 
   const [formData, setFormData] = useState({
     mainGoal1: '',
@@ -90,22 +77,14 @@ function SessionPlanContent() {
       sessionNumber: sessionNumber
     };
 
-    // Silent auto-save - minimal logging
-    if (!isAutoSave) {
-      console.log('💾 Manual save triggered:', sessionPlanData);
-    }
-
     let savedPlan;
     if (existingSessionPlan) {
-      console.log('Updating existing session plan with ID:', existingSessionPlan.id);
       savedPlan = await sessionPlanService.update(existingSessionPlan.id, sessionPlanData);
     } else {
-      console.log('Creating new session plan');
       savedPlan = await sessionPlanService.create(sessionPlanData);
       setExistingSessionPlan(savedPlan);
     }
 
-    // Silent save success
     return savedPlan;
   }, [currentSession, currentClient, formData, selectedActionPoints, editableActionPoints, sessionNumber, existingSessionPlan]);
 
@@ -113,13 +92,11 @@ function SessionPlanContent() {
   const { autoSaveState, changeState, trackChange, forceSave, clearUnsavedChanges } = useRobustAutoSave({
     saveFunction,
     onSaveSuccess: () => {
-      // Silent success handling
       setLegacyLastSaved(new Date());
       setLegacyHasUnsavedChanges(false);
     },
-    onSaveError: (error) => {
-      // Only log actual errors
-      console.error('Auto-save error:', error);
+    onSaveError: () => {
+      // Silent error handling
     },
     enablePeriodicSave: true,
     enableCriticalSave: true,
@@ -139,23 +116,16 @@ function SessionPlanContent() {
       }
 
       try {
-        // If session or client not found in state, try to fetch from database
         if (!session || !client) {
-          console.log('Session or client not found in state, fetching from database...');
-
-          // Fetch session from database
           if (!session) {
             const dbSession = await sessionService.getById(sessionId);
             if (dbSession) {
               setFallbackSession(dbSession);
-              console.log('Fetched session from database:', dbSession);
 
-              // Fetch client from database using the session's clientId
               if (dbSession.clientId) {
                 const dbClient = await clientService.getById(dbSession.clientId);
                 if (dbClient) {
                   setFallbackClient(dbClient);
-                  console.log('Fetched client from database:', dbClient);
                 }
               }
             }
@@ -166,20 +136,9 @@ function SessionPlanContent() {
         const calculatedSessionNumber = await sessionPlanService.calculateSessionNumber(sessionId);
         setSessionNumber(calculatedSessionNumber);
 
-        // Load existing session plan if it exists
-        console.log('Attempting to load session plan for sessionId:', sessionId);
         const existingPlan = await sessionPlanService.getBySessionId(sessionId);
-        console.log('Loaded session plan:', existingPlan);
 
         if (existingPlan) {
-          console.log('Setting form data from existing plan:', {
-            mainGoal1: existingPlan.mainGoal1,
-            mainGoal2: existingPlan.mainGoal2,
-            mainGoal3: existingPlan.mainGoal3,
-            mainGoal4: existingPlan.mainGoal4,
-            explanationOfBehaviour: existingPlan.explanationOfBehaviour,
-            actionPoints: existingPlan.actionPoints
-          });
 
           setExistingSessionPlan(existingPlan);
           setFormData({
@@ -193,10 +152,8 @@ function SessionPlanContent() {
           // Use existing session number if plan already exists
           setSessionNumber(existingPlan.sessionNumber);
 
-          // Restore edited action points if they exist
           if (existingPlan.editedActionPoints) {
             setEditableActionPoints(existingPlan.editedActionPoints);
-            console.log('📝 Restored edited action points:', existingPlan.editedActionPoints);
           }
 
           // Check if document URL exists
@@ -207,11 +164,9 @@ function SessionPlanContent() {
           // Set last saved time and mark as no unsaved changes
           setLegacyLastSaved(existingPlan.updatedAt);
           setLegacyHasUnsavedChanges(false);
-        } else {
-          console.log('No existing session plan found for sessionId:', sessionId);
         }
       } catch (error) {
-        console.error('Error loading existing session plan:', error);
+        // Silent error handling
       } finally {
         setIsLoading(false);
       }
@@ -229,29 +184,23 @@ function SessionPlanContent() {
   }, [existingSessionPlan, clearUnsavedChanges, autoSaveState.hasUnsavedChanges]);
 
   const handleBack = async () => {
-    // Save current state if there are any changes or content using robust auto-save
     if (hasUnsavedChanges || autoSaveState.hasUnsavedChanges ||
         formData.mainGoal1 || formData.mainGoal2 || formData.mainGoal3 ||
         formData.mainGoal4 || formData.explanationOfBehaviour ||
         selectedActionPoints.length > 0 || Object.keys(editableActionPoints).length > 0) {
       try {
         await forceSave();
-        console.log('✅ Saved before navigation');
       } catch (error) {
-        console.error('❌ Failed to save before navigation:', error);
         // Continue with navigation even if save fails
       }
     }
 
-    // Then navigate as usual
     const from = searchParams.get('from');
     const clientId = searchParams.get('clientId');
 
     if (from === 'clients' && clientId) {
-      // Navigate back to clients page and open the client modal
       router.push(`/clients?openClient=${clientId}`);
     } else {
-      // Default to calendar
       router.push('/calendar');
     }
   };
@@ -272,53 +221,26 @@ function SessionPlanContent() {
 
     const poll = async (): Promise<void> => {
       try {
-        console.log(`Polling attempt ${attempts + 1} for session ${sessionId}`);
         const response = await fetch(`/api/session-plan/document-url?sessionId=${sessionId}&t=${Date.now()}`);
         if (response.ok) {
           const data = await response.json();
-          console.log('Polling response:', data);
           if (data.documentUrl) {
-            console.log('Document URL received:', data.documentUrl);
-            console.log('Current generatedDocUrl state:', generatedDocUrl);
-
-            // Check if this is a different URL than what we already have
             if (data.documentUrl !== generatedDocUrl) {
-              console.log('New document URL detected, updating state and opening');
               setGeneratedDocUrl(data.documentUrl);
               setIsPollingForUrl(false);
-
-              // Auto-redirect to the document
               window.open(data.documentUrl, '_blank');
               return;
-            } else {
-              console.log('Same document URL as before, continuing to poll...');
             }
-          } else {
-            console.log('No document URL in response yet');
-          }
-        } else {
-          console.log('Polling response not ok:', response.status);
-          // Log the detailed error response
-          try {
-            const errorData = await response.json();
-            console.log('Polling error details:', errorData);
-          } catch (jsonError) {
-            console.log('Could not parse error response as JSON');
-            const errorText = await response.text();
-            console.log('Polling error text:', errorText);
           }
         }
 
         attempts++;
         if (attempts < maxAttempts) {
-          // Poll every 2 seconds
           setTimeout(poll, 2000);
         } else {
-          console.log('Polling timeout - document URL not received');
           setIsPollingForUrl(false);
         }
       } catch (error) {
-        console.error('Error polling for document URL:', error);
         attempts++;
         if (attempts < maxAttempts) {
           setTimeout(poll, 2000);
@@ -328,27 +250,13 @@ function SessionPlanContent() {
       }
     };
 
-    // Start polling after a delay to allow Make.com to process and send webhook
-    console.log('Starting polling in 3 seconds to allow Make.com webhook to complete...');
     setTimeout(poll, 3000);
   };
 
   // (currentSession and currentClient moved up for scope)
 
-  // Get the session-specific dog name (session.dogName takes priority over client.dogName)
   const getSessionDogName = (): string => {
-    const sessionDogName = currentSession?.dogName || currentClient?.dogName || 'Unknown Dog';
-
-    // Debug logging to help identify dog name issues
-    console.log('🐕 Dog Name Debug:', {
-      sessionDogName: currentSession?.dogName,
-      clientDogName: currentClient?.dogName,
-      clientOtherDogs: currentClient?.otherDogs,
-      finalDogName: sessionDogName,
-      clientName: currentClient ? `${currentClient.firstName} ${currentClient.lastName}` : 'Unknown Client'
-    });
-
-    return sessionDogName;
+    return currentSession?.dogName || currentClient?.dogName || 'Unknown Dog';
   };
 
   // Save function that navigates away (for the main Save button)
@@ -356,16 +264,19 @@ function SessionPlanContent() {
     if (!currentSession || !currentClient) return;
 
     try {
-      // Use the robust save function for manual saves
       await saveFunction(false);
-      console.log('✅ Manual save completed successfully');
-
-      // Navigate back after successful save
-      handleBack();
     } catch (error) {
-      console.error('❌ Error saving session plan:', error);
-      // Still navigate back even if save fails (auto-save will handle it)
-      handleBack();
+      // Continue with navigation even if save fails
+    }
+
+    // Navigate directly without additional save attempts
+    const from = searchParams.get('from');
+    const clientId = searchParams.get('clientId');
+
+    if (from === 'clients' && clientId) {
+      router.push(`/clients?openClient=${clientId}`);
+    } else {
+      router.push('/calendar');
     }
   };
 
@@ -554,12 +465,8 @@ function SessionPlanContent() {
     setIsGeneratingDoc(true);
 
     try {
-      // First, auto-save the session plan to ensure data is preserved
-      console.log('Auto-saving session plan before generating document...');
       await saveSessionPlan();
-      console.log('Session plan auto-saved successfully');
     } catch (error) {
-      console.error('Error auto-saving session plan:', error);
       // Continue with document generation even if save fails
     }
 
@@ -572,29 +479,21 @@ function SessionPlanContent() {
     setIsGeneratingDoc(true);
 
     try {
-      // Save the current form state to ensure fresh data
-      console.log('Saving current session plan before re-generating document...');
       await saveSessionPlan();
-      console.log('Session plan saved successfully');
-
-      // Clear the existing document URL to force regeneration
       setGeneratedDocUrl(null);
 
-      // Also clear from database to ensure fresh generation
       try {
-        const response = await fetch('/api/session-plan/document-url', {
+        await fetch('/api/session-plan/document-url', {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ sessionId: currentSession.id })
         });
-        console.log('Cleared document URL from database:', response.ok);
       } catch (error) {
-        console.log('Could not clear document URL from database:', error);
+        // Silent error handling
       }
     } catch (error) {
-      console.error('Error saving session plan:', error);
       // Continue with document generation even if save fails
     }
 
@@ -664,17 +563,6 @@ function SessionPlanContent() {
     };
 
     try {
-      // Debug: Log the prepared session data before validation
-      console.log('Prepared session data for validation:', {
-        sessionId: sessionData.sessionId,
-        clientName: sessionData.clientName,
-        dogName: sessionData.dogName,
-        sessionNumber: sessionData.sessionNumber,
-        sessionType: sessionData.sessionType,
-        actionPointsCount: sessionData.actionPoints?.length || 0,
-        selectedActionPointsCount: selectedActionPoints.length,
-        formData: formData
-      });
 
       // Validate essential data before sending webhook
       const hasEssentialData = sessionData.sessionId &&
@@ -691,29 +579,6 @@ function SessionPlanContent() {
                           sessionData.actionPoints.length > 0;
 
       if (!hasEssentialData || !hasValidData) {
-        const validationDetails = {
-          hasSessionId: !!sessionData.sessionId,
-          hasClientName: !!sessionData.clientName,
-          hasDogName: !!sessionData.dogName,
-          hasSessionNumber: !!sessionData.sessionNumber,
-          validSessionId: !!sessionData.sessionId?.trim(),
-          validClientName: !!sessionData.clientName?.trim(),
-          validDogName: !!sessionData.dogName?.trim(),
-          validSessionNumber: !!sessionData.sessionNumber && sessionData.sessionNumber !== '0',
-          hasActionPoints: !!sessionData.actionPoints && sessionData.actionPoints.length > 0,
-          // Show actual values for debugging
-          actualSessionId: sessionData.sessionId,
-          actualClientName: sessionData.clientName,
-          actualDogName: sessionData.dogName,
-          actualSessionNumber: sessionData.sessionNumber,
-          actualActionPointsCount: sessionData.actionPoints?.length || 0,
-          selectedActionPointsCount: selectedActionPoints.length
-        };
-
-        console.log('Skipping webhook - missing or invalid essential data:', validationDetails);
-        console.error('Missing required data for session plan generation. Please ensure all fields are filled.');
-
-        // Show user-friendly error message
         const missingFields = [];
         if (!sessionData.sessionId?.trim()) missingFields.push('Session ID');
         if (!sessionData.clientName?.trim()) missingFields.push('Client Name');
@@ -737,51 +602,26 @@ function SessionPlanContent() {
         body: JSON.stringify(sessionData)
       });
 
-      console.log('Make.com response status:', response.status);
-      console.log('Make.com response headers:', Object.fromEntries(response.headers.entries()));
-
-      // Log response text for debugging
       const responseText = await response.text();
-      console.log('Make.com response text:', responseText);
 
       if (response.ok) {
         let result;
         try {
-          // Try to parse as JSON first
           result = JSON.parse(responseText);
-          console.log('Make.com response data (JSON):', result);
         } catch (jsonError) {
-          console.log('Response is not JSON, response text:', responseText);
-          console.log('JSON parse error:', jsonError);
           result = { success: true, rawResponse: responseText };
         }
 
-        // If Make.com returns a document URL immediately, store it and open it
         if (result.documentUrl) {
-          console.log('Make.com returned immediate document URL:', result.documentUrl);
           setGeneratedDocUrl(result.documentUrl);
           window.open(result.documentUrl, '_blank');
         } else {
-          // Document generation was initiated successfully
-          // Start polling for the document URL
-          console.log('Document generation initiated, starting to poll for URL...');
-          console.log('Current session ID:', currentSession?.id);
           pollForDocumentUrl(currentSession?.id || '');
         }
       } else {
-        console.error('Make.com webhook failed:', {
-          status: response.status,
-          statusText: response.statusText,
-          responseText: responseText,
-          headers: Object.fromEntries(response.headers.entries())
-        });
         throw new Error(`HTTP ${response.status}: ${response.statusText} - ${responseText}`);
       }
     } catch (error) {
-      console.error('Error generating document:', error);
-      // Don't show alert popup - just log the error
-      console.log('Document generation may still be in progress despite the error');
-      // Still start polling since Make.com might be processing it
       pollForDocumentUrl(currentSession?.id || '');
     } finally {
       setIsGeneratingDoc(false);

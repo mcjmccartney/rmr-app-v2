@@ -84,14 +84,9 @@ export function useRobustAutoSave({
       });
 
       onSaveSuccess?.();
-      // Silent auto-save - only log errors
       return true;
 
     } catch (error) {
-      // Only log errors, not routine save attempts
-      if (retryCount === 0) {
-        console.error('Auto-save failed, retrying...', error);
-      }
       
       if (retryCount < AUTO_SAVE_CONFIG.MAX_RETRIES) {
         const delay = AUTO_SAVE_CONFIG.RETRY_DELAYS[retryCount] || 5000;
@@ -202,7 +197,7 @@ export function useRobustAutoSave({
           try {
             await queuedSave();
           } catch (error) {
-            console.error('Failed to process queued save:', error);
+            // Silent error handling
           }
         });
       }
@@ -210,7 +205,6 @@ export function useRobustAutoSave({
 
     const handleOffline = () => {
       setAutoSaveState(prev => ({ ...prev, isOnline: false }));
-      // Silent offline handling
     };
 
     window.addEventListener('online', handleOnline);
@@ -226,7 +220,6 @@ export function useRobustAutoSave({
   useEffect(() => {
     const handleVisibilityChange = async () => {
       if (document.hidden && autoSaveState.hasUnsavedChanges && !autoSaveState.isSaving) {
-        // Silent background save
         await robustSave();
       }
     };
