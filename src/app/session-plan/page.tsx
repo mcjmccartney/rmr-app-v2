@@ -330,73 +330,61 @@ function SessionPlanContent() {
 
     console.log('🧭 Navigation params:', { from, clientId, returnSessionId });
 
+    // Force navigation using window.location as fallback since router.push() is being blocked
+    let targetUrl = '';
+
     if (from === 'clients' && clientId) {
+      targetUrl = `/clients?openClient=${clientId}`;
       console.log('🔄 Navigating to clients page with modal');
-      try {
-        await router.push(`/clients?openClient=${clientId}`);
-        console.log('✅ Navigation to clients completed');
-      } catch (error) {
-        console.error('❌ Navigation to clients failed:', error);
-      }
     } else if (from === 'calendar') {
       // Include returnSessionId to restore the session sidepane
       if (returnSessionId) {
+        targetUrl = `/calendar?returnSessionId=${returnSessionId}`;
         console.log('🔄 Navigating to calendar with session restoration');
-        try {
-          await router.push(`/calendar?returnSessionId=${returnSessionId}`);
-          console.log('✅ Navigation to calendar with session restoration completed');
-        } catch (error) {
-          console.error('❌ Navigation to calendar with session restoration failed:', error);
-        }
       } else {
+        targetUrl = '/calendar';
         console.log('🔄 Navigating to calendar');
-        try {
-          await router.push('/calendar');
-          console.log('✅ Navigation to calendar completed');
-        } catch (error) {
-          console.error('❌ Navigation to calendar failed:', error);
-        }
       }
     } else if (from === 'sessions') {
       // Include returnSessionId to restore the session sidepane
       if (returnSessionId) {
+        targetUrl = `/sessions?returnSessionId=${returnSessionId}`;
         console.log('🔄 Navigating to sessions with session restoration');
-        try {
-          await router.push(`/sessions?returnSessionId=${returnSessionId}`);
-          console.log('✅ Navigation to sessions with session restoration completed');
-        } catch (error) {
-          console.error('❌ Navigation to sessions with session restoration failed:', error);
-        }
       } else {
+        targetUrl = '/sessions';
         console.log('🔄 Navigating to sessions');
-        try {
-          await router.push('/sessions');
-          console.log('✅ Navigation to sessions completed');
-        } catch (error) {
-          console.error('❌ Navigation to sessions failed:', error);
-        }
       }
     } else {
       // Fallback: if no 'from' parameter, try to determine best navigation
       // If we have a client, go to clients page with that client open
       if (currentClient) {
+        targetUrl = `/clients?openClient=${currentClient.id}`;
         console.log('🔄 Fallback: Navigating to clients with current client');
-        try {
-          await router.push(`/clients?openClient=${currentClient.id}`);
-          console.log('✅ Fallback navigation to clients completed');
-        } catch (error) {
-          console.error('❌ Fallback navigation to clients failed:', error);
-        }
       } else {
         // Default fallback to calendar
+        targetUrl = '/calendar';
         console.log('🔄 Fallback: Navigating to calendar');
-        try {
-          await router.push('/calendar');
-          console.log('✅ Fallback navigation to calendar completed');
-        } catch (error) {
-          console.error('❌ Fallback navigation to calendar failed:', error);
-        }
       }
+    }
+
+    // Try router.push() first, then force with window.location if it fails to actually navigate
+    try {
+      await router.push(targetUrl);
+      console.log('✅ Router navigation completed');
+
+      // Check if navigation actually happened after a brief delay
+      setTimeout(() => {
+        if (window.location.pathname === '/session-plan') {
+          console.log('⚠️ Router navigation completed but page did not change - forcing with window.location');
+          window.location.href = targetUrl;
+        } else {
+          console.log('✅ Navigation successful - page changed to:', window.location.pathname);
+        }
+      }, 100);
+
+    } catch (error) {
+      console.error('❌ Router navigation failed, forcing with window.location:', error);
+      window.location.href = targetUrl;
     }
   };
 

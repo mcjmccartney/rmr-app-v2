@@ -27,12 +27,25 @@ export default function FloatingActionButton() {
 
   const handleNavigation = async (path: string) => {
     console.log('🔘 FAB Navigation clicked:', { path, currentPathname: pathname });
+
     try {
       await router.push(path);
-      console.log('✅ FAB Navigation completed:', { path });
+      console.log('✅ FAB Router navigation completed:', { path });
+
+      // Check if navigation actually happened after a brief delay
+      setTimeout(() => {
+        if (window.location.pathname === pathname) {
+          console.log('⚠️ FAB Router navigation completed but page did not change - forcing with window.location');
+          window.location.href = path;
+        } else {
+          console.log('✅ FAB Navigation successful - page changed to:', window.location.pathname);
+        }
+      }, 100);
+
       setIsExpanded(false);
     } catch (error) {
-      console.error('❌ FAB Navigation failed:', { path, error });
+      console.error('❌ FAB Router navigation failed, forcing with window.location:', { path, error });
+      window.location.href = path;
       setIsExpanded(false);
     }
   };
