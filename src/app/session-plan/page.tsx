@@ -229,13 +229,14 @@ function SessionPlanContent() {
   }, [existingSessionPlan, clearUnsavedChanges, autoSaveState.hasUnsavedChanges]);
 
   const handleBack = async () => {
-    // Save current state if there are any changes or content
-    if (hasUnsavedChanges || formData.mainGoal1 || formData.mainGoal2 ||
-        formData.mainGoal3 || formData.mainGoal4 || formData.explanationOfBehaviour ||
+    // Save current state if there are any changes or content using robust auto-save
+    if (hasUnsavedChanges || autoSaveState.hasUnsavedChanges ||
+        formData.mainGoal1 || formData.mainGoal2 || formData.mainGoal3 ||
+        formData.mainGoal4 || formData.explanationOfBehaviour ||
         selectedActionPoints.length > 0 || Object.keys(editableActionPoints).length > 0) {
       try {
-        await saveSessionPlan();
-        console.log('✅ Auto-saved before navigation');
+        await forceSave();
+        console.log('✅ Saved before navigation');
       } catch (error) {
         console.error('❌ Failed to save before navigation:', error);
         // Continue with navigation even if save fails
@@ -355,10 +356,15 @@ function SessionPlanContent() {
     if (!currentSession || !currentClient) return;
 
     try {
-      await saveSessionPlan();
+      // Use the robust save function for manual saves
+      await saveFunction(false);
+      console.log('✅ Manual save completed successfully');
+
+      // Navigate back after successful save
       handleBack();
     } catch (error) {
-      console.error('Error saving session plan:', error);
+      console.error('❌ Error saving session plan:', error);
+      // Still navigate back even if save fails (auto-save will handle it)
       handleBack();
     }
   };
@@ -830,13 +836,7 @@ function SessionPlanContent() {
   return (
     <div className="min-h-screen bg-white flex flex-col">
       <div className="bg-white border-b border-gray-200 px-4 py-4">
-        <div className="flex items-center justify-between">
-          <button
-            onClick={handleBack}
-            className="text-gray-600 hover:text-gray-800 transition-colors"
-          >
-            ← Back
-          </button>
+        <div className="flex items-center justify-center">
           <div className="text-center">
             <h1 className="text-xl font-semibold text-gray-900">
               {existingSessionPlan ? 'Edit Session Plan' : 'Create Session Plan'}
