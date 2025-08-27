@@ -287,13 +287,31 @@ function SessionPlanContent() {
 
   // Save function that navigates away (for the main Save button)
   const handleSave = async () => {
+    console.log('🔘 Save & Go Back clicked');
+    console.log('📊 Current state:', {
+      currentSession: !!currentSession,
+      currentClient: !!currentClient,
+      sessionId: currentSession?.id,
+      clientId: currentClient?.id,
+      isLoading,
+      searchParams: {
+        from: searchParams.get('from'),
+        clientId: searchParams.get('clientId'),
+        returnSessionId: searchParams.get('returnSessionId')
+      }
+    });
+
     if (!currentSession || !currentClient) {
+      console.log('❌ Missing session or client data');
       return;
     }
 
+    console.log('💾 Attempting to save...');
     try {
       await saveFunction(false);
+      console.log('✅ Save completed successfully');
     } catch (error) {
+      console.error('❌ Save failed:', error);
       // Continue with navigation even if save fails
     }
 
@@ -304,29 +322,38 @@ function SessionPlanContent() {
     // Navigate based on where user came from
     const returnSessionId = searchParams.get('returnSessionId');
 
+    console.log('🧭 Navigation params:', { from, clientId, returnSessionId });
+
     if (from === 'clients' && clientId) {
+      console.log('🔄 Navigating to clients page with modal');
       router.push(`/clients?openClient=${clientId}`);
     } else if (from === 'calendar') {
       // Include returnSessionId to restore the session sidepane
       if (returnSessionId) {
+        console.log('🔄 Navigating to calendar with session restoration');
         router.push(`/calendar?returnSessionId=${returnSessionId}`);
       } else {
+        console.log('🔄 Navigating to calendar');
         router.push('/calendar');
       }
     } else if (from === 'sessions') {
       // Include returnSessionId to restore the session sidepane
       if (returnSessionId) {
+        console.log('🔄 Navigating to sessions with session restoration');
         router.push(`/sessions?returnSessionId=${returnSessionId}`);
       } else {
+        console.log('🔄 Navigating to sessions');
         router.push('/sessions');
       }
     } else {
       // Fallback: if no 'from' parameter, try to determine best navigation
       // If we have a client, go to clients page with that client open
       if (currentClient) {
+        console.log('🔄 Fallback: Navigating to clients with current client');
         router.push(`/clients?openClient=${currentClient.id}`);
       } else {
         // Default fallback to calendar
+        console.log('🔄 Fallback: Navigating to calendar');
         router.push('/calendar');
       }
     }

@@ -21,10 +21,12 @@ export default function FloatingActionButton() {
   const { isAnyModalOpen } = useModal();
 
   const toggleExpanded = () => {
+    console.log('🔘 FAB Toggle clicked:', { isExpanded, pathname });
     setIsExpanded(!isExpanded);
   };
 
   const handleNavigation = (path: string) => {
+    console.log('🔘 FAB Navigation clicked:', { path, currentPathname: pathname });
     router.push(path);
     setIsExpanded(false);
   };
