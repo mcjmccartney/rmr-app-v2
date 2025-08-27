@@ -201,10 +201,24 @@ function SessionPlanContent() {
     const clientId = searchParams.get('clientId');
 
     // Navigate based on where user came from
+    const returnSessionId = searchParams.get('returnSessionId');
+
     if (from === 'clients' && clientId) {
       router.push(`/clients?openClient=${clientId}`);
     } else if (from === 'calendar') {
-      router.push('/calendar');
+      // Include returnSessionId to restore the session sidepane
+      if (returnSessionId) {
+        router.push(`/calendar?returnSessionId=${returnSessionId}`);
+      } else {
+        router.push('/calendar');
+      }
+    } else if (from === 'sessions') {
+      // Include returnSessionId to restore the session sidepane
+      if (returnSessionId) {
+        router.push(`/sessions?returnSessionId=${returnSessionId}`);
+      } else {
+        router.push('/sessions');
+      }
     } else {
       // Fallback: if no 'from' parameter, try to determine best navigation
       // If we have a client, go to clients page with that client open
@@ -288,10 +302,24 @@ function SessionPlanContent() {
     const clientId = searchParams.get('clientId');
 
     // Navigate based on where user came from
+    const returnSessionId = searchParams.get('returnSessionId');
+
     if (from === 'clients' && clientId) {
       router.push(`/clients?openClient=${clientId}`);
     } else if (from === 'calendar') {
-      router.push('/calendar');
+      // Include returnSessionId to restore the session sidepane
+      if (returnSessionId) {
+        router.push(`/calendar?returnSessionId=${returnSessionId}`);
+      } else {
+        router.push('/calendar');
+      }
+    } else if (from === 'sessions') {
+      // Include returnSessionId to restore the session sidepane
+      if (returnSessionId) {
+        router.push(`/sessions?returnSessionId=${returnSessionId}`);
+      } else {
+        router.push('/sessions');
+      }
     } else {
       // Fallback: if no 'from' parameter, try to determine best navigation
       // If we have a client, go to clients page with that client open

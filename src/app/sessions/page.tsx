@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
 import Header from '@/components/layout/Header';
 import SessionModal from '@/components/modals/SessionModal';
@@ -16,6 +16,7 @@ import { Calendar, UserPlus, ChevronDown, ChevronRight, Target, Edit3 } from 'lu
 export default function SessionsPage() {
   const { state } = useApp();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
   const [showEditSessionModal, setShowEditSessionModal] = useState(false);
@@ -24,6 +25,21 @@ export default function SessionsPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [addModalType, setAddModalType] = useState<'session' | 'client'>('session');
   const [expandedMonths, setExpandedMonths] = useState<Set<string>>(new Set());
+
+  // Check for returnSessionId parameter to restore selected session when returning from session-plan
+  useEffect(() => {
+    const returnSessionId = searchParams.get('returnSessionId');
+    if (returnSessionId && state.sessions.length > 0) {
+      const sessionToRestore = state.sessions.find(s => s.id === returnSessionId);
+      if (sessionToRestore) {
+        setSelectedSession(sessionToRestore);
+        // Clean up the URL by removing the returnSessionId parameter
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.delete('returnSessionId');
+        window.history.replaceState({}, '', newUrl.toString());
+      }
+    }
+  }, [searchParams, state.sessions]);
 
   const filteredSessions = state.sessions.filter(session => {
     const searchTerm = searchQuery.toLowerCase();
@@ -73,6 +89,10 @@ export default function SessionsPage() {
       setEditingClient(client);
       setShowEditClientModal(true);
     }
+  };
+
+  const handleCreateSessionPlan = (session: Session) => {
+    router.push(`/session-plan?sessionId=${session.id}&from=sessions&returnSessionId=${session.id}`);
   };
 
   const handleCloseEditSessionModal = () => {
@@ -254,6 +274,7 @@ export default function SessionsPage() {
         onClose={handleCloseModal}
         onEditSession={handleEditSession}
         onEditClient={handleEditClient}
+        onCreateSessionPlan={handleCreateSessionPlan}
       />
 
       <EditSessionModal

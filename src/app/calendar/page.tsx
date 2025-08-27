@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
 import SessionModal from '@/components/modals/SessionModal';
 import EditSessionModal from '@/components/modals/EditSessionModal';
@@ -123,6 +123,7 @@ const hasQuestionnaireForDog = (client: any, session: any, behaviourQuestionnair
 export default function CalendarPage() {
   const { state, updateClient, pairMembershipsWithClients } = useApp();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [currentDate, setCurrentDate] = useState(() => new Date());
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
@@ -143,6 +144,21 @@ export default function CalendarPage() {
   const [selectedDayDate, setSelectedDayDate] = useState<Date | null>(null);
   const [hideWeekends, setHideWeekends] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Check for returnSessionId parameter to restore selected session when returning from session-plan
+  useEffect(() => {
+    const returnSessionId = searchParams.get('returnSessionId');
+    if (returnSessionId && state.sessions.length > 0) {
+      const sessionToRestore = state.sessions.find(s => s.id === returnSessionId);
+      if (sessionToRestore) {
+        setSelectedSession(sessionToRestore);
+        // Clean up the URL by removing the returnSessionId parameter
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.delete('returnSessionId');
+        window.history.replaceState({}, '', newUrl.toString());
+      }
+    }
+  }, [searchParams, state.sessions]);
 
   // Disabled automatic membership pairing - now using manual override system
   // useEffect(() => {
@@ -308,7 +324,7 @@ export default function CalendarPage() {
   };
 
   const handleCreateSessionPlan = (session: Session) => {
-    router.push(`/session-plan?sessionId=${session.id}&from=calendar`);
+    router.push(`/session-plan?sessionId=${session.id}&from=calendar&returnSessionId=${session.id}`);
   };
 
   const handleViewBehaviouralBrief = (behaviouralBriefId: string) => {
