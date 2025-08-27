@@ -301,6 +301,12 @@ function SessionPlanContent() {
       }
     });
 
+    // Add a small delay to see if there are any timing issues
+    setTimeout(() => {
+      console.log('⏰ 2 seconds after Save & Go Back clicked - checking if still on session-plan page');
+      console.log('📍 Current pathname:', window.location.pathname);
+    }, 2000);
+
     if (!currentSession || !currentClient) {
       console.log('❌ Missing session or client data');
       return;
@@ -326,35 +332,70 @@ function SessionPlanContent() {
 
     if (from === 'clients' && clientId) {
       console.log('🔄 Navigating to clients page with modal');
-      router.push(`/clients?openClient=${clientId}`);
+      try {
+        await router.push(`/clients?openClient=${clientId}`);
+        console.log('✅ Navigation to clients completed');
+      } catch (error) {
+        console.error('❌ Navigation to clients failed:', error);
+      }
     } else if (from === 'calendar') {
       // Include returnSessionId to restore the session sidepane
       if (returnSessionId) {
         console.log('🔄 Navigating to calendar with session restoration');
-        router.push(`/calendar?returnSessionId=${returnSessionId}`);
+        try {
+          await router.push(`/calendar?returnSessionId=${returnSessionId}`);
+          console.log('✅ Navigation to calendar with session restoration completed');
+        } catch (error) {
+          console.error('❌ Navigation to calendar with session restoration failed:', error);
+        }
       } else {
         console.log('🔄 Navigating to calendar');
-        router.push('/calendar');
+        try {
+          await router.push('/calendar');
+          console.log('✅ Navigation to calendar completed');
+        } catch (error) {
+          console.error('❌ Navigation to calendar failed:', error);
+        }
       }
     } else if (from === 'sessions') {
       // Include returnSessionId to restore the session sidepane
       if (returnSessionId) {
         console.log('🔄 Navigating to sessions with session restoration');
-        router.push(`/sessions?returnSessionId=${returnSessionId}`);
+        try {
+          await router.push(`/sessions?returnSessionId=${returnSessionId}`);
+          console.log('✅ Navigation to sessions with session restoration completed');
+        } catch (error) {
+          console.error('❌ Navigation to sessions with session restoration failed:', error);
+        }
       } else {
         console.log('🔄 Navigating to sessions');
-        router.push('/sessions');
+        try {
+          await router.push('/sessions');
+          console.log('✅ Navigation to sessions completed');
+        } catch (error) {
+          console.error('❌ Navigation to sessions failed:', error);
+        }
       }
     } else {
       // Fallback: if no 'from' parameter, try to determine best navigation
       // If we have a client, go to clients page with that client open
       if (currentClient) {
         console.log('🔄 Fallback: Navigating to clients with current client');
-        router.push(`/clients?openClient=${currentClient.id}`);
+        try {
+          await router.push(`/clients?openClient=${currentClient.id}`);
+          console.log('✅ Fallback navigation to clients completed');
+        } catch (error) {
+          console.error('❌ Fallback navigation to clients failed:', error);
+        }
       } else {
         // Default fallback to calendar
         console.log('🔄 Fallback: Navigating to calendar');
-        router.push('/calendar');
+        try {
+          await router.push('/calendar');
+          console.log('✅ Fallback navigation to calendar completed');
+        } catch (error) {
+          console.error('❌ Fallback navigation to calendar failed:', error);
+        }
       }
     }
   };

@@ -25,10 +25,16 @@ export default function FloatingActionButton() {
     setIsExpanded(!isExpanded);
   };
 
-  const handleNavigation = (path: string) => {
+  const handleNavigation = async (path: string) => {
     console.log('🔘 FAB Navigation clicked:', { path, currentPathname: pathname });
-    router.push(path);
-    setIsExpanded(false);
+    try {
+      await router.push(path);
+      console.log('✅ FAB Navigation completed:', { path });
+      setIsExpanded(false);
+    } catch (error) {
+      console.error('❌ FAB Navigation failed:', { path, error });
+      setIsExpanded(false);
+    }
   };
 
   // Hide FAB when any modal is open or on form pages
