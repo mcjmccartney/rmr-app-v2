@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Client, Session, Membership } from '@/types';
 import { useApp } from '@/context/AppContext';
 import { sessionService } from '@/services/sessionService';
@@ -17,6 +18,7 @@ interface ClientModalProps {
 
 export default function ClientModal({ client, isOpen, onClose, onEditClient, onViewBehaviouralBrief, onViewBehaviourQuestionnaire }: ClientModalProps) {
   const { state, updateClient, deleteClient, getMembershipsByClientId, getMembershipsByEmail, getMembershipsByClientIdWithAliases } = useApp();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<'sessions' | 'memberships'>('sessions');
   const [clientSessions, setClientSessions] = useState<Session[]>([]);
   const [clientMemberships, setClientMemberships] = useState<Membership[]>([]);
@@ -129,6 +131,13 @@ export default function ClientModal({ client, isOpen, onClose, onEditClient, onV
     } finally {
       setIsUpdatingActive(false);
     }
+  };
+
+  const handleCreateSessionPlan = (session: Session) => {
+    if (!currentClient) return;
+
+    // Navigate to session plan with proper parameters for returning to clients page
+    router.push(`/session-plan?sessionId=${session.id}&from=clients&clientId=${currentClient.id}`);
   };
 
   const handleToggleMembership = async () => {
@@ -465,7 +474,7 @@ export default function ClientModal({ client, isOpen, onClose, onEditClient, onV
                               className="bg-gray-50 p-3 rounded-lg"
                             >
                               <div className="flex justify-between items-start">
-                                <div>
+                                <div className="flex-1">
                                   <div className="font-medium text-gray-900 text-sm">
                                     Session {sessionNumber}
                                   </div>
@@ -476,10 +485,16 @@ export default function ClientModal({ client, isOpen, onClose, onEditClient, onV
                                     {session.sessionType || 'Unknown type'}
                                   </div>
                                 </div>
-                                <div className="text-right">
+                                <div className="text-right flex flex-col items-end space-y-2">
                                   <div className="font-medium text-gray-900 text-sm">
                                     £{(session.quote || 0).toFixed(2)}
                                   </div>
+                                  <button
+                                    onClick={() => handleCreateSessionPlan(session)}
+                                    className="text-xs bg-amber-800 hover:bg-amber-700 text-white px-2 py-1 rounded transition-colors"
+                                  >
+                                    Session Plan
+                                  </button>
                                 </div>
                               </div>
                             </div>

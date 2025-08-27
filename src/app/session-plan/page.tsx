@@ -59,28 +59,11 @@ function SessionPlanContent() {
   const currentSession = session || fallbackSession;
   const currentClient = client || fallbackClient;
 
-  // Debug current state
-  useEffect(() => {
-    console.log('🔍 Session Plan State Debug:', {
-      sessionId,
-      hasSession: !!session,
-      hasFallbackSession: !!fallbackSession,
-      hasCurrentSession: !!currentSession,
-      hasClient: !!client,
-      hasFallbackClient: !!fallbackClient,
-      hasCurrentClient: !!currentClient,
-      isLoading,
-      stateSessionsCount: state.sessions.length,
-      stateClientsCount: state.clients.length
-    });
-  }, [sessionId, session, fallbackSession, currentSession, client, fallbackClient, currentClient, isLoading, state.sessions.length, state.clients.length]);
+
 
   // Create the save function for robust auto-save
   const saveFunction = useCallback(async (isAutoSave = false) => {
-    console.log('💾 saveFunction called:', { isAutoSave, hasSession: !!currentSession, hasClient: !!currentClient });
-
     if (!currentSession || !currentClient) {
-      console.error('❌ Missing session or client in saveFunction');
       throw new Error('Session or client not available');
     }
 
@@ -98,15 +81,12 @@ function SessionPlanContent() {
 
     let savedPlan;
     if (existingSessionPlan) {
-      console.log('📝 Updating existing session plan:', existingSessionPlan.id);
       savedPlan = await sessionPlanService.update(existingSessionPlan.id, sessionPlanData);
     } else {
-      console.log('📝 Creating new session plan');
       savedPlan = await sessionPlanService.create(sessionPlanData);
       setExistingSessionPlan(savedPlan);
     }
 
-    console.log('✅ Save operation completed:', savedPlan.id);
     return savedPlan;
   }, [currentSession, currentClient, formData, selectedActionPoints, editableActionPoints, sessionNumber, existingSessionPlan]);
 
@@ -220,10 +200,20 @@ function SessionPlanContent() {
     const from = searchParams.get('from');
     const clientId = searchParams.get('clientId');
 
+    // Navigate based on where user came from
     if (from === 'clients' && clientId) {
       router.push(`/clients?openClient=${clientId}`);
-    } else {
+    } else if (from === 'calendar') {
       router.push('/calendar');
+    } else {
+      // Fallback: if no 'from' parameter, try to determine best navigation
+      // If we have a client, go to clients page with that client open
+      if (currentClient) {
+        router.push(`/clients?openClient=${currentClient.id}`);
+      } else {
+        // Default fallback to calendar
+        router.push('/calendar');
+      }
     }
   };
 
@@ -283,32 +273,13 @@ function SessionPlanContent() {
 
   // Save function that navigates away (for the main Save button)
   const handleSave = async () => {
-    console.log('🔄 Save & Go Back clicked');
-    console.log('📊 Current state:', {
-      currentSession: !!currentSession,
-      currentClient: !!currentClient,
-      sessionId: currentSession?.id,
-      clientId: currentClient?.id,
-      sessionData: currentSession,
-      clientData: currentClient
-    });
-
     if (!currentSession || !currentClient) {
-      console.log('❌ Missing session or client data', {
-        hasSession: !!currentSession,
-        hasClient: !!currentClient,
-        session: currentSession,
-        client: currentClient
-      });
       return;
     }
 
-    console.log('💾 Attempting to save...');
     try {
       await saveFunction(false);
-      console.log('✅ Save completed successfully');
     } catch (error) {
-      console.error('❌ Save failed:', error);
       // Continue with navigation even if save fails
     }
 
@@ -316,23 +287,19 @@ function SessionPlanContent() {
     const from = searchParams.get('from');
     const clientId = searchParams.get('clientId');
 
-    console.log('🧭 Navigation params:', { from, clientId });
-
+    // Navigate based on where user came from
     if (from === 'clients' && clientId) {
-      console.log('🔄 Navigating to clients page with modal');
-      try {
-        router.push(`/clients?openClient=${clientId}`);
-        console.log('✅ Navigation to clients initiated');
-      } catch (error) {
-        console.error('❌ Navigation to clients failed:', error);
-      }
+      router.push(`/clients?openClient=${clientId}`);
+    } else if (from === 'calendar') {
+      router.push('/calendar');
     } else {
-      console.log('🔄 Navigating to calendar');
-      try {
+      // Fallback: if no 'from' parameter, try to determine best navigation
+      // If we have a client, go to clients page with that client open
+      if (currentClient) {
+        router.push(`/clients?openClient=${currentClient.id}`);
+      } else {
+        // Default fallback to calendar
         router.push('/calendar');
-        console.log('✅ Navigation to calendar initiated');
-      } catch (error) {
-        console.error('❌ Navigation to calendar failed:', error);
       }
     }
   };
@@ -1004,13 +971,23 @@ function SessionPlanContent() {
             </div>
 
                 <div className="border-t border-gray-200 pt-6 space-y-3">
+                  {/* Auto-save status */}
+                  <div className="text-center text-sm text-gray-500">
+                    {autoSaveState.isSaving ? (
+                      <span className="text-blue-600">💾 Saving...</span>
+                    ) : autoSaveState.lastSaved ? (
+                      <span className="text-green-600">
+                        ✅ Last saved: {new Date(autoSaveState.lastSaved).toLocaleString()}
+                      </span>
+                    ) : autoSaveState.hasUnsavedChanges ? (
+                      <span className="text-amber-600">⚠️ Unsaved changes</span>
+                    ) : (
+                      <span className="text-gray-400">Ready to save</span>
+                    )}
+                  </div>
+
                   <button
-                    onClick={(e) => {
-                      console.log('🔘 Button clicked - event:', e);
-                      e.preventDefault();
-                      e.stopPropagation();
-                      handleSave();
-                    }}
+                    onClick={handleSave}
                     disabled={isLoading || (!currentSession && !currentClient)}
                     className="w-full bg-amber-800 text-white py-3 rounded-md font-medium hover:bg-amber-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >

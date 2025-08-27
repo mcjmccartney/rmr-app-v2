@@ -308,7 +308,7 @@ export default function CalendarPage() {
   };
 
   const handleCreateSessionPlan = (session: Session) => {
-    router.push(`/session-plan?sessionId=${session.id}`);
+    router.push(`/session-plan?sessionId=${session.id}&from=calendar`);
   };
 
   const handleViewBehaviouralBrief = (behaviouralBriefId: string) => {
