@@ -1214,7 +1214,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (isValidWebhookData(webhookData) && !shouldSkipWebhookCall(session.id, 'booking-terms-update')) {
         const webhookTimestamp = new Date().toISOString();
         console.log(`[BOOKING_TERMS_WEBHOOK] Triggering for session ${webhookData.sessionId} - ${webhookData.clientFirstName} ${webhookData.clientLastName} at ${webhookTimestamp}`);
-        await fetch('https://hook.eu1.make.com/yaoalfe77uqtw4xv9fbh5atf4okq14wm', {
+        await fetch('https://hook.eu1.make.com/lipggo8kcd8kwq2vp6j6mr3gnxbx12h7', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
