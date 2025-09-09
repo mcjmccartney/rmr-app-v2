@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { GeocodedLocation } from '@/hooks/useGeocoding';
 
 // Mapbox GL JS types
 interface MapboxGL {
@@ -12,12 +11,22 @@ interface MapboxGL {
   NavigationControl: any;
 }
 
-interface MembersMapProps {
-  locations: GeocodedLocation[];
-  onRefresh: () => void;
+interface MemberLocation {
+  id: string;
+  clientName: string;
+  dogName?: string;
+  email?: string;
+  membershipDate?: string;
+  latitude: number;
+  longitude: number;
+  address: string;
 }
 
-export default function MembersMap({ locations, onRefresh }: MembersMapProps) {
+interface MembersMapProps {
+  locations: MemberLocation[];
+}
+
+export default function MembersMap({ locations }: MembersMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<any>(null);
   const [mapboxgl, setMapboxgl] = useState<MapboxGL | null>(null);
@@ -107,14 +116,14 @@ export default function MembersMap({ locations, onRefresh }: MembersMapProps) {
 
       // Create popup content
       const popupContent = `
-        <div style="padding: 8px; min-width: 200px;">
+        <div style="padding: 12px; min-width: 200px;">
           <h3 style="margin: 0 0 8px 0; font-size: 16px; font-weight: bold; color: #92400e;">
             ${location.clientName}
           </h3>
           ${location.dogName ? `<p style="margin: 4px 0; font-size: 14px;"><strong>Dog:</strong> ${location.dogName}</p>` : ''}
           ${location.email ? `<p style="margin: 4px 0; font-size: 14px;"><strong>Email:</strong> ${location.email}</p>` : ''}
           ${location.membershipDate ? `<p style="margin: 4px 0; font-size: 14px;"><strong>Member since:</strong> ${new Date(location.membershipDate).toLocaleDateString()}</p>` : ''}
-          <p style="margin: 4px 0 0 0; font-size: 12px; color: #666;">
+          <p style="margin: 8px 0 0 0; font-size: 12px; color: #666; border-top: 1px solid #eee; padding-top: 8px;">
             <strong>Address:</strong> ${location.address}
           </p>
         </div>
@@ -159,24 +168,16 @@ export default function MembersMap({ locations, onRefresh }: MembersMapProps) {
   }
 
   return (
-    <div className="relative h-96 w-full rounded-lg overflow-hidden border border-gray-200">
+    <div className="relative w-full h-full">
       <div ref={mapContainer} className="w-full h-full" />
-      
-      {/* Refresh button */}
-      <button
-        onClick={onRefresh}
-        className="absolute top-4 left-4 bg-white hover:bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors"
-      >
-        🔄 Refresh Cache
-      </button>
 
       {/* Member count badge */}
       {locations.length > 0 && (
-        <div className="absolute bottom-4 left-4 bg-white rounded-lg shadow-lg px-3 py-2 border">
+        <div className="absolute top-4 left-4 bg-white rounded-lg shadow-lg px-3 py-2 border">
           <div className="flex items-center gap-2">
             <span className="text-amber-800">👤</span>
             <span className="text-sm font-medium text-gray-900">
-              {locations.length} Active Member{locations.length !== 1 ? 's' : ''}
+              {locations.length} Member{locations.length !== 1 ? 's' : ''}
             </span>
           </div>
         </div>

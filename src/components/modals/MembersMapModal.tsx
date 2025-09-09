@@ -1,10 +1,20 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, MapPin, Users, AlertTriangle, RefreshCw } from 'lucide-react';
+import { X } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
-import { useGeocoding, GeocodedLocation } from '@/hooks/useGeocoding';
 import MembersMap from '@/components/maps/MembersMap';
+
+interface MemberLocation {
+  id: string;
+  clientName: string;
+  dogName?: string;
+  email?: string;
+  membershipDate?: string;
+  latitude: number;
+  longitude: number;
+  address: string;
+}
 
 interface MembersMapModalProps {
   isOpen: boolean;
@@ -14,17 +24,39 @@ interface MembersMapModalProps {
 export default function MembersMapModal({ isOpen, onClose }: MembersMapModalProps) {
   const { state } = useApp();
   const { clients, memberships, behaviourQuestionnaires, behaviouralBriefs } = state;
-  const { batchGeocode, isGeocoding, geocodingProgress, clearGeocodingCache } = useGeocoding();
-  const [locations, setLocations] = useState<GeocodedLocation[]>([]);
-  const [stats, setStats] = useState({
-    totalActiveMembers: 0,
-    membersWithAddresses: 0,
-    mappedMembers: 0
-  });
+  const [memberLocations, setMemberLocations] = useState<MemberLocation[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Get active members with addresses
-  const getActiveMembersWithAddresses = () => {
-    if (!clients || !memberships) return [];
+  // Simple geocoding function using Mapbox
+  const geocodeAddress = async (address: string): Promise<{ lat: number; lng: number } | null> => {
+    try {
+      const token = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
+      if (!token) return null;
+
+      const response = await fetch(
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(address)}.json?access_token=${token}&country=gb&limit=1`
+      );
+
+      if (!response.ok) return null;
+
+      const data = await response.json();
+      if (data.features && data.features.length > 0) {
+        const [lng, lat] = data.features[0].center;
+        return { lat, lng };
+      }
+
+      return null;
+    } catch (error) {
+      console.warn('Geocoding failed for address:', address);
+      return null;
+    }
+  };
+
+  // Get active members with addresses and geocode them
+  const loadMemberLocations = async () => {
+    if (!clients || !memberships) return;
+
+    setIsLoading(true);
 
     // Get recent membership payments (within last 2 months)
     const twoMonthsAgo = new Date();
@@ -37,13 +69,14 @@ export default function MembersMapModal({ isOpen, onClose }: MembersMapModalProp
 
     const recentMemberEmails = new Set(recentMemberships.map(m => m.email));
 
-    // Filter active clients with membership and addresses
+    // Filter active clients with membership
     const activeMembers = clients.filter(client => {
       return client.membership && client.email && recentMemberEmails.has(client.email);
     });
 
-    // Extract addresses with priority system
-    const membersWithAddresses = activeMembers.map(client => {
+    const locations: MemberLocation[] = [];
+
+    for (const client of activeMembers) {
       let address = '';
       let dogName = '';
 
@@ -58,7 +91,7 @@ export default function MembersMapModal({ isOpen, onClose }: MembersMapModalProp
           questionnaire.zipPostalCode,
           questionnaire.country
         ].filter(Boolean);
-        
+
         if (addressParts.length > 0) {
           address = addressParts.join(', ');
           dogName = questionnaire.dogName || '';
@@ -78,96 +111,42 @@ export default function MembersMapModal({ isOpen, onClose }: MembersMapModalProp
         }
       }
 
-      return {
-        ...client,
-        address,
-        dogName
-      };
-    }).filter(member => member.address); // Only include members with addresses
+      // Skip if no address found
+      if (!address) continue;
 
-    return membersWithAddresses;
-  };
+      // Geocode the address
+      const coords = await geocodeAddress(address);
+      if (coords) {
+        const membershipDate = recentMemberships.find(m => m.email === client.email)?.date;
 
-  // Initialize geocoding when modal opens
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const initializeMap = async () => {
-      const membersWithAddresses = getActiveMembersWithAddresses();
-
-      setStats({
-        totalActiveMembers: clients?.filter(c => c.membership)?.length || 0,
-        membersWithAddresses: membersWithAddresses.length,
-        mappedMembers: 0
-      });
-
-      if (membersWithAddresses.length === 0) {
-        setLocations([]);
-        return;
+        locations.push({
+          id: client.id,
+          clientName: `${client.firstName} ${client.lastName}`,
+          dogName,
+          email: client.email,
+          membershipDate,
+          latitude: coords.lat,
+          longitude: coords.lng,
+          address
+        });
       }
 
-      // Get recent memberships for date lookup
-      const twoMonthsAgo = new Date();
-      twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
-      const recentMemberships = memberships?.filter(membership => {
-        const membershipDate = new Date(membership.date);
-        return membershipDate >= twoMonthsAgo;
-      }) || [];
-
-      // Prepare addresses for geocoding
-      const addressesToGeocode = membersWithAddresses.map(member => ({
-        id: member.id,
-        address: member.address,
-        clientName: `${member.firstName} ${member.lastName}`,
-        dogName: member.dogName,
-        email: member.email,
-        membershipDate: recentMemberships.find(m => m.email === member.email)?.date
-      }));
-
-      // Batch geocode all addresses
-      const geocodedLocations = await batchGeocode(addressesToGeocode);
-      setLocations(geocodedLocations);
-      
-      setStats(prev => ({
-        ...prev,
-        mappedMembers: geocodedLocations.length
-      }));
-    };
-
-    initializeMap();
-  }, [isOpen, clients, memberships, behaviourQuestionnaires, behaviouralBriefs, batchGeocode]);
-
-  const handleRefreshCache = async () => {
-    clearGeocodingCache();
-    // Re-trigger the geocoding process
-    const membersWithAddresses = getActiveMembersWithAddresses();
-    if (membersWithAddresses.length > 0) {
-      // Get recent memberships for date lookup
-      const twoMonthsAgo = new Date();
-      twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
-      const recentMemberships = memberships?.filter(membership => {
-        const membershipDate = new Date(membership.date);
-        return membershipDate >= twoMonthsAgo;
-      }) || [];
-
-      const addressesToGeocode = membersWithAddresses.map(member => ({
-        id: member.id,
-        address: member.address,
-        clientName: `${member.firstName} ${member.lastName}`,
-        dogName: member.dogName,
-        email: member.email,
-        membershipDate: recentMemberships.find(m => m.email === member.email)?.date
-      }));
-
-      const geocodedLocations = await batchGeocode(addressesToGeocode);
-      setLocations(geocodedLocations);
-      
-      setStats(prev => ({
-        ...prev,
-        mappedMembers: geocodedLocations.length
-      }));
+      // Small delay to avoid rate limiting
+      await new Promise(resolve => setTimeout(resolve, 100));
     }
+
+    setMemberLocations(locations);
+    setIsLoading(false);
   };
+
+  // Load member locations when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      loadMemberLocations();
+    }
+  }, [isOpen, clients, memberships, behaviourQuestionnaires, behaviouralBriefs]);
+
+
 
   if (!isOpen) return null;
 
@@ -176,10 +155,7 @@ export default function MembersMapModal({ isOpen, onClose }: MembersMapModalProp
       <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl h-[90vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <div className="flex items-center gap-3">
-            <MapPin className="h-6 w-6 text-amber-800" />
-            <h2 className="text-xl font-semibold text-gray-900">Active Members Map</h2>
-          </div>
+          <h2 className="text-xl font-semibold text-gray-900">Members Map</h2>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -188,83 +164,19 @@ export default function MembersMapModal({ isOpen, onClose }: MembersMapModalProp
           </button>
         </div>
 
-        {/* Statistics */}
-        <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="flex items-center gap-3">
-              <Users className="h-5 w-5 text-blue-600" />
-              <div>
-                <p className="text-sm text-gray-600">Total Active Members</p>
-                <p className="text-lg font-semibold text-gray-900">{stats.totalActiveMembers}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <MapPin className="h-5 w-5 text-green-600" />
-              <div>
-                <p className="text-sm text-gray-600">Members with Addresses</p>
-                <p className="text-lg font-semibold text-gray-900">{stats.membersWithAddresses}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="h-5 w-5 bg-amber-800 rounded-full flex items-center justify-center">
-                <span className="text-white text-xs">📍</span>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Successfully Mapped</p>
-                <p className="text-lg font-semibold text-gray-900">{stats.mappedMembers}</p>
-              </div>
+        {/* Loading indicator */}
+        {isLoading && (
+          <div className="px-6 py-4 bg-blue-50 border-b border-blue-200">
+            <div className="flex items-center gap-2">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+              <p className="text-sm text-blue-800">Loading member locations...</p>
             </div>
           </div>
-
-          {/* Warning for missing addresses */}
-          {stats.totalActiveMembers > stats.membersWithAddresses && (
-            <div className="mt-4 flex items-start gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5 flex-shrink-0" />
-              <div>
-                <p className="text-sm text-yellow-800">
-                  <strong>{stats.totalActiveMembers - stats.membersWithAddresses}</strong> active members 
-                  don't have address information and won't appear on the map.
-                </p>
-                <p className="text-xs text-yellow-700 mt-1">
-                  Addresses are sourced from behaviour questionnaires, client profiles, and behavioural briefs.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Geocoding progress */}
-          {isGeocoding && (
-            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                <p className="text-sm text-blue-800">Geocoding member addresses...</p>
-              </div>
-              <div className="w-full bg-blue-200 rounded-full h-2">
-                <div 
-                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${geocodingProgress}%` }}
-                ></div>
-              </div>
-              <p className="text-xs text-blue-700 mt-1">{geocodingProgress}% complete</p>
-            </div>
-          )}
-
-          {/* Refresh cache button */}
-          <div className="mt-4 flex justify-end">
-            <button
-              onClick={handleRefreshCache}
-              disabled={isGeocoding}
-              className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
-            >
-              <RefreshCw size={14} className={isGeocoding ? 'animate-spin' : ''} />
-              Refresh Locations
-            </button>
-          </div>
-        </div>
+        )}
 
         {/* Map */}
-        <div className="flex-1 p-6">
-          <MembersMap locations={locations} onRefresh={handleRefreshCache} />
+        <div className="flex-1">
+          <MembersMap locations={memberLocations} />
         </div>
       </div>
     </div>
