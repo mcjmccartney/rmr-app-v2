@@ -27,22 +27,22 @@ export default function MembersMapModal({ isOpen, onClose }: MembersMapModalProp
   const [memberLocations, setMemberLocations] = useState<MemberLocation[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Simple geocoding function using Mapbox
+  // Simple geocoding function using our API route
   const geocodeAddress = async (address: string): Promise<{ lat: number; lng: number } | null> => {
     try {
-      const token = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
-      if (!token) return null;
-
-      const response = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(address)}.json?access_token=${token}&country=gb&limit=1`
-      );
+      const response = await fetch('/api/geocode', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ address }),
+      });
 
       if (!response.ok) return null;
 
       const data = await response.json();
-      if (data.features && data.features.length > 0) {
-        const [lng, lat] = data.features[0].center;
-        return { lat, lng };
+      if (data.lat && data.lng) {
+        return { lat: data.lat, lng: data.lng };
       }
 
       return null;
