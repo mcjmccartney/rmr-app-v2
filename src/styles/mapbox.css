@@ -1,0 +1,43 @@
+/* Mapbox GL JS CSS */
+@import 'mapbox-gl/dist/mapbox-gl.css';
+
+/* Custom marker styles */
+.mapbox-marker {
+  cursor: pointer;
+}
+
+.mapbox-marker:hover {
+  transform: scale(1.1);
+  transition: transform 0.2s ease;
+}
+
+/* Custom popup styles */
+.mapboxgl-popup-content {
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  padding: 0;
+}
+
+.mapboxgl-popup-tip {
+  border-top-color: white;
+}
+
+/* Navigation control styling */
+.mapboxgl-ctrl-group {
+  border-radius: 6px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.mapboxgl-ctrl button {
+  border-radius: 0;
+}
+
+.mapboxgl-ctrl-group button:first-child {
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
+}
+
+.mapboxgl-ctrl-group button:last-child {
+  border-bottom-left-radius: 6px;
+  border-bottom-right-radius: 6px;
+}

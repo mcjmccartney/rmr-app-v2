@@ -11,10 +11,11 @@ export interface GeocodedLocation {
   membershipDate?: string;
 }
 
-interface NominatimResponse {
-  lat: string;
-  lon: string;
-  display_name: string;
+interface MapboxGeocodingResponse {
+  features: Array<{
+    center: [number, number];
+    place_name: string;
+  }>;
 }
 
 export const useGeocoding = () => {
@@ -27,109 +28,99 @@ export const useGeocoding = () => {
       return null;
     }
 
+    const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
+    if (!mapboxToken) {
+      console.error('Mapbox access token not found');
+      return null;
+    }
+
     try {
-      // Use Nominatim (OpenStreetMap's geocoding service) - completely free
-      const encodedAddress = encodeURIComponent(address.trim());
+      // Check cache first
+      const cacheKey = address.toLowerCase().replace(/\s+/g, '_');
+      const cached = localStorage.getItem(`geocode_${cacheKey}`);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        return { lat: parsed.lat, lng: parsed.lng };
+      }
+
+      const encodedAddress = encodeURIComponent(address);
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodedAddress}&countrycodes=gb&limit=1&addressdetails=1`,
-        {
-          headers: {
-            'User-Agent': 'RaisingMyRescue/1.0 (contact@raisingmyrescue.co.uk)' // Required by Nominatim
-          }
-        }
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodedAddress}.json?access_token=${mapboxToken}&country=gb&limit=1`
       );
 
       if (!response.ok) {
         throw new Error(`Geocoding failed: ${response.status}`);
       }
 
-      const data: NominatimResponse[] = await response.json();
-      
-      if (data && data.length > 0) {
-        const result = data[0];
-        return { 
-          lat: parseFloat(result.lat), 
-          lng: parseFloat(result.lon) 
-        };
+      const data: MapboxGeocodingResponse = await response.json();
+
+      if (data.features && data.features.length > 0) {
+        const [lng, lat] = data.features[0].center;
+        const result = { lat, lng };
+
+        // Cache the result
+        localStorage.setItem(`geocode_${cacheKey}`, JSON.stringify(result));
+
+        return result;
       }
 
       return null;
     } catch (error) {
-      console.error('Geocoding error for address:', address, error);
+      console.error('Geocoding error:', error);
       return null;
     }
   }, []);
 
-  const geocodeAddressWithCache = useCallback(async (address: string, cacheKey: string): Promise<{ lat: number; lng: number } | null> => {
-    // Check localStorage cache first
-    const cacheData = localStorage.getItem(`geocode_${cacheKey}`);
-    if (cacheData) {
-      try {
-        const parsed = JSON.parse(cacheData);
-        if (parsed.lat && parsed.lng) {
-          return parsed;
-        }
-      } catch (e) {
-        // Invalid cache data, continue with geocoding
-      }
-    }
-
-    // Geocode the address
-    const result = await geocodeAddress(address);
-    
-    // Cache the result if successful
-    if (result) {
-      localStorage.setItem(`geocode_${cacheKey}`, JSON.stringify(result));
-    }
-
-    return result;
-  }, [geocodeAddress]);
-
   const batchGeocode = useCallback(async (
-    addresses: Array<{ address: string; id: string; clientName: string; dogName?: string; email?: string; membershipDate?: string }>
+    addresses: Array<{
+      address: string;
+      id: string;
+      clientName: string;
+      dogName?: string;
+      email?: string;
+      membershipDate?: string;
+    }>
   ): Promise<GeocodedLocation[]> => {
     setIsGeocoding(true);
     setGeocodingProgress(0);
     setGeocodingError(null);
 
     const results: GeocodedLocation[] = [];
-    const total = addresses.length;
 
-    for (let i = 0; i < addresses.length; i++) {
-      const item = addresses[i];
-      
-      try {
-        const coords = await geocodeAddressWithCache(item.address, item.id);
-        
-        if (coords) {
-          results.push({
-            id: item.id,
-            latitude: coords.lat,
-            longitude: coords.lng,
-            address: item.address,
-            clientName: item.clientName,
-            dogName: item.dogName,
-            email: item.email,
-            membershipDate: item.membershipDate
-          });
+    try {
+      for (let i = 0; i < addresses.length; i++) {
+        const addressData = addresses[i];
+        setGeocodingProgress(Math.round((i / addresses.length) * 100));
+
+        try {
+          const coords = await geocodeAddress(addressData.address);
+          if (coords) {
+            results.push({
+              id: addressData.id,
+              latitude: coords.lat,
+              longitude: coords.lng,
+              address: addressData.address,
+              clientName: addressData.clientName,
+              dogName: addressData.dogName,
+              email: addressData.email,
+              membershipDate: addressData.membershipDate
+            });
+          }
+        } catch (e) {
+          // Continue with next address if one fails
+          console.warn(`Failed to geocode address for ${addressData.clientName}:`, addressData.address);
         }
-
-        // Update progress
-        setGeocodingProgress(Math.round(((i + 1) / total) * 100));
-
-        // Rate limiting: wait 1 second between requests to be respectful to Nominatim
-        // Nominatim usage policy: max 1 request per second
-        if (i < addresses.length - 1) {
-          await new Promise(resolve => setTimeout(resolve, 1000));
-        }
-      } catch (error) {
-        console.error(`Failed to geocode address for ${item.clientName}:`, error);
       }
-    }
 
-    setIsGeocoding(false);
-    return results;
-  }, [geocodeAddressWithCache]);
+      setGeocodingProgress(100);
+      return results;
+    } catch (error) {
+      setGeocodingError(error instanceof Error ? error.message : 'Geocoding failed');
+      return results;
+    } finally {
+      setIsGeocoding(false);
+    }
+  }, [geocodeAddress]);
 
   const clearGeocodingCache = useCallback(() => {
     // Clear all geocoding cache entries
@@ -143,7 +134,6 @@ export const useGeocoding = () => {
 
   return {
     geocodeAddress,
-    geocodeAddressWithCache,
     batchGeocode,
     clearGeocodingCache,
     isGeocoding,

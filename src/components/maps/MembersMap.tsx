@@ -1,167 +1,180 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
-import { User } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { GeocodedLocation } from '@/hooks/useGeocoding';
+
+// Mapbox GL JS types
+interface MapboxGL {
+  Map: any;
+  Marker: any;
+  Popup: any;
+  LngLatBounds: any;
+  NavigationControl: any;
+}
 
 interface MembersMapProps {
   locations: GeocodedLocation[];
-  isLoading?: boolean;
+  onRefresh: () => void;
 }
 
-export default function MembersMap({ locations, isLoading }: MembersMapProps) {
-  const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<any>(null);
+export default function MembersMap({ locations, onRefresh }: MembersMapProps) {
+  const mapContainer = useRef<HTMLDivElement>(null);
+  const map = useRef<any>(null);
+  const [mapboxgl, setMapboxgl] = useState<MapboxGL | null>(null);
   const markersRef = useRef<any[]>([]);
 
+  // Dynamically import Mapbox GL JS
   useEffect(() => {
-    // Dynamic import of Leaflet to avoid SSR issues
-    const initializeMap = async () => {
-      if (typeof window === 'undefined' || !mapRef.current) return;
-
-      const L = await import('leaflet');
-      
-      // Fix for default markers in Leaflet with webpack
-      delete (L.Icon.Default.prototype as any)._getIconUrl;
-      L.Icon.Default.mergeOptions({
-        iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
-        iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
-        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-      });
-
-      // Initialize map if not already done
-      if (!mapInstanceRef.current) {
-        mapInstanceRef.current = L.map(mapRef.current).setView([54.5, -2.0], 6);
-
-        // Add OpenStreetMap tiles
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(mapInstanceRef.current);
+    const loadMapbox = async () => {
+      try {
+        const mapboxModule = await import('mapbox-gl');
+        const mapboxgl = mapboxModule.default;
+        
+        // Set access token
+        mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || '';
+        
+        setMapboxgl(mapboxgl);
+      } catch (error) {
+        console.error('Failed to load Mapbox GL JS:', error);
       }
     };
 
-    initializeMap();
-
-    // Cleanup function
-    return () => {
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
-        mapInstanceRef.current = null;
-      }
-    };
+    loadMapbox();
   }, []);
 
+  // Initialize map
   useEffect(() => {
-    const updateMarkers = async () => {
-      if (!mapInstanceRef.current || typeof window === 'undefined') return;
+    if (!mapboxgl || !mapContainer.current || map.current) return;
 
-      const L = await import('leaflet');
+    map.current = new mapboxgl.Map({
+      container: mapContainer.current,
+      style: 'mapbox://styles/mapbox/streets-v12',
+      center: [-2.5, 54.5], // Center on UK
+      zoom: 5.5
+    });
 
-      // Clear existing markers
-      markersRef.current.forEach(marker => {
-        mapInstanceRef.current.removeLayer(marker);
-      });
-      markersRef.current = [];
+    // Add navigation controls
+    map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
-      if (locations.length === 0) return;
-
-      // Create custom icon
-      const customIcon = L.divIcon({
-        html: `
-          <div style="
-            background-color: #92400e;
-            color: white;
-            border-radius: 50%;
-            width: 32px;
-            height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 2px solid white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            font-size: 14px;
-          ">
-            👤
-          </div>
-        `,
-        className: 'custom-member-marker',
-        iconSize: [32, 32],
-        iconAnchor: [16, 32],
-        popupAnchor: [0, -32]
-      });
-
-      // Add markers for each location
-      locations.forEach((location) => {
-        const marker = L.marker([location.latitude, location.longitude], {
-          icon: customIcon
-        }).addTo(mapInstanceRef.current);
-
-        // Create popup content
-        const popupContent = `
-          <div style="min-width: 200px; font-family: system-ui, -apple-system, sans-serif;">
-            <h3 style="margin: 0 0 8px 0; font-size: 16px; font-weight: 600; color: #111827;">
-              ${location.clientName}
-            </h3>
-            ${location.dogName ? `
-              <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px; font-size: 14px; color: #6b7280;">
-                <span>🐕</span>
-                <span>Dog: ${location.dogName}</span>
-              </div>
-            ` : ''}
-            ${location.email ? `
-              <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px; font-size: 14px; color: #6b7280;">
-                <span>✉️</span>
-                <span style="word-break: break-all;">${location.email}</span>
-              </div>
-            ` : ''}
-            ${location.membershipDate ? `
-              <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px; font-size: 14px; color: #6b7280;">
-                <span>📅</span>
-                <span>Member since: ${new Date(location.membershipDate).toLocaleDateString('en-GB')}</span>
-              </div>
-            ` : ''}
-            <div style="font-size: 12px; color: #9ca3af; padding-top: 8px; border-top: 1px solid #e5e7eb;">
-              ${location.address}
-            </div>
-          </div>
-        `;
-
-        marker.bindPopup(popupContent);
-        markersRef.current.push(marker);
-      });
-
-      // Auto-fit bounds to show all markers
-      if (locations.length > 0) {
-        const group = new (L as any).featureGroup(markersRef.current);
-        mapInstanceRef.current.fitBounds(group.getBounds().pad(0.1));
+    return () => {
+      if (map.current) {
+        map.current.remove();
+        map.current = null;
       }
     };
+  }, [mapboxgl]);
 
-    updateMarkers();
-  }, [locations]);
+  // Add markers when locations change
+  useEffect(() => {
+    if (!map.current || !mapboxgl || !locations.length) return;
 
-  if (isLoading) {
+    // Clear existing markers
+    markersRef.current.forEach(marker => marker.remove());
+    markersRef.current = [];
+
+    const bounds = new mapboxgl.LngLatBounds();
+    
+    locations.forEach(location => {
+      // Create custom marker element
+      const markerElement = document.createElement('div');
+      markerElement.className = 'mapbox-marker';
+      markerElement.innerHTML = `
+        <div style="
+          background-color: #92400e;
+          color: white;
+          border-radius: 50%;
+          width: 32px;
+          height: 32px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border: 2px solid white;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+          font-size: 14px;
+          cursor: pointer;
+          transform: scale(1);
+          transition: transform 0.2s ease;
+        ">👤</div>
+      `;
+
+      // Add hover effect
+      markerElement.addEventListener('mouseenter', () => {
+        markerElement.style.transform = 'scale(1.1)';
+      });
+      markerElement.addEventListener('mouseleave', () => {
+        markerElement.style.transform = 'scale(1)';
+      });
+
+      // Create popup content
+      const popupContent = `
+        <div style="padding: 8px; min-width: 200px;">
+          <h3 style="margin: 0 0 8px 0; font-size: 16px; font-weight: bold; color: #92400e;">
+            ${location.clientName}
+          </h3>
+          ${location.dogName ? `<p style="margin: 4px 0; font-size: 14px;"><strong>Dog:</strong> ${location.dogName}</p>` : ''}
+          ${location.email ? `<p style="margin: 4px 0; font-size: 14px;"><strong>Email:</strong> ${location.email}</p>` : ''}
+          ${location.membershipDate ? `<p style="margin: 4px 0; font-size: 14px;"><strong>Member since:</strong> ${new Date(location.membershipDate).toLocaleDateString()}</p>` : ''}
+          <p style="margin: 4px 0 0 0; font-size: 12px; color: #666;">
+            <strong>Address:</strong> ${location.address}
+          </p>
+        </div>
+      `;
+
+      const popup = new mapboxgl.Popup({
+        offset: 25,
+        closeButton: true,
+        closeOnClick: false
+      }).setHTML(popupContent);
+
+      // Create marker
+      const marker = new mapboxgl.Marker(markerElement)
+        .setLngLat([location.longitude, location.latitude])
+        .setPopup(popup)
+        .addTo(map.current);
+
+      markersRef.current.push(marker);
+
+      // Extend bounds
+      bounds.extend([location.longitude, location.latitude]);
+    });
+
+    // Fit map to show all markers
+    if (locations.length > 0) {
+      map.current.fitBounds(bounds, {
+        padding: 50,
+        maxZoom: 12
+      });
+    }
+  }, [locations, mapboxgl]);
+
+  if (!mapboxgl) {
     return (
-      <div className="relative w-full h-96 rounded-lg overflow-hidden bg-gray-100">
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-800 mx-auto mb-2"></div>
-            <p className="text-sm text-gray-600">Loading member locations...</p>
-          </div>
+      <div className="flex items-center justify-center h-96 bg-gray-100 rounded-lg">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600 mx-auto mb-2"></div>
+          <p className="text-gray-600">Loading map...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="relative w-full h-96 rounded-lg overflow-hidden">
-      <div ref={mapRef} className="w-full h-full" />
+    <div className="relative h-96 w-full rounded-lg overflow-hidden border border-gray-200">
+      <div ref={mapContainer} className="w-full h-full" />
       
-      {/* Member Count Badge */}
+      {/* Refresh button */}
+      <button
+        onClick={onRefresh}
+        className="absolute top-4 left-4 bg-white hover:bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors"
+      >
+        🔄 Refresh Cache
+      </button>
+
+      {/* Member count badge */}
       {locations.length > 0 && (
         <div className="absolute bottom-4 left-4 bg-white rounded-lg shadow-lg px-3 py-2 border">
           <div className="flex items-center gap-2">
-            <User size={16} className="text-amber-800" />
+            <span className="text-amber-800">👤</span>
             <span className="text-sm font-medium text-gray-900">
               {locations.length} Active Member{locations.length !== 1 ? 's' : ''}
             </span>
@@ -169,48 +182,10 @@ export default function MembersMap({ locations, isLoading }: MembersMapProps) {
         </div>
       )}
 
-      {/* Leaflet CSS */}
-      <style jsx global>{`
-        @import url('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');
-
-        .leaflet-popup-content-wrapper {
-          border-radius: 8px;
-          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-        }
-
-        .leaflet-popup-tip {
-          background: white;
-        }
-
-        .leaflet-control-zoom {
-          border-radius: 6px;
-          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        .leaflet-control-zoom a {
-          border-radius: 0;
-        }
-
-        .leaflet-control-zoom a:first-child {
-          border-top-left-radius: 6px;
-          border-top-right-radius: 6px;
-        }
-
-        .leaflet-control-zoom a:last-child {
-          border-bottom-left-radius: 6px;
-          border-bottom-right-radius: 6px;
-        }
-
-        .custom-member-marker {
-          background: transparent !important;
-          border: none !important;
-        }
-
-        .leaflet-marker-icon:hover {
-          transform: scale(1.1);
-          transition: transform 0.2s ease;
-        }
-      `}</style>
+      {/* Map attribution */}
+      <div className="absolute bottom-2 right-2 bg-white bg-opacity-90 px-2 py-1 rounded text-xs text-gray-600">
+        © Mapbox © OpenStreetMap
+      </div>
     </div>
   );
 }

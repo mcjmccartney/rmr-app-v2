@@ -264,7 +264,7 @@ export default function MembersMapModal({ isOpen, onClose }: MembersMapModalProp
 
         {/* Map */}
         <div className="flex-1 p-6">
-          <MembersMap locations={locations} isLoading={isGeocoding} />
+          <MembersMap locations={locations} onRefresh={handleRefreshCache} />
         </div>
       </div>
     </div>
