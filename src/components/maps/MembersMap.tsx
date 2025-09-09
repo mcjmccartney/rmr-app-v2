@@ -67,7 +67,7 @@ export default function MembersMap({ locations, isLoading }: MembersMapProps) {
 
       // Create custom icon
       const customIcon = L.divIcon({
-        html: \`
+        html: `
           <div style="
             background-color: #92400e;
             color: white;
@@ -83,7 +83,7 @@ export default function MembersMap({ locations, isLoading }: MembersMapProps) {
           ">
             👤
           </div>
-        \`,
+        `,
         className: 'custom-member-marker',
         iconSize: [32, 32],
         iconAnchor: [16, 32],
@@ -97,34 +97,34 @@ export default function MembersMap({ locations, isLoading }: MembersMapProps) {
         }).addTo(mapInstanceRef.current);
 
         // Create popup content
-        const popupContent = \`
+        const popupContent = `
           <div style="min-width: 200px; font-family: system-ui, -apple-system, sans-serif;">
             <h3 style="margin: 0 0 8px 0; font-size: 16px; font-weight: 600; color: #111827;">
-              \${location.clientName}
+              ${location.clientName}
             </h3>
-            \${location.dogName ? \`
+            ${location.dogName ? `
               <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px; font-size: 14px; color: #6b7280;">
                 <span>🐕</span>
-                <span>Dog: \${location.dogName}</span>
+                <span>Dog: ${location.dogName}</span>
               </div>
-            \` : ''}
-            \${location.email ? \`
+            ` : ''}
+            ${location.email ? `
               <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px; font-size: 14px; color: #6b7280;">
                 <span>✉️</span>
-                <span style="word-break: break-all;">\${location.email}</span>
+                <span style="word-break: break-all;">${location.email}</span>
               </div>
-            \` : ''}
-            \${location.membershipDate ? \`
+            ` : ''}
+            ${location.membershipDate ? `
               <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px; font-size: 14px; color: #6b7280;">
                 <span>📅</span>
-                <span>Member since: \${new Date(location.membershipDate).toLocaleDateString('en-GB')}</span>
+                <span>Member since: ${new Date(location.membershipDate).toLocaleDateString('en-GB')}</span>
               </div>
-            \` : ''}
+            ` : ''}
             <div style="font-size: 12px; color: #9ca3af; padding-top: 8px; border-top: 1px solid #e5e7eb;">
-              \${location.address}
+              ${location.address}
             </div>
           </div>
-        \`;
+        `;
 
         marker.bindPopup(popupContent);
         markersRef.current.push(marker);
@@ -132,7 +132,7 @@ export default function MembersMap({ locations, isLoading }: MembersMapProps) {
 
       // Auto-fit bounds to show all markers
       if (locations.length > 0) {
-        const group = new L.featureGroup(markersRef.current);
+        const group = new (L as any).featureGroup(markersRef.current);
         mapInstanceRef.current.fitBounds(group.getBounds().pad(0.1));
       }
     };
@@ -170,47 +170,47 @@ export default function MembersMap({ locations, isLoading }: MembersMapProps) {
       )}
 
       {/* Leaflet CSS */}
-      <style jsx global>{\`
+      <style jsx global>{`
         @import url('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');
-        
+
         .leaflet-popup-content-wrapper {
           border-radius: 8px;
           box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
         }
-        
+
         .leaflet-popup-tip {
           background: white;
         }
-        
+
         .leaflet-control-zoom {
           border-radius: 6px;
           box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
-        
+
         .leaflet-control-zoom a {
           border-radius: 0;
         }
-        
+
         .leaflet-control-zoom a:first-child {
           border-top-left-radius: 6px;
           border-top-right-radius: 6px;
         }
-        
+
         .leaflet-control-zoom a:last-child {
           border-bottom-left-radius: 6px;
           border-bottom-right-radius: 6px;
         }
-        
+
         .custom-member-marker {
           background: transparent !important;
           border: none !important;
         }
-        
+
         .leaflet-marker-icon:hover {
           transform: scale(1.1);
           transition: transform 0.2s ease;
         }
-      \`}</style>
+      `}</style>
     </div>
   );
 }

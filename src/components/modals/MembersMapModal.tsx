@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { X, MapPin, Users, AlertTriangle, RefreshCw } from 'lucide-react';
-import { useAppContext } from '@/context/AppContext';
+import { useApp } from '@/context/AppContext';
 import { useGeocoding, GeocodedLocation } from '@/hooks/useGeocoding';
 import MembersMap from '@/components/maps/MembersMap';
 
@@ -12,7 +12,8 @@ interface MembersMapModalProps {
 }
 
 export default function MembersMapModal({ isOpen, onClose }: MembersMapModalProps) {
-  const { clients, memberships, behaviourQuestionnaires, behaviouralBriefs } = useAppContext();
+  const { state } = useApp();
+  const { clients, memberships, behaviourQuestionnaires, behaviouralBriefs } = state;
   const { batchGeocode, isGeocoding, geocodingProgress, clearGeocodingCache } = useGeocoding();
   const [locations, setLocations] = useState<GeocodedLocation[]>([]);
   const [stats, setStats] = useState({
@@ -38,7 +39,7 @@ export default function MembersMapModal({ isOpen, onClose }: MembersMapModalProp
 
     // Filter active clients with membership and addresses
     const activeMembers = clients.filter(client => {
-      return client.membership && recentMemberEmails.has(client.email);
+      return client.membership && client.email && recentMemberEmails.has(client.email);
     });
 
     // Extract addresses with priority system
@@ -53,14 +54,14 @@ export default function MembersMapModal({ isOpen, onClose }: MembersMapModalProp
           questionnaire.address1,
           questionnaire.address2,
           questionnaire.city,
-          questionnaire.state_province,
-          questionnaire.zip_postal_code,
+          questionnaire.stateProvince,
+          questionnaire.zipPostalCode,
           questionnaire.country
         ].filter(Boolean);
         
         if (addressParts.length > 0) {
           address = addressParts.join(', ');
-          dogName = questionnaire.dog_name || '';
+          dogName = questionnaire.dogName || '';
         }
       }
 
@@ -93,7 +94,7 @@ export default function MembersMapModal({ isOpen, onClose }: MembersMapModalProp
 
     const initializeMap = async () => {
       const membersWithAddresses = getActiveMembersWithAddresses();
-      
+
       setStats({
         totalActiveMembers: clients?.filter(c => c.membership)?.length || 0,
         membersWithAddresses: membersWithAddresses.length,
@@ -105,14 +106,22 @@ export default function MembersMapModal({ isOpen, onClose }: MembersMapModalProp
         return;
       }
 
+      // Get recent memberships for date lookup
+      const twoMonthsAgo = new Date();
+      twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
+      const recentMemberships = memberships?.filter(membership => {
+        const membershipDate = new Date(membership.date);
+        return membershipDate >= twoMonthsAgo;
+      }) || [];
+
       // Prepare addresses for geocoding
       const addressesToGeocode = membersWithAddresses.map(member => ({
         id: member.id,
         address: member.address,
-        clientName: `${member.first_name} ${member.last_name}`,
+        clientName: `${member.firstName} ${member.lastName}`,
         dogName: member.dogName,
         email: member.email,
-        membershipDate: member.created_at
+        membershipDate: recentMemberships.find(m => m.email === member.email)?.date
       }));
 
       // Batch geocode all addresses
@@ -133,13 +142,21 @@ export default function MembersMapModal({ isOpen, onClose }: MembersMapModalProp
     // Re-trigger the geocoding process
     const membersWithAddresses = getActiveMembersWithAddresses();
     if (membersWithAddresses.length > 0) {
+      // Get recent memberships for date lookup
+      const twoMonthsAgo = new Date();
+      twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
+      const recentMemberships = memberships?.filter(membership => {
+        const membershipDate = new Date(membership.date);
+        return membershipDate >= twoMonthsAgo;
+      }) || [];
+
       const addressesToGeocode = membersWithAddresses.map(member => ({
         id: member.id,
         address: member.address,
-        clientName: `${member.first_name} ${member.last_name}`,
+        clientName: `${member.firstName} ${member.lastName}`,
         dogName: member.dogName,
         email: member.email,
-        membershipDate: member.created_at
+        membershipDate: recentMemberships.find(m => m.email === member.email)?.date
       }));
 
       const geocodedLocations = await batchGeocode(addressesToGeocode);
