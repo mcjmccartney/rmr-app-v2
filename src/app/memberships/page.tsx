@@ -4,8 +4,9 @@ import { useState } from 'react';
 import { useApp } from '@/context/AppContext';
 import Header from '@/components/layout/Header';
 import { Membership } from '@/types';
-import { ChevronDown, ChevronRight, CreditCard, TrendingUp, TrendingDown, Plus } from 'lucide-react';
+import { ChevronDown, ChevronRight, CreditCard, TrendingUp, TrendingDown, Plus, MapPin } from 'lucide-react';
 import AddMembershipSidepane from '@/components/sidepanes/AddMembershipSidepane';
+import MembersMapModal from '@/components/modals/MembersMapModal';
 import { formatClientWithAllDogs, getClientDogsPart } from '@/utils/dateFormatting';
 
 export default function MembershipsPage() {
@@ -13,6 +14,7 @@ export default function MembershipsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedMonths, setExpandedMonths] = useState<Set<string>>(new Set());
   const [showAddMembershipSidepane, setShowAddMembershipSidepane] = useState(false);
+  const [showMembersMap, setShowMembersMap] = useState(false);
 
   const filteredMemberships = state.memberships.filter(membership => {
     const searchTerm = searchQuery.toLowerCase();
@@ -55,6 +57,10 @@ export default function MembershipsPage() {
 
   const handleAddMembership = () => {
     setShowAddMembershipSidepane(true);
+  };
+
+  const handleShowMembersMap = () => {
+    setShowMembersMap(true);
   };
 
   const handleCloseMembershipSidepane = () => {
@@ -117,6 +123,12 @@ export default function MembershipsPage() {
         <Header
           title="Memberships"
           buttons={[
+            {
+              icon: MapPin,
+              onClick: handleShowMembersMap,
+              title: 'View Members Map',
+              iconOnly: true
+            },
             {
               icon: Plus,
               onClick: handleAddMembership,
@@ -249,6 +261,11 @@ export default function MembershipsPage() {
       <AddMembershipSidepane
         isOpen={showAddMembershipSidepane}
         onClose={handleCloseMembershipSidepane}
+      />
+
+      <MembersMapModal
+        isOpen={showMembersMap}
+        onClose={() => setShowMembersMap(false)}
       />
     </div>
   );
