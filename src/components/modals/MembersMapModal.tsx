@@ -23,7 +23,7 @@ interface MembersMapModalProps {
 
 export default function MembersMapModal({ isOpen, onClose }: MembersMapModalProps) {
   const { state } = useApp();
-  const { clients, memberships, behaviourQuestionnaires, behaviouralBriefs } = state;
+  const { clients, memberships } = state;
   const [memberLocations, setMemberLocations] = useState<MemberLocation[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -69,50 +69,21 @@ export default function MembersMapModal({ isOpen, onClose }: MembersMapModalProp
 
     const recentMemberEmails = new Set(recentMemberships.map(m => m.email));
 
-    // Filter active clients with membership
+    // Filter active clients with membership AND address
     const activeMembers = clients.filter(client => {
-      return client.membership && client.email && recentMemberEmails.has(client.email);
+      return client.membership &&
+             client.email &&
+             recentMemberEmails.has(client.email) &&
+             client.address &&
+             client.address.trim().length > 0; // Ensure address exists and isn't empty
     });
 
     const locations: MemberLocation[] = [];
 
     for (const client of activeMembers) {
-      let address = '';
-      let dogName = '';
-
-      // Priority 1: Behaviour Questionnaire (most complete address)
-      const questionnaire = behaviourQuestionnaires?.find(q => q.email === client.email);
-      if (questionnaire) {
-        const addressParts = [
-          questionnaire.address1,
-          questionnaire.address2,
-          questionnaire.city,
-          questionnaire.stateProvince,
-          questionnaire.zipPostalCode,
-          questionnaire.country
-        ].filter(Boolean);
-
-        if (addressParts.length > 0) {
-          address = addressParts.join(', ');
-          dogName = questionnaire.dogName || '';
-        }
-      }
-
-      // Priority 2: Client address field
-      if (!address && client.address) {
-        address = client.address;
-      }
-
-      // Priority 3: Behavioural Brief postcode
-      if (!address) {
-        const brief = behaviouralBriefs?.find(b => b.email === client.email);
-        if (brief?.postcode) {
-          address = brief.postcode;
-        }
-      }
-
-      // Skip if no address found
-      if (!address) continue;
+      // Use client address directly - no complex priority logic needed
+      const address = client.address!; // We know it exists from the filter
+      const dogName = client.dogName || ''; // Get dog name from client record
 
       // Geocode the address
       const coords = await geocodeAddress(address);
@@ -144,7 +115,7 @@ export default function MembersMapModal({ isOpen, onClose }: MembersMapModalProp
     if (isOpen) {
       loadMemberLocations();
     }
-  }, [isOpen, clients, memberships, behaviourQuestionnaires, behaviouralBriefs]);
+  }, [isOpen, clients, memberships]);
 
 
 
