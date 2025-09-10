@@ -18,6 +18,7 @@ export async function POST(request: NextRequest) {
     const email = sanitizeEmail(body.email || '');
     const dateStr = sanitizeString(body.date || '');
     const amountStr = sanitizeString(body.amount || '');
+    const postcode = sanitizeString(body.postcode || '');
 
     // Validate required fields
     if (!email || !dateStr || !amountStr) {
@@ -63,13 +64,28 @@ export async function POST(request: NextRequest) {
       foundClientId = await clientEmailAliasService.findClientByEmail(email);
 
       if (foundClientId) {
+        // First, get current client to check address status
+        const { data: currentClient } = await supabase
+          .from('clients')
+          .select('address')
+          .eq('id', foundClientId)
+          .single();
+
+        // Prepare update object
+        const updateData: { membership: boolean; active: boolean; address?: string } = {
+          membership: true,
+          active: true
+        };
+
+        // Add postcode to address if address is blank and postcode is provided
+        if ((!currentClient?.address || currentClient.address.trim() === '') && postcode) {
+          updateData.address = postcode;
+        }
+
         // Update client using the found client ID
         const { data: updatedClient, error: updateError } = await supabase
           .from('clients')
-          .update({
-            membership: true,
-            active: true
-          })
+          .update(updateData)
           .eq('id', foundClientId)
           .select();
 
@@ -84,13 +100,28 @@ export async function POST(request: NextRequest) {
           });
         }
       } else {
+        // First, get current client to check address status
+        const { data: currentClient } = await supabase
+          .from('clients')
+          .select('address')
+          .eq('email', email)
+          .single();
+
+        // Prepare update object
+        const updateData: { membership: boolean; active: boolean; address?: string } = {
+          membership: true,
+          active: true
+        };
+
+        // Add postcode to address if address is blank and postcode is provided
+        if ((!currentClient?.address || currentClient.address.trim() === '') && postcode) {
+          updateData.address = postcode;
+        }
+
         // Fallback: try direct email match (for clients not yet in alias system)
         const { data: directMatch, error: directError } = await supabase
           .from('clients')
-          .update({
-            membership: true,
-            active: true
-          })
+          .update(updateData)
           .eq('email', email)
           .select();
 
@@ -130,7 +161,7 @@ export async function POST(request: NextRequest) {
                 first_name: firstName,
                 last_name: lastName,
                 email: email,
-                postcode: body.postcode || '', // Use postcode from webhook if provided
+                address: postcode || '', // Use address field instead of non-existent postcode field
                 active: true,
                 membership: true
               })
