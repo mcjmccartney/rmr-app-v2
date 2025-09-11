@@ -309,6 +309,25 @@ export async function POST(request: NextRequest) {
         .eq('id', finalClientId);
     }
 
+    // NEW: Populate client address if blank and this is for an existing client
+    if (existingClient && (!existingClient.address || existingClient.address.trim() === '')) {
+      const fullAddress = `${formData.address1}${formData.address2 ? ', ' + formData.address2 : ''}, ${formData.city}, ${formData.stateProvince} ${formData.zipPostalCode}, ${formData.country}`;
+
+      console.log('Populating blank address for existing client:', {
+        clientId: existingClient.id,
+        clientName: `${existingClient.firstName} ${existingClient.lastName}`,
+        address: fullAddress
+      });
+
+      await supabaseServiceRole
+        .from('clients')
+        .update({
+          address: fullAddress,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', existingClient.id);
+    }
+
     return NextResponse.json({ 
       success: true, 
       client: client,

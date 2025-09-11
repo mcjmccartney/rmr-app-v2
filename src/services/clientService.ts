@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase'
 import { Client } from '@/types'
+import { behaviourQuestionnaireService } from './behaviourQuestionnaireService'
 
 // Convert database row to Client type
 function dbRowToClient(row: Record<string, any>): Client {
@@ -161,5 +162,96 @@ export const clientService = {
     }
 
     return data?.map(dbRowToClient) || []
+  },
+
+  // Populate blank address from questionnaire (for ongoing cases)
+  async populateAddressFromQuestionnaire(clientId: string): Promise<Client | null> {
+    try {
+      // Get client
+      const client = await this.getById(clientId);
+      if (!client) {
+        console.log('Client not found:', clientId);
+        return null;
+      }
+
+      // Check if address already exists
+      if (client.address && client.address.trim() !== '') {
+        console.log('Client already has address:', clientId);
+        return client; // Address already exists
+      }
+
+      // Get questionnaires for this client (ordered by submitted_at ASC - first questionnaire first)
+      const questionnaires = await behaviourQuestionnaireService.getByClientId(clientId);
+      if (questionnaires.length === 0) {
+        console.log('No questionnaires found for client:', clientId);
+        return client;
+      }
+
+      // Use the first questionnaire (oldest submitted_at)
+      const firstQuestionnaire = questionnaires[questionnaires.length - 1]; // getByClientId returns DESC order, so last item is oldest
+
+      // Build full address from questionnaire
+      const fullAddress = `${firstQuestionnaire.address1}${firstQuestionnaire.address2 ? ', ' + firstQuestionnaire.address2 : ''}, ${firstQuestionnaire.city}, ${firstQuestionnaire.stateProvince} ${firstQuestionnaire.zipPostalCode}, ${firstQuestionnaire.country}`;
+
+      console.log('Populating address for client:', {
+        clientId,
+        clientName: `${client.firstName} ${client.lastName}`,
+        questionnaireId: firstQuestionnaire.id,
+        address: fullAddress
+      });
+
+      // Update client with address
+      const updatedClient = await this.update(clientId, { address: fullAddress });
+      return updatedClient;
+
+    } catch (error) {
+      console.error('Error populating address from questionnaire:', error);
+      throw error;
+    }
+  },
+
+  // Bulk populate addresses for all clients with blank addresses
+  async bulkPopulateAddressesFromQuestionnaires(): Promise<{ updated: number; skipped: number; errors: number }> {
+    try {
+      console.log('Starting bulk address population...');
+
+      const allClients = await this.getAll();
+      const clientsWithBlankAddresses = allClients.filter(client =>
+        !client.address || client.address.trim() === ''
+      );
+
+      console.log(`Found ${clientsWithBlankAddresses.length} clients with blank addresses`);
+
+      let updated = 0;
+      let skipped = 0;
+      let errors = 0;
+
+      for (const client of clientsWithBlankAddresses) {
+        try {
+          const result = await this.populateAddressFromQuestionnaire(client.id);
+          if (result && result.address && result.address !== client.address) {
+            updated++;
+            console.log(`✅ Updated address for ${client.firstName} ${client.lastName}`);
+          } else {
+            skipped++;
+            console.log(`⏭️ Skipped ${client.firstName} ${client.lastName} (no questionnaire or address unchanged)`);
+          }
+
+          // Small delay to avoid overwhelming the database
+          await new Promise(resolve => setTimeout(resolve, 100));
+
+        } catch (error) {
+          errors++;
+          console.error(`❌ Error updating ${client.firstName} ${client.lastName}:`, error);
+        }
+      }
+
+      console.log('Bulk address population completed:', { updated, skipped, errors });
+      return { updated, skipped, errors };
+
+    } catch (error) {
+      console.error('Error in bulk address population:', error);
+      throw error;
+    }
   }
 }
