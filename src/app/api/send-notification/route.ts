@@ -93,8 +93,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Call Make.com webhook for email notifications
-    const response = await fetch('https://hook.eu1.make.com/6h3l774l7datm3dgtjojf7nvkyqp7usa', {
+    // Call n8n webhook for email notifications
+    const response = await fetch('https://n8n.srv836498.hstgr.cloud/webhook/f0b53625-ebe1-4a79-877a-0cfc99b0a606', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
