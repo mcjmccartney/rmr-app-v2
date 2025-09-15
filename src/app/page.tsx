@@ -7,8 +7,12 @@ export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    // Redirect to sessions page as the default view
-    router.push('/sessions');
+    // Add a small delay to allow AppContext to initialize
+    const timer = setTimeout(() => {
+      router.push('/sessions');
+    }, 100);
+
+    return () => clearTimeout(timer);
   }, [router]);
 
   return (
@@ -16,6 +20,7 @@ export default function Home() {
       <div className="text-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-800 mx-auto"></div>
         <p className="mt-4 text-gray-600">Loading Raising My Rescue...</p>
+        <p className="mt-2 text-sm text-gray-500">Initializing application data...</p>
       </div>
     </div>
   );

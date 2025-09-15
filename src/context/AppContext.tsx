@@ -390,9 +390,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const clients = await clientService.getAll();
       dispatch({ type: 'SET_CLIENTS', payload: clients });
 
-      // Detect duplicates after loading clients (debounced)
+      // Detect duplicates after loading clients (optimized with longer delay)
       setTimeout(async () => {
         try {
+          // Only run duplicate detection if we have a reasonable number of clients
+          if (clients.length > 100) {
+            console.log('⚠️ Large client dataset detected, skipping duplicate detection for performance');
+            debouncedDispatch({ type: 'SET_POTENTIAL_DUPLICATES', payload: [] }, 200);
+            return;
+          }
+
           const allDuplicates = DuplicateDetectionService.detectDuplicates(clients);
 
           // Filter out dismissed duplicates using database
@@ -413,9 +420,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
           debouncedDispatch({ type: 'SET_POTENTIAL_DUPLICATES', payload: activeDuplicates }, 200);
         } catch (error) {
+          console.error('❌ Duplicate detection failed:', error);
           debouncedDispatch({ type: 'SET_POTENTIAL_DUPLICATES', payload: [] }, 200);
         }
-      }, 100);
+      }, 2000); // Increased delay to 2 seconds
     } catch (error) {
       console.error('Failed to load clients:', error);
     }
@@ -1801,30 +1809,62 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (isInitializedRef.current) return;
 
-    console.log('🚀 AppContext: Initializing app with real-time updates...');
+    console.log('🚀 AppContext: Initializing app with optimized loading...');
     const initializeApp = async () => {
       try {
-        // Load initial data in parallel for better performance
+        // Load only essential data first for faster initial load
+        console.log('📊 Loading essential data...');
         await Promise.all([
           loadClients(),
           loadSessions(),
-          loadMemberships(),
-          loadBehaviouralBriefs(),
-          loadBehaviourQuestionnaires(),
-          loadBookingTerms(),
-          loadClientEmailAliases(),
-          loadActionPoints(),
-          loadSessionParticipants(),
-          loadSessionPlans(),
         ]);
 
-        console.log('✅ Initial data loading complete');
-
-        // Setup real-time subscriptions after initial data load
+        console.log('✅ Essential data loaded, setting up real-time subscriptions...');
+        // Setup real-time subscriptions early for essential data
         setupRealtimeSubscriptions();
 
+        // Load secondary data in background with staggered timing
+        console.log('📊 Loading secondary data in background...');
+        setTimeout(async () => {
+          try {
+            await Promise.all([
+              loadMemberships(),
+              loadClientEmailAliases(),
+              loadActionPoints(),
+            ]);
+            console.log('✅ Secondary data batch 1 loaded');
+          } catch (error) {
+            console.error('❌ Failed to load secondary data batch 1:', error);
+          }
+        }, 500);
+
+        setTimeout(async () => {
+          try {
+            await Promise.all([
+              loadBehaviouralBriefs(),
+              loadBehaviourQuestionnaires(),
+              loadBookingTerms(),
+            ]);
+            console.log('✅ Secondary data batch 2 loaded');
+          } catch (error) {
+            console.error('❌ Failed to load secondary data batch 2:', error);
+          }
+        }, 1000);
+
+        setTimeout(async () => {
+          try {
+            await Promise.all([
+              loadSessionParticipants(),
+              loadSessionPlans(),
+            ]);
+            console.log('✅ Secondary data batch 3 loaded');
+          } catch (error) {
+            console.error('❌ Failed to load secondary data batch 3:', error);
+          }
+        }, 1500);
+
         isInitializedRef.current = true;
-        console.log('🎉 App initialization complete with real-time updates');
+        console.log('🎉 App initialization complete with optimized loading');
       } catch (error) {
         console.error('❌ Failed to initialize app:', error);
       }
