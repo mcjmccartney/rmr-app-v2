@@ -169,6 +169,7 @@ function formatBehaviourQuestionnaireEmail(data: any): string {
     margin-bottom: 16px;
     line-height: 1.5;
     margin-top: 0;
+    white-space: pre-wrap;
   `;
 
   return `
@@ -397,6 +398,7 @@ function formatBehaviouralBriefEmail(data: any): string {
     margin-bottom: 16px;
     line-height: 1.5;
     margin-top: 0;
+    white-space: pre-wrap;
   `;
 
   return `
