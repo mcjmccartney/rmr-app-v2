@@ -14,7 +14,7 @@ import AddModal from '@/components/AddModal';
 import { Session, Client, BehaviouralBrief, BehaviourQuestionnaire, SessionPlan } from '@/types';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek } from 'date-fns';
 import { formatTime, formatDayDate, formatMonthYear, combineDateAndTime } from '@/utils/dateFormatting';
-import { ChevronLeft, ChevronRight, Calendar, UserPlus, X, Users, CalendarDays, Edit3, FileText, Search } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar, UserPlus, X, Users, CalendarDays, Edit3, FileText, Search, Bell } from 'lucide-react';
 
 // Helper function to check if a session plan has meaningful content
 const sessionPlanHasContent = (sessionPlan: SessionPlan): boolean => {
@@ -642,6 +642,9 @@ export default function CalendarPage() {
                       const sessionPlan = state.sessionPlans.find(plan => plan.sessionId === session.id);
                       const hasSessionPlanWithContent = sessionPlan && sessionPlanHasContent(sessionPlan);
 
+                      // Check if this session has notes
+                      const hasNotes = session.notes && session.notes.trim().length > 0;
+
                       // Debug logging for Christine Goldfinch session
                       if (client && client.firstName === 'Christine' && client.lastName === 'Goldfinch') {
                         console.log('Christine session debug:', {
@@ -731,12 +734,23 @@ export default function CalendarPage() {
                           <span className="block sm:hidden">{timeOnly}</span>
                           <span className="hidden sm:block">{fullDisplayText}</span>
 
-                          {/* White form icon for sessions with session plan content */}
-                          {hasSessionPlanWithContent && (
-                            <span className="absolute right-2 top-1/2 transform -translate-y-1/2 text-white">
-                              <FileText size={16} />
-                            </span>
-                          )}
+                          {/* Icons container */}
+                          <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
+                            {/* White form icon for sessions with session plan content - Desktop only */}
+                            {hasSessionPlanWithContent && (
+                              <span className="hidden sm:inline text-white">
+                                <FileText size={16} />
+                              </span>
+                            )}
+
+                            {/* Bell icon for sessions with notes - Mobile: smaller, Desktop: normal */}
+                            {hasNotes && (
+                              <span className="text-white">
+                                <Bell size={12} className="sm:hidden" />
+                                <Bell size={16} className="hidden sm:inline" />
+                              </span>
+                            )}
+                          </div>
                         </button>
                       );
                     })}
@@ -905,6 +919,9 @@ export default function CalendarPage() {
                 const sessionPlan = state.sessionPlans.find(plan => plan.sessionId === session.id);
                 const hasSessionPlanWithContent = sessionPlan && sessionPlanHasContent(sessionPlan);
 
+                // Check if this session has notes
+                const hasNotes = session.notes && session.notes.trim().length > 0;
+
                 // Determine button style - priority: session plan sent (black) > fully complete + paid (green) > terms + questionnaire (amber) > default
                 const clientEmails = getClientEmails(client, state.clientEmailAliases || {});
                 const hasSignedBookingTerms = clientEmails.length > 0 ?
@@ -948,12 +965,15 @@ export default function CalendarPage() {
                       {session.sessionType}
                     </div>
 
-                    {/* White form icon for sessions with session plan content */}
-                    {hasSessionPlanWithContent && (
-                      <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white">
-                        <FileText size={20} />
-                      </span>
-                    )}
+                    {/* Icons container */}
+                    <div className="absolute right-4 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
+                      {/* Bell icon for sessions with notes */}
+                      {hasNotes && (
+                        <span className="text-white">
+                          <Bell size={18} />
+                        </span>
+                      )}
+                    </div>
                   </button>
                 );
               })}
@@ -987,6 +1007,9 @@ export default function CalendarPage() {
                   // Check if this session has a session plan with content
                   const sessionPlan = state.sessionPlans.find(plan => plan.sessionId === session.id);
                   const hasSessionPlanWithContent = sessionPlan && sessionPlanHasContent(sessionPlan);
+
+                  // Check if this session has notes
+                  const hasNotes = session.notes && session.notes.trim().length > 0;
 
                   // Determine button style - priority: session plan sent (black) > fully complete + paid (green) > terms + questionnaire (amber) > default
                   const clientEmails = getClientEmails(client, state.clientEmailAliases || {});
@@ -1031,12 +1054,15 @@ export default function CalendarPage() {
                         {session.sessionType}
                       </div>
 
-                      {/* White form icon for sessions with session plan content */}
-                      {hasSessionPlanWithContent && (
-                        <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white">
-                          <FileText size={20} />
-                        </span>
-                      )}
+                      {/* Icons container */}
+                      <div className="absolute right-4 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
+                        {/* Bell icon for sessions with notes */}
+                        {hasNotes && (
+                          <span className="text-white">
+                            <Bell size={18} />
+                          </span>
+                        )}
+                      </div>
                     </button>
                   );
                 })}
