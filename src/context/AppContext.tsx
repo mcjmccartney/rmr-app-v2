@@ -1315,10 +1315,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
             await updateCalendarEvent(session);
             console.log(`[UPDATE_SESSION] Calendar event updated successfully`);
           } else {
-            // Create new calendar event if none exists
-            console.log(`[UPDATE_SESSION] No eventId found, creating new calendar event`);
-            await createCalendarEvent(session);
-            console.log(`[UPDATE_SESSION] Calendar event created successfully`);
+            // No eventId found - Make.com webhook should handle calendar creation for new sessions
+            console.log(`[UPDATE_SESSION] No eventId found, skipping calendar creation (Make.com handles new events)`);
           }
         } catch (calendarError) {
           console.error(`[UPDATE_SESSION] Calendar update failed:`, calendarError);
@@ -1363,7 +1361,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Create calendar event directly (fallback for when Make.com webhook fails)
+  // Create calendar event directly (MANUAL FALLBACK ONLY - not called automatically)
+  // This function is now only available for manual use if Make.com webhook fails
+  // It is no longer called automatically during session updates to prevent duplicates
   const createCalendarEvent = async (session: Session) => {
     try {
       const client = session.clientId ? state.clients.find(c => c.id === session.clientId) : null;
