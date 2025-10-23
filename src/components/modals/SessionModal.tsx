@@ -425,9 +425,9 @@ export default function SessionModal({ session, isOpen, onClose, onEditSession, 
               <button
                 onClick={handleToggleSpecialMarking}
                 className="w-12 h-12 text-white rounded-lg font-medium transition-colors flex items-center justify-center"
-                style={{ backgroundColor: '#666666' }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#555555'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#666666'}
+                style={{ backgroundColor: session.specialMarking ? '#973b00' : '#4f6749' }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = session.specialMarking ? '#7a2f00' : '#3d5237'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = session.specialMarking ? '#973b00' : '#4f6749'}
                 title={session.specialMarking ? "Remove Special Marking" : "Add Special Marking"}
               >
                 {session.specialMarking ? <CircleSlash size={20} /> : <Circle size={20} />}
