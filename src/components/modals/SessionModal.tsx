@@ -177,7 +177,8 @@ export default function SessionModal({ session, isOpen, onClose, onEditSession, 
     try {
       await updateSession(session.id, {
         sessionPaid: false,
-        paymentConfirmedAt: undefined
+        paymentConfirmedAt: undefined,
+        specialMarking: false // Remove special marking when marking as unpaid
       });
       onClose(); // Close the modal
       // Refresh the page to show updated payment status
