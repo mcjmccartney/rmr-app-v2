@@ -7,7 +7,7 @@ import SlideUpModal from './SlideUpModal';
 import { formatDateTime, formatClientWithAllDogs } from '@/utils/dateFormatting';
 import { paymentService } from '@/services/paymentService';
 import { sessionService } from '@/services/sessionService';
-import { Circle } from 'lucide-react';
+import { Circle, CircleSlash } from 'lucide-react';
 
 interface SessionModalProps {
   session: Session | null;
@@ -156,20 +156,17 @@ export default function SessionModal({ session, isOpen, onClose, onEditSession, 
     }
   };
 
-  const handleMarkAsPaidWithSpecialMarking = async () => {
+  const handleToggleSpecialMarking = async () => {
     try {
-      const updatedSession = await sessionService.markAsPaid(session.id);
       await updateSession(session.id, {
-        sessionPaid: true,
-        paymentConfirmedAt: updatedSession.paymentConfirmedAt,
-        specialMarking: true // Add special marking flag
+        specialMarking: !session.specialMarking // Toggle special marking
       });
       onClose(); // Close the modal
-      // Refresh the page to show updated payment status
+      // Refresh the page to show updated special marking status
       window.location.reload();
     } catch (error) {
-      console.error('Error marking session as paid with special marking:', error);
-      alert('Failed to mark session as paid with special marking. Please try again.');
+      console.error('Error toggling special marking:', error);
+      alert('Failed to toggle special marking. Please try again.');
     }
   };
 
@@ -177,8 +174,8 @@ export default function SessionModal({ session, isOpen, onClose, onEditSession, 
     try {
       await updateSession(session.id, {
         sessionPaid: false,
-        paymentConfirmedAt: undefined,
-        specialMarking: false // Remove special marking when marking as unpaid
+        paymentConfirmedAt: undefined
+        // Keep specialMarking unchanged - it's independent of payment status
       });
       onClose(); // Close the modal
       // Refresh the page to show updated payment status
@@ -397,11 +394,12 @@ export default function SessionModal({ session, isOpen, onClose, onEditSession, 
           </div>
         )}
 
-        {/* Payment Buttons */}
+        {/* Payment and Special Marking Buttons */}
         {client && (
           <div className="pb-3 border-b border-gray-200">
-            {!session.sessionPaid ? (
-              <div className="flex gap-2">
+            <div className="flex gap-2">
+              {/* Payment Button */}
+              {!session.sessionPaid ? (
                 <button
                   onClick={handleMarkAsPaid}
                   className="flex-1 text-white py-3 px-4 rounded-lg font-medium transition-colors"
@@ -411,28 +409,30 @@ export default function SessionModal({ session, isOpen, onClose, onEditSession, 
                 >
                   Mark as Paid
                 </button>
+              ) : (
                 <button
-                  onClick={handleMarkAsPaidWithSpecialMarking}
-                  className="w-12 h-12 text-white rounded-lg font-medium transition-colors flex items-center justify-center"
-                  style={{ backgroundColor: '#4f6749' }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3d5237'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#4f6749'}
-                  title="Mark as Paid with Special Marking"
+                  onClick={handleMarkAsUnpaid}
+                  className="flex-1 text-white py-3 px-4 rounded-lg font-medium transition-colors"
+                  style={{ backgroundColor: '#973b00' }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#7a2f00'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#973b00'}
                 >
-                  <Circle size={20} />
+                  Mark as Unpaid
                 </button>
-              </div>
-            ) : (
+              )}
+
+              {/* Special Marking Toggle Button - Always Available */}
               <button
-                onClick={handleMarkAsUnpaid}
-                className="w-full text-white py-3 px-4 rounded-lg font-medium transition-colors"
-                style={{ backgroundColor: '#973b00' }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#7a2f00'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#973b00'}
+                onClick={handleToggleSpecialMarking}
+                className="w-12 h-12 text-white rounded-lg font-medium transition-colors flex items-center justify-center"
+                style={{ backgroundColor: '#666666' }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#555555'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#666666'}
+                title={session.specialMarking ? "Remove Special Marking" : "Add Special Marking"}
               >
-                Mark as Unpaid
+                {session.specialMarking ? <CircleSlash size={20} /> : <Circle size={20} />}
               </button>
-            )}
+            </div>
           </div>
         )}
 
