@@ -691,16 +691,20 @@ export default function CalendarPage() {
 
 
 
-                      // Priority: No Client (charcoal grey) > Session Plan Sent (charcoal grey) > Fully Complete + Paid (green) > Terms + Questionnaire (amber) > Default (amber-800)
+                      // Priority: No Client (amber-800) > All Complete (Paid + Terms + Session Plan Sent) (charcoal grey) > Fully Complete + Paid (green) > Terms + Questionnaire (amber) > Default (amber-800)
                       const isFullyCompleted = hasSignedBookingTerms && (hasFilledQuestionnaire || session.questionnaireBypass);
                       const isPaid = session.sessionPaid;
                       const isSessionPlanSent = session.sessionPlanSent;
+                      const isAllComplete = isPaid && hasSignedBookingTerms && isSessionPlanSent;
 
                       let buttonStyle = {};
                       let buttonClasses = "";
 
-                      if (!client || isSessionPlanSent) {
-                        // No client or session plan sent = dark charcoal grey background (highest priority)
+                      if (!client) {
+                        // No client = amber-800 background
+                        buttonClasses = "w-full bg-amber-800 text-white text-xs px-2 py-1 rounded text-left transition-colors flex-shrink-0 hover:bg-amber-700";
+                      } else if (isAllComplete) {
+                        // All complete (Paid + Terms + Session Plan Sent) = dark charcoal grey background (highest priority)
                         buttonStyle = { backgroundColor: '#36454F' };
                         buttonClasses = "w-full text-white text-xs px-2 py-1 rounded text-left transition-colors flex-shrink-0 hover:opacity-80";
                       } else if (isFullyCompleted && isPaid) {
@@ -786,13 +790,17 @@ export default function CalendarPage() {
               state.bookingTerms.some(bt => clientEmails.includes(bt.email?.toLowerCase() || '')) : false;
             const hasFilledQuestionnaire = hasQuestionnaireForDog(client, firstSession, state.behaviourQuestionnaires);
 
-            // Priority: No Client (charcoal grey) > Session Plan Sent (charcoal grey) > Fully Complete + Paid (green) > Terms + Questionnaire (amber) > Default (amber-800)
+            // Priority: No Client (amber-800) > All Complete (Paid + Terms + Session Plan Sent) (charcoal grey) > Fully Complete + Paid (green) > Terms + Questionnaire (amber) > Default (amber-800)
             const isFullyCompleted = hasSignedBookingTerms && (hasFilledQuestionnaire || firstSession.questionnaireBypass);
             const isPaid = firstSession.sessionPaid;
             const isSessionPlanSent = firstSession.sessionPlanSent;
+            const isAllComplete = isPaid && hasSignedBookingTerms && isSessionPlanSent;
 
-            if (!client || isSessionPlanSent) {
-              // No client or session plan sent = dark charcoal grey background (highest priority)
+            if (!client) {
+              // No client = amber-800 background
+              return '#973b00';
+            } else if (isAllComplete) {
+              // All complete (Paid + Terms + Session Plan Sent) = dark charcoal grey background (highest priority)
               return '#36454F';
             } else if (isFullyCompleted && isPaid) {
               // Fully completed AND paid = green background
@@ -922,7 +930,7 @@ export default function CalendarPage() {
                 // Check if this session has notes
                 const hasNotes = session.notes && session.notes.trim().length > 0;
 
-                // Determine button style - priority: session plan sent (black) > fully complete + paid (green) > terms + questionnaire (amber) > default
+                // Determine button style - priority: all complete (paid + terms + session plan sent) (charcoal grey) > fully complete + paid (green) > terms + questionnaire (amber) > default
                 const clientEmails = getClientEmails(client, state.clientEmailAliases || {});
                 const hasSignedBookingTerms = clientEmails.length > 0 ?
                   state.bookingTerms.some(bt => clientEmails.includes(bt.email?.toLowerCase() || '')) : false;
@@ -930,11 +938,15 @@ export default function CalendarPage() {
                 const isPaid = session.sessionPaid;
                 const isFullyCompleted = hasSignedBookingTerms && (hasFilledQuestionnaire || session.questionnaireBypass);
                 const isSessionPlanSent = session.sessionPlanSent;
+                const isAllComplete = isPaid && hasSignedBookingTerms && isSessionPlanSent;
 
                 let buttonClass = "";
                 let buttonStyle = {};
 
-                if (!client || isSessionPlanSent) {
+                if (!client) {
+                  buttonClass = "w-full bg-amber-800 text-white p-4 rounded-lg text-left hover:bg-amber-700 transition-colors";
+                  buttonStyle = {};
+                } else if (isAllComplete) {
                   buttonClass = "w-full text-white p-4 rounded-lg text-left transition-colors hover:opacity-80";
                   buttonStyle = { backgroundColor: '#36454F' };
                 } else if (isFullyCompleted && isPaid) {
@@ -1011,7 +1023,7 @@ export default function CalendarPage() {
                   // Check if this session has notes
                   const hasNotes = session.notes && session.notes.trim().length > 0;
 
-                  // Determine button style - priority: session plan sent (black) > fully complete + paid (green) > terms + questionnaire (amber) > default
+                  // Determine button style - priority: all complete (paid + terms + session plan sent) (charcoal grey) > fully complete + paid (green) > terms + questionnaire (amber) > default
                   const clientEmails = getClientEmails(client, state.clientEmailAliases || {});
                   const hasSignedBookingTerms = clientEmails.length > 0 ?
                     state.bookingTerms.some(bt => clientEmails.includes(bt.email?.toLowerCase() || '')) : false;
@@ -1019,11 +1031,15 @@ export default function CalendarPage() {
                   const isPaid = session.sessionPaid;
                   const isFullyCompleted = hasSignedBookingTerms && (hasFilledQuestionnaire || session.questionnaireBypass);
                   const isSessionPlanSent = session.sessionPlanSent;
+                  const isAllComplete = isPaid && hasSignedBookingTerms && isSessionPlanSent;
 
                   let buttonClass = "";
                   let buttonStyle = {};
 
-                  if (!client || isSessionPlanSent) {
+                  if (!client) {
+                    buttonClass = "w-full bg-amber-800 text-white p-4 rounded-lg text-left hover:bg-amber-700 transition-colors";
+                    buttonStyle = {};
+                  } else if (isAllComplete) {
                     buttonClass = "w-full text-white p-4 rounded-lg text-left transition-colors hover:opacity-80";
                     buttonStyle = { backgroundColor: '#36454F' };
                   } else if (isFullyCompleted && isPaid) {
