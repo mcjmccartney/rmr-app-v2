@@ -7,6 +7,7 @@ import SlideUpModal from './SlideUpModal';
 import { formatDateTime, formatClientWithAllDogs } from '@/utils/dateFormatting';
 import { paymentService } from '@/services/paymentService';
 import { sessionService } from '@/services/sessionService';
+import { Circle } from 'lucide-react';
 
 interface SessionModalProps {
   session: Session | null;
@@ -152,6 +153,23 @@ export default function SessionModal({ session, isOpen, onClose, onEditSession, 
     } catch (error) {
       console.error('Error marking session as paid:', error);
       alert('Failed to mark session as paid. Please try again.');
+    }
+  };
+
+  const handleMarkAsPaidWithSpecialMarking = async () => {
+    try {
+      const updatedSession = await sessionService.markAsPaid(session.id);
+      await updateSession(session.id, {
+        sessionPaid: true,
+        paymentConfirmedAt: updatedSession.paymentConfirmedAt,
+        specialMarking: true // Add special marking flag
+      });
+      onClose(); // Close the modal
+      // Refresh the page to show updated payment status
+      window.location.reload();
+    } catch (error) {
+      console.error('Error marking session as paid with special marking:', error);
+      alert('Failed to mark session as paid with special marking. Please try again.');
     }
   };
 
@@ -382,15 +400,27 @@ export default function SessionModal({ session, isOpen, onClose, onEditSession, 
         {client && (
           <div className="pb-3 border-b border-gray-200">
             {!session.sessionPaid ? (
-              <button
-                onClick={handleMarkAsPaid}
-                className="w-full text-white py-3 px-4 rounded-lg font-medium transition-colors"
-                style={{ backgroundColor: '#4f6749' }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3d5237'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#4f6749'}
-              >
-                Mark as Paid
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleMarkAsPaid}
+                  className="flex-1 text-white py-3 px-4 rounded-lg font-medium transition-colors"
+                  style={{ backgroundColor: '#4f6749' }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3d5237'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#4f6749'}
+                >
+                  Mark as Paid
+                </button>
+                <button
+                  onClick={handleMarkAsPaidWithSpecialMarking}
+                  className="w-12 h-12 text-white rounded-lg font-medium transition-colors flex items-center justify-center"
+                  style={{ backgroundColor: '#4f6749' }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3d5237'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#4f6749'}
+                  title="Mark as Paid with Special Marking"
+                >
+                  <Circle size={20} />
+                </button>
+              </div>
             ) : (
               <button
                 onClick={handleMarkAsUnpaid}

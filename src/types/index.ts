@@ -22,6 +22,7 @@ export interface Session {
   paymentConfirmedAt?: string; // When payment was confirmed
   sessionPlanSent?: boolean; // Whether session plan has been sent
   questionnaireBypass?: boolean; // Whether questionnaire requirement is bypassed
+  specialMarking?: boolean; // Special marking for priority sessions (shows circle icon)
   eventId?: string; // Google Calendar Event ID for deletion
   googleMeetLink?: string; // Google Meet link from Make.com
   // Group/RMR Live session fields

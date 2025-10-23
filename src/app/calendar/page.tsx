@@ -14,7 +14,7 @@ import AddModal from '@/components/AddModal';
 import { Session, Client, BehaviouralBrief, BehaviourQuestionnaire, SessionPlan } from '@/types';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek } from 'date-fns';
 import { formatTime, formatDayDate, formatMonthYear, combineDateAndTime } from '@/utils/dateFormatting';
-import { ChevronLeft, ChevronRight, Calendar, UserPlus, X, Users, CalendarDays, Edit3, FileText, Search, Bell } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar, UserPlus, X, Users, CalendarDays, Edit3, FileText, Search, Bell, Circle } from 'lucide-react';
 
 // Helper function to check if a session plan has meaningful content
 const sessionPlanHasContent = (sessionPlan: SessionPlan): boolean => {
@@ -740,6 +740,13 @@ export default function CalendarPage() {
 
                           {/* Icons container */}
                           <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
+                            {/* Circle icon for sessions with special marking - Desktop only */}
+                            {session.specialMarking && (
+                              <span className="hidden sm:inline text-white">
+                                <Circle size={16} />
+                              </span>
+                            )}
+
                             {/* White form icon for sessions with session plan content - Desktop only */}
                             {hasSessionPlanWithContent && (
                               <span className="hidden sm:inline text-white">
@@ -979,6 +986,13 @@ export default function CalendarPage() {
 
                     {/* Icons container */}
                     <div className="absolute right-4 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
+                      {/* Circle icon for sessions with special marking */}
+                      {session.specialMarking && (
+                        <span className="text-white">
+                          <Circle size={18} />
+                        </span>
+                      )}
+
                       {/* Bell icon for sessions with notes */}
                       {hasNotes && (
                         <span className="text-white">
@@ -1072,6 +1086,13 @@ export default function CalendarPage() {
 
                       {/* Icons container */}
                       <div className="absolute right-4 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
+                        {/* Circle icon for sessions with special marking */}
+                        {session.specialMarking && (
+                          <span className="text-white">
+                            <Circle size={18} />
+                          </span>
+                        )}
+
                         {/* Bell icon for sessions with notes */}
                         {hasNotes && (
                           <span className="text-white">
