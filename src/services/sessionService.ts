@@ -196,6 +196,26 @@ export const sessionService = {
         return dbRowToSession(retryData)
       }
 
+      // If special_marking column doesn't exist yet, retry without it
+      if (error.code === 'PGRST204' && error.message.includes('special_marking')) {
+        console.warn('special_marking column not found, retrying without it')
+        const { special_marking, ...dbRowWithoutSpecialMarking } = dbRow
+
+        const { data: retryData, error: retryError } = await supabase
+          .from('sessions')
+          .update(dbRowWithoutSpecialMarking)
+          .eq('id', id)
+          .select()
+          .single()
+
+        if (retryError) {
+          console.error('Error updating session (retry):', retryError)
+          throw retryError
+        }
+
+        return dbRowToSession(retryData)
+      }
+
       console.error('Error updating session:', error)
       throw error
     }
