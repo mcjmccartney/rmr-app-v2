@@ -7,6 +7,7 @@ import Header from '@/components/layout/Header';
 import SessionModal from '@/components/modals/SessionModal';
 import EditSessionModal from '@/components/modals/EditSessionModal';
 import EditClientModal from '@/components/modals/EditClientModal';
+import ClientModal from '@/components/modals/ClientModal';
 import AddModal from '@/components/AddModal';
 import { Session, Client } from '@/types';
 
@@ -20,7 +21,9 @@ export default function SessionsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
   const [showEditSessionModal, setShowEditSessionModal] = useState(false);
+  const [showClientModal, setShowClientModal] = useState(false);
   const [showEditClientModal, setShowEditClientModal] = useState(false);
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [addModalType, setAddModalType] = useState<'session' | 'client'>('session');
@@ -86,9 +89,16 @@ export default function SessionsPage() {
     // Find the client based on the session's client ID
     const client = state.clients.find(c => c.id === session.clientId);
     if (client) {
-      setEditingClient(client);
-      setShowEditClientModal(true);
+      setSelectedClient(client);
+      setShowClientModal(true);
     }
+  };
+
+  const handleEditClientFromModal = (client: Client) => {
+    // Close the view modal and open the edit modal
+    setShowClientModal(false);
+    setEditingClient(client);
+    setShowEditClientModal(true);
   };
 
   const handleCreateSessionPlan = (session: Session) => {
@@ -97,6 +107,11 @@ export default function SessionsPage() {
 
   const handleCloseEditSessionModal = () => {
     setShowEditSessionModal(false);
+  };
+
+  const handleCloseClientModal = () => {
+    setShowClientModal(false);
+    setSelectedClient(null);
   };
 
   const handleCloseEditClientModal = () => {
@@ -270,7 +285,7 @@ export default function SessionsPage() {
 
       <SessionModal
         session={selectedSession}
-        isOpen={!!selectedSession && !showEditSessionModal && !showEditClientModal}
+        isOpen={!!selectedSession && !showEditSessionModal && !showClientModal && !showEditClientModal}
         onClose={handleCloseModal}
         onEditSession={handleEditSession}
         onEditClient={handleEditClient}
@@ -281,6 +296,13 @@ export default function SessionsPage() {
         session={selectedSession}
         isOpen={showEditSessionModal}
         onClose={handleCloseEditSessionModal}
+      />
+
+      <ClientModal
+        client={selectedClient}
+        isOpen={showClientModal}
+        onClose={handleCloseClientModal}
+        onEditClient={handleEditClientFromModal}
       />
 
       <EditClientModal
