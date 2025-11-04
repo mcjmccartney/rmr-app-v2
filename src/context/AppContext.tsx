@@ -1215,7 +1215,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         isMember: client.membership,
         // Form URLs with email prefilled
         bookingTermsUrl: `https://rmrcms.vercel.app/booking-terms?email=${encodeURIComponent(client.email)}`,
-        questionnaireUrl: `https://rmrcms.vercel.app/questionnaire?email=${encodeURIComponent(client.email)}`
+        questionnaireUrl: `https://rmrcms.vercel.app/behaviour-questionnaire?email=${encodeURIComponent(client.email)}`
       };
 
       // Comprehensive validation to prevent blank/empty webhook data
