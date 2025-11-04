@@ -1395,6 +1395,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   // Update Google Calendar event when session date/time changes
+  // This now deletes the old event and creates a new one for better audit trail
   const updateCalendarEvent = async (session: Session) => {
     try {
       // Find the client for this session (if any)
@@ -1410,30 +1411,91 @@ export function AppProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      console.log('Updating Google Calendar event for session:', {
+      console.log('Updating Google Calendar event for session (delete + recreate):', {
         sessionId: session.id,
-        eventId: session.eventId,
+        oldEventId: session.eventId,
         clientName: client ? `${client.firstName} ${client.lastName}`.trim() : session.sessionType,
         bookingDate: session.bookingDate,
         bookingTime: session.bookingTime
       });
 
-      // Update Google Calendar event via API route with retry logic
-      const updateCalendarWithRetry = async (retryCount = 0) => {
+      // Step 1: Delete the old calendar event
+      console.log(`[CALENDAR_UPDATE] Step 1: Deleting old calendar event ${session.eventId}`);
+
+      const deleteCalendarWithRetry = async (retryCount = 0) => {
         const maxRetries = 2;
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
 
         try {
-          console.log(`[CALENDAR_UPDATE] Attempt ${retryCount + 1}/${maxRetries + 1} to update calendar event ${session.eventId}`);
+          console.log(`[CALENDAR_DELETE] Attempt ${retryCount + 1}/${maxRetries + 1} to delete calendar event ${session.eventId}`);
 
-          const calendarResponse = await fetch('/api/calendar/update', {
+          const deleteResponse = await fetch('/api/calendar/delete', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              eventId: session.eventId,
+              eventId: session.eventId
+            }),
+            signal: controller.signal
+          });
+
+          clearTimeout(timeoutId);
+
+          if (deleteResponse.ok) {
+            console.log('[CALENDAR_DELETE] Successfully deleted old calendar event');
+            return true;
+          } else {
+            console.error('[CALENDAR_DELETE] Failed to delete calendar event:', deleteResponse.status);
+            const errorText = await deleteResponse.text();
+            console.error('[CALENDAR_DELETE] Error response:', errorText);
+            return false;
+          }
+        } catch (fetchError) {
+          clearTimeout(timeoutId);
+
+          if (fetchError instanceof Error && fetchError.name === 'AbortError') {
+            console.error('[CALENDAR_DELETE] Calendar delete request timed out');
+          } else {
+            console.error('[CALENDAR_DELETE] Calendar delete request failed:', fetchError);
+          }
+
+          // Retry on network errors if we haven't exceeded max retries
+          if (retryCount < maxRetries) {
+            console.log(`[CALENDAR_DELETE] Retrying in 2 seconds... (attempt ${retryCount + 2}/${maxRetries + 1})`);
+            await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds before retry
+            return deleteCalendarWithRetry(retryCount + 1);
+          }
+
+          return false;
+        }
+      };
+
+      const deleteSuccess = await deleteCalendarWithRetry();
+
+      if (!deleteSuccess) {
+        console.error('[CALENDAR_UPDATE] Failed to delete old calendar event, aborting update');
+        return;
+      }
+
+      // Step 2: Create a new calendar event
+      console.log(`[CALENDAR_UPDATE] Step 2: Creating new calendar event`);
+
+      const createCalendarWithRetry = async (retryCount = 0) => {
+        const maxRetries = 2;
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+
+        try {
+          console.log(`[CALENDAR_CREATE] Attempt ${retryCount + 1}/${maxRetries + 1} to create new calendar event`);
+
+          const createResponse = await fetch('/api/calendar/create', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
               clientName: client ? `${client.firstName} ${client.lastName}`.trim() : session.sessionType,
               clientEmail: client?.email || '',
               clientAddress: client?.address || '',
@@ -1449,36 +1511,52 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
           clearTimeout(timeoutId);
 
-          if (calendarResponse.ok) {
-            console.log('[CALENDAR_UPDATE] Successfully updated calendar event');
+          if (createResponse.ok) {
+            const result = await createResponse.json();
+            console.log('[CALENDAR_CREATE] Successfully created new calendar event:', result.eventId);
+
+            // Update the session with the new eventId using internal update (no webhooks)
+            if (result.eventId) {
+              await updateSessionInternal(session.id, { eventId: result.eventId });
+              console.log('[CALENDAR_CREATE] Updated session with new eventId (internal):', result.eventId);
+            }
             return true;
           } else {
-            console.error('[CALENDAR_UPDATE] Failed to update calendar event via API:', calendarResponse.status);
-            const errorText = await calendarResponse.text();
-            console.error('[CALENDAR_UPDATE] Error response:', errorText);
+            console.error('[CALENDAR_CREATE] Failed to create new calendar event:', createResponse.status);
+            const errorText = await createResponse.text();
+            console.error('[CALENDAR_CREATE] Error response:', errorText);
             return false;
           }
         } catch (fetchError) {
           clearTimeout(timeoutId);
 
           if (fetchError instanceof Error && fetchError.name === 'AbortError') {
-            console.error('[CALENDAR_UPDATE] Calendar update request timed out');
+            console.error('[CALENDAR_CREATE] Calendar create request timed out');
           } else {
-            console.error('[CALENDAR_UPDATE] Calendar update request failed:', fetchError);
+            console.error('[CALENDAR_CREATE] Calendar create request failed:', fetchError);
           }
 
           // Retry on network errors if we haven't exceeded max retries
           if (retryCount < maxRetries) {
-            console.log(`[CALENDAR_UPDATE] Retrying in 2 seconds... (attempt ${retryCount + 2}/${maxRetries + 1})`);
+            console.log(`[CALENDAR_CREATE] Retrying in 2 seconds... (attempt ${retryCount + 2}/${maxRetries + 1})`);
             await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds before retry
-            return updateCalendarWithRetry(retryCount + 1);
+            return createCalendarWithRetry(retryCount + 1);
           }
 
           return false;
         }
       };
 
-      await updateCalendarWithRetry();
+      const createSuccess = await createCalendarWithRetry();
+
+      if (createSuccess) {
+        console.log('[CALENDAR_UPDATE] Successfully completed calendar event update (delete + recreate)');
+      } else {
+        console.error('[CALENDAR_UPDATE] Failed to create new calendar event after deleting old one');
+        // Clear the eventId since the old event was deleted but new one failed
+        await updateSessionInternal(session.id, { eventId: null });
+        console.log('[CALENDAR_UPDATE] Cleared eventId from session due to failed recreation');
+      }
 
     } catch (error) {
       console.error('Error updating Google Calendar event:', error);
