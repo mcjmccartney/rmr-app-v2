@@ -2,7 +2,7 @@
 const testGet = async () => {
   console.log('Testing GET request for actual session...');
   try {
-    const response = await fetch('https://raising-my-rescue.vercel.app/api/session-plan/document-url?sessionId=5305343b-4b88-46e2-b579-41f88c489997');
+    const response = await fetch('https://rmrcms.vercel.app/api/session-plan/document-url?sessionId=5305343b-4b88-46e2-b579-41f88c489997');
     console.log('GET Response status:', response.status);
     const data = await response.text();
     console.log('GET Response:', data);
@@ -46,8 +46,8 @@ const testWebhook = async () => {
   try {
     // Try both with and without trailing slash
     const urls = [
-      'https://raising-my-rescue.vercel.app/api/session-plan/document-url',
-      'https://raising-my-rescue.vercel.app/api/session-plan/document-url/'
+      'https://rmrcms.vercel.app/api/session-plan/document-url',
+      'https://rmrcms.vercel.app/api/session-plan/document-url/'
     ];
 
     for (const url of urls) {

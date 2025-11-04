@@ -1,6 +1,6 @@
 -- Supabase CORS and RLS Fix
 -- Run this SQL in your Supabase SQL Editor to fix CORS and access issues
--- IMPORTANT: Also add https://raising-my-rescue.vercel.app to your Supabase CORS origins in the dashboard
+-- IMPORTANT: Also add https://rmrcms.vercel.app to your Supabase CORS origins in the dashboard
 
 -- 1. Ensure RLS policies allow public access for your app
 -- Note: These are permissive policies for development. Restrict them in production.

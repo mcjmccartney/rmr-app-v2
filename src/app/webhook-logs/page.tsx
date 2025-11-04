@@ -106,7 +106,7 @@ export default function WebhookLogsPage() {
               <div>
                 <span className="text-sm font-medium">Stripe Payments:</span>
                 <code className="bg-gray-100 p-2 rounded text-sm block">
-                  https://raising-my-rescue.vercel.app/api/stripe/webhook
+                  https://rmrcms.vercel.app/api/stripe/webhook
                 </code>
               </div>
               <div>

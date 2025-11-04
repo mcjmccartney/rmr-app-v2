@@ -1214,7 +1214,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         hasFilledQuestionnaire,
         isMember: client.membership,
         // Form URLs with email prefilled
-        bookingTermsUrl: `https://raising-my-rescue.vercel.app/booking-terms?email=${encodeURIComponent(client.email)}`,
+        bookingTermsUrl: `https://rmrcms.vercel.app/booking-terms?email=${encodeURIComponent(client.email)}`,
         questionnaireUrl: `https://rmrcms.vercel.app/questionnaire?email=${encodeURIComponent(client.email)}`
       };
 
