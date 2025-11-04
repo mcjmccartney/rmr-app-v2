@@ -1168,79 +1168,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Trigger booking terms webhook for session updates
+  // Note: Booking terms webhook for updates has been removed
+  // The webhook https://hook.eu1.make.com/lipggo8kcd8kwq2vp6j6mr3gnxbx12h7 should only trigger for NEW sessions
+  // Session updates no longer trigger this webhook to prevent duplicate notifications
   const triggerBookingTermsWebhookForUpdate = async (session: Session) => {
-    try {
-      // Find the client for this session (if any)
-      const client = session.clientId ? state.clients.find(c => c.id === session.clientId) : null;
-
-      // For Group and RMR Live sessions without clients, skip webhook
-      if (!session.clientId && (session.sessionType === 'Group' || session.sessionType === 'RMR Live')) {
-        return;
-      }
-
-      if (!client || !client.email) {
-        return;
-      }
-
-      // Check if client has already signed booking terms by looking in booking_terms table
-      const hasSignedBookingTerms = state.bookingTerms.some(bt =>
-        bt.email?.toLowerCase() === client.email?.toLowerCase()
-      );
-
-      // Check if client has filled questionnaire for the specific dog in this session
-      const sessionDogName = session.dogName || client.dogName;
-      const hasFilledQuestionnaire = sessionDogName
-        ? findQuestionnaireForClient(client, sessionDogName, state.behaviourQuestionnaires)
-        : false;
-
-      // Prepare session data for booking terms webhook
-      const webhookData = {
-        sessionId: session.id,
-        clientId: session.clientId,
-        clientName: `${client.firstName} ${client.lastName}`.trim(),
-        clientFirstName: client.firstName,
-        clientLastName: client.lastName,
-        clientEmail: client.email,
-        address: client.address || '',
-        dogName: sessionDogName || '',
-        sessionType: session.sessionType,
-        bookingDate: session.bookingDate,
-        bookingTime: session.bookingTime.substring(0, 5),
-        quote: session.quote,
-        notes: session.notes || '',
-        createdAt: new Date().toISOString(),
-        hasSignedBookingTerms,
-        hasFilledQuestionnaire,
-        isMember: client.membership,
-        // Form URLs with email prefilled
-        bookingTermsUrl: `https://rmrcms.vercel.app/booking-terms?email=${encodeURIComponent(client.email)}`,
-        questionnaireUrl: `https://rmrcms.vercel.app/behaviour-questionnaire?email=${encodeURIComponent(client.email)}`
-      };
-
-      // Comprehensive validation to prevent blank/empty webhook data
-      if (isValidWebhookData(webhookData) && !shouldSkipWebhookCall(session.id, 'booking-terms-update')) {
-        const webhookTimestamp = new Date().toISOString();
-        console.log(`[BOOKING_TERMS_WEBHOOK] Triggering for session ${webhookData.sessionId} - ${webhookData.clientFirstName} ${webhookData.clientLastName} at ${webhookTimestamp}`);
-        await fetch('https://hook.eu1.make.com/lipggo8kcd8kwq2vp6j6mr3gnxbx12h7', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            ...webhookData,
-            webhookTimestamp
-          })
-        });
-        console.log(`[BOOKING_TERMS_WEBHOOK] Completed for session ${webhookData.sessionId} at ${new Date().toISOString()}`);
-      } else if (!isValidWebhookData(webhookData)) {
-        console.log(`[BOOKING_TERMS_WEBHOOK] BLOCKED - Invalid data for session ${session.id}. Webhook data:`, webhookData);
-      } else {
-        console.log(`[BOOKING_TERMS_WEBHOOK] BLOCKED - Duplicate update call prevented for session ${session.id}`);
-      }
-    } catch (error) {
-      // Don't throw error - webhook failure shouldn't prevent session update
-    }
+    // This function has been disabled - webhook should only trigger for new sessions
+    console.log(`[BOOKING_TERMS_WEBHOOK] SKIPPED for session update ${session.id} - webhook only triggers for new sessions`);
+    return;
   };
 
   // Internal update session function that bypasses webhook triggers (for system updates like eventId)
