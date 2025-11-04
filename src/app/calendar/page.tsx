@@ -617,7 +617,7 @@ export default function CalendarPage() {
                 return (
                 <div
                   key={day.toISOString()}
-                  className={`flex flex-col p-1 min-h-0 border-r border-b border-gray-100 last:border-r-0 cursor-pointer ${
+                  className={`flex flex-col p-1 min-h-0 border-r border-b border-gray-100 last:border-r-0 cursor-default ${
                     isToday ? 'ring-2 ring-brand-primary ring-inset' : ''
                   }`}
                   onClick={() => handleDayClick(day, sessions)}
@@ -702,23 +702,23 @@ export default function CalendarPage() {
 
                       if (!client) {
                         // No client = amber-800 background
-                        buttonClasses = "w-full bg-amber-800 text-white text-xs px-2 py-1 rounded text-left transition-colors flex-shrink-0 hover:bg-amber-700";
+                        buttonClasses = "w-full bg-amber-800 text-white text-xs px-2 py-1 rounded text-left transition-colors flex-shrink-0 hover:bg-amber-700 cursor-pointer";
                       } else if (isAllComplete) {
                         // All complete (Paid + Terms + Session Plan Sent) = dark charcoal grey background (highest priority)
                         buttonStyle = { backgroundColor: '#36454F' };
-                        buttonClasses = "w-full text-white text-xs px-2 py-1 rounded text-left transition-colors flex-shrink-0 hover:opacity-80";
+                        buttonClasses = "w-full text-white text-xs px-2 py-1 rounded text-left transition-colors flex-shrink-0 hover:opacity-80 cursor-pointer";
                       } else if (isFullyCompleted && isPaid) {
                         // Fully completed AND paid = green background
                         buttonStyle = { backgroundColor: '#4f6749' };
-                        buttonClasses = "w-full text-white text-xs px-2 py-1 rounded text-left transition-colors flex-shrink-0 hover:opacity-80";
+                        buttonClasses = "w-full text-white text-xs px-2 py-1 rounded text-left transition-colors flex-shrink-0 hover:opacity-80 cursor-pointer";
                       } else if (isFullyCompleted) {
                         // Terms + Questionnaire (but not paid) = amber background
                         buttonStyle = { backgroundColor: '#e17100' };
-                        buttonClasses = "w-full text-white text-xs px-2 py-1 rounded text-left transition-colors flex-shrink-0 hover:opacity-80";
+                        buttonClasses = "w-full text-white text-xs px-2 py-1 rounded text-left transition-colors flex-shrink-0 hover:opacity-80 cursor-pointer";
                       } else {
                         // Default amber-800 background
                         buttonStyle = {};
-                        buttonClasses = "w-full bg-amber-800 text-white text-xs px-2 py-1 rounded text-left hover:bg-amber-700 transition-colors flex-shrink-0";
+                        buttonClasses = "w-full bg-amber-800 text-white text-xs px-2 py-1 rounded text-left hover:bg-amber-700 transition-colors flex-shrink-0 cursor-pointer";
                       }
 
                       return (
@@ -783,7 +783,7 @@ export default function CalendarPage() {
       <button
         onClick={handleUpNextClick}
         disabled={!firstSession}
-        className="text-white px-4 py-1.5 flex-shrink-0 w-full text-left disabled:cursor-default"
+        className="text-white px-4 py-1.5 flex-shrink-0 w-full text-left disabled:cursor-default cursor-pointer"
         style={{
           backgroundColor: (() => {
             if (!firstSession) return '#973b00';
@@ -951,19 +951,19 @@ export default function CalendarPage() {
                 let buttonStyle = {};
 
                 if (!client) {
-                  buttonClass = "w-full bg-amber-800 text-white p-4 rounded-lg text-left hover:bg-amber-700 transition-colors";
+                  buttonClass = "w-full bg-amber-800 text-white p-4 rounded-lg text-left hover:bg-amber-700 transition-colors cursor-pointer";
                   buttonStyle = {};
                 } else if (isAllComplete) {
-                  buttonClass = "w-full text-white p-4 rounded-lg text-left transition-colors hover:opacity-80";
+                  buttonClass = "w-full text-white p-4 rounded-lg text-left transition-colors hover:opacity-80 cursor-pointer";
                   buttonStyle = { backgroundColor: '#36454F' };
                 } else if (isFullyCompleted && isPaid) {
-                  buttonClass = "w-full text-white p-4 rounded-lg text-left transition-colors hover:opacity-80";
+                  buttonClass = "w-full text-white p-4 rounded-lg text-left transition-colors hover:opacity-80 cursor-pointer";
                   buttonStyle = { backgroundColor: '#4f6749' };
                 } else if (isFullyCompleted) {
-                  buttonClass = "w-full text-white p-4 rounded-lg text-left transition-colors hover:opacity-80";
+                  buttonClass = "w-full text-white p-4 rounded-lg text-left transition-colors hover:opacity-80 cursor-pointer";
                   buttonStyle = { backgroundColor: '#e17100' };
                 } else {
-                  buttonClass = "w-full bg-amber-800 text-white p-4 rounded-lg text-left hover:bg-amber-700 transition-colors";
+                  buttonClass = "w-full bg-amber-800 text-white p-4 rounded-lg text-left hover:bg-amber-700 transition-colors cursor-pointer";
                   buttonStyle = {};
                 }
 
@@ -1051,19 +1051,19 @@ export default function CalendarPage() {
                   let buttonStyle = {};
 
                   if (!client) {
-                    buttonClass = "w-full bg-amber-800 text-white p-4 rounded-lg text-left hover:bg-amber-700 transition-colors";
+                    buttonClass = "w-full bg-amber-800 text-white p-4 rounded-lg text-left hover:bg-amber-700 transition-colors cursor-pointer";
                     buttonStyle = {};
                   } else if (isAllComplete) {
-                    buttonClass = "w-full text-white p-4 rounded-lg text-left transition-colors hover:opacity-80";
+                    buttonClass = "w-full text-white p-4 rounded-lg text-left transition-colors hover:opacity-80 cursor-pointer";
                     buttonStyle = { backgroundColor: '#36454F' };
                   } else if (isFullyCompleted && isPaid) {
-                    buttonClass = "w-full text-white p-4 rounded-lg text-left transition-colors hover:opacity-80";
+                    buttonClass = "w-full text-white p-4 rounded-lg text-left transition-colors hover:opacity-80 cursor-pointer";
                     buttonStyle = { backgroundColor: '#4f6749' };
                   } else if (isFullyCompleted) {
-                    buttonClass = "w-full text-white p-4 rounded-lg text-left transition-colors hover:opacity-80";
+                    buttonClass = "w-full text-white p-4 rounded-lg text-left transition-colors hover:opacity-80 cursor-pointer";
                     buttonStyle = { backgroundColor: '#e17100' };
                   } else {
-                    buttonClass = "w-full bg-amber-800 text-white p-4 rounded-lg text-left hover:bg-amber-700 transition-colors";
+                    buttonClass = "w-full bg-amber-800 text-white p-4 rounded-lg text-left hover:bg-amber-700 transition-colors cursor-pointer";
                     buttonStyle = {};
                   }
 
