@@ -16,7 +16,7 @@ export default function BehaviouralBriefCompletedPage() {
                 Behavioural Brief
               </h1>
               <p className="text-gray-700">
-                Thank you! Your behavioural brief has successfully submitted. You may now close this window or Return to Home.
+                Thank you for submitting your Behavioural Brief. I will be in touch within the next couple of days via Whatsapp or email. Please check your email spam folder if you haven't heard from me.
               </p>
             </div>
 
@@ -29,7 +29,7 @@ export default function BehaviouralBriefCompletedPage() {
                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3d5237'}
                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#4f6749'}
               >
-                Return to Home
+                Return to Home Page
               </button>
             </div>
           </div>
