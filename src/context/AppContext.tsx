@@ -1554,7 +1554,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       } else {
         console.error('[CALENDAR_UPDATE] Failed to create new calendar event after deleting old one');
         // Clear the eventId since the old event was deleted but new one failed
-        await updateSessionInternal(session.id, { eventId: null });
+        await updateSessionInternal(session.id, { eventId: undefined });
         console.log('[CALENDAR_UPDATE] Cleared eventId from session due to failed recreation');
       }
 
