@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Session, Client, BehaviourQuestionnaire, BookingTerms, SessionPlan } from '@/types';
+import { Session, Client, BehaviourQuestionnaire, BookingTerms, SessionPlan, ClientEmailAlias } from '@/types';
 
 interface SessionColorData {
   sessions: Session[];
@@ -7,7 +7,7 @@ interface SessionColorData {
   behaviourQuestionnaires: BehaviourQuestionnaire[];
   bookingTerms: BookingTerms[];
   sessionPlans: SessionPlan[];
-  clientEmailAliases: Record<string, string[]>;
+  clientEmailAliases: { [clientId: string]: ClientEmailAlias[] };
 }
 
 interface SessionColorResult {
@@ -21,12 +21,13 @@ interface SessionColorResult {
 }
 
 // Helper function to get client emails including aliases
-const getClientEmails = (client: Client | undefined, aliases: Record<string, string[]>): string[] => {
+const getClientEmails = (client: Client | undefined, aliases: { [clientId: string]: ClientEmailAlias[] }): string[] => {
   if (!client?.email) return [];
-  
+
   const emails = [client.email.toLowerCase()];
-  const clientAliases = aliases[client.email.toLowerCase()] || [];
-  return [...emails, ...clientAliases.map(alias => alias.toLowerCase())];
+  const clientAliases = aliases[client.id] || [];
+  const aliasEmails = clientAliases.map(alias => alias.email.toLowerCase());
+  return [...emails, ...aliasEmails];
 };
 
 // Helper function to check if client has questionnaire for specific dog
@@ -49,13 +50,22 @@ const hasQuestionnaireForDog = (
 // Helper function to check if session plan has content
 const sessionPlanHasContent = (sessionPlan: SessionPlan): boolean => {
   if (!sessionPlan) return false;
-  
-  const hasMainGoals = sessionPlan.mainGoals && sessionPlan.mainGoals.trim().length > 0;
+
+  // Check if any main goals have content
+  const hasMainGoals = !!(
+    sessionPlan.mainGoal1?.trim() ||
+    sessionPlan.mainGoal2?.trim() ||
+    sessionPlan.mainGoal3?.trim() ||
+    sessionPlan.mainGoal4?.trim()
+  );
+
+  // Check if explanation has content
+  const hasExplanation = !!(sessionPlan.explanationOfBehaviour?.trim());
+
+  // Check if action points are selected
   const hasActionPoints = sessionPlan.actionPoints && sessionPlan.actionPoints.length > 0;
-  const hasHomework = sessionPlan.homework && sessionPlan.homework.trim().length > 0;
-  const hasNotes = sessionPlan.notes && sessionPlan.notes.trim().length > 0;
-  
-  return hasMainGoals || hasActionPoints || hasHomework || hasNotes;
+
+  return hasMainGoals || hasExplanation || hasActionPoints;
 };
 
 export const useSessionColors = (data: SessionColorData) => {
@@ -67,13 +77,13 @@ export const useSessionColors = (data: SessionColorData) => {
       const clientEmails = getClientEmails(client, data.clientEmailAliases);
       
       // Check session status
-      const hasSignedBookingTerms = clientEmails.length > 0 ? 
+      const hasSignedBookingTerms = clientEmails.length > 0 ?
         data.bookingTerms.some(bt => clientEmails.includes(bt.email?.toLowerCase() || '')) : false;
       const hasFilledQuestionnaire = hasQuestionnaireForDog(client, session, data.behaviourQuestionnaires);
-      const isPaid = session.sessionPaid;
-      const isSessionPlanSent = session.sessionPlanSent;
-      
-      const isFullyCompleted = hasSignedBookingTerms && (hasFilledQuestionnaire || session.questionnaireBypass);
+      const isPaid = !!session.sessionPaid;
+      const isSessionPlanSent = !!session.sessionPlanSent;
+
+      const isFullyCompleted = hasSignedBookingTerms && (hasFilledQuestionnaire || !!session.questionnaireBypass);
       const isAllComplete = isPaid && hasSignedBookingTerms && isSessionPlanSent;
       
       let backgroundColor: string;
@@ -114,7 +124,7 @@ export const useSessionColors = (data: SessionColorData) => {
         isAllComplete,
         isPaid,
         hasSignedTerms: hasSignedBookingTerms,
-        hasQuestionnaire: hasFilledQuestionnaire || session.questionnaireBypass
+        hasQuestionnaire: hasFilledQuestionnaire || !!session.questionnaireBypass
       });
     });
     
@@ -124,7 +134,6 @@ export const useSessionColors = (data: SessionColorData) => {
     data.clients,
     data.behaviourQuestionnaires,
     data.bookingTerms,
-    data.sessionPlans,
     data.clientEmailAliases
   ]);
 };
