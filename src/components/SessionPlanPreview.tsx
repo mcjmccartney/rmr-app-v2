@@ -5,6 +5,8 @@ import { SessionPlan, ActionPoint, Session, Client } from '@/types';
 import { personalizeActionPoint } from '@/data/actionPoints';
 import { X, Download, Edit3 } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
+import SafeHtmlRenderer from '@/components/SafeHtmlRenderer';
+import RichTextEditor from '@/components/RichTextEditor';
 
 interface SessionPlanPreviewProps {
   sessionPlan: SessionPlan;
@@ -252,25 +254,31 @@ export default function SessionPlanPreview({
                       <div className="font-medium text-gray-700 mb-2">Action Point {index + 1}:</div>
                       {isEditing ? (
                         <div className="space-y-2">
-                          <input
-                            type="text"
+                          <RichTextEditor
                             value={actionPoint.header}
-                            onChange={(e) => updateActionPoint(index, 'header', e.target.value)}
-                            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:border-black font-medium"
+                            onChange={(value) => updateActionPoint(index, 'header', value)}
                             placeholder="Action point header"
+                            className="w-full"
                           />
-                          <textarea
+                          <RichTextEditor
                             value={actionPoint.details}
-                            onChange={(e) => updateActionPoint(index, 'details', e.target.value)}
-                            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:border-black resize-none"
-                            rows={3}
+                            onChange={(value) => updateActionPoint(index, 'details', value)}
                             placeholder="Action point details"
+                            className="w-full"
                           />
                         </div>
                       ) : (
                         <div>
-                          <h3 className="font-medium text-gray-900 mb-1">{actionPoint.header}</h3>
-                          <p className="text-gray-700">{actionPoint.details}</p>
+                          <SafeHtmlRenderer
+                            html={actionPoint.header}
+                            className="font-medium text-gray-900 mb-1"
+                            fallback={actionPoint.header}
+                          />
+                          <SafeHtmlRenderer
+                            html={actionPoint.details}
+                            className="text-gray-700"
+                            fallback={actionPoint.details}
+                          />
                         </div>
                       )}
                     </div>

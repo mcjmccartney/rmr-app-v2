@@ -6,6 +6,8 @@ import { Plus, Edit2, Trash2, Save, X } from 'lucide-react';
 import { ActionPoint } from '@/types';
 import { useApp } from '@/context/AppContext';
 import { useEnterKeyHandler } from '@/hooks/useEnterKeyHandler';
+import RichTextEditor from '@/components/RichTextEditor';
+import SafeHtmlRenderer from '@/components/SafeHtmlRenderer';
 
 export default function ActionPointsPage() {
   const router = useRouter();
@@ -138,24 +140,22 @@ export default function ActionPointsPage() {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Header
                     </label>
-                    <input
-                      type="text"
+                    <RichTextEditor
                       value={addForm.header}
-                      onChange={(e) => setAddForm({ ...addForm, header: e.target.value })}
-                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-800 focus:border-amber-800"
+                      onChange={(value) => setAddForm({ ...addForm, header: value })}
                       placeholder="Enter action point header"
+                      className="w-full"
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Details
                     </label>
-                    <textarea
+                    <RichTextEditor
                       value={addForm.details}
-                      onChange={(e) => setAddForm({ ...addForm, details: e.target.value })}
-                      rows={8}
-                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-800 focus:border-amber-800 resize-none"
+                      onChange={(value) => setAddForm({ ...addForm, details: value })}
                       placeholder="Enter action point details (use [Dog Name], [he/she], [him/her] for personalization)"
+                      className="w-full"
                     />
                   </div>
                   <div className="flex gap-3">
@@ -190,22 +190,22 @@ export default function ActionPointsPage() {
                           <label className="block text-sm font-medium text-gray-700 mb-2">
                             Header
                           </label>
-                          <input
-                            type="text"
+                          <RichTextEditor
                             value={editForm.header}
-                            onChange={(e) => setEditForm({ ...editForm, header: e.target.value })}
-                            className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-800 focus:border-amber-800"
+                            onChange={(value) => setEditForm({ ...editForm, header: value })}
+                            placeholder="Enter action point header"
+                            className="w-full"
                           />
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
                             Details
                           </label>
-                          <textarea
+                          <RichTextEditor
                             value={editForm.details}
-                            onChange={(e) => setEditForm({ ...editForm, details: e.target.value })}
-                            rows={8}
-                            className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-800 focus:border-amber-800 resize-none"
+                            onChange={(value) => setEditForm({ ...editForm, details: value })}
+                            placeholder="Enter action point details"
+                            className="w-full"
                           />
                         </div>
                         <div className="flex gap-3">
@@ -231,8 +231,12 @@ export default function ActionPointsPage() {
                       // Display Mode
                       <div>
                         <div className="flex items-start justify-between mb-3">
-                          <h4 className="font-medium text-gray-900 text-lg">{actionPoint.header}</h4>
-                          <div className="flex gap-2">
+                          <SafeHtmlRenderer
+                            html={actionPoint.header}
+                            className="font-medium text-gray-900 text-lg flex-1"
+                            fallback={actionPoint.header}
+                          />
+                          <div className="flex gap-2 ml-4">
                             <button
                               onClick={() => handleEdit(actionPoint)}
                               className="p-2 text-gray-400 hover:text-amber-600 transition-colors"
@@ -250,7 +254,11 @@ export default function ActionPointsPage() {
                             </button>
                           </div>
                         </div>
-                        <p className="text-gray-600 leading-relaxed">{actionPoint.details}</p>
+                        <SafeHtmlRenderer
+                          html={actionPoint.details}
+                          className="text-gray-600 leading-relaxed"
+                          fallback={actionPoint.details}
+                        />
                       </div>
                     )}
                   </div>

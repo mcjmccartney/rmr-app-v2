@@ -10,6 +10,8 @@ import { clientService } from '@/services/clientService';
 import { sessionService } from '@/services/sessionService';
 import { useRobustAutoSave } from '@/hooks/useRobustAutoSave';
 import type { SessionPlan, Client, Session } from '@/types';
+import SafeHtmlRenderer from '@/components/SafeHtmlRenderer';
+import RichTextEditor from '@/components/RichTextEditor';
 // import SessionPlanPreviewModal from '@/components/modals/SessionPlanPreviewModal';
 
 function SessionPlanContent() {
@@ -927,12 +929,11 @@ function SessionPlanContent() {
                           <label className="block text-xs font-medium text-gray-600 mb-1">
                             Header
                           </label>
-                          <input
-                            type="text"
+                          <RichTextEditor
                             value={editableContent.header}
-                            onChange={(e) => updateEditableActionPoint(actionPointId, 'header', e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-amber-500 focus:border-transparent text-sm"
+                            onChange={(value) => updateEditableActionPoint(actionPointId, 'header', value)}
                             placeholder="Action point header"
+                            className="w-full text-sm"
                           />
                         </div>
 
@@ -941,12 +942,11 @@ function SessionPlanContent() {
                           <label className="block text-xs font-medium text-gray-600 mb-1">
                             Details
                           </label>
-                          <textarea
+                          <RichTextEditor
                             value={editableContent.details}
-                            onChange={(e) => updateEditableActionPoint(actionPointId, 'details', e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-amber-500 focus:border-transparent text-sm"
+                            onChange={(value) => updateEditableActionPoint(actionPointId, 'details', value)}
                             placeholder="Action point details"
-                            rows={6}
+                            className="w-full text-sm"
                           />
                         </div>
                       </div>
@@ -999,8 +999,16 @@ function SessionPlanContent() {
                         >
                           <div className="flex items-center justify-between">
                             <div className="flex-1">
-                              <h5 className="font-medium text-gray-900">{personalizedActionPoint.header}</h5>
-                              <p className="text-sm text-gray-600 mt-1">{personalizedActionPoint.details}</p>
+                              <SafeHtmlRenderer
+                                html={personalizedActionPoint.header}
+                                className="font-medium text-gray-900"
+                                fallback={personalizedActionPoint.header}
+                              />
+                              <SafeHtmlRenderer
+                                html={personalizedActionPoint.details}
+                                className="text-sm text-gray-600 mt-1"
+                                fallback={personalizedActionPoint.details}
+                              />
                             </div>
                             <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
                               isSelected ? 'border-amber-800 bg-amber-800' : 'border-gray-300'

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { SessionPlan, Session, Client } from '@/types';
 import { predefinedActionPoints, personalizeActionPoint } from '@/data/actionPoints';
 import { useEnterKeyHandler } from '@/hooks/useEnterKeyHandler';
+import SafeHtmlRenderer from '@/components/SafeHtmlRenderer';
 // import { sessionPlanService } from '@/services/sessionPlanService';
 // import { googleDocsService } from '@/services/googleDocsService';
 // import SessionPlanPreview from './SessionPlanPreview';
@@ -223,15 +224,26 @@ export default function SessionPlanForm({ session, client, existingPlan, onClose
                 return (
                   <div key={actionPointId} className="border border-gray-200 p-4 rounded-md">
                     <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-medium text-gray-900">Action Point {index + 1}: {personalizedActionPoint.header}</h4>
+                      <div className="flex-1">
+                        <span className="font-medium text-gray-900">Action Point {index + 1}: </span>
+                        <SafeHtmlRenderer
+                          html={personalizedActionPoint.header}
+                          className="font-medium text-gray-900 inline"
+                          fallback={personalizedActionPoint.header}
+                        />
+                      </div>
                       <button
                         onClick={() => handleActionPointToggle(actionPointId)}
-                        className="text-red-600 hover:text-red-800 text-sm"
+                        className="text-red-600 hover:text-red-800 text-sm ml-2"
                       >
                         Remove
                       </button>
                     </div>
-                    <p className="text-gray-700 text-sm">{personalizedActionPoint.details}</p>
+                    <SafeHtmlRenderer
+                      html={personalizedActionPoint.details}
+                      className="text-gray-700 text-sm"
+                      fallback={personalizedActionPoint.details}
+                    />
                   </div>
                 );
               })}
@@ -259,8 +271,16 @@ export default function SessionPlanForm({ session, client, existingPlan, onClose
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
-                          <h5 className="font-medium text-gray-900">{personalizedActionPoint.header}</h5>
-                          <p className="text-sm text-gray-600 mt-1">{personalizedActionPoint.details}</p>
+                          <SafeHtmlRenderer
+                            html={personalizedActionPoint.header}
+                            className="font-medium text-gray-900"
+                            fallback={personalizedActionPoint.header}
+                          />
+                          <SafeHtmlRenderer
+                            html={personalizedActionPoint.details}
+                            className="text-sm text-gray-600 mt-1"
+                            fallback={personalizedActionPoint.details}
+                          />
                         </div>
                         <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
                           isSelected ? 'border-gray-900 bg-gray-900' : 'border-gray-300'
