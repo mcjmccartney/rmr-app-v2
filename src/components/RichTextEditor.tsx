@@ -20,6 +20,29 @@ export default function RichTextEditor({
 }: RichTextEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null);
   const [isFocused, setIsFocused] = useState(false);
+  const [selectionState, setSelectionState] = useState({
+    bold: false,
+    italic: false,
+    underline: false
+  });
+
+  // Update selection state when selection changes
+  const updateSelectionState = () => {
+    try {
+      setSelectionState({
+        bold: document.queryCommandState('bold'),
+        italic: document.queryCommandState('italic'),
+        underline: document.queryCommandState('underline')
+      });
+    } catch {
+      // Fallback if queryCommandState fails
+      setSelectionState({
+        bold: false,
+        italic: false,
+        underline: false
+      });
+    }
+  };
 
   // Initialize editor content
   useEffect(() => {
@@ -42,11 +65,28 @@ export default function RichTextEditor({
     }
   }, [value]);
 
+  // Add selection change listeners
+  useEffect(() => {
+    const handleSelectionChange = () => {
+      // Only update if this editor is focused
+      if (document.activeElement === editorRef.current) {
+        updateSelectionState();
+      }
+    };
+
+    document.addEventListener('selectionchange', handleSelectionChange);
+    return () => {
+      document.removeEventListener('selectionchange', handleSelectionChange);
+    };
+  }, []);
+
   // Handle content changes
   const handleInput = () => {
     if (editorRef.current) {
       const content = editorRef.current.innerHTML;
       onChange(content);
+      // Update selection state after content changes
+      updateSelectionState();
     }
   };
 
@@ -89,19 +129,30 @@ export default function RichTextEditor({
   // Format text with the specified command
   const formatText = (command: string) => {
     if (disabled) return;
-    
+
     document.execCommand(command, false);
     editorRef.current?.focus();
     handleInput();
   };
 
-  // Check if a format is currently active
-  const isFormatActive = (command: string): boolean => {
-    try {
-      return document.queryCommandState(command);
-    } catch {
-      return false;
-    }
+  // Handle focus events
+  const handleFocus = () => {
+    setIsFocused(true);
+    updateSelectionState();
+  };
+
+  const handleBlur = () => {
+    setIsFocused(false);
+  };
+
+  // Handle mouse up to catch selection changes via mouse
+  const handleMouseUp = () => {
+    updateSelectionState();
+  };
+
+  // Handle key up to catch selection changes via keyboard
+  const handleKeyUp = () => {
+    updateSelectionState();
   };
 
   // Handle paste to clean up formatting and preserve line breaks
@@ -127,7 +178,7 @@ export default function RichTextEditor({
           onClick={() => formatText('bold')}
           disabled={disabled}
           className={`p-2 rounded hover:bg-gray-200 transition-colors ${
-            isFormatActive('bold') ? 'bg-gray-300' : ''
+            selectionState.bold ? 'bg-gray-300' : ''
           } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
           title="Bold (Ctrl+B)"
         >
@@ -138,7 +189,7 @@ export default function RichTextEditor({
           onClick={() => formatText('italic')}
           disabled={disabled}
           className={`p-2 rounded hover:bg-gray-200 transition-colors ${
-            isFormatActive('italic') ? 'bg-gray-300' : ''
+            selectionState.italic ? 'bg-gray-300' : ''
           } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
           title="Italic (Ctrl+I)"
         >
@@ -149,7 +200,7 @@ export default function RichTextEditor({
           onClick={() => formatText('underline')}
           disabled={disabled}
           className={`p-2 rounded hover:bg-gray-200 transition-colors ${
-            isFormatActive('underline') ? 'bg-gray-300' : ''
+            selectionState.underline ? 'bg-gray-300' : ''
           } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
           title="Underline (Ctrl+U)"
         >
@@ -162,14 +213,16 @@ export default function RichTextEditor({
         ref={editorRef}
         contentEditable={!disabled}
         onInput={handleInput}
-        onFocus={() => setIsFocused(true)}
-        onBlur={() => setIsFocused(false)}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
         onPaste={handlePaste}
         onKeyDown={handleKeyDown}
+        onKeyUp={handleKeyUp}
+        onMouseUp={handleMouseUp}
         className={`p-3 min-h-[100px] focus:outline-none ${
           disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'
         }`}
-        style={{ 
+        style={{
           wordBreak: 'break-word',
           overflowWrap: 'break-word'
         }}
