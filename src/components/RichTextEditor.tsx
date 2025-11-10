@@ -24,10 +24,20 @@ export default function RichTextEditor({
   // Initialize editor content
   useEffect(() => {
     if (editorRef.current && editorRef.current.innerHTML !== value) {
-      // Convert paragraph tags back to double line breaks for editing
-      const editableContent = (value || '')
-        .replace(/<\/p>\s*<p>/gi, '<br><br>')
-        .replace(/<\/?p>/gi, '');
+      let editableContent = value || '';
+
+      // If content doesn't contain HTML tags, it's plain text - convert line breaks
+      if (!/<[^>]+>/.test(editableContent)) {
+        editableContent = editableContent
+          .replace(/\n\n/g, '<br><br>') // Double line breaks to paragraph breaks
+          .replace(/\n/g, '<br>'); // Single line breaks to HTML breaks
+      } else {
+        // If it's HTML, convert paragraph tags back to double line breaks for editing
+        editableContent = editableContent
+          .replace(/<\/p>\s*<p>/gi, '<br><br>')
+          .replace(/<\/?p>/gi, '');
+      }
+
       editorRef.current.innerHTML = editableContent;
     }
   }, [value]);

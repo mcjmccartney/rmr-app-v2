@@ -52,19 +52,24 @@ function sanitizeHtml(html: string): string {
 // Convert plain text to HTML with basic formatting preservation
 function textToHtml(text: string): string {
   if (!text) return '';
-  
+
   // If it already contains HTML tags, assume it's HTML
   if (/<[^>]+>/.test(text)) {
     return sanitizeHtml(text);
   }
-  
-  // Convert plain text to HTML
-  return text
-    .replace(/\n\n/g, '<br><br>') // Double line breaks
-    .replace(/\n/g, '<br>') // Single line breaks
+
+  // Convert plain text to HTML - handle line breaks properly
+  let htmlText = text
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // **bold**
     .replace(/\*(.*?)\*/g, '<em>$1</em>') // *italic*
     .replace(/__(.*?)__/g, '<u>$1</u>'); // __underline__
+
+  // Handle line breaks - convert double line breaks to paragraph breaks
+  htmlText = htmlText
+    .replace(/\n\n+/g, '<br><br>') // Multiple line breaks to double breaks
+    .replace(/\n/g, '<br>'); // Single line breaks to HTML breaks
+
+  return htmlText;
 }
 
 export default function SafeHtmlRenderer({ 
