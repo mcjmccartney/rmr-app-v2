@@ -46,6 +46,7 @@ function SessionPlanContent() {
   const [selectedActionPoints, setSelectedActionPoints] = useState<string[]>([]);
   const [showActionPoints, setShowActionPoints] = useState(false);
   const [showMainGoals, setShowMainGoals] = useState(false);
+  const [hasMainGoals, setHasMainGoals] = useState(true);
   const [editableActionPoints, setEditableActionPoints] = useState<{[key: string]: {header: string, details: string}}>({});
   const [actionPointSearch, setActionPointSearch] = useState('');
   const [expandedActionPoints, setExpandedActionPoints] = useState<Set<string>>(new Set());
@@ -569,6 +570,31 @@ function SessionPlanContent() {
     });
   }, []);
 
+  // Remove main goals section
+  const removeMainGoals = useCallback(() => {
+    setHasMainGoals(false);
+    setShowMainGoals(false);
+    // Clear main goals content
+    setFormData(prev => ({
+      ...prev,
+      mainGoal1: '',
+      mainGoal2: '',
+      mainGoal3: '',
+      mainGoal4: '',
+      explanationOfBehaviour: ''
+    }));
+    setLegacyHasUnsavedChanges(true);
+    trackChange('hasTextChanges', false);
+  }, [trackChange]);
+
+  // Add main goals section back
+  const addMainGoals = useCallback(() => {
+    setHasMainGoals(true);
+    setShowMainGoals(true);
+    setLegacyHasUnsavedChanges(true);
+    trackChange('hasTextChanges', false);
+  }, [trackChange]);
+
   const handlePreviewAndEdit = async () => {
     if (!currentSession || !currentClient) return;
 
@@ -629,14 +655,14 @@ function SessionPlanContent() {
       sessionDate: new Date(currentSession.bookingDate).toLocaleDateString('en-GB'),
       sessionTime: currentSession.bookingTime.substring(0, 5), // Ensure HH:mm format (remove seconds)
 
-      // Main goals (current form state) - Add bullet points before each goal
-      mainGoal1: formData.mainGoal1 ? `• ${formData.mainGoal1}` : '',
-      mainGoal2: formData.mainGoal2 ? `• ${formData.mainGoal2}` : '',
-      mainGoal3: formData.mainGoal3 ? `• ${formData.mainGoal3}` : '',
-      mainGoal4: formData.mainGoal4 ? `• ${formData.mainGoal4}` : '',
+      // Main goals (current form state) - Only include if hasMainGoals is true
+      mainGoal1: hasMainGoals && formData.mainGoal1 ? `• ${formData.mainGoal1}` : '',
+      mainGoal2: hasMainGoals && formData.mainGoal2 ? `• ${formData.mainGoal2}` : '',
+      mainGoal3: hasMainGoals && formData.mainGoal3 ? `• ${formData.mainGoal3}` : '',
+      mainGoal4: hasMainGoals && formData.mainGoal4 ? `• ${formData.mainGoal4}` : '',
 
-      // Explanation (current form state)
-      explanationOfBehaviour: formData.explanationOfBehaviour || '',
+      // Explanation (current form state) - Only include if hasMainGoals is true
+      explanationOfBehaviour: hasMainGoals ? (formData.explanationOfBehaviour || '') : '',
 
       // Action points (current selection - use edited versions if available, otherwise personalized)
       actionPoints: selectedActionPoints.map((actionPointId) => {
@@ -824,17 +850,30 @@ function SessionPlanContent() {
 
               <div className="space-y-6">
                 {/* Main Goals and Explanation - Hidden behind reveal button */}
-                <div>
-                  <button
-                    onClick={() => setShowMainGoals(!showMainGoals)}
-                    className="w-full bg-gray-100 text-gray-700 px-4 py-3 rounded-md hover:bg-gray-200 transition-colors text-sm font-medium flex items-center justify-between"
-                  >
-                    <span>Main Goals & Explanation of Behaviour</span>
-                    <ChevronDown
-                      size={16}
-                      className={`transform transition-transform ${showMainGoals ? 'rotate-180' : ''}`}
-                    />
-                  </button>
+                {hasMainGoals ? (
+                  <div>
+                    <button
+                      onClick={() => setShowMainGoals(!showMainGoals)}
+                      className="w-full bg-gray-100 text-gray-700 px-4 py-3 rounded-md hover:bg-gray-200 transition-colors text-sm font-medium flex items-center justify-between"
+                    >
+                      <span>Main Goals & Explanation of Behaviour</span>
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeMainGoals();
+                          }}
+                          className="text-red-600 hover:text-red-800 text-xs px-2 py-1 rounded hover:bg-red-50"
+                          title="Remove main goals section"
+                        >
+                          Remove
+                        </button>
+                        <ChevronDown
+                          size={16}
+                          className={`transform transition-transform ${showMainGoals ? 'rotate-180' : ''}`}
+                        />
+                      </div>
+                    </button>
 
                   {showMainGoals && (
                     <div className="mt-4 space-y-6 border border-gray-200 p-4 rounded-md">
@@ -912,7 +951,17 @@ function SessionPlanContent() {
                       </div>
                     </div>
                   )}
-                </div>
+                  </div>
+                ) : (
+                  <div className="mb-6">
+                    <button
+                      onClick={addMainGoals}
+                      className="w-full bg-amber-800 text-white px-4 py-3 rounded-md hover:bg-amber-700 transition-colors text-sm font-medium"
+                    >
+                      Add Main Goals & Explanation of Behaviour
+                    </button>
+                  </div>
+                )}
 
                 {/* Action Points Section */}
                 <div>
