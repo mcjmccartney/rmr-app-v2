@@ -20,7 +20,15 @@ function sanitizeHtml(html: string): string {
   
   // Remove any javascript: links
   sanitized = sanitized.replace(/javascript:/gi, '');
-  
+
+  // Convert double line breaks to paragraph breaks for better spacing
+  sanitized = sanitized.replace(/<br\s*\/?>\s*<br\s*\/?>/gi, '</p><p>');
+
+  // Wrap content in paragraphs if it contains paragraph breaks
+  if (sanitized.includes('</p><p>')) {
+    sanitized = '<p>' + sanitized + '</p>';
+  }
+
   // Only allow specific safe tags
   const allowedTags = ['b', 'strong', 'i', 'em', 'u', 'br', 'p', 'div', 'span'];
   const tagRegex = /<\/?([a-zA-Z][a-zA-Z0-9]*)\b[^>]*>/g;
@@ -52,7 +60,8 @@ function textToHtml(text: string): string {
   
   // Convert plain text to HTML
   return text
-    .replace(/\n/g, '<br>')
+    .replace(/\n\n/g, '<br><br>') // Double line breaks
+    .replace(/\n/g, '<br>') // Single line breaks
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // **bold**
     .replace(/\*(.*?)\*/g, '<em>$1</em>') // *italic*
     .replace(/__(.*?)__/g, '<u>$1</u>'); // __underline__
@@ -77,8 +86,8 @@ export default function SafeHtmlRenderer({
   }
 
   return (
-    <div 
-      className={className}
+    <div
+      className={`${className} [&_p]:mb-4 [&_p:last-child]:mb-0`}
       dangerouslySetInnerHTML={{ __html: sanitizedHtml || fallback }}
       style={{
         wordBreak: 'break-word',

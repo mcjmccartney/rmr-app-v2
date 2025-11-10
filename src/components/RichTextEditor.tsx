@@ -24,7 +24,11 @@ export default function RichTextEditor({
   // Initialize editor content
   useEffect(() => {
     if (editorRef.current && editorRef.current.innerHTML !== value) {
-      editorRef.current.innerHTML = value || '';
+      // Convert paragraph tags back to double line breaks for editing
+      const editableContent = (value || '')
+        .replace(/<\/p>\s*<p>/gi, '<br><br>')
+        .replace(/<\/?p>/gi, '');
+      editorRef.current.innerHTML = editableContent;
     }
   }, [value]);
 
@@ -33,6 +37,42 @@ export default function RichTextEditor({
     if (editorRef.current) {
       const content = editorRef.current.innerHTML;
       onChange(content);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (disabled) return;
+
+    // Handle Enter key to create proper paragraph breaks
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      document.execCommand('insertHTML', false, '<br><br>');
+      return;
+    }
+
+    // Handle Shift+Enter for single line break
+    if (e.key === 'Enter' && e.shiftKey) {
+      e.preventDefault();
+      document.execCommand('insertHTML', false, '<br>');
+      return;
+    }
+
+    // Handle keyboard shortcuts
+    if (e.ctrlKey || e.metaKey) {
+      switch (e.key.toLowerCase()) {
+        case 'b':
+          e.preventDefault();
+          formatText('bold');
+          break;
+        case 'i':
+          e.preventDefault();
+          formatText('italic');
+          break;
+        case 'u':
+          e.preventDefault();
+          formatText('underline');
+          break;
+      }
     }
   };
 
@@ -54,34 +94,19 @@ export default function RichTextEditor({
     }
   };
 
-  // Handle paste to clean up formatting
+  // Handle paste to clean up formatting and preserve line breaks
   const handlePaste = (e: React.ClipboardEvent) => {
+    if (disabled) return;
+
     e.preventDefault();
     const text = e.clipboardData.getData('text/plain');
-    document.execCommand('insertText', false, text);
+    // Convert line breaks to HTML breaks for proper display
+    const htmlContent = text.replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>');
+    document.execCommand('insertHTML', false, htmlContent);
     handleInput();
   };
 
-  // Handle key events
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    // Allow Ctrl+B, Ctrl+I, Ctrl+U for formatting
-    if (e.ctrlKey || e.metaKey) {
-      switch (e.key.toLowerCase()) {
-        case 'b':
-          e.preventDefault();
-          formatText('bold');
-          break;
-        case 'i':
-          e.preventDefault();
-          formatText('italic');
-          break;
-        case 'u':
-          e.preventDefault();
-          formatText('underline');
-          break;
-      }
-    }
-  };
+
 
   return (
     <div className={`border border-gray-300 rounded-md ${isFocused ? 'ring-2 ring-amber-800 border-amber-800' : ''} ${className}`}>
