@@ -45,6 +45,7 @@ function SessionPlanContent() {
 
   const [selectedActionPoints, setSelectedActionPoints] = useState<string[]>([]);
   const [showActionPoints, setShowActionPoints] = useState(false);
+  const [showMainGoals, setShowMainGoals] = useState(false);
   const [editableActionPoints, setEditableActionPoints] = useState<{[key: string]: {header: string, details: string}}>({});
   const [actionPointSearch, setActionPointSearch] = useState('');
   const [existingSessionPlan, setExistingSessionPlan] = useState<SessionPlan | null>(null);
@@ -531,6 +532,26 @@ function SessionPlanContent() {
     trackChange('hasActionPointChanges', false);
   }, [selectedActionPoints, trackChange]);
 
+  // Add a blank action point to the session plan
+  const addBlankActionPoint = useCallback(() => {
+    const blankActionPointId = `blank-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+    // Add to selected action points
+    setSelectedActionPoints(prev => [...prev, blankActionPointId]);
+
+    // Add to editable action points with blank content
+    setEditableActionPoints(prev => ({
+      ...prev,
+      [blankActionPointId]: {
+        header: '',
+        details: ''
+      }
+    }));
+
+    setLegacyHasUnsavedChanges(true);
+    trackChange('hasActionPointChanges', false);
+  }, [trackChange]);
+
   const handlePreviewAndEdit = async () => {
     if (!currentSession || !currentClient) return;
 
@@ -602,7 +623,7 @@ function SessionPlanContent() {
 
       // Action points (current selection - use edited versions if available, otherwise personalized)
       actionPoints: selectedActionPoints.map((actionPointId) => {
-        // Check if we have an edited version
+        // Check if we have an edited version (for both blank and library action points)
         if (editableActionPoints[actionPointId]) {
           return {
             header: editableActionPoints[actionPointId].header,
@@ -610,7 +631,12 @@ function SessionPlanContent() {
           };
         }
 
-        // Otherwise use personalized version with correct gender
+        // For blank action points without content, skip them
+        if (actionPointId.startsWith('blank-')) {
+          return null;
+        }
+
+        // Otherwise use personalized version with correct gender for library action points
         const actionPoint = actionPoints.find(ap => ap.id === actionPointId);
         if (!actionPoint) return null;
 
@@ -780,104 +806,131 @@ function SessionPlanContent() {
               </div>
 
               <div className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Main Goal 1
-              </label>
-              <textarea
-                value={formData.mainGoal1}
-                onChange={(e) => handleInputChange('mainGoal1', e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-800 focus:border-amber-800 resize-none"
-                rows={2}
-              />
-            </div>
+                {/* Main Goals and Explanation - Hidden behind reveal button */}
+                <div>
+                  <button
+                    onClick={() => setShowMainGoals(!showMainGoals)}
+                    className="w-full bg-gray-100 text-gray-700 px-4 py-3 rounded-md hover:bg-gray-200 transition-colors text-sm font-medium flex items-center justify-between"
+                  >
+                    <span>Main Goals & Explanation of Behaviour</span>
+                    <ChevronDown
+                      size={16}
+                      className={`transform transition-transform ${showMainGoals ? 'rotate-180' : ''}`}
+                    />
+                  </button>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Main Goal 2
-              </label>
-              <textarea
-                value={formData.mainGoal2}
-                onChange={(e) => handleInputChange('mainGoal2', e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-800 focus:border-amber-800 resize-none"
-                rows={2}
-              />
-            </div>
+                  {showMainGoals && (
+                    <div className="mt-4 space-y-6 border border-gray-200 p-4 rounded-md">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Main Goal 1
+                        </label>
+                        <textarea
+                          value={formData.mainGoal1}
+                          onChange={(e) => handleInputChange('mainGoal1', e.target.value)}
+                          className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-800 focus:border-amber-800 resize-none"
+                          rows={2}
+                        />
+                      </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Main Goal 3
-              </label>
-              <textarea
-                value={formData.mainGoal3}
-                onChange={(e) => handleInputChange('mainGoal3', e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-800 focus:border-amber-800 resize-none"
-                rows={2}
-              />
-            </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Main Goal 2
+                        </label>
+                        <textarea
+                          value={formData.mainGoal2}
+                          onChange={(e) => handleInputChange('mainGoal2', e.target.value)}
+                          className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-800 focus:border-amber-800 resize-none"
+                          rows={2}
+                        />
+                      </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Main Goal 4
-              </label>
-              <textarea
-                value={formData.mainGoal4}
-                onChange={(e) => handleInputChange('mainGoal4', e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-800 focus:border-amber-800 resize-none"
-                rows={2}
-              />
-            </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Main Goal 3
+                        </label>
+                        <textarea
+                          value={formData.mainGoal3}
+                          onChange={(e) => handleInputChange('mainGoal3', e.target.value)}
+                          className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-800 focus:border-amber-800 resize-none"
+                          rows={2}
+                        />
+                      </div>
 
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Explanation of Behaviour
-                </label>
-                <span className={`text-xs ${
-                  formData.explanationOfBehaviour.length > 1600 ? 'text-red-500' : 'text-gray-500'
-                }`}>
-                  {formData.explanationOfBehaviour.length}/1600
-                </span>
-              </div>
-              <textarea
-                value={formData.explanationOfBehaviour}
-                onChange={(e) => {
-                  if (e.target.value.length <= 1600) {
-                    handleInputChange('explanationOfBehaviour', e.target.value);
-                  }
-                }}
-                className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-800 focus:border-amber-800 resize-none"
-                rows={8}
-                maxLength={1600}
-                placeholder="Describe the behaviour patterns, triggers, and context..."
-              />
-            </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Main Goal 4
+                        </label>
+                        <textarea
+                          value={formData.mainGoal4}
+                          onChange={(e) => handleInputChange('mainGoal4', e.target.value)}
+                          className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-800 focus:border-amber-800 resize-none"
+                          rows={2}
+                        />
+                      </div>
 
-            {/* Action Points */}
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <label className="block text-sm font-medium text-gray-700">
-                  Action Points
-                </label>
-                <button
-                  onClick={() => setShowActionPoints(!showActionPoints)}
-                  className="bg-amber-800 text-white px-4 py-2 rounded-md hover:bg-amber-700 transition-colors text-sm"
-                >
-                  {showActionPoints ? 'Edit Action Points' : 'Add Action Points'}
-                </button>
-              </div>
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <label className="block text-sm font-medium text-gray-700">
+                            Explanation of Behaviour
+                          </label>
+                          <span className={`text-xs ${
+                            formData.explanationOfBehaviour.length > 1600 ? 'text-red-500' : 'text-gray-500'
+                          }`}>
+                            {formData.explanationOfBehaviour.length}/1600
+                          </span>
+                        </div>
+                        <textarea
+                          value={formData.explanationOfBehaviour}
+                          onChange={(e) => {
+                            if (e.target.value.length <= 1600) {
+                              handleInputChange('explanationOfBehaviour', e.target.value);
+                            }
+                          }}
+                          className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-800 focus:border-amber-800 resize-none"
+                          rows={8}
+                          maxLength={1600}
+                          placeholder="Describe the behaviour patterns, triggers, and context..."
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
 
-              {/* Selected Action Points - Editable */}
-              {selectedActionPoints.length > 0 && !showActionPoints && (
-                <div className="space-y-3 mb-4">
-                  {selectedActionPoints.map((actionPointId, index) => {
-                    // Check if we have an editable version, otherwise create one
-                    if (!editableActionPoints[actionPointId]) {
-                      initializeEditableActionPoint(actionPointId);
-                    }
+                {/* Action Points - Always visible */}
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Action Points
+                    </label>
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => setShowActionPoints(!showActionPoints)}
+                        className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors text-sm"
+                      >
+                        {showActionPoints ? 'Hide Library' : 'Show Library'}
+                      </button>
+                      <button
+                        onClick={addBlankActionPoint}
+                        className="bg-amber-800 text-white px-4 py-2 rounded-md hover:bg-amber-700 transition-colors text-sm"
+                      >
+                        Add Blank Action Point
+                      </button>
+                    </div>
+                  </div>
 
-                    const editableContent = editableActionPoints[actionPointId];
-                    if (!editableContent) return null;
+                  {/* Selected Action Points - Always visible and editable */}
+                  <div className="border border-gray-200 rounded-md" style={{ minHeight: '400px' }}>
+                    {selectedActionPoints.length > 0 ? (
+                      <div className="space-y-3 p-4">
+                        {selectedActionPoints.map((actionPointId, index) => {
+                          // Check if we have an editable version, otherwise create one for library action points
+                          if (!editableActionPoints[actionPointId] && !actionPointId.startsWith('blank-')) {
+                            initializeEditableActionPoint(actionPointId);
+                          }
+
+                          const editableContent = editableActionPoints[actionPointId];
+                          if (!editableContent) return null;
 
                     return (
                       <div key={actionPointId} className="border border-gray-200 p-4 rounded-md">
@@ -937,92 +990,98 @@ function SessionPlanContent() {
                           />
                         </div>
 
-                        {/* Editable Details */}
-                        <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">
-                            Details
-                          </label>
-                          <RichTextEditor
-                            value={editableContent.details}
-                            onChange={(value) => updateEditableActionPoint(actionPointId, 'details', value)}
-                            placeholder="Action point details"
-                            className="w-full text-sm"
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-
-              {/* Action Point Selector */}
-              {showActionPoints && (
-                <div className="border border-gray-200 p-4 rounded-md max-h-96 overflow-y-auto mb-6">
-                  <h4 className="font-medium mb-3 text-gray-900">Select Action Points:</h4>
-
-                  {/* Search Bar */}
-                  <div className="mb-4">
-                    <input
-                      type="text"
-                      placeholder="Search action points..."
-                      value={actionPointSearch}
-                      onChange={(e) => setActionPointSearch(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-amber-500 focus:border-transparent text-sm"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    {actionPoints
-                      .filter(actionPoint => {
-                        if (!actionPointSearch) return true;
-                        const searchLower = actionPointSearch.toLowerCase();
-                        return actionPoint.header.toLowerCase().includes(searchLower) ||
-                               actionPoint.details.toLowerCase().includes(searchLower);
-                      })
-                      .map(actionPoint => {
-                      const isSelected = selectedActionPoints.includes(actionPoint.id);
-                      const personalizedActionPoint = personalizeActionPoint(
-                        actionPoint,
-                        getSessionDogName(),
-                        getDogGender()
-                      );
-
-                      return (
-                        <div
-                          key={actionPoint.id}
-                          className={`p-3 border rounded-md cursor-pointer transition-colors ${
-                            isSelected
-                              ? 'border-amber-800 bg-amber-800/10'
-                              : 'border-gray-300 hover:border-gray-400'
-                          }`}
-                          onClick={() => handleActionPointToggle(actionPoint.id)}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="flex-1">
-                              <SafeHtmlRenderer
-                                html={personalizedActionPoint.header}
-                                className="font-medium text-gray-900"
-                                fallback={personalizedActionPoint.header}
-                              />
-                              <SafeHtmlRenderer
-                                html={personalizedActionPoint.details}
-                                className="text-sm text-gray-600 mt-1"
-                                fallback={personalizedActionPoint.details}
-                              />
-                            </div>
-                            <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
-                              isSelected ? 'border-amber-800 bg-amber-800' : 'border-gray-300'
-                            }`}>
-                              {isSelected && <span className="text-white text-xs">✓</span>}
-                            </div>
+                          {/* Editable Details */}
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">
+                              Details
+                            </label>
+                            <RichTextEditor
+                              value={editableContent.details}
+                              onChange={(value) => updateEditableActionPoint(actionPointId, 'details', value)}
+                              placeholder="Action point details"
+                              className="w-full text-sm"
+                            />
                           </div>
                         </div>
                       );
                     })}
                   </div>
+                ) : (
+                  <div className="p-8 text-center text-gray-500">
+                    <p>No action points selected yet.</p>
+                    <p className="text-sm mt-1">Use "Show Library" to select from predefined action points or "Add Blank Action Point" to create custom ones.</p>
+                  </div>
+                )}
+              </div>
+
+                  {/* Action Point Library - Only shown when requested */}
+                  {showActionPoints && (
+                    <div className="border border-gray-200 p-4 rounded-md max-h-96 overflow-y-auto mb-6">
+                      <h4 className="font-medium mb-3 text-gray-900">Action Point Library:</h4>
+
+                      {/* Search Bar */}
+                      <div className="mb-4">
+                        <input
+                          type="text"
+                          placeholder="Search action points..."
+                          value={actionPointSearch}
+                          onChange={(e) => setActionPointSearch(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-amber-500 focus:border-transparent text-sm"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        {actionPoints
+                          .filter(actionPoint => {
+                            if (!actionPointSearch) return true;
+                            const searchLower = actionPointSearch.toLowerCase();
+                            return actionPoint.header.toLowerCase().includes(searchLower) ||
+                                   actionPoint.details.toLowerCase().includes(searchLower);
+                          })
+                          .map(actionPoint => {
+                          const isSelected = selectedActionPoints.includes(actionPoint.id);
+                          const personalizedActionPoint = personalizeActionPoint(
+                            actionPoint,
+                            getSessionDogName(),
+                            getDogGender()
+                          );
+
+                          return (
+                            <div
+                              key={actionPoint.id}
+                              className={`p-3 border rounded-md cursor-pointer transition-colors ${
+                                isSelected
+                                  ? 'border-amber-800 bg-amber-800/10'
+                                  : 'border-gray-300 hover:border-gray-400'
+                              }`}
+                              onClick={() => handleActionPointToggle(actionPoint.id)}
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="flex-1">
+                                  <SafeHtmlRenderer
+                                    html={personalizedActionPoint.header}
+                                    className="font-medium text-gray-900"
+                                    fallback={personalizedActionPoint.header}
+                                  />
+                                  <SafeHtmlRenderer
+                                    html={personalizedActionPoint.details}
+                                    className="text-sm text-gray-600 mt-1"
+                                    fallback={personalizedActionPoint.details}
+                                  />
+                                </div>
+                                <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
+                                  isSelected ? 'border-amber-800 bg-amber-800' : 'border-gray-300'
+                                }`}>
+                                  {isSelected && <span className="text-white text-xs">✓</span>}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
 
                 <div className="border-t border-gray-200 pt-6 space-y-3">
                   {/* Auto-save status */}
