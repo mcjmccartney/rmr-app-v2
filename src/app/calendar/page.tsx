@@ -11,6 +11,7 @@ import EditClientModal from '@/components/modals/EditClientModal';
 import BehaviouralBriefModal from '@/components/modals/BehaviouralBriefModal';
 import BehaviourQuestionnaireModal from '@/components/modals/BehaviourQuestionnaireModal';
 import AddModal from '@/components/AddModal';
+import { useSessionColors, getSessionColor } from '@/hooks/useSessionColors';
 import { Session, Client, BehaviouralBrief, BehaviourQuestionnaire, SessionPlan } from '@/types';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek } from 'date-fns';
 import { formatTime, formatDayDate, formatMonthYear, combineDateAndTime } from '@/utils/dateFormatting';
@@ -144,6 +145,21 @@ export default function CalendarPage() {
   const [selectedDayDate, setSelectedDayDate] = useState<Date | null>(null);
   const [hideWeekends, setHideWeekends] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Check if essential data for calendar colors is loaded
+  const isEssentialDataLoaded = state.sessions.length > 0 ||
+    (state.clients.length >= 0 && state.behaviourQuestionnaires.length >= 0 &&
+     state.bookingTerms.length >= 0 && state.sessionPlans.length >= 0);
+
+  // Memoized session colors for performance
+  const sessionColorMap = useSessionColors({
+    sessions: state.sessions,
+    clients: state.clients,
+    behaviourQuestionnaires: state.behaviourQuestionnaires,
+    bookingTerms: state.bookingTerms,
+    sessionPlans: state.sessionPlans,
+    clientEmailAliases: state.clientEmailAliases || {}
+  });
 
   // Check for returnSessionId parameter to restore selected session when returning from session-plan
   useEffect(() => {
@@ -494,6 +510,19 @@ export default function CalendarPage() {
   const firstSession = upcomingSessions[0];
   const firstSessionClient = firstSession ? state.clients.find(c => c.id === firstSession.clientId) : null;
 
+  // Show loading screen while essential data is loading
+  if (!isEssentialDataLoaded) {
+    return (
+      <div className="h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-800 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading calendar...</p>
+          <p className="mt-2 text-sm text-gray-500">Preparing session data...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       id="calendar-container"
@@ -678,48 +707,10 @@ export default function CalendarPage() {
                         ? `${timeOnly} | ${session.sessionType}`
                         : `${timeOnly} | Unknown Client`;
 
-                      // Check if client has both booking terms signed and questionnaire filled for this dog
-                      // Include email aliases in the check
-                      const clientEmails = getClientEmails(client, state.clientEmailAliases || {});
-
-                      const hasSignedBookingTerms = clientEmails.length > 0 ?
-                        state.bookingTerms.some(bt =>
-                          clientEmails.includes(bt.email?.toLowerCase() || '')
-                        ) : false;
-                      const hasFilledQuestionnaire = hasQuestionnaireForDog(client, session, state.behaviourQuestionnaires);
-
-
-
-
-                      // Priority: No Client (amber-800) > All Complete (Paid + Terms + Session Plan Sent) (charcoal grey) > Fully Complete + Paid (green) > Terms + Questionnaire (amber) > Default (amber-800)
-                      const isFullyCompleted = hasSignedBookingTerms && (hasFilledQuestionnaire || session.questionnaireBypass);
-                      const isPaid = session.sessionPaid;
-                      const isSessionPlanSent = session.sessionPlanSent;
-                      const isAllComplete = isPaid && hasSignedBookingTerms && isSessionPlanSent;
-
-                      let buttonStyle = {};
-                      let buttonClasses = "";
-
-                      if (!client) {
-                        // No client = amber-800 background
-                        buttonClasses = "w-full bg-amber-800 text-white text-xs px-2 py-1 rounded text-left transition-colors flex-shrink-0 hover:bg-amber-700 cursor-pointer";
-                      } else if (isAllComplete) {
-                        // All complete (Paid + Terms + Session Plan Sent) = dark charcoal grey background (highest priority)
-                        buttonStyle = { backgroundColor: '#36454F' };
-                        buttonClasses = "w-full text-white text-xs px-2 py-1 rounded text-left transition-colors flex-shrink-0 hover:opacity-80 cursor-pointer";
-                      } else if (isFullyCompleted && isPaid) {
-                        // Fully completed AND paid = green background
-                        buttonStyle = { backgroundColor: '#4f6749' };
-                        buttonClasses = "w-full text-white text-xs px-2 py-1 rounded text-left transition-colors flex-shrink-0 hover:opacity-80 cursor-pointer";
-                      } else if (isFullyCompleted) {
-                        // Terms + Questionnaire (but not paid) = amber background
-                        buttonStyle = { backgroundColor: '#e17100' };
-                        buttonClasses = "w-full text-white text-xs px-2 py-1 rounded text-left transition-colors flex-shrink-0 hover:opacity-80 cursor-pointer";
-                      } else {
-                        // Default amber-800 background
-                        buttonStyle = {};
-                        buttonClasses = "w-full bg-amber-800 text-white text-xs px-2 py-1 rounded text-left hover:bg-amber-700 transition-colors flex-shrink-0 cursor-pointer";
-                      }
+                      // Get memoized session color data for performance
+                      const sessionColorData = getSessionColor(session.id, sessionColorMap);
+                      const buttonStyle = { backgroundColor: sessionColorData.backgroundColor };
+                      const buttonClasses = sessionColorData.className;
 
                       return (
                         <button
@@ -785,41 +776,7 @@ export default function CalendarPage() {
         disabled={!firstSession}
         className="text-white px-4 py-1.5 flex-shrink-0 w-full text-left disabled:cursor-default cursor-pointer"
         style={{
-          backgroundColor: (() => {
-            if (!firstSession) return '#973b00';
-
-            // Use the same color logic as calendar sessions
-            const client = firstSessionClient;
-
-            // Check client status
-            const clientEmails = client ? getClientEmails(client, state.clientEmailAliases || {}) : [];
-            const hasSignedBookingTerms = clientEmails.length > 0 ?
-              state.bookingTerms.some(bt => clientEmails.includes(bt.email?.toLowerCase() || '')) : false;
-            const hasFilledQuestionnaire = hasQuestionnaireForDog(client, firstSession, state.behaviourQuestionnaires);
-
-            // Priority: No Client (amber-800) > All Complete (Paid + Terms + Session Plan Sent) (charcoal grey) > Fully Complete + Paid (green) > Terms + Questionnaire (amber) > Default (amber-800)
-            const isFullyCompleted = hasSignedBookingTerms && (hasFilledQuestionnaire || firstSession.questionnaireBypass);
-            const isPaid = firstSession.sessionPaid;
-            const isSessionPlanSent = firstSession.sessionPlanSent;
-            const isAllComplete = isPaid && hasSignedBookingTerms && isSessionPlanSent;
-
-            if (!client) {
-              // No client = amber-800 background
-              return '#973b00';
-            } else if (isAllComplete) {
-              // All complete (Paid + Terms + Session Plan Sent) = dark charcoal grey background (highest priority)
-              return '#36454F';
-            } else if (isFullyCompleted && isPaid) {
-              // Fully completed AND paid = green background
-              return '#4f6749';
-            } else if (isFullyCompleted) {
-              // Terms + Questionnaire (but not paid) = amber background
-              return '#e17100';
-            } else {
-              // Default = amber-800 background
-              return '#973b00';
-            }
-          })()
+          backgroundColor: firstSession ? getSessionColor(firstSession.id, sessionColorMap).backgroundColor : '#973b00'
         }}
       >
         {firstSession ? (
@@ -937,35 +894,10 @@ export default function CalendarPage() {
                 // Check if this session has notes
                 const hasNotes = session.notes && session.notes.trim().length > 0;
 
-                // Determine button style - priority: all complete (paid + terms + session plan sent) (charcoal grey) > fully complete + paid (green) > terms + questionnaire (amber) > default
-                const clientEmails = getClientEmails(client, state.clientEmailAliases || {});
-                const hasSignedBookingTerms = clientEmails.length > 0 ?
-                  state.bookingTerms.some(bt => clientEmails.includes(bt.email?.toLowerCase() || '')) : false;
-                const hasFilledQuestionnaire = hasQuestionnaireForDog(client, session, state.behaviourQuestionnaires);
-                const isPaid = session.sessionPaid;
-                const isFullyCompleted = hasSignedBookingTerms && (hasFilledQuestionnaire || session.questionnaireBypass);
-                const isSessionPlanSent = session.sessionPlanSent;
-                const isAllComplete = isPaid && hasSignedBookingTerms && isSessionPlanSent;
-
-                let buttonClass = "";
-                let buttonStyle = {};
-
-                if (!client) {
-                  buttonClass = "w-full bg-amber-800 text-white p-4 rounded-lg text-left hover:bg-amber-700 transition-colors cursor-pointer";
-                  buttonStyle = {};
-                } else if (isAllComplete) {
-                  buttonClass = "w-full text-white p-4 rounded-lg text-left transition-colors hover:opacity-80 cursor-pointer";
-                  buttonStyle = { backgroundColor: '#36454F' };
-                } else if (isFullyCompleted && isPaid) {
-                  buttonClass = "w-full text-white p-4 rounded-lg text-left transition-colors hover:opacity-80 cursor-pointer";
-                  buttonStyle = { backgroundColor: '#4f6749' };
-                } else if (isFullyCompleted) {
-                  buttonClass = "w-full text-white p-4 rounded-lg text-left transition-colors hover:opacity-80 cursor-pointer";
-                  buttonStyle = { backgroundColor: '#e17100' };
-                } else {
-                  buttonClass = "w-full bg-amber-800 text-white p-4 rounded-lg text-left hover:bg-amber-700 transition-colors cursor-pointer";
-                  buttonStyle = {};
-                }
+                // Get memoized session color data for mobile
+                const sessionColorData = getSessionColor(session.id, sessionColorMap);
+                const buttonClass = sessionColorData.mobileClassName;
+                const buttonStyle = { backgroundColor: sessionColorData.backgroundColor };
 
                 return (
                   <button
@@ -1037,35 +969,10 @@ export default function CalendarPage() {
                   // Check if this session has notes
                   const hasNotes = session.notes && session.notes.trim().length > 0;
 
-                  // Determine button style - priority: all complete (paid + terms + session plan sent) (charcoal grey) > fully complete + paid (green) > terms + questionnaire (amber) > default
-                  const clientEmails = getClientEmails(client, state.clientEmailAliases || {});
-                  const hasSignedBookingTerms = clientEmails.length > 0 ?
-                    state.bookingTerms.some(bt => clientEmails.includes(bt.email?.toLowerCase() || '')) : false;
-                  const hasFilledQuestionnaire = hasQuestionnaireForDog(client, session, state.behaviourQuestionnaires);
-                  const isPaid = session.sessionPaid;
-                  const isFullyCompleted = hasSignedBookingTerms && (hasFilledQuestionnaire || session.questionnaireBypass);
-                  const isSessionPlanSent = session.sessionPlanSent;
-                  const isAllComplete = isPaid && hasSignedBookingTerms && isSessionPlanSent;
-
-                  let buttonClass = "";
-                  let buttonStyle = {};
-
-                  if (!client) {
-                    buttonClass = "w-full bg-amber-800 text-white p-4 rounded-lg text-left hover:bg-amber-700 transition-colors cursor-pointer";
-                    buttonStyle = {};
-                  } else if (isAllComplete) {
-                    buttonClass = "w-full text-white p-4 rounded-lg text-left transition-colors hover:opacity-80 cursor-pointer";
-                    buttonStyle = { backgroundColor: '#36454F' };
-                  } else if (isFullyCompleted && isPaid) {
-                    buttonClass = "w-full text-white p-4 rounded-lg text-left transition-colors hover:opacity-80 cursor-pointer";
-                    buttonStyle = { backgroundColor: '#4f6749' };
-                  } else if (isFullyCompleted) {
-                    buttonClass = "w-full text-white p-4 rounded-lg text-left transition-colors hover:opacity-80 cursor-pointer";
-                    buttonStyle = { backgroundColor: '#e17100' };
-                  } else {
-                    buttonClass = "w-full bg-amber-800 text-white p-4 rounded-lg text-left hover:bg-amber-700 transition-colors cursor-pointer";
-                    buttonStyle = {};
-                  }
+                  // Get memoized session color data for mobile
+                  const sessionColorData = getSessionColor(session.id, sessionColorMap);
+                  const buttonClass = sessionColorData.mobileClassName;
+                  const buttonStyle = { backgroundColor: sessionColorData.backgroundColor };
 
                   return (
                     <button

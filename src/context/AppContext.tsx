@@ -1824,56 +1824,46 @@ export function AppProvider({ children }: { children: ReactNode }) {
     console.log('🚀 AppContext: Initializing app with optimized loading...');
     const initializeApp = async () => {
       try {
-        // Load only essential data first for faster initial load
-        console.log('📊 Loading essential data...');
+        // Load essential data for calendar colors first - all at once for immediate visual consistency
+        console.log('📊 Loading essential calendar data...');
         await Promise.all([
           loadClients(),
           loadSessions(),
+          loadBehaviourQuestionnaires(), // Needed for session colors
+          loadBookingTerms(), // Needed for session colors
+          loadSessionPlans(), // Needed for session colors
+          loadClientEmailAliases(), // Needed for session colors
         ]);
 
-        console.log('✅ Essential data loaded, setting up real-time subscriptions...');
+        console.log('✅ Essential calendar data loaded, setting up real-time subscriptions...');
         // Setup real-time subscriptions early for essential data
         setupRealtimeSubscriptions();
 
-        // Load secondary data in background with staggered timing
-        console.log('📊 Loading secondary data in background...');
+        // Load remaining secondary data in background with reduced delays
+        console.log('📊 Loading remaining data in background...');
         setTimeout(async () => {
           try {
             await Promise.all([
               loadMemberships(),
-              loadClientEmailAliases(),
               loadActionPoints(),
+              loadBehaviouralBriefs(),
             ]);
             console.log('✅ Secondary data batch 1 loaded');
           } catch (error) {
             console.error('❌ Failed to load secondary data batch 1:', error);
           }
-        }, 500);
-
-        setTimeout(async () => {
-          try {
-            await Promise.all([
-              loadBehaviouralBriefs(),
-              loadBehaviourQuestionnaires(),
-              loadBookingTerms(),
-            ]);
-            console.log('✅ Secondary data batch 2 loaded');
-          } catch (error) {
-            console.error('❌ Failed to load secondary data batch 2:', error);
-          }
-        }, 1000);
+        }, 100); // Reduced from 500ms
 
         setTimeout(async () => {
           try {
             await Promise.all([
               loadSessionParticipants(),
-              loadSessionPlans(),
             ]);
-            console.log('✅ Secondary data batch 3 loaded');
+            console.log('✅ Secondary data batch 2 loaded');
           } catch (error) {
-            console.error('❌ Failed to load secondary data batch 3:', error);
+            console.error('❌ Failed to load secondary data batch 2:', error);
           }
-        }, 1500);
+        }, 200); // Reduced from 1500ms
 
         isInitializedRef.current = true;
         console.log('🎉 App initialization complete with optimized loading');
