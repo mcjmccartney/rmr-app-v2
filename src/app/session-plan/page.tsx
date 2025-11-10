@@ -48,6 +48,7 @@ function SessionPlanContent() {
   const [showMainGoals, setShowMainGoals] = useState(false);
   const [editableActionPoints, setEditableActionPoints] = useState<{[key: string]: {header: string, details: string}}>({});
   const [actionPointSearch, setActionPointSearch] = useState('');
+  const [expandedActionPoints, setExpandedActionPoints] = useState<Set<string>>(new Set());
   const [existingSessionPlan, setExistingSessionPlan] = useState<SessionPlan | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [sessionNumber, setSessionNumber] = useState<number>(1);
@@ -548,9 +549,25 @@ function SessionPlanContent() {
       }
     }));
 
+    // Auto-expand the new blank action point for editing
+    setExpandedActionPoints(prev => new Set([...prev, blankActionPointId]));
+
     setLegacyHasUnsavedChanges(true);
     trackChange('hasActionPointChanges', false);
   }, [trackChange]);
+
+  // Toggle action point expansion
+  const toggleActionPointExpansion = useCallback((actionPointId: string) => {
+    setExpandedActionPoints(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(actionPointId)) {
+        newSet.delete(actionPointId);
+      } else {
+        newSet.add(actionPointId);
+      }
+      return newSet;
+    });
+  }, []);
 
   const handlePreviewAndEdit = async () => {
     if (!currentSession || !currentClient) return;
@@ -897,11 +914,11 @@ function SessionPlanContent() {
                   )}
                 </div>
 
-                {/* Action Points - Always visible */}
+                {/* Action Points Section */}
                 <div>
                   <div className="flex items-center justify-between mb-4">
                     <label className="block text-sm font-medium text-gray-700">
-                      Action Points
+                      Action Points ({selectedActionPoints.length})
                     </label>
                     <div className="flex space-x-2">
                       <button
@@ -919,100 +936,148 @@ function SessionPlanContent() {
                     </div>
                   </div>
 
-                  {/* Selected Action Points - Always visible and editable */}
-                  <div className="border border-gray-200 rounded-md" style={{ minHeight: '400px' }}>
+                  {/* Selected Action Points - Collapsible List */}
+                  <div className="space-y-2">
                     {selectedActionPoints.length > 0 ? (
-                      <div className="space-y-3 p-4">
-                        {selectedActionPoints.map((actionPointId, index) => {
-                          // Check if we have an editable version, otherwise create one for library action points
-                          if (!editableActionPoints[actionPointId] && !actionPointId.startsWith('blank-')) {
-                            initializeEditableActionPoint(actionPointId);
+                      selectedActionPoints.map((actionPointId, index) => {
+                        // Check if we have an editable version, otherwise create one for library action points
+                        if (!editableActionPoints[actionPointId] && !actionPointId.startsWith('blank-')) {
+                          initializeEditableActionPoint(actionPointId);
+                        }
+
+                        const editableContent = editableActionPoints[actionPointId];
+                        if (!editableContent) return null;
+
+                        const isExpanded = expandedActionPoints.has(actionPointId);
+
+                        // Get display title for the collapsed state
+                        const getActionPointTitle = () => {
+                          if (editableContent.header.trim()) {
+                            // Strip HTML tags for display
+                            const tempDiv = document.createElement('div');
+                            tempDiv.innerHTML = editableContent.header;
+                            return tempDiv.textContent || tempDiv.innerText || 'Action Point';
                           }
 
-                          const editableContent = editableActionPoints[actionPointId];
-                          if (!editableContent) return null;
+                          // For library action points, try to get original title
+                          if (!actionPointId.startsWith('blank-')) {
+                            const originalActionPoint = actionPoints.find(ap => ap.id === actionPointId);
+                            if (originalActionPoint) {
+                              const tempDiv = document.createElement('div');
+                              tempDiv.innerHTML = originalActionPoint.header;
+                              return tempDiv.textContent || tempDiv.innerText || 'Action Point';
+                            }
+                          }
 
-                    return (
-                      <div key={actionPointId} className="border border-gray-200 p-4 rounded-md">
-                        <div className="flex items-center justify-between mb-3">
-                          <h4 className="font-medium text-gray-900">
-                            Action Point {index + 1}
-                          </h4>
-                          <div className="flex items-center space-x-2">
-                            {/* Move Up Button */}
+                          return 'New Action Point';
+                        };
+
+                        return (
+                          <div key={actionPointId} className="border border-gray-200 rounded-md">
+                            {/* Collapsible Header */}
                             <button
-                              onClick={() => moveActionPoint(actionPointId, 'up')}
-                              disabled={index === 0}
-                              className={`p-1 rounded ${
-                                index === 0
-                                  ? 'text-gray-300 cursor-not-allowed'
-                                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
-                              }`}
-                              title="Move up"
+                              onClick={() => toggleActionPointExpansion(actionPointId)}
+                              className="w-full bg-gray-50 text-gray-700 px-4 py-3 rounded-t-md hover:bg-gray-100 transition-colors text-sm font-medium flex items-center justify-between"
                             >
-                              <ChevronUp size={16} />
+                              <span className="flex items-center">
+                                <span className="text-xs text-gray-500 mr-2">#{index + 1}</span>
+                                <span className="truncate">{getActionPointTitle()}</span>
+                              </span>
+                              <div className="flex items-center space-x-2">
+                                {/* Move Up Button */}
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    moveActionPoint(actionPointId, 'up');
+                                  }}
+                                  disabled={index === 0}
+                                  className={`p-1 rounded ${
+                                    index === 0
+                                      ? 'text-gray-300 cursor-not-allowed'
+                                      : 'text-gray-600 hover:text-gray-800 hover:bg-gray-200'
+                                  }`}
+                                  title="Move up"
+                                >
+                                  <ChevronUp size={14} />
+                                </button>
+
+                                {/* Move Down Button */}
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    moveActionPoint(actionPointId, 'down');
+                                  }}
+                                  disabled={index === selectedActionPoints.length - 1}
+                                  className={`p-1 rounded ${
+                                    index === selectedActionPoints.length - 1
+                                      ? 'text-gray-300 cursor-not-allowed'
+                                      : 'text-gray-600 hover:text-gray-800 hover:bg-gray-200'
+                                  }`}
+                                  title="Move down"
+                                >
+                                  <ChevronDown size={14} />
+                                </button>
+
+                                {/* Remove Button */}
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleActionPointToggle(actionPointId);
+                                  }}
+                                  className="text-red-600 hover:text-red-800 text-xs px-2 py-1 rounded hover:bg-red-50"
+                                  title="Remove action point"
+                                >
+                                  Remove
+                                </button>
+
+                                {/* Expand/Collapse Icon */}
+                                <ChevronDown
+                                  size={16}
+                                  className={`transform transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                                />
+                              </div>
                             </button>
 
-                            {/* Move Down Button */}
-                            <button
-                              onClick={() => moveActionPoint(actionPointId, 'down')}
-                              disabled={index === selectedActionPoints.length - 1}
-                              className={`p-1 rounded ${
-                                index === selectedActionPoints.length - 1
-                                  ? 'text-gray-300 cursor-not-allowed'
-                                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
-                              }`}
-                              title="Move down"
-                            >
-                              <ChevronDown size={16} />
-                            </button>
+                            {/* Expandable Content */}
+                            {isExpanded && (
+                              <div className="border-t border-gray-200 p-4 bg-white rounded-b-md">
+                                {/* Editable Header */}
+                                <div className="mb-4">
+                                  <label className="block text-xs font-medium text-gray-600 mb-2">
+                                    Header
+                                  </label>
+                                  <RichTextEditor
+                                    value={editableContent.header}
+                                    onChange={(value) => updateEditableActionPoint(actionPointId, 'header', value)}
+                                    placeholder="Action point header"
+                                    className="w-full text-sm"
+                                  />
+                                </div>
 
-                            {/* Remove Button */}
-                            <button
-                              onClick={() => handleActionPointToggle(actionPointId)}
-                              className="text-red-600 hover:text-red-800 text-sm ml-2"
-                            >
-                              Remove
-                            </button>
+                                {/* Editable Details */}
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-600 mb-2">
+                                    Details
+                                  </label>
+                                  <RichTextEditor
+                                    value={editableContent.details}
+                                    onChange={(value) => updateEditableActionPoint(actionPointId, 'details', value)}
+                                    placeholder="Action point details"
+                                    className="w-full text-sm"
+                                  />
+                                </div>
+                              </div>
+                            )}
                           </div>
-                        </div>
-
-                        {/* Editable Header */}
-                        <div className="mb-3">
-                          <label className="block text-xs font-medium text-gray-600 mb-1">
-                            Header
-                          </label>
-                          <RichTextEditor
-                            value={editableContent.header}
-                            onChange={(value) => updateEditableActionPoint(actionPointId, 'header', value)}
-                            placeholder="Action point header"
-                            className="w-full text-sm"
-                          />
-                        </div>
-
-                          {/* Editable Details */}
-                          <div>
-                            <label className="block text-xs font-medium text-gray-600 mb-1">
-                              Details
-                            </label>
-                            <RichTextEditor
-                              value={editableContent.details}
-                              onChange={(value) => updateEditableActionPoint(actionPointId, 'details', value)}
-                              placeholder="Action point details"
-                              className="w-full text-sm"
-                            />
-                          </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })
+                    ) : (
+                      <div className="p-8 text-center text-gray-500 border border-gray-200 rounded-md">
+                        <p>No action points added yet.</p>
+                        <p className="text-sm mt-1">Use "Show Library" to select from predefined action points or "Add Blank Action Point" to create custom ones.</p>
+                      </div>
+                    )}
                   </div>
-                ) : (
-                  <div className="p-8 text-center text-gray-500">
-                    <p>No action points selected yet.</p>
-                    <p className="text-sm mt-1">Use "Show Library" to select from predefined action points or "Add Blank Action Point" to create custom ones.</p>
-                  </div>
-                )}
-              </div>
 
                   {/* Action Point Library - Only shown when requested */}
                   {showActionPoints && (
