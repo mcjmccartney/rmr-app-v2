@@ -45,6 +45,7 @@ export default function ActionPointLibraryModal({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  // Body scroll lock
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -69,9 +70,9 @@ export default function ActionPointLibraryModal({
   // Mobile: Full screen modal
   if (isMobile) {
     return (
-      <div className="fixed inset-0 z-50 bg-white">
+      <div className="fixed inset-0 z-50 bg-white flex flex-col">
         {/* Mobile Header */}
-        <div className="bg-white border-b border-gray-200 px-4 py-4">
+        <div className="bg-white border-b border-gray-200 px-4 py-4 flex-shrink-0">
           <div className="flex items-center justify-between">
             <button
               onClick={onClose}
@@ -152,45 +153,45 @@ export default function ActionPointLibraryModal({
     );
   }
 
-  // Desktop: Popup modal
+  // Desktop: Popup modal overlay
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        {/* Background overlay */}
-        <div 
-          className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
-          onClick={onClose}
-        ></div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Background overlay */}
+      <div 
+        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+        onClick={onClose}
+      ></div>
 
-        {/* Modal panel */}
-        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
-          {/* Header */}
-          <div className="bg-white px-6 py-4 border-b border-gray-200">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900">Action Point Library</h3>
-              <button
-                onClick={onClose}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <X size={24} />
-              </button>
-            </div>
+      {/* Modal panel */}
+      <div className="relative bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[80vh] flex flex-col">
+        {/* Header */}
+        <div className="bg-white px-6 py-4 border-b border-gray-200 rounded-t-lg flex-shrink-0">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-gray-900">Action Point Library</h3>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <X size={24} />
+            </button>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 px-6 py-4 overflow-hidden flex flex-col">
+          {/* Search Bar */}
+          <div className="mb-4 flex-shrink-0">
+            <input
+              type="text"
+              placeholder="Search action points..."
+              value={actionPointSearch}
+              onChange={(e) => setActionPointSearch(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-amber-500 focus:border-transparent text-sm"
+            />
           </div>
 
-          {/* Content */}
-          <div className="bg-white px-6 py-4 max-h-96 overflow-y-auto">
-            {/* Search Bar */}
-            <div className="mb-4">
-              <input
-                type="text"
-                placeholder="Search action points..."
-                value={actionPointSearch}
-                onChange={(e) => setActionPointSearch(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-amber-500 focus:border-transparent text-sm"
-              />
-            </div>
-
-            {/* Action Points List */}
+          {/* Action Points List - Scrollable */}
+          <div className="flex-1 overflow-y-auto">
             <div className="space-y-2">
               {filteredActionPoints.map(actionPoint => {
                 const isSelected = selectedActionPoints.includes(actionPoint.id);

@@ -850,8 +850,8 @@ function SessionPlanContent() {
                     </p>
                   </div>
 
-                  {/* Last Saved indicator - top right */}
-                  <div className="text-sm text-gray-500">
+                  {/* Last Saved indicator - top right, hidden on mobile */}
+                  <div className="hidden sm:block text-sm text-gray-500">
                     {autoSaveState.isSaving ? (
                       <span>Saving...</span>
                     ) : autoSaveState.lastSaved ? (
