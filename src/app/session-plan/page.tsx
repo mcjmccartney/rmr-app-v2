@@ -840,12 +840,31 @@ function SessionPlanContent() {
           ) : (
             <div>
               <div className="border-b border-gray-200 pb-4 mb-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-2">
-                  {getSessionDogName()} - Session Plan
-                </h2>
-                <p className="text-gray-600">
-                  {currentClient?.firstName} {currentClient?.lastName} • {currentSession?.sessionType}
-                </p>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-900 mb-2">
+                      {getSessionDogName()} - Session Plan
+                    </h2>
+                    <p className="text-gray-600">
+                      {currentClient?.firstName} {currentClient?.lastName} • {currentSession?.sessionType}
+                    </p>
+                  </div>
+
+                  {/* Last Saved indicator - top right */}
+                  <div className="text-sm text-gray-500">
+                    {autoSaveState.isSaving ? (
+                      <span>Saving...</span>
+                    ) : autoSaveState.lastSaved ? (
+                      <span>
+                        Last saved: {new Date(autoSaveState.lastSaved).toLocaleString()}
+                      </span>
+                    ) : autoSaveState.hasUnsavedChanges ? (
+                      <span>Unsaved changes</span>
+                    ) : (
+                      <span>Ready to save</span>
+                    )}
+                  </div>
+                </div>
               </div>
 
               <div className="space-y-6">
@@ -1120,12 +1139,7 @@ function SessionPlanContent() {
                           </div>
                         );
                       })
-                    ) : (
-                      <div className="p-8 text-center text-gray-500 border border-gray-200 rounded-md">
-                        <p>No action points added yet.</p>
-                        <p className="text-sm mt-1">Use "Show Library" to select from predefined action points or "Add Blank Action Point" to create custom ones.</p>
-                      </div>
-                    )}
+                    ) : null}
                   </div>
 
                   {/* Action Point Library - Only shown when requested */}
@@ -1198,20 +1212,6 @@ function SessionPlanContent() {
                 </div>
 
                 <div className="border-t border-gray-200 pt-6 space-y-3">
-                  {/* Auto-save status */}
-                  <div className="text-center text-sm text-gray-500">
-                    {autoSaveState.isSaving ? (
-                      <span className="text-blue-600">💾 Saving...</span>
-                    ) : autoSaveState.lastSaved ? (
-                      <span className="text-green-600">
-                        ✅ Last saved: {new Date(autoSaveState.lastSaved).toLocaleString()}
-                      </span>
-                    ) : autoSaveState.hasUnsavedChanges ? (
-                      <span className="text-amber-600">⚠️ Unsaved changes</span>
-                    ) : (
-                      <span className="text-gray-400">Ready to save</span>
-                    )}
-                  </div>
 
                   <button
                     onClick={handleSave}
