@@ -2,12 +2,13 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Edit2, Trash2, Save, X } from 'lucide-react';
+import { Plus, Edit2, Trash2, Save, X, ArrowLeft } from 'lucide-react';
 import { ActionPoint } from '@/types';
 import { useApp } from '@/context/AppContext';
 import { useEnterKeyHandler } from '@/hooks/useEnterKeyHandler';
 import RichTextEditor from '@/components/RichTextEditor';
 import SafeHtmlRenderer from '@/components/SafeHtmlRenderer';
+import Header from '@/components/layout/Header';
 
 export default function ActionPointsPage() {
   const router = useRouter();
@@ -17,9 +18,17 @@ export default function ActionPointsPage() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [addForm, setAddForm] = useState({ header: '', details: '' });
   const [isLoading, setIsLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  // Use action points from app state (loaded from Supabase)
-  const actionPoints = state.actionPoints;
+  // Filter action points based on search query
+  const filteredActionPoints = state.actionPoints.filter(actionPoint => {
+    const searchTerm = searchQuery.toLowerCase();
+    // Search in header (strip HTML tags for search)
+    const headerText = actionPoint.header.replace(/<[^>]*>/g, '').toLowerCase();
+    // Also search in details for more comprehensive search
+    const detailsText = actionPoint.details.replace(/<[^>]*>/g, '').toLowerCase();
+    return headerText.includes(searchTerm) || detailsText.includes(searchTerm);
+  });
 
   const handleBack = () => {
     router.push('/calendar');
@@ -102,23 +111,25 @@ export default function ActionPointsPage() {
   return (
     <div className="min-h-screen bg-white flex flex-col">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-4 py-4">
-        <div className="flex items-center justify-between">
-          <button
-            onClick={handleBack}
-            className="text-gray-600 hover:text-gray-800 transition-colors"
-          >
-            ← Back
-          </button>
-          <h1 className="text-xl font-semibold text-gray-900">
-            Manage Action Points
-          </h1>
-          <div className="w-16"></div>
-        </div>
+      <div className="bg-amber-800">
+        <Header
+          title="Manage Action Points"
+          buttons={[
+            {
+              icon: ArrowLeft,
+              onClick: handleBack,
+              title: 'Back to Calendar',
+              iconOnly: true
+            }
+          ]}
+          showSearch
+          onSearch={setSearchQuery}
+          searchPlaceholder="Search action points..."
+        />
       </div>
 
       {/* Content */}
-      <div className="flex-1 p-4">
+      <div className="flex-1 p-4 bg-gray-50">
         <div className="max-w-2xl mx-auto">
           <div className="space-y-6">
             {/* Add New Action Point Button */}
@@ -181,7 +192,22 @@ export default function ActionPointsPage() {
 
             {/* Action Points List */}
             <div className="space-y-4">
-                {actionPoints.map((actionPoint) => (
+              {filteredActionPoints.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-500">
+                    {searchQuery ? 'No action points found matching your search.' : 'No action points yet.'}
+                  </p>
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="mt-2 text-amber-600 hover:text-amber-700 underline"
+                    >
+                      Clear search
+                    </button>
+                  )}
+                </div>
+              ) : (
+                filteredActionPoints.map((actionPoint) => (
                   <div key={actionPoint.id} className="bg-white border border-gray-200 rounded-lg p-4">
                     {editingId === actionPoint.id ? (
                       // Edit Form
@@ -262,15 +288,9 @@ export default function ActionPointsPage() {
                       </div>
                     )}
                   </div>
-                ))}
+                ))
+              )}
             </div>
-
-            {actionPoints.length === 0 && (
-                <div className="text-center py-12">
-                  <p className="text-gray-500 text-lg">No action points available</p>
-                  <p className="text-gray-400 text-sm mt-2">Click &quot;Add New Action Point&quot; to get started</p>
-                </div>
-            )}
           </div>
         </div>
       </div>
