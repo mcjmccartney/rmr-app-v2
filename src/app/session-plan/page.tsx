@@ -12,6 +12,7 @@ import { useRobustAutoSave } from '@/hooks/useRobustAutoSave';
 import type { SessionPlan, Client, Session } from '@/types';
 import SafeHtmlRenderer from '@/components/SafeHtmlRenderer';
 import RichTextEditor from '@/components/RichTextEditor';
+import ActionPointLibraryModal from '@/components/modals/ActionPointLibraryModal';
 // import SessionPlanPreviewModal from '@/components/modals/SessionPlanPreviewModal';
 
 function SessionPlanContent() {
@@ -44,11 +45,10 @@ function SessionPlanContent() {
   const [legacyHasUnsavedChanges, setLegacyHasUnsavedChanges] = useState(false);
 
   const [selectedActionPoints, setSelectedActionPoints] = useState<string[]>([]);
-  const [showActionPoints, setShowActionPoints] = useState(false);
+  const [showActionPointsModal, setShowActionPointsModal] = useState(false);
   const [showMainGoals, setShowMainGoals] = useState(false);
   const [hasMainGoals, setHasMainGoals] = useState(true);
   const [editableActionPoints, setEditableActionPoints] = useState<{[key: string]: {header: string, details: string}}>({});
-  const [actionPointSearch, setActionPointSearch] = useState('');
   const [expandedActionPoints, setExpandedActionPoints] = useState<Set<string>>(new Set());
   const [existingSessionPlan, setExistingSessionPlan] = useState<SessionPlan | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -975,7 +975,7 @@ function SessionPlanContent() {
                   <div className="mb-6">
                     <button
                       onClick={addMainGoals}
-                      className="w-full bg-amber-800 text-white px-4 py-3 rounded-md hover:bg-amber-700 transition-colors text-sm font-medium"
+                      className="w-full bg-amber-800 text-white px-4 py-3 rounded-md hover:bg-amber-700 transition-colors text-sm sm:text-base font-medium"
                     >
                       Add Main Goals & Explanation of Behaviour
                     </button>
@@ -984,20 +984,20 @@ function SessionPlanContent() {
 
                 {/* Action Points Section */}
                 <div>
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 space-y-3 sm:space-y-0">
                     <label className="block text-sm font-medium text-gray-700">
                       Action Points ({selectedActionPoints.length})
                     </label>
-                    <div className="flex space-x-2">
+                    <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                       <button
-                        onClick={() => setShowActionPoints(!showActionPoints)}
-                        className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors text-sm"
+                        onClick={() => setShowActionPointsModal(true)}
+                        className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors text-sm w-full sm:w-auto"
                       >
-                        {showActionPoints ? 'Hide Library' : 'Show Library'}
+                        Show Library
                       </button>
                       <button
                         onClick={addBlankActionPoint}
-                        className="bg-amber-800 text-white px-4 py-2 rounded-md hover:bg-amber-700 transition-colors text-sm"
+                        className="bg-amber-800 text-white px-4 py-2 rounded-md hover:bg-amber-700 transition-colors text-sm w-full sm:w-auto"
                       >
                         Add Blank Action Point
                       </button>
@@ -1142,73 +1142,7 @@ function SessionPlanContent() {
                     ) : null}
                   </div>
 
-                  {/* Action Point Library - Only shown when requested */}
-                  {showActionPoints && (
-                    <div className="border border-gray-200 p-4 rounded-md max-h-96 overflow-y-auto mb-6">
-                      <h4 className="font-medium mb-3 text-gray-900">Action Point Library:</h4>
 
-                      {/* Search Bar */}
-                      <div className="mb-4">
-                        <input
-                          type="text"
-                          placeholder="Search action points..."
-                          value={actionPointSearch}
-                          onChange={(e) => setActionPointSearch(e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-amber-500 focus:border-transparent text-sm"
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        {actionPoints
-                          .filter(actionPoint => {
-                            if (!actionPointSearch) return true;
-                            const searchLower = actionPointSearch.toLowerCase();
-                            return actionPoint.header.toLowerCase().includes(searchLower) ||
-                                   actionPoint.details.toLowerCase().includes(searchLower);
-                          })
-                          .map(actionPoint => {
-                          const isSelected = selectedActionPoints.includes(actionPoint.id);
-                          const personalizedActionPoint = personalizeActionPoint(
-                            actionPoint,
-                            getSessionDogName(),
-                            getDogGender()
-                          );
-
-                          return (
-                            <div
-                              key={actionPoint.id}
-                              className={`p-3 border rounded-md cursor-pointer transition-colors ${
-                                isSelected
-                                  ? 'border-amber-800 bg-amber-800/10'
-                                  : 'border-gray-300 hover:border-gray-400'
-                              }`}
-                              onClick={() => handleActionPointToggle(actionPoint.id)}
-                            >
-                              <div className="flex items-center justify-between">
-                                <div className="flex-1">
-                                  <SafeHtmlRenderer
-                                    html={personalizedActionPoint.header}
-                                    className="font-medium text-gray-900"
-                                    fallback={personalizedActionPoint.header}
-                                  />
-                                  <SafeHtmlRenderer
-                                    html={personalizedActionPoint.details}
-                                    className="text-sm text-gray-600 mt-1"
-                                    fallback={personalizedActionPoint.details}
-                                  />
-                                </div>
-                                <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
-                                  isSelected ? 'border-amber-800 bg-amber-800' : 'border-gray-300'
-                                }`}>
-                                  {isSelected && <span className="text-white text-xs">✓</span>}
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
                 </div>
 
                 <div className="border-t border-gray-200 pt-6 space-y-3">
@@ -1216,7 +1150,7 @@ function SessionPlanContent() {
                   <button
                     onClick={handleSave}
                     disabled={isLoading || (!currentSession && !currentClient)}
-                    className="w-full bg-amber-800 text-white py-3 rounded-md font-medium hover:bg-amber-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full bg-amber-800 text-white py-3 px-4 rounded-md font-medium hover:bg-amber-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
                   >
                     {isLoading ? 'Loading...' : 'Save & Go Back'}
                   </button>
@@ -1225,7 +1159,7 @@ function SessionPlanContent() {
                     <button
                       onClick={handlePreviewAndEdit}
                       disabled={isGeneratingDoc || isPollingForUrl}
-                      className="w-full bg-white text-amber-800 py-3 rounded-md font-medium border border-amber-800 hover:bg-amber-800/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full bg-white text-amber-800 py-3 px-4 rounded-md font-medium border border-amber-800 hover:bg-amber-800/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
                     >
                       {isGeneratingDoc
                         ? 'Generating Document...'
@@ -1237,7 +1171,7 @@ function SessionPlanContent() {
                     <div className="space-y-2">
                       <button
                         onClick={handleEditGoogleDoc}
-                        className="w-full text-white py-3 rounded-md font-medium transition-colors"
+                        className="w-full text-white py-3 px-4 rounded-md font-medium transition-colors text-sm sm:text-base"
                         style={{ backgroundColor: '#4f6749' }}
                         onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3d5037'}
                         onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#4f6749'}
@@ -1247,7 +1181,7 @@ function SessionPlanContent() {
                       <button
                         onClick={handleReGenerate}
                         disabled={isGeneratingDoc || isPollingForUrl}
-                        className="w-full text-white py-3 rounded-md font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full text-white py-3 px-4 rounded-md font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
                         style={{ backgroundColor: '#973b00' }}
                         onMouseEnter={(e) => !e.currentTarget.disabled && (e.currentTarget.style.backgroundColor = '#7a2f00')}
                         onMouseLeave={(e) => !e.currentTarget.disabled && (e.currentTarget.style.backgroundColor = '#973b00')}
@@ -1267,25 +1201,17 @@ function SessionPlanContent() {
         </div>
       </div>
 
-      {/* Preview Modal - Replaced with Make webhook */}
-      {/* <SessionPlanPreviewModal
-        isOpen={showPreviewModal}
-        onClose={() => setShowPreviewModal(false)}
-        sessionPlan={{
-          dogName: client?.dogName || 'Unknown Dog',
-          clientName: `${client?.firstName || ''} ${client?.lastName || ''}`.trim(),
-          sessionType: session?.sessionType || '',
-          sessionDate: session ? new Date(session.bookingDate).toLocaleDateString('en-GB') : '',
-          sessionTime: session?.bookingTime || '',
-          mainGoal1: formData.mainGoal1,
-          mainGoal2: formData.mainGoal2,
-          mainGoal3: formData.mainGoal3,
-          mainGoal4: formData.mainGoal4,
-          explanationOfBehaviour: formData.explanationOfBehaviour,
-          selectedActionPoints: selectedActionPoints,
-        }}
-        onSave={handleSaveEditedContent}
-      /> */}
+      {/* Action Point Library Modal */}
+      <ActionPointLibraryModal
+        isOpen={showActionPointsModal}
+        onClose={() => setShowActionPointsModal(false)}
+        actionPoints={actionPoints}
+        selectedActionPoints={selectedActionPoints}
+        onActionPointToggle={handleActionPointToggle}
+        personalizeActionPoint={personalizeActionPoint}
+        getSessionDogName={getSessionDogName}
+        getDogGender={getDogGender}
+      />
     </div>
   );
 }
