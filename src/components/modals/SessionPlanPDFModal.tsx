@@ -126,9 +126,10 @@ export default function SessionPlanPDFModal({
 
 
   const handleGeneratePDF = () => {
-    // Simply trigger the browser's print dialog
-    // User can save as PDF from there
-    window.print();
+    // Open the dedicated preview page in a new window
+    // The preview page will auto-trigger the print dialog
+    const previewUrl = `/session-plan-preview/${session.id}`;
+    window.open(previewUrl, '_blank');
   };
 
   const updateMainGoal = (index: number, value: string) => {
