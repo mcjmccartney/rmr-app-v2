@@ -163,6 +163,24 @@ export default function SessionPlanPDFModal({
             top: 0;
             width: 100%;
           }
+
+          /* Force Action Points section to start on new page */
+          .action-points-section {
+            page-break-before: always !important;
+            break-before: page !important;
+          }
+
+          /* Prevent individual action point boxes from splitting across pages */
+          .action-point-box {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+          }
+
+          /* If an action point would split, start it on a new page */
+          .action-point-box {
+            page-break-before: auto !important;
+            break-before: auto !important;
+          }
         }
       `}</style>
 
@@ -331,11 +349,11 @@ export default function SessionPlanPDFModal({
 
               {/* Action Points - Start on new page */}
               {editableContent.actionPoints.length > 0 && (
-                <div className="mb-6" style={{ pageBreakBefore: 'always' }}>
+                <div className="mb-6 action-points-section">
                   <h3 className="font-semibold text-gray-900 mb-3">Action Points</h3>
                   <div className="space-y-4">
                     {editableContent.actionPoints.map((actionPoint, index) => (
-                      <div key={index} className="border border-gray-200 rounded-md p-4" style={{ pageBreakInside: 'avoid' }}>
+                      <div key={index} className="border border-gray-200 rounded-md p-4 action-point-box">
                         <h4 className="font-medium text-gray-900 mb-2">
                           Action Point {index + 1}: <SafeHtmlRenderer html={actionPoint.header} className="inline" />
                         </h4>
