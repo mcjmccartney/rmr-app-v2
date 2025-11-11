@@ -1168,13 +1168,92 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Note: Booking terms webhook for updates has been removed
-  // The webhook https://hook.eu1.make.com/lipggo8kcd8kwq2vp6j6mr3gnxbx12h7 should only trigger for NEW sessions
-  // Session updates no longer trigger this webhook to prevent duplicate notifications
+  // Trigger booking terms webhook for session updates
   const triggerBookingTermsWebhookForUpdate = async (session: Session) => {
-    // This function has been disabled - webhook should only trigger for new sessions
-    console.log(`[BOOKING_TERMS_WEBHOOK] SKIPPED for session update ${session.id} - webhook only triggers for new sessions`);
-    return;
+    try {
+      console.log(`[BOOKING_TERMS_WEBHOOK] Starting webhook for session update ${session.id}`);
+
+      // Find the client for this session
+      const client = session.clientId ? state.clients.find(c => c.id === session.clientId) : null;
+
+      if (!client || !client.email) {
+        console.log(`[BOOKING_TERMS_WEBHOOK] No client or email found for session ${session.id}, skipping webhook`);
+        return;
+      }
+
+      // Get the dog name for this session
+      const sessionDogName = session.dogName || client.dogName || client.otherDogs?.[0] || '';
+
+      // Check if client has already signed booking terms
+      const hasSignedBookingTerms = state.bookingTerms.some(bt =>
+        bt.email?.toLowerCase() === client.email?.toLowerCase()
+      );
+
+      // Check if client has filled questionnaire
+      const hasFilledQuestionnaire = state.behaviourQuestionnaires.some(q =>
+        q.email?.toLowerCase() === client.email?.toLowerCase() &&
+        (q.dogName?.toLowerCase() === sessionDogName?.toLowerCase() || sessionDogName === '')
+      );
+
+      // Prepare webhook data (same structure as new session webhook)
+      const webhookData = {
+        sessionId: session.id,
+        clientId: session.clientId,
+        clientName: `${client.firstName} ${client.lastName}`.trim(),
+        clientFirstName: client.firstName,
+        clientLastName: client.lastName,
+        clientEmail: client.email,
+        address: client.address || '',
+        dogName: sessionDogName || '',
+        sessionType: session.sessionType,
+        bookingDate: session.bookingDate, // YYYY-MM-DD format
+        bookingTime: session.bookingTime.substring(0, 5), // Ensure HH:mm format (remove seconds)
+        quote: session.quote,
+        notes: session.notes || '',
+        membershipStatus: client.membership,
+        createdAt: new Date().toISOString(),
+        // Form completion status
+        hasSignedBookingTerms,
+        hasFilledQuestionnaire,
+        // Form URLs with email prefilled
+        bookingTermsUrl: `https://rmrcms.vercel.app/booking-terms?email=${encodeURIComponent(client.email)}`,
+        questionnaireUrl: `https://rmrcms.vercel.app/behaviour-questionnaire?email=${encodeURIComponent(client.email)}`,
+        isUpdate: true // Flag to indicate this is an update webhook
+      };
+
+      // Validate webhook data before sending
+      if (!isValidWebhookData(webhookData)) {
+        console.log(`[BOOKING_TERMS_WEBHOOK] BLOCKED - Invalid data for session update ${session.id}. Webhook data:`, webhookData);
+        return;
+      }
+
+      // Check for duplicate webhook calls
+      if (shouldSkipWebhookCall(session.id, 'booking-terms-update')) {
+        console.log(`[BOOKING_TERMS_WEBHOOK] BLOCKED - Duplicate call prevented for session update ${session.id}`);
+        return;
+      }
+
+      console.log(`[BOOKING_TERMS_WEBHOOK] Sending webhook for session update ${session.id} - ${client.firstName} ${client.lastName}`);
+
+      // Send webhook to Make.com
+      const response = await fetch('https://hook.eu1.make.com/yaoalfe77uqtw4xv9fbh5atf4okq14wm', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(webhookData)
+      });
+
+      if (response.ok) {
+        console.log(`[BOOKING_TERMS_WEBHOOK] ✅ Successfully sent webhook for session update ${session.id}`);
+      } else {
+        console.error(`[BOOKING_TERMS_WEBHOOK] ❌ Failed to send webhook for session update ${session.id}:`, response.status, response.statusText);
+      }
+
+    } catch (error) {
+      console.error(`[BOOKING_TERMS_WEBHOOK] Error sending webhook for session update ${session.id}:`, error);
+      // Don't throw error - webhook failure shouldn't prevent session update
+    }
   };
 
   // Internal update session function that bypasses webhook triggers (for system updates like eventId)
