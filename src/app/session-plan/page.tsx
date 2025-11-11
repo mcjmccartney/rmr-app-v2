@@ -607,7 +607,10 @@ function SessionPlanContent() {
       console.error('Failed to save session plan:', error);
     }
 
-    setShowPDFModal(true);
+    // Open the dedicated preview page in a new window
+    // The preview page will auto-trigger the print dialog
+    const previewUrl = `/session-plan-preview/${currentSession.id}`;
+    window.open(previewUrl, '_blank');
   };
 
   const handleReGenerate = async () => {
