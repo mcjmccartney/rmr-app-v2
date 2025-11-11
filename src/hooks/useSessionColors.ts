@@ -71,11 +71,50 @@ const sessionPlanHasContent = (sessionPlan: SessionPlan): boolean => {
 export const useSessionColors = (data: SessionColorData) => {
   return useMemo(() => {
     const colorMap = new Map<string, SessionColorResult>();
-    
+
     data.sessions.forEach(session => {
       const client = data.clients.find(c => c.id === session.clientId);
       const clientEmails = getClientEmails(client, data.clientEmailAliases);
-      
+
+      // Check if session date has passed
+      const sessionDate = new Date(session.bookingDate);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Reset time to start of day for accurate comparison
+      const isSessionPast = sessionDate < today;
+
+      // Special handling for Group and RMR Live sessions
+      const isGroupOrRMRLive = session.sessionType === 'Group' || session.sessionType === 'RMR Live';
+
+      if (isGroupOrRMRLive) {
+        let backgroundColor: string;
+        let className: string;
+        let mobileClassName: string;
+
+        if (isSessionPast) {
+          // Past Group/RMR Live sessions = black
+          backgroundColor = '#36454f';
+          className = "w-full text-white text-xs px-2 py-1 rounded text-left transition-colors flex-shrink-0 hover:opacity-80 cursor-pointer";
+          mobileClassName = "w-full text-white p-4 rounded-lg text-left transition-colors hover:opacity-80 cursor-pointer";
+        } else {
+          // Future/current Group/RMR Live sessions = green
+          backgroundColor = '#4f6749';
+          className = "w-full text-white text-xs px-2 py-1 rounded text-left transition-colors flex-shrink-0 hover:opacity-80 cursor-pointer";
+          mobileClassName = "w-full text-white p-4 rounded-lg text-left transition-colors hover:opacity-80 cursor-pointer";
+        }
+
+        colorMap.set(session.id, {
+          backgroundColor,
+          className,
+          mobileClassName,
+          isAllComplete: false, // Group sessions don't follow the same completion logic
+          isPaid: !!session.sessionPaid,
+          hasSignedTerms: false, // Group sessions don't require individual booking terms
+          hasQuestionnaire: false // Group sessions don't require individual questionnaires
+        });
+        return; // Skip the regular client-based logic
+      }
+
+      // Regular session logic (non-Group/RMR Live)
       // Check session status
       const hasSignedBookingTerms = clientEmails.length > 0 ?
         data.bookingTerms.some(bt => clientEmails.includes(bt.email?.toLowerCase() || '')) : false;
@@ -85,7 +124,7 @@ export const useSessionColors = (data: SessionColorData) => {
 
       const isFullyCompleted = hasSignedBookingTerms && (hasFilledQuestionnaire || !!session.questionnaireBypass);
       const isAllComplete = isPaid && hasSignedBookingTerms && isSessionPlanSent;
-      
+
       let backgroundColor: string;
       let className: string;
       let mobileClassName: string;
@@ -116,7 +155,7 @@ export const useSessionColors = (data: SessionColorData) => {
         className = "w-full bg-amber-800 text-white text-xs px-2 py-1 rounded text-left transition-colors flex-shrink-0 hover:bg-amber-700 cursor-pointer";
         mobileClassName = "w-full bg-amber-800 text-white p-4 rounded-lg text-left hover:bg-amber-700 transition-colors cursor-pointer";
       }
-      
+
       colorMap.set(session.id, {
         backgroundColor,
         className,
@@ -127,7 +166,7 @@ export const useSessionColors = (data: SessionColorData) => {
         hasQuestionnaire: hasFilledQuestionnaire || !!session.questionnaireBypass
       });
     });
-    
+
     return colorMap;
   }, [
     data.sessions,
