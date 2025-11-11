@@ -72,9 +72,19 @@ export const useSessionColors = (data: SessionColorData) => {
   return useMemo(() => {
     const colorMap = new Map<string, SessionColorResult>();
 
+    // Defensive check for data availability
+    if (!data || !data.sessions || !Array.isArray(data.sessions)) {
+      return colorMap;
+    }
+
     data.sessions.forEach(session => {
-      const client = data.clients.find(c => c.id === session.clientId);
-      const clientEmails = getClientEmails(client, data.clientEmailAliases);
+      // Defensive check for session data
+      if (!session || !session.id || !session.bookingDate || !session.sessionType) {
+        return; // Skip invalid sessions
+      }
+
+      const client = data.clients?.find(c => c.id === session.clientId);
+      const clientEmails = getClientEmails(client, data.clientEmailAliases || {});
 
       // Check if session date has passed
       const sessionDate = new Date(session.bookingDate);
@@ -111,14 +121,14 @@ export const useSessionColors = (data: SessionColorData) => {
           hasSignedTerms: false, // Group sessions don't require individual booking terms
           hasQuestionnaire: false // Group sessions don't require individual questionnaires
         });
-        return; // Skip the regular client-based logic
+        return; // Skip the regular client-based logic for this session
       }
 
       // Regular session logic (non-Group/RMR Live)
       // Check session status
-      const hasSignedBookingTerms = clientEmails.length > 0 ?
+      const hasSignedBookingTerms = clientEmails.length > 0 && data.bookingTerms ?
         data.bookingTerms.some(bt => clientEmails.includes(bt.email?.toLowerCase() || '')) : false;
-      const hasFilledQuestionnaire = hasQuestionnaireForDog(client, session, data.behaviourQuestionnaires);
+      const hasFilledQuestionnaire = hasQuestionnaireForDog(client, session, data.behaviourQuestionnaires || []);
       const isPaid = !!session.sessionPaid;
       const isSessionPlanSent = !!session.sessionPlanSent;
 
