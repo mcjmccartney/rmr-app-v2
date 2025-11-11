@@ -1256,6 +1256,134 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Trigger session webhook for session updates
+  const triggerSessionWebhookForUpdate = async (session: Session) => {
+    try {
+      console.log(`[SESSION_WEBHOOK] Starting webhook for session update ${session.id}`);
+
+      // Handle Group and RMR Live sessions differently
+      if (session.sessionType === 'Group' || session.sessionType === 'RMR Live') {
+        const minimalWebhookData = {
+          sessionId: session.id,
+          sessionType: session.sessionType,
+          bookingDate: session.bookingDate,
+          bookingTime: session.bookingTime.substring(0, 5),
+          quote: session.quote,
+          isUpdate: true,
+          sendSessionEmail: false,
+          createCalendarEvent: false
+        };
+
+        console.log(`[SESSION_WEBHOOK] Sending ${session.sessionType} webhook for session update ${session.id}`);
+
+        const response = await fetch('https://hook.eu1.make.com/lipggo8kcd8kwq2vp6j6mr3gnxbx12h7', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(minimalWebhookData)
+        });
+
+        if (response.ok) {
+          console.log(`[SESSION_WEBHOOK] ✅ Successfully sent ${session.sessionType} webhook for session update ${session.id}`);
+        } else {
+          console.error(`[SESSION_WEBHOOK] ❌ Failed to send ${session.sessionType} webhook for session update ${session.id}:`, response.status, response.statusText);
+        }
+        return;
+      }
+
+      // Find the client for regular sessions
+      const client = session.clientId ? state.clients.find(c => c.id === session.clientId) : null;
+
+      if (!client || !client.email) {
+        console.log(`[SESSION_WEBHOOK] No client or email found for session ${session.id}, skipping webhook`);
+        return;
+      }
+
+      // Get the dog name for this session
+      const sessionDogName = session.dogName || client.dogName || client.otherDogs?.[0] || '';
+
+      // Check if client has already signed booking terms
+      const hasSignedBookingTerms = state.bookingTerms.some(bt =>
+        bt.email?.toLowerCase() === client.email?.toLowerCase()
+      );
+
+      // Check if client has filled questionnaire
+      const hasFilledQuestionnaire = state.behaviourQuestionnaires.some(q =>
+        q.email?.toLowerCase() === client.email?.toLowerCase() &&
+        (q.dogName?.toLowerCase() === sessionDogName?.toLowerCase() || sessionDogName === '')
+      );
+
+      // Calculate days until session for email logic
+      const sessionDate = new Date(session.bookingDate);
+      const now = new Date();
+      const timeDiff = sessionDate.getTime() - now.getTime();
+      const daysUntilSession = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+
+      // Prepare webhook data with session flags
+      const webhookData = {
+        sessionId: session.id,
+        clientId: session.clientId,
+        clientName: `${client.firstName} ${client.lastName}`.trim(),
+        clientFirstName: client.firstName,
+        clientLastName: client.lastName,
+        clientEmail: client.email,
+        address: client.address || '',
+        dogName: sessionDogName || '',
+        sessionType: session.sessionType,
+        bookingDate: session.bookingDate, // YYYY-MM-DD format
+        bookingTime: session.bookingTime.substring(0, 5), // Ensure HH:mm format (remove seconds)
+        quote: session.quote,
+        notes: session.notes || '',
+        membershipStatus: client.membership,
+        createdAt: new Date().toISOString(),
+        // Form completion status
+        hasSignedBookingTerms,
+        hasFilledQuestionnaire,
+        // Form URLs with email prefilled
+        bookingTermsUrl: `https://rmrcms.vercel.app/booking-terms?email=${encodeURIComponent(client.email)}`,
+        questionnaireUrl: `https://rmrcms.vercel.app/behaviour-questionnaire?email=${encodeURIComponent(client.email)}`,
+        // Session webhook specific flags
+        sendSessionEmail: daysUntilSession <= 4, // Only send email if ≤4 days away
+        createCalendarEvent: false, // Don't create calendar events for updates
+        isUpdate: true // Flag to indicate this is an update webhook
+      };
+
+      // Validate webhook data before sending
+      if (!isValidWebhookData(webhookData)) {
+        console.log(`[SESSION_WEBHOOK] BLOCKED - Invalid data for session update ${session.id}. Webhook data:`, webhookData);
+        return;
+      }
+
+      // Check for duplicate webhook calls
+      if (shouldSkipWebhookCall(session.id, 'session-update')) {
+        console.log(`[SESSION_WEBHOOK] BLOCKED - Duplicate call prevented for session update ${session.id}`);
+        return;
+      }
+
+      console.log(`[SESSION_WEBHOOK] Sending webhook for session update ${session.id} - ${client.firstName} ${client.lastName}`);
+
+      // Send webhook to Make.com
+      const response = await fetch('https://hook.eu1.make.com/lipggo8kcd8kwq2vp6j6mr3gnxbx12h7', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(webhookData)
+      });
+
+      if (response.ok) {
+        console.log(`[SESSION_WEBHOOK] ✅ Successfully sent webhook for session update ${session.id}`);
+      } else {
+        console.error(`[SESSION_WEBHOOK] ❌ Failed to send webhook for session update ${session.id}:`, response.status, response.statusText);
+      }
+
+    } catch (error) {
+      console.error(`[SESSION_WEBHOOK] Error sending webhook for session update ${session.id}:`, error);
+      // Don't throw error - webhook failure shouldn't prevent session update
+    }
+  };
+
   // Internal update session function that bypasses webhook triggers (for system updates like eventId)
   const updateSessionInternal = async (id: string, updates: Partial<Session>): Promise<Session> => {
     try {
@@ -1356,13 +1484,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
       });
 
       if (hasBookingTermsRelevantChange) {
-        console.log(`[UPDATE_SESSION] ✅ TRIGGERING booking terms webhook for session ${id}`);
+        console.log(`[UPDATE_SESSION] ✅ TRIGGERING webhooks for session ${id}`);
         console.log(`[UPDATE_SESSION] Relevant changed fields:`, Object.keys(updates).filter(key => bookingTermsRelevantFields.includes(key)));
         console.log(`[UPDATE_SESSION] Webhook timestamp:`, new Date().toISOString());
-        await triggerBookingTermsWebhookForUpdate(session);
-        console.log(`[UPDATE_SESSION] Booking terms webhook completed for session ${id} at`, new Date().toISOString());
+
+        // Trigger both webhooks in parallel for session updates
+        await Promise.allSettled([
+          triggerBookingTermsWebhookForUpdate(session),
+          triggerSessionWebhookForUpdate(session)
+        ]);
+
+        console.log(`[UPDATE_SESSION] Both webhooks completed for session ${id} at`, new Date().toISOString());
       } else {
-        console.log(`[UPDATE_SESSION] ❌ SKIPPING booking terms webhook for session ${id} - no relevant changes`);
+        console.log(`[UPDATE_SESSION] ❌ SKIPPING webhooks for session ${id} - no relevant changes`);
         console.log(`[UPDATE_SESSION] Updated fields (not relevant):`, Object.keys(updates));
       }
 
