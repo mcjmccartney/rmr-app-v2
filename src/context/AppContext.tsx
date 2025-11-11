@@ -1467,10 +1467,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         console.log(`[UPDATE_SESSION] No calendar relevant changes detected, skipping calendar update`);
       }
 
-      // Only trigger booking terms webhook for Session Type, Date, or Time changes
-      // This prevents webhooks for internal updates like payment status, notes, session plan sent status, eventId, etc.
+      // Only trigger booking terms webhook for Date or Time changes
+      // This prevents webhooks for internal updates like payment status, notes, session plan sent status, eventId, sessionType, quote, etc.
       const bookingTermsRelevantFields = [
-        'sessionType',
         'bookingDate',
         'bookingTime'
       ];
