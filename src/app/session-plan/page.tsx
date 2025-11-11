@@ -13,6 +13,7 @@ import type { SessionPlan, Client, Session } from '@/types';
 import SafeHtmlRenderer from '@/components/SafeHtmlRenderer';
 import RichTextEditor from '@/components/RichTextEditor';
 import ActionPointLibraryModal from '@/components/modals/ActionPointLibraryModal';
+import SessionPlanPDFModal from '@/components/modals/SessionPlanPDFModal';
 // import SessionPlanPreviewModal from '@/components/modals/SessionPlanPreviewModal';
 
 function SessionPlanContent() {
@@ -58,6 +59,7 @@ function SessionPlanContent() {
   const [isGeneratingDoc, setIsGeneratingDoc] = useState(false);
   const [generatedDocUrl, setGeneratedDocUrl] = useState<string | null>(null);
   const [isPollingForUrl, setIsPollingForUrl] = useState(false);
+  const [showPDFModal, setShowPDFModal] = useState(false);
   // const [showPreviewModal, setShowPreviewModal] = useState(false);
 
   // Use fallback data if state data is not available (moved up for scope)
@@ -598,15 +600,14 @@ function SessionPlanContent() {
   const handlePreviewAndEdit = async () => {
     if (!currentSession || !currentClient) return;
 
-    setIsGeneratingDoc(true);
-
     try {
       await saveSessionPlan();
     } catch (error) {
-      // Continue with document generation even if save fails
+      // Continue with PDF preview even if save fails
+      console.error('Failed to save session plan:', error);
     }
 
-    await generateDocument();
+    setShowPDFModal(true);
   };
 
   const handleReGenerate = async () => {
@@ -1033,10 +1034,10 @@ function SessionPlanContent() {
                               onClick={() => toggleActionPointExpansion(actionPointId)}
                               className="w-full bg-gray-50 text-gray-700 px-4 py-3 rounded-t-md hover:bg-gray-100 transition-colors text-sm font-medium flex items-center justify-between"
                             >
-                              <div className="flex items-center min-w-0 flex-1 mr-2">
+                              <div className="flex items-center min-w-0 flex-1 mr-2 text-left">
                                 <span className="text-xs text-gray-500 mr-2 flex-shrink-0">#{index + 1}</span>
                                 <div className="relative flex-1 min-w-0">
-                                  <span className="block truncate pr-8">{getActionPointTitle()}</span>
+                                  <span className="block text-left pr-8">{getActionPointTitle()}</span>
                                   {/* Fade effect overlay */}
                                   <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-gray-50 to-transparent pointer-events-none"></div>
                                 </div>
@@ -1159,17 +1160,33 @@ function SessionPlanContent() {
                     {isLoading ? 'Loading...' : 'Save & Go Back'}
                   </button>
 
+                  <button
+                    onClick={handlePreviewAndEdit}
+                    className="w-full bg-white text-amber-800 py-3 px-4 rounded-lg font-medium border border-amber-800 hover:bg-amber-800/10 transition-colors"
+                  >
+                    Preview & Generate PDF
+                  </button>
+
                   {!generatedDocUrl ? (
                     <button
-                      onClick={handlePreviewAndEdit}
+                      onClick={async () => {
+                        if (!currentSession || !currentClient) return;
+                        setIsGeneratingDoc(true);
+                        try {
+                          await saveSessionPlan();
+                        } catch (error) {
+                          // Continue with document generation even if save fails
+                        }
+                        await generateDocument();
+                      }}
                       disabled={isGeneratingDoc || isPollingForUrl}
-                      className="w-full bg-white text-amber-800 py-3 px-4 rounded-lg font-medium border border-amber-800 hover:bg-amber-800/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full bg-gray-100 text-gray-700 py-3 px-4 rounded-lg font-medium border border-gray-300 hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {isGeneratingDoc
                         ? 'Generating Document...'
                         : isPollingForUrl
                         ? 'Waiting for Document...'
-                        : 'Generate Google Doc'}
+                        : 'Generate Google Doc (Legacy)'}
                     </button>
                   ) : (
                     <div className="space-y-2">
@@ -1216,6 +1233,23 @@ function SessionPlanContent() {
         getSessionDogName={getSessionDogName}
         getDogGender={getDogGender}
       />
+
+      {/* Session Plan PDF Modal */}
+      {existingSessionPlan && currentSession && currentClient && (
+        <SessionPlanPDFModal
+          isOpen={showPDFModal}
+          onClose={() => setShowPDFModal(false)}
+          sessionPlan={existingSessionPlan}
+          session={currentSession}
+          client={currentClient}
+          actionPoints={actionPoints}
+          selectedActionPoints={selectedActionPoints}
+          editableActionPoints={editableActionPoints}
+          formData={formData}
+          getSessionDogName={getSessionDogName}
+          getDogGender={getDogGender}
+        />
+      )}
     </div>
   );
 }
