@@ -984,24 +984,10 @@ function SessionPlanContent() {
 
                 {/* Action Points Section */}
                 <div>
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 space-y-3 sm:space-y-0">
+                  <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700">
                       Action Points ({selectedActionPoints.length})
                     </label>
-                    <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-                      <button
-                        onClick={() => setShowActionPointsModal(true)}
-                        className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors text-sm w-full sm:w-auto"
-                      >
-                        Show Library
-                      </button>
-                      <button
-                        onClick={addBlankActionPoint}
-                        className="bg-amber-800 text-white px-4 py-2 rounded-md hover:bg-amber-700 transition-colors text-sm w-full sm:w-auto"
-                      >
-                        Add Blank Action Point
-                      </button>
-                    </div>
                   </div>
 
                   {/* Selected Action Points - Collapsible List */}
@@ -1142,7 +1128,21 @@ function SessionPlanContent() {
                     ) : null}
                   </div>
 
-
+                  {/* Action Point Buttons - Below the list */}
+                  <div className="mt-4 space-y-3">
+                    <button
+                      onClick={() => setShowActionPointsModal(true)}
+                      className="w-full bg-gray-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-gray-700 transition-colors"
+                    >
+                      Show Library
+                    </button>
+                    <button
+                      onClick={addBlankActionPoint}
+                      className="w-full bg-amber-800 text-white py-3 px-4 rounded-lg font-medium hover:bg-amber-700 transition-colors"
+                    >
+                      Add Blank Action Point
+                    </button>
+                  </div>
                 </div>
 
                 <div className="border-t border-gray-200 pt-6 space-y-3">
