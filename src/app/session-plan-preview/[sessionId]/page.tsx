@@ -232,32 +232,43 @@ export default function SessionPlanPreviewPage() {
       {/* Print styles */}
       <style jsx global>{`
         @media print {
-          /* Force Action Points section to start on new page */
-          .action-points-section {
-            page-break-before: always !important;
-            break-before: page !important;
-          }
-
           /* Prevent individual action point boxes from splitting across pages */
           .action-point-box {
             page-break-inside: avoid !important;
             break-inside: avoid !important;
           }
 
-          /* Ensure proper page sizing */
+          /* Ensure proper page sizing with cream background */
           @page {
             margin: 0.5in;
             size: A4;
           }
+
+          /* Make header appear on every page */
+          .page-header {
+            position: running(header);
+          }
+
+          /* Cream background for print */
+          body {
+            background-color: #ecebdd !important;
+          }
+        }
+
+        @media screen {
+          /* Cream background for screen preview */
+          body {
+            background-color: #ecebdd !important;
+          }
         }
       `}</style>
 
-      <div className="min-h-screen bg-white p-8">
+      <div className="min-h-screen p-8" style={{ backgroundColor: '#ecebdd' }}>
         <div className="max-w-4xl mx-auto">
-          {/* Header Section */}
-          <div style={{ backgroundColor: '#4f6749' }} className="text-white p-6 rounded-t-lg mb-6">
-            <h1 className="text-2xl font-bold">RAISING MY RESCUE</h1>
-            <p className="text-gray-300">Professional Dog Training Services</p>
+          {/* Header Section - Narrower */}
+          <div style={{ backgroundColor: '#4f6749' }} className="text-white p-4 rounded-lg mb-6 page-header">
+            <h1 className="text-xl font-bold">RAISING MY RESCUE</h1>
+            <p className="text-sm text-gray-300">Professional Dog Training Services</p>
           </div>
 
           {/* Title */}
@@ -267,7 +278,7 @@ export default function SessionPlanPreviewPage() {
           {mainGoals.length > 0 && (
             <div className="mb-6">
               <h3 className="font-semibold text-gray-900 mb-3">Main Goals</h3>
-              <div className="space-y-2">
+              <div className="bg-white p-4 rounded-md space-y-2">
                 {mainGoals.map((goal, index) => (
                   <div key={index} className="flex items-start">
                     <span className="font-medium text-gray-700 mr-2">•</span>
@@ -285,19 +296,19 @@ export default function SessionPlanPreviewPage() {
           {explanationOfBehaviour && (
             <div className="mb-6">
               <h3 className="font-semibold text-gray-900 mb-3">Explanation of Behaviour</h3>
-              <div className="bg-gray-50 p-4 rounded-md">
+              <div className="bg-white p-4 rounded-md">
                 <SafeHtmlRenderer html={explanationOfBehaviour} />
               </div>
             </div>
           )}
 
-          {/* Action Points - Start on new page */}
+          {/* Action Points */}
           {editableActionPoints.length > 0 && (
-            <div className="mb-6 action-points-section">
+            <div className="mb-6">
               <h3 className="font-semibold text-gray-900 mb-3">Action Points</h3>
               <div className="space-y-4">
                 {editableActionPoints.map((actionPoint, index) => (
-                  <div key={index} className="border border-gray-200 rounded-md p-4 action-point-box">
+                  <div key={index} className="border border-gray-200 rounded-md p-4 action-point-box bg-white">
                     <h4 className="font-medium text-gray-900 mb-2">
                       Action Point {index + 1}: <SafeHtmlRenderer html={actionPoint.header} className="inline" />
                     </h4>
