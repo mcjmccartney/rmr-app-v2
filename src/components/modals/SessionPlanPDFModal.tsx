@@ -365,26 +365,13 @@ export default function SessionPlanPDFModal({
             /* Preview Mode */
             <div id="session-plan-preview" ref={previewRef} className="bg-white">
               {/* Header Section */}
-              <div className="bg-gray-900 text-white p-6 rounded-t-lg mb-6">
+              <div style={{ backgroundColor: '#4f6749' }} className="text-white p-6 rounded-t-lg mb-6">
                 <h1 className="text-2xl font-bold">RAISING MY RESCUE</h1>
                 <p className="text-gray-300">Professional Dog Training Services</p>
               </div>
 
               {/* Title */}
               <h2 className="text-xl font-bold text-gray-900 mb-6">{editableContent.title}</h2>
-
-              {/* Session Information */}
-              <div className="bg-gray-50 p-4 rounded-md mb-6">
-                <h3 className="font-semibold text-gray-900 mb-3">Session Information</h3>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div><strong>Dog Name:</strong> {editableContent.dogName}</div>
-                  <div><strong>Session Number:</strong> {editableContent.sessionNumber}</div>
-                  <div><strong>Owner:</strong> {editableContent.ownerName}</div>
-                  <div><strong>Session Type:</strong> {editableContent.sessionType}</div>
-                  <div><strong>Date:</strong> {new Date(editableContent.sessionDate).toLocaleDateString('en-GB')}</div>
-                  <div><strong>Time:</strong> {editableContent.sessionTime}</div>
-                </div>
-              </div>
 
               {/* Main Goals */}
               {editableContent.mainGoals.length > 0 && (
@@ -414,13 +401,13 @@ export default function SessionPlanPDFModal({
                 </div>
               )}
 
-              {/* Action Points */}
+              {/* Action Points - Start on new page */}
               {editableContent.actionPoints.length > 0 && (
-                <div className="mb-6">
+                <div className="mb-6" style={{ pageBreakBefore: 'always' }}>
                   <h3 className="font-semibold text-gray-900 mb-3">Action Points</h3>
                   <div className="space-y-4">
                     {editableContent.actionPoints.map((actionPoint, index) => (
-                      <div key={index} className="border border-gray-200 rounded-md p-4">
+                      <div key={index} className="border border-gray-200 rounded-md p-4" style={{ pageBreakInside: 'avoid' }}>
                         <h4 className="font-medium text-gray-900 mb-2">
                           Action Point {index + 1}: <SafeHtmlRenderer html={actionPoint.header} className="inline" />
                         </h4>
