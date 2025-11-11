@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { ChevronUp, ChevronDown } from 'lucide-react';
+import { ChevronUp, ChevronDown, X } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { predefinedActionPoints, personalizeActionPoint } from '@/data/actionPoints';
 import { sessionPlanService } from '@/services/sessionPlanService';
@@ -875,7 +875,7 @@ function SessionPlanContent() {
                       onClick={() => setShowMainGoals(!showMainGoals)}
                       className="w-full bg-gray-100 text-gray-700 px-4 py-3 rounded-md hover:bg-gray-200 transition-colors text-sm font-medium flex items-center justify-between"
                     >
-                      <span>Main Goals & Explanation of Behaviour</span>
+                      <span>Main Goals & Exp. of Behaviour</span>
                       <div className="flex items-center space-x-2">
                         <button
                           onClick={(e) => {
@@ -977,7 +977,7 @@ function SessionPlanContent() {
                       onClick={addMainGoals}
                       className="w-full bg-amber-800 text-white px-4 py-3 rounded-md hover:bg-amber-700 transition-colors text-sm sm:text-base font-medium"
                     >
-                      Add Main Goals & Explanation of Behaviour
+                      Add Main Goals & Exp. of Behaviour
                     </button>
                   </div>
                 )}
@@ -1033,11 +1033,15 @@ function SessionPlanContent() {
                               onClick={() => toggleActionPointExpansion(actionPointId)}
                               className="w-full bg-gray-50 text-gray-700 px-4 py-3 rounded-t-md hover:bg-gray-100 transition-colors text-sm font-medium flex items-center justify-between"
                             >
-                              <span className="flex items-center">
-                                <span className="text-xs text-gray-500 mr-2">#{index + 1}</span>
-                                <span className="truncate">{getActionPointTitle()}</span>
-                              </span>
-                              <div className="flex items-center space-x-2">
+                              <div className="flex items-center min-w-0 flex-1 mr-2">
+                                <span className="text-xs text-gray-500 mr-2 flex-shrink-0">#{index + 1}</span>
+                                <div className="relative flex-1 min-w-0">
+                                  <span className="block truncate pr-8">{getActionPointTitle()}</span>
+                                  {/* Fade effect overlay */}
+                                  <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-gray-50 to-transparent pointer-events-none"></div>
+                                </div>
+                              </div>
+                              <div className="flex items-center space-x-2 flex-shrink-0">
                                 {/* Move Up Button */}
                                 <button
                                   onClick={(e) => {
@@ -1072,16 +1076,16 @@ function SessionPlanContent() {
                                   <ChevronDown size={14} />
                                 </button>
 
-                                {/* Remove Button */}
+                                {/* Remove Button - Red X */}
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     handleActionPointToggle(actionPointId);
                                   }}
-                                  className="text-red-600 hover:text-red-800 text-xs px-2 py-1 rounded hover:bg-red-50"
+                                  className="text-red-600 hover:text-red-800 p-1 rounded hover:bg-red-50"
                                   title="Remove action point"
                                 >
-                                  Remove
+                                  <X size={14} />
                                 </button>
 
                                 {/* Expand/Collapse Icon */}
@@ -1150,7 +1154,7 @@ function SessionPlanContent() {
                   <button
                     onClick={handleSave}
                     disabled={isLoading || (!currentSession && !currentClient)}
-                    className="w-full bg-amber-800 text-white py-3 px-4 rounded-md font-medium hover:bg-amber-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+                    className="w-full bg-amber-800 text-white py-3 px-4 rounded-lg font-medium hover:bg-amber-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isLoading ? 'Loading...' : 'Save & Go Back'}
                   </button>
@@ -1159,7 +1163,7 @@ function SessionPlanContent() {
                     <button
                       onClick={handlePreviewAndEdit}
                       disabled={isGeneratingDoc || isPollingForUrl}
-                      className="w-full bg-white text-amber-800 py-3 px-4 rounded-md font-medium border border-amber-800 hover:bg-amber-800/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+                      className="w-full bg-white text-amber-800 py-3 px-4 rounded-lg font-medium border border-amber-800 hover:bg-amber-800/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {isGeneratingDoc
                         ? 'Generating Document...'
@@ -1171,7 +1175,7 @@ function SessionPlanContent() {
                     <div className="space-y-2">
                       <button
                         onClick={handleEditGoogleDoc}
-                        className="w-full text-white py-3 px-4 rounded-md font-medium transition-colors text-sm sm:text-base"
+                        className="w-full text-white py-3 px-4 rounded-lg font-medium transition-colors"
                         style={{ backgroundColor: '#4f6749' }}
                         onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3d5037'}
                         onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#4f6749'}
@@ -1181,7 +1185,7 @@ function SessionPlanContent() {
                       <button
                         onClick={handleReGenerate}
                         disabled={isGeneratingDoc || isPollingForUrl}
-                        className="w-full text-white py-3 px-4 rounded-md font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+                        className="w-full text-white py-3 px-4 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         style={{ backgroundColor: '#973b00' }}
                         onMouseEnter={(e) => !e.currentTarget.disabled && (e.currentTarget.style.backgroundColor = '#7a2f00')}
                         onMouseLeave={(e) => !e.currentTarget.disabled && (e.currentTarget.style.backgroundColor = '#973b00')}
