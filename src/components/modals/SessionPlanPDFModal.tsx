@@ -171,6 +171,11 @@ export default function SessionPlanPDFModal({
             display: none !important;
           }
 
+          /* Hide the edit mode content */
+          .edit-mode-content {
+            display: none !important;
+          }
+
           /* Make content container full width and remove scroll */
           .fixed.inset-0 > div > div.flex-1.p-6.overflow-y-auto {
             max-height: none !important;
@@ -249,7 +254,7 @@ export default function SessionPlanPDFModal({
         <div className="flex-1 p-6 overflow-y-auto">
           {isEditing ? (
             /* Edit Mode */
-            <div className="space-y-6">
+            <div className="space-y-6 edit-mode-content">
               {/* Title */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
