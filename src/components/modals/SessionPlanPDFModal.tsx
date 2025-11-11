@@ -137,41 +137,61 @@ export default function SessionPlanPDFModal({
         throw new Error('Preview element not found');
       }
 
-      // Convert the HTML element to canvas
-      const canvas = await html2canvas(element, {
+      // Clone the element and fix all styles before passing to html2canvas
+      const clonedElement = element.cloneNode(true) as HTMLElement;
+
+      // Add to document temporarily (off-screen) to compute styles
+      clonedElement.style.position = 'absolute';
+      clonedElement.style.left = '-9999px';
+      clonedElement.style.top = '0';
+      document.body.appendChild(clonedElement);
+
+      // Get all elements and convert their styles
+      const allOriginalElements = element.getElementsByTagName('*');
+      const allClonedElements = clonedElement.getElementsByTagName('*');
+
+      for (let i = 0; i < allOriginalElements.length; i++) {
+        const originalEl = allOriginalElements[i] as HTMLElement;
+        const clonedEl = allClonedElements[i] as HTMLElement;
+
+        if (originalEl && clonedEl) {
+          const computedStyle = window.getComputedStyle(originalEl);
+
+          // Convert all color-related properties to inline styles
+          if (computedStyle.backgroundColor && computedStyle.backgroundColor !== 'rgba(0, 0, 0, 0)') {
+            clonedEl.style.backgroundColor = computedStyle.backgroundColor;
+          }
+          if (computedStyle.color) {
+            clonedEl.style.color = computedStyle.color;
+          }
+          if (computedStyle.borderColor) {
+            clonedEl.style.borderColor = computedStyle.borderColor;
+          }
+          if (computedStyle.borderTopColor) {
+            clonedEl.style.borderTopColor = computedStyle.borderTopColor;
+          }
+          if (computedStyle.borderRightColor) {
+            clonedEl.style.borderRightColor = computedStyle.borderRightColor;
+          }
+          if (computedStyle.borderBottomColor) {
+            clonedEl.style.borderBottomColor = computedStyle.borderBottomColor;
+          }
+          if (computedStyle.borderLeftColor) {
+            clonedEl.style.borderLeftColor = computedStyle.borderLeftColor;
+          }
+        }
+      }
+
+      // Convert the cloned element to canvas
+      const canvas = await html2canvas(clonedElement, {
         scale: 2, // Higher quality
         useCORS: true, // Allow cross-origin images
         logging: false,
         backgroundColor: '#ffffff',
-        onclone: (clonedDoc, clonedElement) => {
-          // Fix oklch colors by converting them to standard colors
-          // Get all elements in the cloned document
-          const allElements = clonedElement.getElementsByTagName('*');
-
-          for (let i = 0; i < allElements.length; i++) {
-            const el = allElements[i] as HTMLElement;
-
-            // Get the original element to read computed styles
-            const originalElements = element.getElementsByTagName('*');
-            const originalEl = originalElements[i] as HTMLElement;
-
-            if (originalEl) {
-              const computedStyle = window.getComputedStyle(originalEl);
-
-              // Convert computed colors to the element's inline style
-              if (computedStyle.backgroundColor && computedStyle.backgroundColor !== 'rgba(0, 0, 0, 0)') {
-                el.style.backgroundColor = computedStyle.backgroundColor;
-              }
-              if (computedStyle.color) {
-                el.style.color = computedStyle.color;
-              }
-              if (computedStyle.borderColor) {
-                el.style.borderColor = computedStyle.borderColor;
-              }
-            }
-          }
-        }
       });
+
+      // Remove the cloned element
+      document.body.removeChild(clonedElement);
 
       // Get canvas dimensions
       const imgWidth = 210; // A4 width in mm
