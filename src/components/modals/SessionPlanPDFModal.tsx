@@ -125,82 +125,10 @@ export default function SessionPlanPDFModal({
 
 
 
-  const handleGeneratePDF = async () => {
-    try {
-      // Get the preview element
-      const element = previewRef.current;
-      if (!element) return;
-
-      // Create a new window for printing
-      const printWindow = window.open('', '_blank');
-      if (!printWindow) {
-        alert('Please allow popups to download the PDF');
-        return;
-      }
-
-      // Clone the preview content
-      const clonedContent = element.cloneNode(true) as HTMLElement;
-
-      // Write the content to the new window with print styles
-      printWindow.document.write(`
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <title>Session Plan - ${session.dogName}</title>
-            <style>
-              * {
-                margin: 0;
-                padding: 0;
-                box-sizing: border-box;
-              }
-              body {
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                padding: 20px;
-              }
-              @media print {
-                body {
-                  padding: 0;
-                }
-              }
-              @page {
-                margin: 0.5in;
-              }
-            </style>
-            ${Array.from(document.styleSheets)
-              .map(styleSheet => {
-                try {
-                  return Array.from(styleSheet.cssRules)
-                    .map(rule => rule.cssText)
-                    .join('\n');
-                } catch (e) {
-                  return '';
-                }
-              })
-              .filter(css => css)
-              .map(css => `<style>${css}</style>`)
-              .join('\n')}
-          </head>
-          <body>
-            ${clonedContent.outerHTML}
-          </body>
-        </html>
-      `);
-      printWindow.document.close();
-
-      // Wait for content to load
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      // Trigger print dialog (user can save as PDF)
-      printWindow.print();
-
-      // Close the window after printing
-      printWindow.onafterprint = () => {
-        printWindow.close();
-      };
-    } catch (error) {
-      console.error('Error generating PDF:', error);
-      alert('Failed to generate PDF. Please try again.');
-    }
+  const handleGeneratePDF = () => {
+    // Simply trigger the browser's print dialog
+    // User can save as PDF from there
+    window.print();
   };
 
   const updateMainGoal = (index: number, value: string) => {
@@ -260,7 +188,7 @@ export default function SessionPlanPDFModal({
                 className="flex items-center gap-2 bg-amber-800 text-white px-4 py-2 rounded-md hover:bg-amber-700 transition-colors text-sm font-medium"
               >
                 <Download size={16} />
-                Download PDF
+                Print / Save as PDF
               </button>
               <button
                 onClick={onClose}
