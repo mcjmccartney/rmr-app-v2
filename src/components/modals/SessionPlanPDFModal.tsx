@@ -150,45 +150,21 @@ export default function SessionPlanPDFModal({
       {/* Print styles */}
       <style jsx global>{`
         @media print {
-          /* Hide everything except the session plan preview */
-          body > *:not(#__next) {
-            display: none !important;
+          /* Hide everything except the preview */
+          body * {
+            visibility: hidden;
           }
 
-          #__next > *:not(.fixed) {
-            display: none !important;
-          }
-
-          .fixed {
-            position: static !important;
-            background: white !important;
-            padding: 0 !important;
-            margin: 0 !important;
-            max-width: 100% !important;
-            max-height: 100% !important;
-            overflow: visible !important;
-          }
-
-          .fixed > div {
-            max-width: 100% !important;
-            max-height: 100% !important;
-            overflow: visible !important;
-            border-radius: 0 !important;
-          }
-
-          .fixed > div > div:first-child {
-            display: none !important; /* Hide the modal header with close button */
-          }
-
-          .fixed > div > div:last-child {
-            max-height: 100% !important;
-            overflow: visible !important;
+          #session-plan-preview,
+          #session-plan-preview * {
+            visibility: visible;
           }
 
           #session-plan-preview {
-            position: static !important;
-            width: 100% !important;
-            max-width: 100% !important;
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
           }
 
           /* Force Action Points section to start on new page */
