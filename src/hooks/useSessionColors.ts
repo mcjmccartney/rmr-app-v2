@@ -96,21 +96,9 @@ export const useSessionColors = (data: SessionColorData) => {
       const isGroupOrRMRLive = session.sessionType === 'Group' || session.sessionType === 'RMR Live';
 
       if (isGroupOrRMRLive) {
-        let backgroundColor: string;
-        let className: string;
-        let mobileClassName: string;
-
-        if (isSessionPast) {
-          // Past Group/RMR Live sessions = black
-          backgroundColor = '#36454f';
-          className = "w-full text-white text-xs px-2 py-1 rounded text-left transition-colors flex-shrink-0 hover:opacity-80 cursor-pointer";
-          mobileClassName = "w-full text-white p-4 rounded-lg text-left transition-colors hover:opacity-80 cursor-pointer";
-        } else {
-          // Future/current Group/RMR Live sessions = green
-          backgroundColor = '#4f6749';
-          className = "w-full text-white text-xs px-2 py-1 rounded text-left transition-colors flex-shrink-0 hover:opacity-80 cursor-pointer";
-          mobileClassName = "w-full text-white p-4 rounded-lg text-left transition-colors hover:opacity-80 cursor-pointer";
-        }
+        const backgroundColor = isSessionPast ? '#36454f' : '#4f6749';
+        const className = "w-full text-white text-xs px-2 py-1 rounded text-left transition-colors flex-shrink-0 hover:opacity-80 cursor-pointer";
+        const mobileClassName = "w-full text-white p-4 rounded-lg text-left transition-colors hover:opacity-80 cursor-pointer";
 
         colorMap.set(session.id, {
           backgroundColor,
@@ -121,8 +109,7 @@ export const useSessionColors = (data: SessionColorData) => {
           hasSignedTerms: false, // Group sessions don't require individual booking terms
           hasQuestionnaire: false // Group sessions don't require individual questionnaires
         });
-        return; // Skip the regular client-based logic for this session
-      }
+      } else {
 
       // Regular session logic (non-Group/RMR Live)
       // Check session status
@@ -175,6 +162,7 @@ export const useSessionColors = (data: SessionColorData) => {
         hasSignedTerms: hasSignedBookingTerms,
         hasQuestionnaire: hasFilledQuestionnaire || !!session.questionnaireBypass
       });
+      }
     });
 
     return colorMap;
