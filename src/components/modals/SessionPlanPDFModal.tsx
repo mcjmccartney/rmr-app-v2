@@ -137,46 +137,41 @@ export default function SessionPlanPDFModal({
         throw new Error('Preview element not found');
       }
 
-      // Clone the element to avoid modifying the original
-      const clonedElement = element.cloneNode(true) as HTMLElement;
-
-      // Add the cloned element to the document temporarily
-      clonedElement.style.position = 'absolute';
-      clonedElement.style.left = '-9999px';
-      clonedElement.style.top = '0';
-      document.body.appendChild(clonedElement);
-
       // Convert the HTML element to canvas
-      const canvas = await html2canvas(clonedElement, {
+      const canvas = await html2canvas(element, {
         scale: 2, // Higher quality
         useCORS: true, // Allow cross-origin images
         logging: false,
         backgroundColor: '#ffffff',
-        onclone: (clonedDoc) => {
+        onclone: (clonedDoc, clonedElement) => {
           // Fix oklch colors by converting them to standard colors
-          const clonedBody = clonedDoc.body;
-          const allElements = clonedBody.getElementsByTagName('*');
+          // Get all elements in the cloned document
+          const allElements = clonedElement.getElementsByTagName('*');
 
           for (let i = 0; i < allElements.length; i++) {
             const el = allElements[i] as HTMLElement;
-            const computedStyle = window.getComputedStyle(el);
 
-            // Convert computed colors to the element's inline style
-            if (computedStyle.backgroundColor) {
-              el.style.backgroundColor = computedStyle.backgroundColor;
-            }
-            if (computedStyle.color) {
-              el.style.color = computedStyle.color;
-            }
-            if (computedStyle.borderColor) {
-              el.style.borderColor = computedStyle.borderColor;
+            // Get the original element to read computed styles
+            const originalElements = element.getElementsByTagName('*');
+            const originalEl = originalElements[i] as HTMLElement;
+
+            if (originalEl) {
+              const computedStyle = window.getComputedStyle(originalEl);
+
+              // Convert computed colors to the element's inline style
+              if (computedStyle.backgroundColor && computedStyle.backgroundColor !== 'rgba(0, 0, 0, 0)') {
+                el.style.backgroundColor = computedStyle.backgroundColor;
+              }
+              if (computedStyle.color) {
+                el.style.color = computedStyle.color;
+              }
+              if (computedStyle.borderColor) {
+                el.style.borderColor = computedStyle.borderColor;
+              }
             }
           }
         }
       });
-
-      // Remove the cloned element
-      document.body.removeChild(clonedElement);
 
       // Get canvas dimensions
       const imgWidth = 210; // A4 width in mm
@@ -203,7 +198,7 @@ export default function SessionPlanPDFModal({
 
       // Save the PDF
       pdf.save(`Session_Plan_${editableContent.dogName}_Session_${editableContent.sessionNumber || 1}.pdf`);
-      
+
     } catch (error) {
       console.error('Error generating PDF:', error);
       alert('Failed to generate PDF. Please try again.');
