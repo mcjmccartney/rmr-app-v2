@@ -150,18 +150,45 @@ export default function SessionPlanPDFModal({
       {/* Print styles */}
       <style jsx global>{`
         @media print {
-          body * {
-            visibility: hidden;
+          /* Hide everything except the session plan preview */
+          body > *:not(#__next) {
+            display: none !important;
           }
-          #session-plan-preview,
-          #session-plan-preview * {
-            visibility: visible;
+
+          #__next > *:not(.fixed) {
+            display: none !important;
           }
+
+          .fixed {
+            position: static !important;
+            background: white !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            max-width: 100% !important;
+            max-height: 100% !important;
+            overflow: visible !important;
+          }
+
+          .fixed > div {
+            max-width: 100% !important;
+            max-height: 100% !important;
+            overflow: visible !important;
+            border-radius: 0 !important;
+          }
+
+          .fixed > div > div:first-child {
+            display: none !important; /* Hide the modal header with close button */
+          }
+
+          .fixed > div > div:last-child {
+            max-height: 100% !important;
+            overflow: visible !important;
+          }
+
           #session-plan-preview {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
+            position: static !important;
+            width: 100% !important;
+            max-width: 100% !important;
           }
 
           /* Force Action Points section to start on new page */
@@ -180,6 +207,12 @@ export default function SessionPlanPDFModal({
           .action-point-box {
             page-break-before: auto !important;
             break-before: auto !important;
+          }
+
+          /* Ensure proper page sizing */
+          @page {
+            margin: 0.5in;
+            size: A4;
           }
         }
       `}</style>
