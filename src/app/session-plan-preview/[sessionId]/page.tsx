@@ -299,6 +299,13 @@ export default function SessionPlanPreviewPage() {
     grid-template-rows: none;
   }
 
+  /* Ensure all Paged.js elements have the correct background */
+  .pagedjs_margin,
+  .pagedjs_margin-content,
+  .pagedjs_area {
+    background-color: #ecebdd !important;
+  }
+
   .content-wrapper {
     background-color: #ecebdd;
     padding: 24px;
@@ -380,6 +387,17 @@ export default function SessionPlanPreviewPage() {
 
       {/* === ACTUAL DOCUMENT === */}
       <div className="content-wrapper">
+          {/* Green Banner */}
+          <div style={{
+            backgroundColor: '#4f6749',
+            height: '80px',
+            marginBottom: '40px',
+            marginTop: '-24px',
+            marginLeft: '-24px',
+            marginRight: '-24px',
+            width: 'calc(100% + 48px)'
+          }}></div>
+
           {/* Title */}
           <h2 className="text-5xl text-gray-900 mb-10">{title}</h2>
 
