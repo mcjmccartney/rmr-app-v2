@@ -242,8 +242,11 @@ export default function SessionPlanPreviewPage() {
   //   }
   // }, [loading, error, sessionPlan]);
 
+  console.log('Component render - loading:', loading, 'sessionPlan:', !!sessionPlan, 'error:', error);
+
   // Don't show loading screen - just render content when ready
   if (error) {
+    console.log('Returning error screen');
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
@@ -261,10 +264,11 @@ export default function SessionPlanPreviewPage() {
 
   // Wait for data to be ready (don't wait for Paged.js)
   if (loading || !sessionPlan) {
+    console.log('Returning empty div - loading:', loading, 'sessionPlan:', !!sessionPlan);
     return <div className="min-h-screen bg-white"></div>;
   }
 
-  console.log('Rendering session plan content - pagedJsReady:', pagedJsReady);
+  console.log('About to render session plan content - title:', title, 'mainGoals:', mainGoals.length);
 
   return (
     <>
