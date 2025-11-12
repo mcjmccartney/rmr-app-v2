@@ -26,6 +26,7 @@ export default function SessionPlanPreviewPage() {
   const [mainGoals, setMainGoals] = useState<string[]>([]);
   const [explanationOfBehaviour, setExplanationOfBehaviour] = useState('');
   const [editableActionPoints, setEditableActionPoints] = useState<EditableActionPoint[]>([]);
+  const [pagedJsReady, setPagedJsReady] = useState(false);
 
   // Load Paged.js dynamically
   useEffect(() => {
@@ -34,9 +35,15 @@ export default function SessionPlanPreviewPage() {
     script.async = true;
     script.onload = () => {
       console.log('Paged.js loaded successfully');
+      // Give Paged.js time to initialize
+      setTimeout(() => {
+        setPagedJsReady(true);
+        console.log('Paged.js ready to render');
+      }, 500);
     };
     script.onerror = () => {
       console.error('Failed to load Paged.js');
+      setPagedJsReady(true); // Still allow rendering even if Paged.js fails
     };
     document.body.appendChild(script);
 
@@ -252,10 +259,12 @@ export default function SessionPlanPreviewPage() {
     );
   }
 
-  // If still loading or no session plan, return empty div (no loading spinner)
-  if (loading || !sessionPlan) {
+  // Wait for both data and Paged.js to be ready
+  if (loading || !sessionPlan || !pagedJsReady) {
     return <div className="min-h-screen bg-white"></div>;
   }
+
+  console.log('Rendering session plan content');
 
   return (
     <>
@@ -300,6 +309,13 @@ export default function SessionPlanPreviewPage() {
     visibility: visible !important;
     opacity: 1 !important;
   }
+
+  .pagedjs_pagebox {
+    grid-template-columns: none !important;
+    grid-template-rows: none !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    }
 
   /* Make page area take full space */
   .pagedjs_page_content,
