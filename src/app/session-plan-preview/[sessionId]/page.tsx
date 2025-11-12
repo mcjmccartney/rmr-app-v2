@@ -301,13 +301,6 @@ export default function SessionPlanPreviewPage() {
     opacity: 1 !important;
   }
 
-  .pagedjs_pagebox {
-    grid-template-columns: none !important;
-    grid-template-rows: none !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    }
-
   /* Make page area take full space */
   .pagedjs_page_content,
   .pagedjs_pagebox {
