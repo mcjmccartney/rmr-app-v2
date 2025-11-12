@@ -58,12 +58,28 @@ export default function SessionPlanPreviewPage() {
 
   // Trigger Paged.js preview AFTER content is loaded
   useEffect(() => {
-    if (!loading && sessionPlan && pagedJsReady && (window as any).PagedPolyfill) {
+    if (!loading && sessionPlan && pagedJsReady) {
       console.log('Triggering Paged.js preview with content');
-      const paged = new (window as any).PagedPolyfill.Previewer();
-      paged.preview().then(() => {
-        console.log('Paged.js preview complete');
-      });
+
+      // Check what's available on window
+      console.log('window.PagedPolyfill:', (window as any).PagedPolyfill);
+      console.log('window.Paged:', (window as any).Paged);
+
+      // Try different API approaches
+      if ((window as any).PagedPolyfill) {
+        const Paged = (window as any).PagedPolyfill;
+        const paged = new Paged.Previewer();
+        paged.preview().then(() => {
+          console.log('Paged.js preview complete');
+        }).catch((err: any) => {
+          console.error('Paged.js preview error:', err);
+        });
+      } else if ((window as any).Paged) {
+        // Alternative API
+        console.log('Using window.Paged API');
+      } else {
+        console.error('Paged.js not found on window');
+      }
     }
   }, [loading, sessionPlan, pagedJsReady]);
 
