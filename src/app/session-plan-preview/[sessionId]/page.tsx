@@ -280,31 +280,43 @@ export default function SessionPlanPreviewPage() {
     color: #222;
   }
 
+  /* === Ensure content is visible === */
+  body {
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+
   /* === Paged.js Preview === */
   .pagedjs_pages {
-    background: #525659;  /* dark gray background behind pages */
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 20px;
-    min-height: 100vh;
+    background: #525659 !important;  /* dark gray background behind pages */
+    padding: 20px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 20px !important;
+    min-height: 100vh !important;
+    visibility: visible !important;
+    opacity: 1 !important;
   }
 
   .pagedjs_page {
     background: #ecebdd !important;  /* A4 page color */
-    width: 210mm;
-    height: 297mm;
-    overflow: hidden;
+    width: 210mm !important;
+    height: 297mm !important;
+    overflow: hidden !important;
     margin: 0 !important;
     padding: 0 !important;
-    border: none;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+    border: none !important;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3) !important;
+    visibility: visible !important;
+    opacity: 1 !important;
   }
 
   .pagedjs_pagebox {
     grid-template-columns: none !important;
     grid-template-rows: none !important;
+    visibility: visible !important;
+    opacity: 1 !important;
     }
 
   /* Make page area take full space */
@@ -314,6 +326,20 @@ export default function SessionPlanPreviewPage() {
     height: 100% !important;
     margin: 0 !important;
     padding: 0 !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+
+  /* Ensure the original content wrapper is hidden after Paged.js processes it */
+  .content-wrapper:not(.pagedjs_page_content .content-wrapper) {
+    display: none;
+  }
+
+  /* But show it inside Paged.js pages */
+  .pagedjs_page_content .content-wrapper {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
   }
 
   .content-wrapper {
