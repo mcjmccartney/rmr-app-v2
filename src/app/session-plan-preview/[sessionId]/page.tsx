@@ -135,32 +135,34 @@ export default function SessionPlanPreviewPage() {
         setSession(sess);
 
         // Fetch client if session has clientId
+        let clientData = null;
         if (sess.clientId) {
-          const { data: clientData, error: clientError } = await supabase
+          const { data: fetchedClientData, error: clientError } = await supabase
             .from('clients')
             .select('*')
             .eq('id', sess.clientId)
             .single();
 
-          if (!clientError && clientData) {
+          if (!clientError && fetchedClientData) {
             const cli: Client = {
-              id: clientData.id,
-              firstName: clientData.first_name,
-              lastName: clientData.last_name,
-              partnerName: clientData.partner_name,
-              dogName: clientData.dog_name,
-              otherDogs: clientData.other_dogs || [],
-              phone: clientData.phone,
-              email: clientData.email,
-              address: clientData.address,
-              active: clientData.active,
-              membership: clientData.membership,
-              avatar: clientData.avatar,
-              behaviouralBriefId: clientData.behavioural_brief_id,
-              booking_terms_signed: clientData.booking_terms_signed,
-              booking_terms_signed_date: clientData.booking_terms_signed_date,
+              id: fetchedClientData.id,
+              firstName: fetchedClientData.first_name,
+              lastName: fetchedClientData.last_name,
+              partnerName: fetchedClientData.partner_name,
+              dogName: fetchedClientData.dog_name,
+              otherDogs: fetchedClientData.other_dogs || [],
+              phone: fetchedClientData.phone,
+              email: fetchedClientData.email,
+              address: fetchedClientData.address,
+              active: fetchedClientData.active,
+              membership: fetchedClientData.membership,
+              avatar: fetchedClientData.avatar,
+              behaviouralBriefId: fetchedClientData.behavioural_brief_id,
+              booking_terms_signed: fetchedClientData.booking_terms_signed,
+              booking_terms_signed_date: fetchedClientData.booking_terms_signed_date,
             };
             setClient(cli);
+            clientData = cli;
           }
         }
 
@@ -180,7 +182,7 @@ export default function SessionPlanPreviewPage() {
         }
 
         // Build title
-        const dogName = sess.dogName || (client?.dogName) || 'Dog';
+        const dogName = sess.dogName || clientData?.dogName || 'Dog';
         const titleText = `Session ${plan.sessionNumber} - ${dogName}`;
         setTitle(titleText);
 
