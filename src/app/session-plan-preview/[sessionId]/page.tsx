@@ -294,6 +294,11 @@ export default function SessionPlanPreviewPage() {
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
   }
 
+  .pagedjs_pagebox {
+    grid-template-columns: none;
+    grid-template-rows: none;
+  }
+
   .content-wrapper {
     background-color: #ecebdd;
     padding: 24px;
