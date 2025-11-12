@@ -5,7 +5,6 @@ import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { SessionPlan, Session, Client, ActionPoint } from '@/types';
 import SafeHtmlRenderer from '@/components/SafeHtmlRenderer';
-import Script from 'next/script';
 
 interface EditableActionPoint {
   header: string;
@@ -27,7 +26,27 @@ export default function SessionPlanPreviewPage() {
   const [mainGoals, setMainGoals] = useState<string[]>([]);
   const [explanationOfBehaviour, setExplanationOfBehaviour] = useState('');
   const [editableActionPoints, setEditableActionPoints] = useState<EditableActionPoint[]>([]);
-  const [pagedReady, setPagedReady] = useState(false);
+
+  // Load Paged.js dynamically
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://unpkg.com/pagedjs/dist/paged.polyfill.js';
+    script.async = true;
+    script.onload = () => {
+      console.log('Paged.js loaded successfully');
+    };
+    script.onerror = () => {
+      console.error('Failed to load Paged.js');
+    };
+    document.body.appendChild(script);
+
+    return () => {
+      // Cleanup: remove script when component unmounts
+      if (document.body.contains(script)) {
+        document.body.removeChild(script);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     async function fetchData() {
@@ -231,16 +250,6 @@ export default function SessionPlanPreviewPage() {
 
   return (
     <>
-      {/* Load Paged.js for pagination preview */}
-      <Script
-        src="https://unpkg.com/pagedjs/dist/paged.polyfill.js"
-        strategy="afterInteractive"
-        onLoad={() => {
-          console.log('Paged.js loaded');
-          setPagedReady(true);
-        }}
-      />
-
       {/* Paged.js styles for pagination */}
       <style jsx global>{`
         /* Page setup for Paged.js */
