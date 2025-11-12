@@ -278,74 +278,20 @@ export default function SessionPlanPreviewPage() {
     color: #222;
   }
 
-  /* === Ensure content is visible === */
-  body {
-    visibility: visible !important;
-    opacity: 1 !important;
-  }
-
-  /* === Paged.js Preview === */
+  /* === Paged.js Preview Styling (minimal overrides) === */
   .pagedjs_pages {
-    background: #525659 !important;  /* dark gray background behind pages */
-    padding: 20px !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    gap: 20px !important;
-    min-height: 100vh !important;
-    visibility: visible !important;
-    opacity: 1 !important;
+    background: #525659;
+    padding: 20px;
   }
 
   .pagedjs_page {
-    background: #ecebdd !important;  /* A4 page color */
-    width: 210mm !important;
-    height: 297mm !important;
-    overflow: hidden !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    border: none !important;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3) !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-  }
-
-  .pagedjs_pagebox {
-    grid-template-columns: none !important;
-    grid-template-rows: none !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    }
-
-  /* Make page area take full space */
-  .pagedjs_page_content,
-  .pagedjs_pagebox {
-    width: 100% !important;
-    height: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-  }
-
-  /* Ensure the original content wrapper is hidden after Paged.js processes it */
-  .content-wrapper:not(.pagedjs_page_content .content-wrapper) {
-    display: none;
-  }
-
-  /* But show it inside Paged.js pages */
-  .pagedjs_page_content .content-wrapper {
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
+    background: #ecebdd;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
   }
 
   .content-wrapper {
     background-color: #ecebdd;
-    width: 100%;
-    height: 100%;
-    padding: 0;
-    margin: 0;
+    padding: 24px;
   }
 
   /* === Paged.js Pagination Rules === */
@@ -394,8 +340,7 @@ export default function SessionPlanPreviewPage() {
     __html: `
       @page {
         size: A4;
-        margin: 0 !important;  /* absolutely no margins */
-        padding: 0 !important;
+        margin: 20mm;
         background: #ecebdd;
       }
     `,
@@ -404,8 +349,6 @@ export default function SessionPlanPreviewPage() {
 
       {/* === ACTUAL DOCUMENT === */}
       <div className="content-wrapper">
-        {/* Main Content Area */}
-        <div style={{ padding: "24px" }}>
           {/* Title */}
           <h2 className="text-5xl text-gray-900 mb-10">{title}</h2>
 
@@ -459,8 +402,6 @@ export default function SessionPlanPreviewPage() {
             ))}
           </div>
         )}
-        </div>
-        {/* End Main Content Area */}
       </div>
     </>
   );
