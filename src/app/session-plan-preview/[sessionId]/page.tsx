@@ -249,16 +249,12 @@ export default function SessionPlanPreviewPage() {
   //   }
   // }, [loading, error, sessionPlan]);
 
-  console.log('Render state:', { loading, error, sessionPlan: !!sessionPlan, session: !!session });
-  console.log('Component render timestamp:', new Date().toISOString());
-
   if (loading) {
-    console.log('Rendering loading screen');
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading session plan... (v2)</p>
+          <p className="text-gray-600">Loading session plan...</p>
         </div>
       </div>
     );
@@ -281,14 +277,8 @@ export default function SessionPlanPreviewPage() {
     );
   }
 
-  console.log('Rendering main content - BUILD v2');
   return (
     <>
-      {/* DEBUG: This should be visible */}
-      <div style={{ position: 'fixed', top: 0, left: 0, background: 'red', color: 'white', padding: '10px', zIndex: 9999 }}>
-        MAIN CONTENT RENDERED - {new Date().toISOString()}
-      </div>
-
       {/* Paged.js styles for pagination */}
       <style>{`
   /* === Base Layout === */
@@ -484,6 +474,8 @@ export default function SessionPlanPreviewPage() {
             ))}
           </div>
         )}
+        </div>
+        {/* End Main Content Area */}
 
         {/* Footer */}
         <div
