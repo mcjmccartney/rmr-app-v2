@@ -387,16 +387,25 @@ export default function SessionPlanPreviewPage() {
 
       {/* === ACTUAL DOCUMENT === */}
       <div className="content-wrapper">
-          {/* Green Banner */}
-          <div style={{
-            backgroundColor: '#4f6749',
-            height: '80px',
-            marginBottom: '40px',
-            marginTop: '-24px',
-            marginLeft: '-24px',
-            marginRight: '-24px',
-            width: 'calc(100% + 48px)'
-          }}></div>
+          {/* Header */}
+        <div
+          style={{ backgroundColor: "#4f6749" }}
+          className="p-2 mb-6 page-header flex items-center justify-between"
+        >
+          {/* Left Image */}
+          <img
+            src="https://i.ibb.co/tp6WV8TN/Screenshot-2025-11-12-at-13-38-12.png"
+            alt="Raising My Rescue Text Logo"
+            className="h-16 w-auto"
+          />
+
+          {/* Right Logo */}
+          <img
+            src="https://i.ibb.co/0V6pRF85/Screenshot-2025-11-12-at-13-17-36.png"
+            alt="Raising My Rescue Logo"
+            className="h-16 w-auto ml-4"
+          />
+        </div>
 
           {/* Title */}
           <h2 className="text-5xl text-gray-900 mb-10">{title}</h2>
@@ -451,6 +460,22 @@ export default function SessionPlanPreviewPage() {
             ))}
           </div>
         )}
+
+        {/* Footer */}
+        <div className="bg-[#ecebdd] mt-12 py-6 border-t-2 border-[#4f6749] flex flex-col sm:flex-row justify-between items-center text-center sm:text-left text-black font-serif tracking-wide">
+          <p className="text-base italic">A happier life with your dog</p>
+
+          {/* Clickable Website Link */}
+          <a
+            href="https://www.raisingmyrescue.co.uk"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-base cursor-pointer no-underline hover:underline-offset-4 hover:cursor-pointer"
+            style={{ color: "black", textDecoration: "none" }}
+          >
+            www.raisingmyrescue.co.uk
+          </a>
+        </div>
       </div>
     </>
   );
