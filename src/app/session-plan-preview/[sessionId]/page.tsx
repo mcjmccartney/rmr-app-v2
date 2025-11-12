@@ -268,7 +268,6 @@ export default function SessionPlanPreviewPage() {
           {/* Header Section - Narrower */}
           <div style={{ backgroundColor: '#4f6749' }} className="text-white p-4 rounded-lg mb-6 page-header">
             <h1 className="text-xl font-bold">RAISING MY RESCUE</h1>
-            <p className="text-sm text-gray-300">Professional Dog Training Services</p>
           </div>
 
           {/* Title */}

@@ -640,6 +640,16 @@ function SessionPlanContent() {
     await generateDocument();
   };
 
+  // Helper function to strip HTML tags from text
+  const stripHtmlTags = (html: string): string => {
+    if (!html) return '';
+    // Create a temporary div element to parse HTML
+    const temp = document.createElement('div');
+    temp.innerHTML = html;
+    // Get text content (strips all HTML tags)
+    return temp.textContent || temp.innerText || '';
+  };
+
   const generateDocument = async () => {
     if (!currentSession || !currentClient) return;
 
@@ -669,12 +679,13 @@ function SessionPlanContent() {
       explanationOfBehaviour: hasMainGoals ? (formData.explanationOfBehaviour || '') : '',
 
       // Action points (current selection - use edited versions if available, otherwise personalized)
+      // Strip HTML tags from action points for Google Doc generation
       actionPoints: selectedActionPoints.map((actionPointId) => {
         // Check if we have an edited version (for both blank and library action points)
         if (editableActionPoints[actionPointId]) {
           return {
-            header: editableActionPoints[actionPointId].header,
-            details: editableActionPoints[actionPointId].details
+            header: stripHtmlTags(editableActionPoints[actionPointId].header),
+            details: stripHtmlTags(editableActionPoints[actionPointId].details)
           };
         }
 
@@ -694,8 +705,8 @@ function SessionPlanContent() {
         );
 
         return {
-          header: personalizedActionPoint.header,
-          details: personalizedActionPoint.details
+          header: stripHtmlTags(personalizedActionPoint.header),
+          details: stripHtmlTags(personalizedActionPoint.details)
         };
       }).filter(Boolean),
 
@@ -1168,6 +1179,14 @@ function SessionPlanContent() {
                     className="w-full bg-white text-amber-800 py-3 px-4 rounded-lg font-medium border border-amber-800 hover:bg-amber-800/10 transition-colors"
                   >
                     Preview & Generate PDF
+                  </button>
+
+                  {/* Temporary button to open modal for testing */}
+                  <button
+                    onClick={() => setShowPDFModal(true)}
+                    className="w-full bg-purple-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-purple-700 transition-colors"
+                  >
+                    🔧 Open Modal (Testing)
                   </button>
 
                   {!generatedDocUrl ? (
