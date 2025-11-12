@@ -65,6 +65,7 @@ export default function SessionPlanPreviewPage() {
   useEffect(() => {
     async function fetchData() {
       try {
+        console.log('Starting to fetch session plan for sessionId:', sessionId);
         setLoading(true);
         setError(null);
 
@@ -76,10 +77,13 @@ export default function SessionPlanPreviewPage() {
           .single();
 
         if (planError) {
+          console.error('Session plan error:', planError);
           setError('Session plan not found');
           setLoading(false);
           return;
         }
+
+        console.log('Session plan fetched:', planData);
 
         const plan: SessionPlan = {
           id: planData.id,
@@ -107,10 +111,13 @@ export default function SessionPlanPreviewPage() {
           .single();
 
         if (sessionError) {
+          console.error('Session error:', sessionError);
           setError('Session not found');
           setLoading(false);
           return;
         }
+
+        console.log('Session fetched:', sessionData);
 
         const sess: Session = {
           id: sessionData.id,
@@ -213,6 +220,7 @@ export default function SessionPlanPreviewPage() {
         }
         setEditableActionPoints(editableAPs);
 
+        console.log('All data loaded successfully, setting loading to false');
         setLoading(false);
       } catch (err) {
         console.error('Error fetching session plan preview:', err);
@@ -222,7 +230,10 @@ export default function SessionPlanPreviewPage() {
     }
 
     if (sessionId) {
+      console.log('SessionId exists, calling fetchData');
       fetchData();
+    } else {
+      console.error('No sessionId provided');
     }
   }, [sessionId]);
 
