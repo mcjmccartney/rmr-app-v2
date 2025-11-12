@@ -34,6 +34,20 @@ export default function SessionPlanPreviewPage() {
     script.async = true;
     script.onload = () => {
       console.log('Paged.js loaded successfully');
+
+      // Inject @page margin box rules after Paged.js loads
+      const pageStyle = document.createElement('style');
+      pageStyle.textContent = `
+        @page {
+          @top-center {
+            content: element(header);
+          }
+          @bottom-center {
+            content: element(footer);
+          }
+        }
+      `;
+      document.head.appendChild(pageStyle);
     };
     script.onerror = () => {
       console.error('Failed to load Paged.js');
@@ -251,33 +265,7 @@ export default function SessionPlanPreviewPage() {
   return (
     <>
       {/* Paged.js styles for pagination */}
-      <style dangerouslySetInnerHTML={{__html: `
-        /* Page setup for Paged.js */
-        @page {
-          size: A4;
-          margin: 0.75in 0.5in;
-        }
-
-        @page {
-          @top-center {
-            content: element(header);
-          }
-
-          @bottom-center {
-            content: element(footer);
-          }
-        }
-
-        /* Running header */
-        .page-header {
-          position: running(header);
-        }
-
-        /* Running footer */
-        .page-footer {
-          position: running(footer);
-        }
-
+      <style>{`
         /* Prevent action points from breaking across pages */
         .action-point-box {
           page-break-inside: avoid;
@@ -329,6 +317,22 @@ export default function SessionPlanPreviewPage() {
             box-shadow: none;
             margin: 0;
           }
+        }
+      `}</style>
+
+      {/* Paged.js @page rules - injected after Paged.js loads */}
+      <style dangerouslySetInnerHTML={{__html: `
+        @page {
+          size: A4;
+          margin: 0.75in 0.5in;
+        }
+
+        .page-header {
+          position: running(header);
+        }
+
+        .page-footer {
+          position: running(footer);
         }
       `}} />
 
