@@ -249,83 +249,120 @@ export default function SessionPlanPreviewPage() {
             position: running(header);
           }
 
-          /* Cream background for print */
-          body {
-            background-color: #ecebdd !important;
+          break-before-page {
+          page-break-before: always;
           }
+          
         }
 
-        @media screen {
-          /* Cream background for screen preview */
-          body {
-            background-color: #ecebdd !important;
-          }
-        }
       `}</style>
 
       <div className="min-h-screen p-8" style={{ backgroundColor: '#ecebdd' }}>
         <div className="max-w-4xl mx-auto">
-          {/* Header Section - Narrower */}
-          <div style={{ backgroundColor: '#4f6749' }} className="text-white p-4 rounded-lg mb-6 page-header">
-            <h1 className="text-xl font-bold">RAISING MY RESCUE</h1>
-          </div>
+          {/* Header */}
+        <div
+          style={{ backgroundColor: "#4f6749" }}
+          className="p-3 mb-6 page-header flex items-center justify-between"
+        >
+          {/* Left Image */}
+          <img
+            src="https://i.ibb.co/tp6WV8TN/Screenshot-2025-11-12-at-13-38-12.png"
+            alt="Raising My Rescue Text Logo"
+            className="h-12 w-auto rounded"
+          />
+
+          {/* Right Logo */}
+          <img
+            src="https://i.ibb.co/0V6pRF85/Screenshot-2025-11-12-at-13-17-36.png"
+            alt="Raising My Rescue Logo"
+            className="h-12 w-auto ml-4 rounded"
+          />
+        </div>
 
           {/* Title */}
-          <h2 className="text-xl font-bold text-gray-900 mb-6">{title}</h2>
+          <h2 className="text-5xl text-gray-900 mb-10">{title}</h2>
 
           {/* Main Goals */}
-          {mainGoals.length > 0 && (
-            <div className="mb-6">
-              <h3 className="font-semibold text-gray-900 mb-3">Main Goals</h3>
-              <div className="bg-white p-4 rounded-md space-y-2">
+        {mainGoals.length > 0 && (
+          <div className="relative mb-8">
+            {/* Heading Label */}
+            <h3 className="absolute -top-5 left-4 bg-[#ecebdd] px-2 italic text-3xl">
+              Main Goals
+            </h3>
+
+            {/* Border Box */}
+            <div className="border-[3px] border-[#4f6749] rounded-md p-6">
+              <div className="grid md:grid-cols-2 gap-x-8 gap-y-4">
                 {mainGoals.map((goal, index) => (
                   <div key={index} className="flex items-start">
                     <span className="font-medium text-gray-700 mr-2">•</span>
-                    <div className="flex-1">
-                      <strong>Main Goal {index + 1}:</strong>{' '}
-                      <SafeHtmlRenderer html={goal} className="inline" />
-                    </div>
+                    <SafeHtmlRenderer
+                      html={goal}
+                      className="inline text-gray-900"
+                    />
                   </div>
                 ))}
               </div>
             </div>
-          )}
-
-          {/* Explanation of Behaviour */}
-          {explanationOfBehaviour && (
-            <div className="mb-6">
-              <h3 className="font-semibold text-gray-900 mb-3">Explanation of Behaviour</h3>
-              <div className="bg-white p-4 rounded-md">
-                <SafeHtmlRenderer html={explanationOfBehaviour} />
-              </div>
-            </div>
-          )}
-
-          {/* Action Points */}
-          {editableActionPoints.length > 0 && (
-            <div className="mb-6">
-              <h3 className="font-semibold text-gray-900 mb-3">Action Points</h3>
-              <div className="space-y-4">
-                {editableActionPoints.map((actionPoint, index) => (
-                  <div key={index} className="border border-gray-200 rounded-md p-4 action-point-box bg-white">
-                    <h4 className="font-medium text-gray-900 mb-2">
-                      Action Point {index + 1}: <SafeHtmlRenderer html={actionPoint.header} className="inline" />
-                    </h4>
-                    <div className="text-gray-700">
-                      <SafeHtmlRenderer html={actionPoint.details} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Footer */}
-          <div className="text-center text-sm text-gray-500 mt-8 pt-4 border-t border-gray-200">
-            Generated on {new Date().toLocaleDateString('en-GB')} at {new Date().toLocaleTimeString('en-GB')}
           </div>
+        )}
+
+        {/* Explanation of Behaviour */}
+        {explanationOfBehaviour && (
+          <div className="mb-6">
+            <h3 className="text-gray-900 italic text-3xl mb-2">
+              Explanation of Behaviour
+            </h3>
+            <div className="rounded-md">
+              <SafeHtmlRenderer html={explanationOfBehaviour} />
+            </div>
+          </div>
+        )}
+
+        {/* Force next section to start new page */}
+        <div className="break-before-page"></div>
+
+        {/* Action Points */}
+        {editableActionPoints.length > 0 && (
+          <div className="mb-6 space-y-6">
+            {editableActionPoints.map((actionPoint, index) => (
+              <div key={index} className="relative">
+                {/* Floating Header Label */}
+                <h4 className="absolute -top-5 left-4 bg-[#ecebdd] px-2 italic text-3xl">
+                  <SafeHtmlRenderer
+                    html={actionPoint.header}
+                    className="inline"
+                  />
+                </h4>
+
+                {/* Bordered Content Box */}
+                <div className="border-[3px] border-[#4f6749] rounded-md p-4 text-gray-900 leading-relaxed">
+                  <div className="text-gray-900">
+                    <SafeHtmlRenderer html={actionPoint.details} />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Footer */}
+        <div className="bg-[#ecebdd] mt-12 py-6 border-t-2 border-[#4f6749] flex flex-col sm:flex-row justify-between items-center text-center sm:text-left text-black font-serif tracking-wide">
+          <p className="text-base italic">A happier life with your dog</p>
+
+          {/* Clickable Website Link */}
+          <a
+            href="https://www.raisingmyrescue.co.uk"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-base cursor-pointer no-underline hover:underline-offset-4 hover:cursor-pointer"
+            style={{ color: "black", textDecoration: "none" }}
+          >
+            www.raisingmyrescue.co.uk
+          </a>
         </div>
       </div>
+    </div>
     </>
   );
 }
