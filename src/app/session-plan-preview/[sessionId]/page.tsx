@@ -295,21 +295,23 @@ export default function SessionPlanPreviewPage() {
 
   /* === Paged.js Preview === */
   .pagedjs_pages {
-    background: #ecebdd;  /* consistent background behind pages */
-    padding: 0;
+    background: #525659;  /* dark gray background behind pages */
+    padding: 20px;
     display: flex;
     flex-direction: column;
     align-items: center;
+    gap: 20px;
+    min-height: 100vh;
   }
 
   .pagedjs_page {
-    background: #ecebdd;  /* A4 page color */
+    background: #ecebdd !important;  /* A4 page color */
     width: 210mm;
     height: 297mm;
     overflow: hidden;
     margin: 0;
     border: none;
-    box-shadow: none;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
   }
 
   .content-wrapper {
@@ -341,13 +343,14 @@ export default function SessionPlanPreviewPage() {
   /* === Print Cleanup === */
   @media print {
     body {
-      background: #ecebdd !important;
+      background: white !important;
     }
 
     .pagedjs_pages {
-      background: #ecebdd !important;
+      background: transparent !important;
       padding: 0;
       margin: 0;
+      gap: 0;
     }
 
     .pagedjs_page {
