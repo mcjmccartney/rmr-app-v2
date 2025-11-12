@@ -290,21 +290,6 @@ export default function SessionPlanPreviewPage() {
           break-before: page;
         }
 
-        /* Paged.js preview styling */
-        .pagedjs_pages {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 20px;
-          padding: 20px;
-          background: #525659;
-        }
-
-        .pagedjs_page {
-          background: white;
-          box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-        }
-
         /* Print styles */
         @media print {
           .pagedjs_pages {
