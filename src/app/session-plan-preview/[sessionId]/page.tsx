@@ -235,7 +235,10 @@ export default function SessionPlanPreviewPage() {
   //   }
   // }, [loading, error, sessionPlan]);
 
+  console.log('Render check - loading:', loading, 'error:', error, 'sessionPlan:', !!sessionPlan);
+
   if (loading) {
+    console.log('Showing loading screen');
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
@@ -262,6 +265,8 @@ export default function SessionPlanPreviewPage() {
       </div>
     );
   }
+
+  console.log('Rendering main content with session plan');
 
   return (
     <>
