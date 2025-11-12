@@ -251,18 +251,18 @@ export default function SessionPlanPreviewPage() {
   return (
     <>
       {/* Paged.js styles for pagination */}
-      <style jsx global>{`
+      <style dangerouslySetInnerHTML={{__html: `
         /* Page setup for Paged.js */
         @page {
           size: A4;
           margin: 0.75in 0.5in;
+        }
 
-          /* Header on every page */
+        @page {
           @top-center {
             content: element(header);
           }
 
-          /* Footer on every page */
           @bottom-center {
             content: element(footer);
           }
@@ -330,7 +330,7 @@ export default function SessionPlanPreviewPage() {
             margin: 0;
           }
         }
-      `}</style>
+      `}} />
 
       <div className="content-wrapper" style={{ backgroundColor: '#ecebdd' }}>
           {/* Header */}
