@@ -28,22 +28,23 @@ export default function SessionPlanPreviewPage() {
   const [editableActionPoints, setEditableActionPoints] = useState<EditableActionPoint[]>([]);
   const [pagedJsReady, setPagedJsReady] = useState(false);
 
-  // Load Paged.js dynamically
+  // Load Paged.js dynamically - but DON'T let it auto-run
   useEffect(() => {
+    // Disable auto-preview so Paged.js doesn't process empty content
+    (window as any).PagedConfig = {
+      auto: false,
+    };
+
     const script = document.createElement('script');
     script.src = 'https://unpkg.com/pagedjs/dist/paged.polyfill.js';
     script.async = true;
     script.onload = () => {
-      console.log('Paged.js loaded successfully');
-      // Give Paged.js time to initialize
-      setTimeout(() => {
-        setPagedJsReady(true);
-        console.log('Paged.js ready to render');
-      }, 500);
+      console.log('Paged.js loaded successfully (auto-preview disabled)');
+      setPagedJsReady(true);
     };
     script.onerror = () => {
       console.error('Failed to load Paged.js');
-      setPagedJsReady(true); // Still allow rendering even if Paged.js fails
+      setPagedJsReady(true);
     };
     document.body.appendChild(script);
 
@@ -54,6 +55,17 @@ export default function SessionPlanPreviewPage() {
       }
     };
   }, []);
+
+  // Trigger Paged.js preview AFTER content is loaded
+  useEffect(() => {
+    if (!loading && sessionPlan && pagedJsReady && (window as any).PagedPolyfill) {
+      console.log('Triggering Paged.js preview with content');
+      const paged = new (window as any).PagedPolyfill.Previewer();
+      paged.preview().then(() => {
+        console.log('Paged.js preview complete');
+      });
+    }
+  }, [loading, sessionPlan, pagedJsReady]);
 
   useEffect(() => {
     async function fetchData() {
