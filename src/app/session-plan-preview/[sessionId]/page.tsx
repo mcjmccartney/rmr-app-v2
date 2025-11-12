@@ -268,105 +268,108 @@ export default function SessionPlanPreviewPage() {
     <>
       {/* Paged.js styles for pagination */}
       <style>{`
-        /* --- General layout --- */
-        body {
-          background: #d0d0d0;
-          font-family: "Helvetica", sans-serif;
-          color: #222;
-        }
+  /* === Base Layout === */
+  body {
+    background: #ecebdd;
+    margin: 0;
+    font-family: "Helvetica", sans-serif;
+    color: #222;
+  }
 
-        .content-wrapper {
-          background-color: #ecebdd;
-          padding-top: 2cm; /* prevents overlap with header */
-          padding-bottom: 2cm; /* prevents overlap with footer */
-        }
+  /* === Paged.js Preview === */
+  .pagedjs_pages {
+    background: #ecebdd;  /* consistent background behind pages */
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
 
-        /* --- Paged.js Preview Styling --- */
-        .pagedjs_pages {
-          background: #d0d0d0;
-          padding: 1rem;
-          display: flex;
-          flex-wrap: wrap;
-          justify-content: center;
-          gap: 1rem;
-        }
+  .pagedjs_page {
+    background: #ecebdd;  /* A4 page color */
+    width: 210mm;
+    height: 297mm;
+    overflow: hidden;
+    margin: 0;
+    border: none;
+    box-shadow: none;
+  }
 
-        .pagedjs_page {
-          background: white;
-          box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-          border: 1px solid #999;
-          width: 210mm;
-          height: 297mm;
-          overflow: hidden;
-        }
+  .content-wrapper {
+    background-color: #ecebdd;
+    width: 100%;
+    height: 100%;
+    padding-top: 0;         /* header at top edge */
+    padding-bottom: 2cm;    /* space for footer */
+  }
 
-        @media screen {
-          .pagedjs_page {
-            zoom: 0.9; /* adjust preview scale */
-          }
-        }
+  /* === Paged.js Pagination Rules === */
+  .action-point-box,
+  .main-goals-section,
+  .explanation-section {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
 
-        /* --- Printing Cleanup --- */
-        @media print {
-          .pagedjs_pages {
-            background: transparent;
-            padding: 0;
-            gap: 0;
-          }
-          .pagedjs_page {
-            box-shadow: none;
-            border: none;
-            margin: 0;
-            zoom: 1;
-          }
-        }
+  .break-before-page {
+    page-break-before: always;
+    break-before: page;
+  }
 
-        /* --- Pagination rules --- */
-        .action-point-box,
-        .main-goals-section,
-        .explanation-section {
-          page-break-inside: avoid;
-          break-inside: avoid;
-        }
+  .break-after-page {
+    page-break-after: always;
+    break-after: page;
+  }
 
-        .break-before-page {
-          page-break-before: always;
-          break-before: page;
-        }
+  /* === Print Cleanup === */
+  @media print {
+    body {
+      background: #ecebdd !important;
+    }
 
-        .break-after-page {
-          page-break-after: always;
-          break-after: page;
-        }
-      `}</style>
+    .pagedjs_pages {
+      background: #ecebdd !important;
+      padding: 0;
+      margin: 0;
+    }
+
+    .pagedjs_page {
+      background: #ecebdd !important;
+      box-shadow: none;
+      margin: 0;
+      border: none;
+    }
+  }
+`}</style>
 
       {/* === @page setup (Paged.js) === */}
       <style
-        dangerouslySetInnerHTML={{
-          __html: `
-          @page {
-            size: A4;
-            margin: 0.75in 0.5in;
+  dangerouslySetInnerHTML={{
+    __html: `
+      @page {
+        size: A4;
+        margin: 0;  /* full bleed */
+        background: #ecebdd;
 
-            @top-center {
-              content: element(header);
-            }
+        @top-center {
+          content: element(header);
+        }
 
-            @bottom-center {
-              content: element(footer);
-            }
-          }
+        @bottom-center {
+          content: element(footer);
+        }
+      }
 
-          .page-header {
-            position: running(header);
-          }
+      .page-header {
+        position: running(header);
+      }
 
-          .page-footer {
-            position: running(footer);
-          }
-        `,
-        }}
-      />
+      .page-footer {
+        position: running(footer);
+      }
+    `,
+  }}
+/>
 
       {/* === ACTUAL DOCUMENT === */}
       <div className="content-wrapper">
