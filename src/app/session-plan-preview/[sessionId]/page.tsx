@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { SessionPlan, Session, Client, ActionPoint } from '@/types';
 import SafeHtmlRenderer from '@/components/SafeHtmlRenderer';
+import Script from 'next/script';
 
 interface EditableActionPoint {
   header: string;
@@ -26,6 +27,7 @@ export default function SessionPlanPreviewPage() {
   const [mainGoals, setMainGoals] = useState<string[]>([]);
   const [explanationOfBehaviour, setExplanationOfBehaviour] = useState('');
   const [editableActionPoints, setEditableActionPoints] = useState<EditableActionPoint[]>([]);
+  const [pagedReady, setPagedReady] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -229,36 +231,99 @@ export default function SessionPlanPreviewPage() {
 
   return (
     <>
-      {/* Print styles */}
+      {/* Load Paged.js for pagination preview */}
+      <Script
+        src="https://unpkg.com/pagedjs/dist/paged.polyfill.js"
+        strategy="afterInteractive"
+        onLoad={() => {
+          console.log('Paged.js loaded');
+          setPagedReady(true);
+        }}
+      />
+
+      {/* Paged.js styles for pagination */}
       <style jsx global>{`
-        @media print {
-          /* Prevent individual action point boxes from splitting across pages */
-          .action-point-box {
-            page-break-inside: avoid !important;
-            break-inside: avoid !important;
+        /* Page setup for Paged.js */
+        @page {
+          size: A4;
+          margin: 0.75in 0.5in;
+
+          /* Header on every page */
+          @top-center {
+            content: element(header);
           }
 
-          /* Ensure proper page sizing with cream background */
-          @page {
-            margin: 0.5in;
-            size: A4;
+          /* Footer on every page */
+          @bottom-center {
+            content: element(footer);
           }
-
-          /* Make header appear on every page */
-          .page-header {
-            position: running(header);
-          }
-
-          break-before-page {
-          page-break-before: always;
-          }
-          
         }
 
+        /* Running header */
+        .page-header {
+          position: running(header);
+        }
+
+        /* Running footer */
+        .page-footer {
+          position: running(footer);
+        }
+
+        /* Prevent action points from breaking across pages */
+        .action-point-box {
+          page-break-inside: avoid;
+          break-inside: avoid;
+        }
+
+        /* Prevent main goals from breaking */
+        .main-goals-section {
+          page-break-inside: avoid;
+          break-inside: avoid;
+        }
+
+        /* Prevent explanation from breaking */
+        .explanation-section {
+          page-break-inside: avoid;
+          break-inside: avoid;
+        }
+
+        /* Force page break before action points */
+        .break-before-page {
+          page-break-before: always;
+          break-before: page;
+        }
+
+        /* Paged.js preview styling */
+        .pagedjs_pages {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 20px;
+          padding: 20px;
+          background: #525659;
+        }
+
+        .pagedjs_page {
+          background: white;
+          box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Print styles */
+        @media print {
+          .pagedjs_pages {
+            background: transparent;
+            padding: 0;
+            gap: 0;
+          }
+
+          .pagedjs_page {
+            box-shadow: none;
+            margin: 0;
+          }
+        }
       `}</style>
 
-      <div className="min-h-screen p-8" style={{ backgroundColor: '#ecebdd' }}>
-        <div className="max-w-4xl mx-auto">
+      <div className="content-wrapper" style={{ backgroundColor: '#ecebdd' }}>
           {/* Header */}
         <div
           style={{ backgroundColor: "#4f6749" }}
@@ -284,7 +349,7 @@ export default function SessionPlanPreviewPage() {
 
           {/* Main Goals */}
         {mainGoals.length > 0 && (
-          <div className="relative mb-8">
+          <div className="main-goals-section relative mb-8">
             {/* Heading Label */}
             <h3 className="absolute -top-5 left-4 bg-[#ecebdd] px-2 italic text-3xl">
               Main Goals
@@ -309,7 +374,7 @@ export default function SessionPlanPreviewPage() {
 
         {/* Explanation of Behaviour */}
         {explanationOfBehaviour && (
-          <div className="mb-6">
+          <div className="explanation-section mb-6">
             <h3 className="text-gray-900 italic text-3xl mb-2">
               Explanation of Behaviour
             </h3>
@@ -326,7 +391,7 @@ export default function SessionPlanPreviewPage() {
         {editableActionPoints.length > 0 && (
           <div className="mb-6 space-y-6">
             {editableActionPoints.map((actionPoint, index) => (
-              <div key={index} className="relative">
+              <div key={index} className="action-point-box relative">
                 {/* Floating Header Label */}
                 <h4 className="absolute -top-5 left-4 bg-[#ecebdd] px-2 italic text-3xl">
                   <SafeHtmlRenderer
@@ -347,7 +412,7 @@ export default function SessionPlanPreviewPage() {
         )}
 
         {/* Footer */}
-        <div className="bg-[#ecebdd] mt-12 py-6 border-t-2 border-[#4f6749] flex flex-col sm:flex-row justify-between items-center text-center sm:text-left text-black font-serif tracking-wide">
+        <div className="page-footer bg-[#ecebdd] mt-12 py-6 border-t-2 border-[#4f6749] flex flex-col sm:flex-row justify-between items-center text-center sm:text-left text-black font-serif tracking-wide">
           <p className="text-base italic">A happier life with your dog</p>
 
           {/* Clickable Website Link */}
@@ -362,7 +427,6 @@ export default function SessionPlanPreviewPage() {
           </a>
         </div>
       </div>
-    </div>
     </>
   );
 }
