@@ -235,26 +235,12 @@ export default function SessionPlanPreviewPage() {
   //   }
   // }, [loading, error, sessionPlan]);
 
-  console.log('Render check - loading:', loading, 'error:', error, 'sessionPlan:', !!sessionPlan);
-
-  if (loading) {
-    console.log('Showing loading screen');
+  // Don't show loading screen - just render content when ready
+  if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading session plan...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error || !sessionPlan) {
-    console.log('Rendering error screen');
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="text-center">
-          <p className="text-red-600 mb-4">{error || 'Session plan not found'}</p>
+          <p className="text-red-600 mb-4">{error}</p>
           <button
             onClick={() => router.back()}
             className="px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700"
@@ -266,7 +252,10 @@ export default function SessionPlanPreviewPage() {
     );
   }
 
-  console.log('Rendering main content with session plan');
+  // If still loading or no session plan, return empty div (no loading spinner)
+  if (loading || !sessionPlan) {
+    return <div className="min-h-screen bg-white"></div>;
+  }
 
   return (
     <>
