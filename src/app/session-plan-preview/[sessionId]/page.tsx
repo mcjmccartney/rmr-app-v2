@@ -28,48 +28,31 @@ export default function SessionPlanPreviewPage() {
   const [editableActionPoints, setEditableActionPoints] = useState<EditableActionPoint[]>([]);
   const [pagedJsReady, setPagedJsReady] = useState(false);
 
-  // Load Paged.js dynamically - but DON'T let it auto-run
+  // Load Paged.js ONLY after content is ready
   useEffect(() => {
-    // Disable auto-preview so Paged.js doesn't process empty content
-    (window as any).PagedConfig = {
-      auto: false,
-    };
+    // Only load Paged.js after we have content
+    if (!loading && sessionPlan && !pagedJsReady) {
+      console.log('Content ready, loading Paged.js...');
 
-    const script = document.createElement('script');
-    script.src = 'https://unpkg.com/pagedjs/dist/paged.polyfill.js';
-    script.async = true;
-    script.onload = () => {
-      console.log('Paged.js loaded successfully (auto-preview disabled)');
-      setPagedJsReady(true);
-    };
-    script.onerror = () => {
-      console.error('Failed to load Paged.js');
-      setPagedJsReady(true);
-    };
-    document.body.appendChild(script);
+      const script = document.createElement('script');
+      script.src = 'https://unpkg.com/pagedjs/dist/paged.polyfill.js';
+      script.async = true;
+      script.onload = () => {
+        console.log('Paged.js loaded and will auto-process content');
+        setPagedJsReady(true);
+      };
+      script.onerror = () => {
+        console.error('Failed to load Paged.js');
+        setPagedJsReady(true);
+      };
+      document.body.appendChild(script);
 
-    return () => {
-      // Cleanup: remove script when component unmounts
-      if (document.body.contains(script)) {
-        document.body.removeChild(script);
-      }
-    };
-  }, []);
-
-  // Trigger Paged.js preview AFTER content is loaded
-  useEffect(() => {
-    if (!loading && sessionPlan && pagedJsReady && (window as any).PagedPolyfill) {
-      console.log('Triggering Paged.js preview with content');
-
-      // PagedPolyfill IS the Previewer class
-      const Previewer = (window as any).PagedPolyfill;
-      const paged = new Previewer();
-
-      paged.preview().then(() => {
-        console.log('Paged.js preview complete!');
-      }).catch((err: any) => {
-        console.error('Paged.js preview error:', err);
-      });
+      return () => {
+        // Cleanup: remove script when component unmounts
+        if (document.body.contains(script)) {
+          document.body.removeChild(script);
+        }
+      };
     }
   }, [loading, sessionPlan, pagedJsReady]);
 
