@@ -311,30 +311,10 @@ export default function SessionPlanPreviewPage() {
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
   }
 
-  /* Remove all Paged.js margin boxes */
-  .pagedjs_margin,
-  .pagedjs_margin-top,
-  .pagedjs_margin-right,
-  .pagedjs_margin-bottom,
-  .pagedjs_margin-left,
-  .pagedjs_margin-top-left,
-  .pagedjs_margin-top-center,
-  .pagedjs_margin-top-right,
-  .pagedjs_margin-bottom-left,
-  .pagedjs_margin-bottom-center,
-  .pagedjs_margin-bottom-right,
-  .pagedjs_margin-left-top,
-  .pagedjs_margin-left-middle,
-  .pagedjs_margin-left-bottom,
-  .pagedjs_margin-right-top,
-  .pagedjs_margin-right-middle,
-  .pagedjs_margin-right-bottom {
-    display: none !important;
-    width: 0 !important;
-    height: 0 !important;
-    padding: 0 !important;
-    margin: 0 !important;
-  }
+  .pagedjs_pagebox {
+    grid-template-columns: none !important;
+    grid-template-rows: none !important;
+    }
 
   /* Make page area take full space */
   .pagedjs_page_content,
