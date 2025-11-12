@@ -266,75 +266,118 @@ export default function SessionPlanPreviewPage() {
     <>
       {/* Paged.js styles for pagination */}
       <style>{`
-        /* Prevent action points from breaking across pages */
-        .action-point-box {
-          page-break-inside: avoid;
-          break-inside: avoid;
+        /* --- General layout --- */
+        body {
+          background: #d0d0d0;
+          font-family: "Helvetica", sans-serif;
+          color: #222;
         }
 
-        /* Prevent main goals from breaking */
-        .main-goals-section {
-          page-break-inside: avoid;
-          break-inside: avoid;
+        .content-wrapper {
+          background-color: #ecebdd;
+          padding-top: 2cm; /* prevents overlap with header */
+          padding-bottom: 2cm; /* prevents overlap with footer */
         }
 
-        /* Prevent explanation from breaking */
-        .explanation-section {
-          page-break-inside: avoid;
-          break-inside: avoid;
+        /* --- Paged.js Preview Styling --- */
+        .pagedjs_pages {
+          background: #d0d0d0;
+          padding: 1rem;
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: center;
+          gap: 1rem;
         }
 
-        /* Force page break before action points */
-        .break-before-page {
-          page-break-before: always;
-          break-before: page;
+        .pagedjs_page {
+          background: white;
+          box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+          border: 1px solid #999;
+          width: 210mm;
+          height: 297mm;
+          overflow: hidden;
         }
 
-        /* Print styles */
+        @media screen {
+          .pagedjs_page {
+            zoom: 0.9; /* adjust preview scale */
+          }
+        }
+
+        /* --- Printing Cleanup --- */
         @media print {
           .pagedjs_pages {
             background: transparent;
             padding: 0;
             gap: 0;
           }
-
           .pagedjs_page {
             box-shadow: none;
+            border: none;
             margin: 0;
+            zoom: 1;
           }
+        }
+
+        /* --- Pagination rules --- */
+        .action-point-box,
+        .main-goals-section,
+        .explanation-section {
+          page-break-inside: avoid;
+          break-inside: avoid;
+        }
+
+        .break-before-page {
+          page-break-before: always;
+          break-before: page;
+        }
+
+        .break-after-page {
+          page-break-after: always;
+          break-after: page;
         }
       `}</style>
 
-      {/* Paged.js @page rules - injected after Paged.js loads */}
-      <style dangerouslySetInnerHTML={{__html: `
-        @page {
-          size: A4;
-          margin: 0.75in 0.5in;
-        }
+      {/* === @page setup (Paged.js) === */}
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+          @page {
+            size: A4;
+            margin: 0.75in 0.5in;
 
-        .page-header {
-          position: running(header);
-        }
+            @top-center {
+              content: element(header);
+            }
 
-        .page-footer {
-          position: running(footer);
-        }
-      `}} />
+            @bottom-center {
+              content: element(footer);
+            }
+          }
 
-      <div className="content-wrapper" style={{ backgroundColor: '#ecebdd' }}>
-          {/* Header */}
+          .page-header {
+            position: running(header);
+          }
+
+          .page-footer {
+            position: running(footer);
+          }
+        `,
+        }}
+      />
+
+      {/* === ACTUAL DOCUMENT === */}
+      <div className="content-wrapper">
+        {/* Header */}
         <div
           style={{ backgroundColor: "#4f6749" }}
           className="p-3 mb-6 page-header flex items-center justify-between"
         >
-          {/* Left Image */}
           <img
             src="https://i.ibb.co/tp6WV8TN/Screenshot-2025-11-12-at-13-38-12.png"
             alt="Raising My Rescue Text Logo"
             className="h-12 w-auto rounded"
           />
-
-          {/* Right Logo */}
           <img
             src="https://i.ibb.co/0V6pRF85/Screenshot-2025-11-12-at-13-17-36.png"
             alt="Raising My Rescue Logo"
@@ -342,18 +385,15 @@ export default function SessionPlanPreviewPage() {
           />
         </div>
 
-          {/* Title */}
-          <h2 className="text-5xl text-gray-900 mb-10">{title}</h2>
+        {/* Title */}
+        <h2 className="text-5xl text-gray-900 mb-10">{title}</h2>
 
-          {/* Main Goals */}
+        {/* Main Goals */}
         {mainGoals.length > 0 && (
           <div className="main-goals-section relative mb-8">
-            {/* Heading Label */}
             <h3 className="absolute -top-5 left-4 bg-[#ecebdd] px-2 italic text-3xl">
               Main Goals
             </h3>
-
-            {/* Border Box */}
             <div className="border-[3px] border-[#4f6749] rounded-md p-6">
               <div className="grid md:grid-cols-2 gap-x-8 gap-y-4">
                 {mainGoals.map((goal, index) => (
@@ -372,7 +412,7 @@ export default function SessionPlanPreviewPage() {
 
         {/* Explanation of Behaviour */}
         {explanationOfBehaviour && (
-          <div className="explanation-section mb-6">
+          <div className="explanation-section mb-6 break-after-page">
             <h3 className="text-gray-900 italic text-3xl mb-2">
               Explanation of Behaviour
             </h3>
@@ -382,27 +422,17 @@ export default function SessionPlanPreviewPage() {
           </div>
         )}
 
-        {/* Force next section to start new page */}
-        <div className="break-before-page"></div>
-
-        {/* Action Points */}
+        {/* Action Points (next page) */}
         {editableActionPoints.length > 0 && (
           <div className="mb-6 space-y-6">
             {editableActionPoints.map((actionPoint, index) => (
               <div key={index} className="action-point-box relative">
-                {/* Floating Header Label */}
                 <h4 className="absolute -top-5 left-4 bg-[#ecebdd] px-2 italic text-3xl">
-                  <SafeHtmlRenderer
-                    html={actionPoint.header}
-                    className="inline"
-                  />
+                  <SafeHtmlRenderer html={actionPoint.header} className="inline" />
                 </h4>
 
-                {/* Bordered Content Box */}
                 <div className="border-[3px] border-[#4f6749] rounded-md p-4 text-gray-900 leading-relaxed">
-                  <div className="text-gray-900">
-                    <SafeHtmlRenderer html={actionPoint.details} />
-                  </div>
+                  <SafeHtmlRenderer html={actionPoint.details} />
                 </div>
               </div>
             ))}
@@ -412,13 +442,11 @@ export default function SessionPlanPreviewPage() {
         {/* Footer */}
         <div className="page-footer bg-[#ecebdd] mt-12 py-6 border-t-2 border-[#4f6749] flex flex-col sm:flex-row justify-between items-center text-center sm:text-left text-black font-serif tracking-wide">
           <p className="text-base italic">A happier life with your dog</p>
-
-          {/* Clickable Website Link */}
           <a
             href="https://www.raisingmyrescue.co.uk"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-base cursor-pointer no-underline hover:underline-offset-4 hover:cursor-pointer"
+            className="text-base cursor-pointer no-underline hover:underline-offset-4"
             style={{ color: "black", textDecoration: "none" }}
           >
             www.raisingmyrescue.co.uk
