@@ -249,7 +249,10 @@ export default function SessionPlanPreviewPage() {
   //   }
   // }, [loading, error, sessionPlan]);
 
+  console.log('Render state:', { loading, error, sessionPlan: !!sessionPlan, session: !!session });
+
   if (loading) {
+    console.log('Rendering loading screen');
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
@@ -261,6 +264,7 @@ export default function SessionPlanPreviewPage() {
   }
 
   if (error || !sessionPlan) {
+    console.log('Rendering error screen');
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
@@ -276,6 +280,7 @@ export default function SessionPlanPreviewPage() {
     );
   }
 
+  console.log('Rendering main content');
   return (
     <>
       {/* Paged.js styles for pagination */}
