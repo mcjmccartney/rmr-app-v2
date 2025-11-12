@@ -34,20 +34,6 @@ export default function SessionPlanPreviewPage() {
     script.async = true;
     script.onload = () => {
       console.log('Paged.js loaded successfully');
-
-      // Inject @page margin box rules after Paged.js loads
-      const pageStyle = document.createElement('style');
-      pageStyle.textContent = `
-        @page {
-          @top-center {
-            content: element(header);
-          }
-          @bottom-center {
-            content: element(footer);
-          }
-        }
-      `;
-      document.head.appendChild(pageStyle);
     };
     script.onerror = () => {
       console.error('Failed to load Paged.js');
