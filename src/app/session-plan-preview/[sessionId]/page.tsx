@@ -308,7 +308,8 @@ export default function SessionPlanPreviewPage() {
 
   .content-wrapper {
     background-color: #ecebdd;
-    padding: 24px;
+    padding: 0;
+    min-height: 100vh;
   }
 
   /* === Paged.js Pagination Rules === */
@@ -357,29 +358,8 @@ export default function SessionPlanPreviewPage() {
     __html: `
       @page {
         size: A4;
-        margin-top: 60px;
-        margin-bottom: 60px;
-        margin-left: 20mm;
-        margin-right: 20mm;
+        margin: 0;
         background: #ecebdd;
-
-        @top-center {
-          content: "${title.replace(/"/g, '\\"')}";
-          font-family: "Helvetica", sans-serif;
-          font-size: 14px;
-          color: #666;
-          padding-bottom: 10px;
-          border-bottom: 1px solid #ccc;
-        }
-
-        @bottom-center {
-          content: "Page " counter(page) " of " counter(pages);
-          font-family: "Helvetica", sans-serif;
-          font-size: 12px;
-          color: #666;
-          padding-top: 10px;
-          border-top: 1px solid #ccc;
-        }
       }
     `,
   }}
@@ -390,7 +370,7 @@ export default function SessionPlanPreviewPage() {
           {/* Header */}
         <div
           style={{ backgroundColor: "#4f6749" }}
-          className="p-2 mb-6 page-header flex items-center justify-between"
+          className="p-2 page-header flex items-center justify-between"
         >
           {/* Left Image */}
           <img
@@ -407,6 +387,8 @@ export default function SessionPlanPreviewPage() {
           />
         </div>
 
+        {/* Main Content Area with Padding */}
+        <div className="px-6 py-6">
           {/* Title */}
           <h2 className="text-5xl text-gray-900 mb-10">{title}</h2>
 
@@ -476,6 +458,7 @@ export default function SessionPlanPreviewPage() {
             www.raisingmyrescue.co.uk
           </a>
         </div>
+        </div> {/* Close Main Content Area */}
       </div>
     </>
   );
