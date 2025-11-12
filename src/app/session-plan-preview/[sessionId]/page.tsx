@@ -238,15 +238,16 @@ export default function SessionPlanPreviewPage() {
   }, [sessionId]);
 
   // Auto-trigger print dialog after content loads
-  useEffect(() => {
-    if (!loading && !error && sessionPlan) {
-      // Small delay to ensure content is fully rendered
-      const timer = setTimeout(() => {
-        window.print();
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [loading, error, sessionPlan]);
+  // TEMPORARILY DISABLED - uncomment when ready
+  // useEffect(() => {
+  //   if (!loading && !error && sessionPlan) {
+  //     // Small delay to ensure content is fully rendered
+  //     const timer = setTimeout(() => {
+  //       window.print();
+  //     }, 500);
+  //     return () => clearTimeout(timer);
+  //   }
+  // }, [loading, error, sessionPlan]);
 
   if (loading) {
     return (
