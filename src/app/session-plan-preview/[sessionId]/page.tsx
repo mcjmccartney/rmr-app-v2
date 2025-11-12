@@ -305,9 +305,44 @@ export default function SessionPlanPreviewPage() {
     width: 210mm;
     height: 297mm;
     overflow: hidden;
-    margin: 0;
+    margin: 0 !important;
+    padding: 0 !important;
     border: none;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Remove all Paged.js margin boxes */
+  .pagedjs_margin,
+  .pagedjs_margin-top,
+  .pagedjs_margin-right,
+  .pagedjs_margin-bottom,
+  .pagedjs_margin-left,
+  .pagedjs_margin-top-left,
+  .pagedjs_margin-top-center,
+  .pagedjs_margin-top-right,
+  .pagedjs_margin-bottom-left,
+  .pagedjs_margin-bottom-center,
+  .pagedjs_margin-bottom-right,
+  .pagedjs_margin-left-top,
+  .pagedjs_margin-left-middle,
+  .pagedjs_margin-left-bottom,
+  .pagedjs_margin-right-top,
+  .pagedjs_margin-right-middle,
+  .pagedjs_margin-right-bottom {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Make page area take full space */
+  .pagedjs_page_content,
+  .pagedjs_pagebox {
+    width: 100% !important;
+    height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
   .content-wrapper {
@@ -364,32 +399,9 @@ export default function SessionPlanPreviewPage() {
     __html: `
       @page {
         size: A4;
-        margin: 0;  /* full bleed */
+        margin: 0 !important;  /* absolutely no margins */
+        padding: 0 !important;
         background: #ecebdd;
-
-        @top-center {
-          content: element(header);
-          width: 100%;
-        }
-
-        @bottom-center {
-          content: element(footer);
-          width: 100%;
-        }
-      }
-
-      .page-header {
-        position: running(header);
-        width: 100%;
-        margin: 0;
-        padding: 0;
-      }
-
-      .page-footer {
-        position: running(footer);
-        width: 100%;
-        margin: 0;
-        padding: 0;
       }
     `,
   }}
@@ -397,32 +409,10 @@ export default function SessionPlanPreviewPage() {
 
       {/* === ACTUAL DOCUMENT === */}
       <div className="content-wrapper">
-        {/* Header */}
-        <div
-          style={{
-            backgroundColor: "#4f6749",
-            width: "100%",
-            margin: "0",
-            padding: "12px 24px"
-          }}
-          className="page-header flex items-center justify-between"
-        >
-          <img
-            src="https://i.ibb.co/tp6WV8TN/Screenshot-2025-11-12-at-13-38-12.png"
-            alt="Raising My Rescue Text Logo"
-            className="h-12 w-auto rounded"
-          />
-          <img
-            src="https://i.ibb.co/0V6pRF85/Screenshot-2025-11-12-at-13-17-36.png"
-            alt="Raising My Rescue Logo"
-            className="h-12 w-auto ml-4 rounded"
-          />
-        </div>
-
         {/* Main Content Area */}
-        <div style={{ padding: "0 24px 24px 24px" }}>
+        <div style={{ padding: "24px" }}>
           {/* Title */}
-          <h2 className="text-5xl text-gray-900 mb-10 mt-6">{title}</h2>
+          <h2 className="text-5xl text-gray-900 mb-10">{title}</h2>
 
           {/* Main Goals */}
         {mainGoals.length > 0 && (
@@ -476,29 +466,6 @@ export default function SessionPlanPreviewPage() {
         )}
         </div>
         {/* End Main Content Area */}
-
-        {/* Footer */}
-        <div
-          className="page-footer flex justify-between items-center text-black font-serif tracking-wide"
-          style={{
-            backgroundColor: "#ecebdd",
-            width: "100%",
-            margin: "0",
-            padding: "24px",
-            borderTop: "2px solid #4f6749"
-          }}
-        >
-          <p className="text-base italic m-0">A happier life with your dog</p>
-          <a
-            href="https://www.raisingmyrescue.co.uk"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-base cursor-pointer no-underline hover:underline-offset-4"
-            style={{ color: "black", textDecoration: "none" }}
-          >
-            www.raisingmyrescue.co.uk
-          </a>
-        </div>
       </div>
     </>
   );
