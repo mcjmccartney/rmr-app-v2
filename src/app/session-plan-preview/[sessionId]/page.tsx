@@ -345,8 +345,29 @@ export default function SessionPlanPreviewPage() {
     __html: `
       @page {
         size: A4;
-        margin: 20mm;
+        margin-top: 60px;
+        margin-bottom: 60px;
+        margin-left: 20mm;
+        margin-right: 20mm;
         background: #ecebdd;
+
+        @top-center {
+          content: "${title.replace(/"/g, '\\"')}";
+          font-family: "Helvetica", sans-serif;
+          font-size: 14px;
+          color: #666;
+          padding-bottom: 10px;
+          border-bottom: 1px solid #ccc;
+        }
+
+        @bottom-center {
+          content: "Page " counter(page) " of " counter(pages);
+          font-family: "Helvetica", sans-serif;
+          font-size: 12px;
+          color: #666;
+          padding-top: 10px;
+          border-top: 1px solid #ccc;
+        }
       }
     `,
   }}
