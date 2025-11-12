@@ -259,12 +259,12 @@ export default function SessionPlanPreviewPage() {
     );
   }
 
-  // Wait for both data and Paged.js to be ready
-  if (loading || !sessionPlan || !pagedJsReady) {
+  // Wait for data to be ready (don't wait for Paged.js)
+  if (loading || !sessionPlan) {
     return <div className="min-h-screen bg-white"></div>;
   }
 
-  console.log('Rendering session plan content');
+  console.log('Rendering session plan content - pagedJsReady:', pagedJsReady);
 
   return (
     <>
