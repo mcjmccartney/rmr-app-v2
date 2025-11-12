@@ -324,8 +324,8 @@ export default function SessionPlanPreviewPage() {
     background-color: #ecebdd;
     width: 100%;
     height: 100%;
-    padding-top: 0;         /* header at top edge */
-    padding-bottom: 2cm;    /* space for footer */
+    padding: 0;
+    margin: 0;
   }
 
   /* === Paged.js Pagination Rules === */
@@ -379,19 +379,27 @@ export default function SessionPlanPreviewPage() {
 
         @top-center {
           content: element(header);
+          width: 100%;
         }
 
         @bottom-center {
           content: element(footer);
+          width: 100%;
         }
       }
 
       .page-header {
         position: running(header);
+        width: 100%;
+        margin: 0;
+        padding: 0;
       }
 
       .page-footer {
         position: running(footer);
+        width: 100%;
+        margin: 0;
+        padding: 0;
       }
     `,
   }}
@@ -401,8 +409,13 @@ export default function SessionPlanPreviewPage() {
       <div className="content-wrapper">
         {/* Header */}
         <div
-          style={{ backgroundColor: "#4f6749" }}
-          className="p-3 mb-6 page-header flex items-center justify-between"
+          style={{
+            backgroundColor: "#4f6749",
+            width: "100%",
+            margin: "0",
+            padding: "12px 24px"
+          }}
+          className="page-header flex items-center justify-between"
         >
           <img
             src="https://i.ibb.co/tp6WV8TN/Screenshot-2025-11-12-at-13-38-12.png"
@@ -416,10 +429,12 @@ export default function SessionPlanPreviewPage() {
           />
         </div>
 
-        {/* Title */}
-        <h2 className="text-5xl text-gray-900 mb-10">{title}</h2>
+        {/* Main Content Area */}
+        <div style={{ padding: "0 24px 24px 24px" }}>
+          {/* Title */}
+          <h2 className="text-5xl text-gray-900 mb-10 mt-6">{title}</h2>
 
-        {/* Main Goals */}
+          {/* Main Goals */}
         {mainGoals.length > 0 && (
           <div className="main-goals-section relative mb-8">
             <h3 className="absolute -top-5 left-4 bg-[#ecebdd] px-2 italic text-3xl">
@@ -471,8 +486,17 @@ export default function SessionPlanPreviewPage() {
         )}
 
         {/* Footer */}
-        <div className="page-footer bg-[#ecebdd] mt-12 py-6 border-t-2 border-[#4f6749] flex flex-col sm:flex-row justify-between items-center text-center sm:text-left text-black font-serif tracking-wide">
-          <p className="text-base italic">A happier life with your dog</p>
+        <div
+          className="page-footer flex justify-between items-center text-black font-serif tracking-wide"
+          style={{
+            backgroundColor: "#ecebdd",
+            width: "100%",
+            margin: "0",
+            padding: "24px",
+            borderTop: "2px solid #4f6749"
+          }}
+        >
+          <p className="text-base italic m-0">A happier life with your dog</p>
           <a
             href="https://www.raisingmyrescue.co.uk"
             target="_blank"
