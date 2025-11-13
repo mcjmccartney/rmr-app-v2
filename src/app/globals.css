@@ -220,7 +220,7 @@ html {
 
 @page {
   size: A4;
-  margin: 100px 0 40px 0;  /* adjust based on the real height of your header */
+  margin: 100px 0 100px 0;  /* 100px top for header, 100px bottom for footer */
 
   @top-center {
     content: "";

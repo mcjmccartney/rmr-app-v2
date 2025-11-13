@@ -412,7 +412,7 @@ h1, h2, h3, h4, h5, h6 {
 
         {/* Action Points (next page) */}
         {editableActionPoints.length > 0 && (
-          <div className="mb-10 space-y-6">
+          <div className="mb-6 space-y-6">
             {editableActionPoints.map((actionPoint, index) => (
               <div key={index} className="action-point-box relative">
                 <h4 className="absolute -top-5 left-4 bg-[#ecebdd] px-2 italic text-3xl">
@@ -426,22 +426,6 @@ h1, h2, h3, h4, h5, h6 {
             ))}
           </div>
         )}
-
-        {/* Footer */}
-        <div className="bg-[#ecebdd] mt-12 py-6 border-t-2 border-[#4f6749] flex flex-col sm:flex-row justify-between items-center text-center sm:text-left text-black font-serif tracking-wide">
-          <p className="text-base italic">A happier life with your dog</p>
-
-          {/* Clickable Website Link */}
-          <a
-            href="https://www.raisingmyrescue.co.uk"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-base cursor-pointer no-underline hover:underline-offset-4 hover:cursor-pointer"
-            style={{ color: "black", textDecoration: "none" }}
-          >
-            www.raisingmyrescue.co.uk
-          </a>
-        </div>
         </div> {/* Close Main Content Area */}
       </div>
     </>
