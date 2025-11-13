@@ -412,7 +412,7 @@ h1, h2, h3, h4, h5, h6 {
 
         {/* Action Points (next page) */}
         {editableActionPoints.length > 0 && (
-          <div className="mb-6 space-y-6">
+          <div className="mb-10 space-y-6">
             {editableActionPoints.map((actionPoint, index) => (
               <div key={index} className="action-point-box relative">
                 <h4 className="absolute -top-5 left-4 bg-[#ecebdd] px-2 italic text-3xl">
