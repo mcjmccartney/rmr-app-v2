@@ -301,7 +301,10 @@ export default function SessionPlanPreviewPage() {
       return;
     }
 
-    const element = document.querySelector('.content-wrapper');
+    // Try to get the Paged.js rendered pages first, fallback to content-wrapper
+    const pagedContent = document.querySelector('.pagedjs_pages');
+    const element = pagedContent || document.querySelector('.content-wrapper');
+
     if (!element) {
       alert('Content not found. Please try again.');
       return;
@@ -310,11 +313,17 @@ export default function SessionPlanPreviewPage() {
     const filename = title ? `${title}.pdf` : 'Session Plan.pdf';
 
     const opt = {
-      margin: [0.5, 0.5, 0.5, 0.5],
+      margin: 0,
       filename: filename,
       image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true },
-      jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+      html2canvas: {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#525659'
+      },
+      jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' },
+      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
     };
 
     (window as any).html2pdf().set(opt).from(element).save();
@@ -322,15 +331,6 @@ export default function SessionPlanPreviewPage() {
 
   return (
     <>
-      {/* Floating PDF Save Button */}
-      <button
-        onClick={handleSavePDF}
-        className="fixed bottom-8 right-8 bg-[#4f6749] hover:bg-[#3d5138] text-white rounded-full p-4 shadow-lg z-50 transition-colors duration-200"
-        title="Save as PDF"
-      >
-        <Download size={24} />
-      </button>
-
       {/* Paged.js styles for pagination */}
       <style>{`
   /* === Cooper Black Font === */
@@ -518,6 +518,16 @@ h4, h5, h6 {
         )}
         </div> {/* Close Main Content Area */}
       </div>
+
+      {/* Floating PDF Save Button - Outside content wrapper so Paged.js doesn't paginate it */}
+      <button
+        onClick={handleSavePDF}
+        className="fixed bottom-8 right-8 bg-[#4f6749] hover:bg-[#3d5138] text-white rounded-full p-4 shadow-lg transition-colors duration-200"
+        style={{ zIndex: 9999 }}
+        title="Save as PDF"
+      >
+        <Download size={24} />
+      </button>
     </>
   );
 }
