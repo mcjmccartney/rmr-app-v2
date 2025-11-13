@@ -19,8 +19,10 @@ export default withPWA({
   register: true,
   skipWaiting: true,
   disable: false, // Enable PWA in all environments
-  buildExcludes: [/app-build-manifest\.json$/],
-  publicExcludes: ['!robots.txt', '!sitemap.xml'],
+  cacheOnFrontEndNav: true,
+  fallbacks: {
+    document: '/offline.html',
+  },
   runtimeCaching: [
     {
       urlPattern: /\.(?:jpg|jpeg|gif|png|svg|ico|webp)$/i,
