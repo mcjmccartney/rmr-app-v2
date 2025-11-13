@@ -218,9 +218,25 @@ html {
   }
 }
 
+/* First page - header only, no footer */
+@page :first {
+  size: A4;
+  margin: 100px 0 40px 0;  /* 100px top for header, 40px bottom (no footer) */
+
+  @top-center {
+    content: "";
+    background-image: url("https://i.ibb.co/Z1bz4gg9/Screenshot-2025-11-13-at-09-10-22.png");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: cover;
+    display: block;
+  }
+}
+
+/* All other pages - header and footer */
 @page {
   size: A4;
-  margin: 100px 0 100px 0;  /* 100px top for header, 100px bottom for footer */
+  margin: 100px 0 120px 0;  /* 100px top for header, 120px bottom for footer */
 
   @top-center {
     content: "";
@@ -233,7 +249,7 @@ html {
 
   @bottom-center {
     content: "";
-    background-image: url("https://i.ibb.co/MkVL9vXD/Screenshot-2025-11-13-at-15-28-11.png");
+    background-image: url("https://i.ibb.co/3Y4bTFNt/Screenshot-2025-11-13-at-15-28-11.png");
     background-repeat: no-repeat;
     background-position: center;
     background-size: cover;
