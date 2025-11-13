@@ -329,6 +329,18 @@ h3, h4, h5, h6 {
   font-weight: normal; /* Cooper is already heavy */
 }
 
+  /* Position reminder at bottom of last page */
+  .reminder-section {
+    position: running(reminder);
+  }
+
+  @page:last {
+    @bottom-left {
+      content: element(reminder);
+      width: 100%;
+    }
+  }
+
   .page-header {
   display: none !important;
 }
@@ -474,10 +486,10 @@ h3, h4, h5, h6 {
           </div>
         )}
 
-        {/* Reminder Section - Always at the end of the last page */}
-        <div className="mt-16 mb-8">
-          <h3 className="text-2xl text-gray-900 mb-4">Reminder:</h3>
-          <p className="text-gray-900 text-base leading-relaxed">
+        {/* Reminder Section - Positioned at bottom of last page */}
+        <div className="reminder-section">
+          <h6 className="text-2xl text-gray-900 mb-3">Reminder:</h6>
+          <p className="text-gray-900 text-base leading-relaxed mb-0">
             I'm here to support you and your dog from a behavioural perspective. Sometimes, behavioural
             challenges can be linked to pain, diet, or physical discomfort, so I may highlight these areas if
             they seem relevant based on behavioural symptoms you've shared with me or that I've
