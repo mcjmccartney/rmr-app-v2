@@ -304,12 +304,12 @@ export default function SessionPlanPreviewPage() {
 
   /* === Headers use Cooper Black === */
   /* Headings use Cooper Black */
-h1, h2 {
+h1, h2, h3 {
   font-family: "Cooper Black", Arial, sans-serif !important;
   font-weight: normal; /* Cooper is already heavy */
 }
 
-h3, h4, h5, h6 {
+h4, h5, h6 {
   font-family: "Cooper Black 2", Arial, sans-serif !important;
   font-weight: normal; /* Cooper is already heavy */
 }
@@ -429,7 +429,10 @@ h3, h4, h5, h6 {
           </div>
         )}
 
-        {/* Action Points (next page) */}
+        {/* Title - Always on second page */}
+          <h2 className="text-4xl text-gray-900 mb-10 break-before-page">{title}</h2>
+
+        {/* Action Points */}
         {editableActionPoints.length > 0 && (
           <div className="mt-12 mb-6 space-y-6">
             {editableActionPoints.map((actionPoint, index) => (
