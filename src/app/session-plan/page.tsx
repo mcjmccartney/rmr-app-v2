@@ -164,9 +164,11 @@ function SessionPlanContent() {
             setEditableActionPoints(existingPlan.editedActionPoints);
           }
 
-          // Set hasMainGoals based on noFirstPage field
+          // Set hasMainGoals and showMainGoals based on noFirstPage field
           if (existingPlan.noFirstPage !== undefined) {
-            setHasMainGoals(!existingPlan.noFirstPage);
+            const shouldShowMainGoals = !existingPlan.noFirstPage;
+            setHasMainGoals(shouldShowMainGoals);
+            setShowMainGoals(shouldShowMainGoals);
           }
 
           // Check if document URL exists

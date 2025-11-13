@@ -101,6 +101,7 @@ export default function SessionPlanPreviewPage() {
           actionPoints: planData.action_points || [],
           editedActionPoints: planData.edited_action_points || {},
           documentEditUrl: planData.document_edit_url,
+          noFirstPage: planData.no_first_page || false,
           createdAt: new Date(planData.created_at),
           updatedAt: new Date(planData.updated_at),
         };
@@ -433,8 +434,8 @@ h1, h2, h3, h4, h5, h6 {
 
         {/* Main Content Area with Padding */}
         <div className="px-6 py-6">
-          {/* First Page - Only show if noFirstPage is false */}
-          {!sessionPlan.noFirstPage && (
+          {/* First Page - Only show if noFirstPage is false AND there's content to show */}
+          {!sessionPlan.noFirstPage && (mainGoals.length > 0 || explanationOfBehaviour) && (
             <>
               {/* Title */}
               <h1 className="text-5xl text-gray-900 mb-10">{title}</h1>
@@ -478,8 +479,8 @@ h1, h2, h3, h4, h5, h6 {
             </>
           )}
 
-          {/* Title - On first page when noFirstPage is true */}
-          {sessionPlan.noFirstPage && (
+          {/* Title - On first page when noFirstPage is true OR when there's no content for first page */}
+          {(sessionPlan.noFirstPage || (!mainGoals.length && !explanationOfBehaviour)) && (
             <h1 className="text-5xl text-gray-900 mb-10">{title}</h1>
           )}
 
