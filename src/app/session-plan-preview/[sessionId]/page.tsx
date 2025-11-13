@@ -298,11 +298,6 @@ export default function SessionPlanPreviewPage() {
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
   }
 
-  .pagedjs_pagebox {
-    grid-template-columns: none;
-    grid-template-rows: none;
-  }
-
   /* Ensure all Paged.js elements have the correct background */
   .pagedjs_margin,
   .pagedjs_margin-content,
