@@ -141,16 +141,19 @@ html {
   }
 }
 
-/* Paged.js margin box definitions must be global */
 @page {
   size: A4;
-  margin: 100px 0 40px 0;
+  margin: 140px 0 40px 0;  /* adjust based on the real height of your header */
 
   @top-center {
-    content: "HEADER TEST";
-    color: red;
-    font-size: 40px;
-    font-weight: bold;
+    content: "";
+    background-image: url("https://i.ibb.co/Z1bz4gg9/Screenshot-2025-11-13-at-09-10-22.png");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    height: 140px;   /* MUST match the top margin */
+    width: 100%;
+    display: block;
   }
 }
 
