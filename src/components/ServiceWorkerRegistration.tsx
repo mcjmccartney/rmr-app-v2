@@ -14,8 +14,12 @@ export default function ServiceWorkerRegistration() {
         .then((registration) => {
           console.log('SW registered: ', registration);
 
-          // Check for updates immediately
-          registration.update();
+          // Check for updates immediately (with a small delay to ensure registration is ready)
+          setTimeout(() => {
+            registration.update().catch((err) => {
+              console.log('SW update check failed (this is normal on first load):', err);
+            });
+          }, 1000);
 
           // Check for updates
           registration.addEventListener('updatefound', () => {
@@ -24,9 +28,9 @@ export default function ServiceWorkerRegistration() {
             if (newWorker) {
               newWorker.addEventListener('statechange', () => {
                 if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                  console.log('New service worker installed, activating and reloading...');
-                  // Tell the new service worker to skip waiting and activate immediately
-                  newWorker.postMessage({ type: 'SKIP_WAITING' });
+                  console.log('New service worker installed, reloading page...');
+                  // The service worker already has skipWaiting() in it, so just reload
+                  window.location.reload();
                 }
               });
             }
