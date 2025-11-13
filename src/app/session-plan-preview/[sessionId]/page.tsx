@@ -277,7 +277,7 @@ export default function SessionPlanPreviewPage() {
       <style>{`
   /* === Cooper Black Font === */
   @font-face {
-  font-family: 'CooperBlackBT';
+  font-family: 'Cooper Black';
   src: url('/fonts/cooperblkbt-regular-webfont.woff2') format('woff2'),
        url('/fonts/cooperblkbt-regular-webfont.woff') format('woff');
   font-weight: 400;
@@ -296,7 +296,7 @@ export default function SessionPlanPreviewPage() {
   /* === Headers use Cooper Black === */
   /* Headings use Cooper Black */
 h1, h2, h3, h4, h5, h6 {
-  font-family: "CooperBlackBT", Arial, sans-serif !important;
+  font-family: "Cooper Black", Arial, sans-serif !important;
   font-weight: normal; /* Cooper is already heavy */
 }
 
