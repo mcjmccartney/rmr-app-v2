@@ -291,8 +291,26 @@ export default function SessionPlanPreviewPage() {
 
   return (
     <>
-      {/* Paged.js styles for pagination */}
-      <style>{`
+      {/* Fixed Header Bar with Save as PDF Button */}
+      <div className="fixed top-0 left-0 right-0 bg-white border-b border-gray-300 shadow-sm z-[10000] print:hidden">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+          <h1 className="text-lg font-semibold text-gray-800">Session Plan Preview</h1>
+          <button
+            onClick={handleSavePDF}
+            className="bg-[#4f6749] hover:bg-[#3d5138] text-white px-4 py-2 rounded-md transition-colors duration-200 flex items-center gap-2"
+            title="Save as PDF"
+            aria-label="Save as PDF"
+          >
+            <FileDown size={20} />
+            <span>Save as PDF</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Add padding to account for fixed header */}
+      <div className="pt-16">
+        {/* Paged.js styles for pagination */}
+        <style>{`
   /* === Cooper Black Font === */
   @font-face {
   font-family: 'Cooper Black';
@@ -478,17 +496,7 @@ h4, h5, h6 {
         )}
         </div> {/* Close Main Content Area */}
       </div>
-
-      {/* Floating Save as PDF Button - Outside content wrapper so Paged.js doesn't paginate it */}
-      <button
-        onClick={handleSavePDF}
-        className="fixed bottom-8 right-8 bg-[#4f6749] hover:bg-[#3d5138] text-white rounded-full p-4 shadow-lg transition-colors duration-200 flex items-center justify-center"
-        style={{ zIndex: 9999 }}
-        title="Save as PDF"
-        aria-label="Save as PDF"
-      >
-        <FileDown size={24} />
-      </button>
+      </div> {/* Close padding wrapper */}
     </>
   );
 }
