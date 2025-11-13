@@ -365,10 +365,9 @@ export default function SessionPlanPreviewPage() {
     __html: `
       @page {
         size: A4;
-        margin: 100px 0 40px 0;
+        margin: 120px 0 40px 0; /* Top margin must match header height */
         background: #ecebdd;
 
-        /* TOP-CENTER HEADER IMAGE */
         @top-center {
           content: "";
           background-image: url("https://i.ibb.co/Z1bz4gg9/Screenshot-2025-11-13-at-09-10-22.png");
@@ -376,9 +375,14 @@ export default function SessionPlanPreviewPage() {
           background-repeat: no-repeat;
           background-position: center;
           display: block;
-          height: 100px; /* same as top margin */
+          height: 120px;
           width: 100%;
         }
+      }
+
+      /* Required for paged.js to render margin boxes visually */
+      .pagedjs_margin-content {
+        display: block !important;
       }
     `,
   }}
