@@ -150,9 +150,7 @@ html {
     background-image: url("https://i.ibb.co/Z1bz4gg9/Screenshot-2025-11-13-at-09-10-22.png");
     background-repeat: no-repeat;
     background-position: center;
-    background-size: contain;
-    height: 100px;   /* MUST match the top margin */
-    width: 100%;
+    background-size: cover;
     display: block;
   }
 }
@@ -161,3 +159,13 @@ html {
   display: block !important;
 }
 
+/* Body text (paragraphs, lists, general text) */
+body, p, div, span, li {
+  font-family: Arial, sans-serif !important;
+}
+
+/* Headings use Cooper Black */
+h1, h2, h3, h4, h5, h6 {
+  font-family: "Cooper Black", Arial, sans-serif !important;
+  font-weight: normal; /* Cooper is already heavy */
+}
