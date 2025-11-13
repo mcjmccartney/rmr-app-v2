@@ -285,6 +285,15 @@ export default function SessionPlanPreviewPage() {
   font-display: swap;
 }
 
+@font-face {
+  font-family: 'Cooper Black 2';
+  src: url('/fonts/cooperltbt-regular-webfont.woff2') format('woff2'),
+       url('/fonts/cooperltbt-regular-webfont.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
   /* === Base Layout === */
   body {
     background: #ecebdd;
@@ -295,8 +304,13 @@ export default function SessionPlanPreviewPage() {
 
   /* === Headers use Cooper Black === */
   /* Headings use Cooper Black */
-h1, h2, h3, h4, h5, h6 {
+h1, h2 {
   font-family: "Cooper Black", Arial, sans-serif !important;
+  font-weight: normal; /* Cooper is already heavy */
+}
+
+h3, h4, h5, h6 {
+  font-family: "Cooper Black 2", Arial, sans-serif !important;
   font-weight: normal; /* Cooper is already heavy */
 }
 
