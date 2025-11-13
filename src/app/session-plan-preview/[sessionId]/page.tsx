@@ -374,7 +374,7 @@ h1, h2, h3, h4, h5, h6 {
         {/* Main Content Area with Padding */}
         <div className="px-6 py-6">
           {/* Title */}
-          <h2 className="text-5xl text-gray-900 mb-10">{title}</h2>
+          <h2 className="text-4xl text-gray-900 mb-10">{title}</h2>
 
           {/* Main Goals */}
         {mainGoals.length > 0 && (
@@ -383,18 +383,18 @@ h1, h2, h3, h4, h5, h6 {
               Main Goals
             </h3>
             <div className="border-[3px] border-[#4f6749] rounded-md p-6">
-              <div className="grid md:grid-cols-2 gap-x-8 gap-y-4">
-                {mainGoals.map((goal, index) => (
-                  <div key={index} className="flex items-start">
-                    <span className="font-medium text-gray-700 mr-2">•</span>
-                    <SafeHtmlRenderer
-                      html={goal}
-                      className="inline text-gray-900"
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
+  <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+    {mainGoals.map((goal, index) => (
+      <div key={index} className="flex items-start">
+        <span className="font-medium text-gray-700 mr-2">•</span>
+        <SafeHtmlRenderer
+          html={goal}
+          className="inline text-gray-900"
+        />
+      </div>
+    ))}
+  </div>
+</div>
           </div>
         )}
 
