@@ -278,8 +278,8 @@ export default function SessionPlanPreviewPage() {
   /* === Cooper Black Font === */
   @font-face {
   font-family: 'Cooper Black';
-  src: url('/fonts/cooperblkbt-regular-webfont.woff2') format('woff2'),
-       url('/fonts/cooperblkbt-regular-webfont.woff') format('woff');
+  src: url('/fonts/cooperltbt-regular-webfont.woff2') format('woff2'),
+       url('/fonts/cooperltbt-regular-webfont.woff') format('woff');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
