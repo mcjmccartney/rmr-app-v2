@@ -433,45 +433,55 @@ h1, h2, h3, h4, h5, h6 {
 
         {/* Main Content Area with Padding */}
         <div className="px-6 py-6">
-          {/* Title */}
-          <h1 className="text-5xl text-gray-900 mb-10">{title}</h1>
+          {/* First Page - Only show if there are main goals or explanation of behaviour */}
+          {(mainGoals.length > 0 || explanationOfBehaviour) && (
+            <>
+              {/* Title */}
+              <h1 className="text-5xl text-gray-900 mb-10">{title}</h1>
 
-          {/* Main Goals */}
-        {mainGoals.length > 0 && (
-          <div className="main-goals-section relative mb-8">
-            <h3 className="absolute -top-5 left-4 bg-[#ecebdd] px-2 italic text-3xl">
-              Main Goals
-            </h3>
-            <div className="border-[3px] border-[#4f6749] rounded-md p-6">
-  <div className="grid grid-cols-2 gap-x-8 gap-y-4">
-    {mainGoals.map((goal, index) => (
-      <div key={index} className="flex items-start">
-        <span className="font-medium text-gray-700 mr-2">•</span>
-        <SafeHtmlRenderer
-          html={goal}
-          className="inline text-gray-900"
-        />
-      </div>
-    ))}
-  </div>
-</div>
-          </div>
-        )}
+              {/* Main Goals */}
+              {mainGoals.length > 0 && (
+                <div className="main-goals-section relative mb-8">
+                  <h3 className="absolute -top-5 left-4 bg-[#ecebdd] px-2 italic text-3xl">
+                    Main Goals
+                  </h3>
+                  <div className="border-[3px] border-[#4f6749] rounded-md p-6">
+                    <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+                      {mainGoals.map((goal, index) => (
+                        <div key={index} className="flex items-start">
+                          <span className="font-medium text-gray-700 mr-2">•</span>
+                          <SafeHtmlRenderer
+                            html={goal}
+                            className="inline text-gray-900"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
 
-        {/* Explanation of Behaviour */}
-        {explanationOfBehaviour && (
-          <div className="explanation-section mb-6 break-after-page">
-            <h3 className="text-gray-900 italic text-3xl mb-2">
-              Explanation of Behaviour
-            </h3>
-            <div className="rounded-md">
-              <SafeHtmlRenderer html={explanationOfBehaviour} />
-            </div>
-          </div>
-        )}
+              {/* Explanation of Behaviour */}
+              {explanationOfBehaviour && (
+                <div className="explanation-section mb-6 break-after-page">
+                  <h3 className="text-gray-900 italic text-3xl mb-2">
+                    Explanation of Behaviour
+                  </h3>
+                  <div className="rounded-md">
+                    <SafeHtmlRenderer html={explanationOfBehaviour} />
+                  </div>
+                </div>
+              )}
 
-        {/* Title - Always on second page */}
-          <h1 className="text-5xl text-gray-900 mb-10 mt-6 break-before-page">{title}</h1>
+              {/* Title - On second page when first page exists */}
+              <h1 className="text-5xl text-gray-900 mb-10 mt-6 break-before-page">{title}</h1>
+            </>
+          )}
+
+          {/* Title - On first page when no main goals or explanation */}
+          {!(mainGoals.length > 0 || explanationOfBehaviour) && (
+            <h1 className="text-5xl text-gray-900 mb-10">{title}</h1>
+          )}
 
         {/* Action Points */}
         {editableActionPoints.length > 0 && (

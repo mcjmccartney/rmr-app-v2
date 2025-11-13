@@ -13,7 +13,6 @@ import type { SessionPlan, Client, Session } from '@/types';
 import SafeHtmlRenderer from '@/components/SafeHtmlRenderer';
 import RichTextEditor from '@/components/RichTextEditor';
 import ActionPointLibraryModal from '@/components/modals/ActionPointLibraryModal';
-import SessionPlanPDFModal from '@/components/modals/SessionPlanPDFModal';
 // import SessionPlanPreviewModal from '@/components/modals/SessionPlanPreviewModal';
 
 function SessionPlanContent() {
@@ -59,7 +58,6 @@ function SessionPlanContent() {
   const [isGeneratingDoc, setIsGeneratingDoc] = useState(false);
   const [generatedDocUrl, setGeneratedDocUrl] = useState<string | null>(null);
   const [isPollingForUrl, setIsPollingForUrl] = useState(false);
-  const [showPDFModal, setShowPDFModal] = useState(false);
   // const [showPreviewModal, setShowPreviewModal] = useState(false);
 
   // Use fallback data if state data is not available (moved up for scope)
@@ -1181,14 +1179,6 @@ function SessionPlanContent() {
                     Preview & Generate PDF
                   </button>
 
-                  {/* Temporary button to open modal for testing */}
-                  <button
-                    onClick={() => setShowPDFModal(true)}
-                    className="w-full bg-purple-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-purple-700 transition-colors"
-                  >
-                    🔧 Open Modal (Testing)
-                  </button>
-
                   {!generatedDocUrl ? (
                     <button
                       onClick={async () => {
@@ -1255,23 +1245,6 @@ function SessionPlanContent() {
         getSessionDogName={getSessionDogName}
         getDogGender={getDogGender}
       />
-
-      {/* Session Plan PDF Modal */}
-      {existingSessionPlan && currentSession && currentClient && (
-        <SessionPlanPDFModal
-          isOpen={showPDFModal}
-          onClose={() => setShowPDFModal(false)}
-          sessionPlan={existingSessionPlan}
-          session={currentSession}
-          client={currentClient}
-          actionPoints={actionPoints}
-          selectedActionPoints={selectedActionPoints}
-          editableActionPoints={editableActionPoints}
-          formData={formData}
-          getSessionDogName={getSessionDogName}
-          getDogGender={getDogGender}
-        />
-      )}
     </div>
   );
 }
