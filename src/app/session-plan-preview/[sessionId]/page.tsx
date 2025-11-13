@@ -293,9 +293,6 @@ export default function SessionPlanPreviewPage() {
     padding: 20px;
   }
 
-  .pagedjs_pagebox > .pagedjs_area {
-    grid-row: auto;}
-
   .pagedjs_page {
     background: #ecebdd;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
