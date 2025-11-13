@@ -430,16 +430,16 @@ h4, h5, h6 {
         )}
 
         {/* Title - Always on second page */}
-          <h2 className="text-4xl text-gray-900 mb-10 break-before-page">{title}</h2>
+          <h2 className="text-4xl text-gray-900 mb-10 mt-6 break-before-page">{title}</h2>
 
         {/* Action Points */}
         {editableActionPoints.length > 0 && (
           <div className="mt-12 mb-6 space-y-6">
             {editableActionPoints.map((actionPoint, index) => (
               <div key={index} className="action-point-box relative">
-                <h4 className="absolute -top-5 left-4 bg-[#ecebdd] px-2 italic text-3xl">
+                <h3 className="absolute -top-5 left-4 bg-[#ecebdd] px-2 italic text-3xl">
                   <SafeHtmlRenderer html={actionPoint.header} className="inline" />
-                </h4>
+                </h3>
 
                 <div className="border-[3px] border-[#4f6749] rounded-md p-4 text-gray-900 leading-relaxed">
                   <SafeHtmlRenderer html={actionPoint.details} />
