@@ -14,6 +14,9 @@ export default function ServiceWorkerRegistration() {
         .then((registration) => {
           console.log('SW registered: ', registration);
 
+          // Check for updates immediately
+          registration.update();
+
           // Check for updates
           registration.addEventListener('updatefound', () => {
             console.log('Service worker update found');
@@ -21,9 +24,21 @@ export default function ServiceWorkerRegistration() {
             if (newWorker) {
               newWorker.addEventListener('statechange', () => {
                 if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                  console.log('New service worker installed, ready to activate');
+                  console.log('New service worker installed, activating and reloading...');
+                  // Tell the new service worker to skip waiting and activate immediately
+                  newWorker.postMessage({ type: 'SKIP_WAITING' });
                 }
               });
+            }
+          });
+
+          // Listen for the controlling service worker changing and reload the page
+          let refreshing = false;
+          navigator.serviceWorker.addEventListener('controllerchange', () => {
+            if (!refreshing) {
+              console.log('Service worker activated, reloading page...');
+              refreshing = true;
+              window.location.reload();
             }
           });
         })
