@@ -12,10 +12,10 @@ function dbRowToSessionPlan(row: Record<string, any>): SessionPlan {
     mainGoal3: row.main_goal_3,
     mainGoal4: row.main_goal_4,
     explanationOfBehaviour: row.explanation_of_behaviour,
-    hasMainGoals: row.has_main_goals !== undefined ? row.has_main_goals : true, // Default to true for existing records
     actionPoints: row.action_points || [],
     editedActionPoints: row.edited_action_points || {},
     documentEditUrl: row.document_edit_url,
+    noFirstPage: row.no_first_page || false,
     createdAt: new Date(row.created_at),
     updatedAt: new Date(row.updated_at),
   };
@@ -32,10 +32,10 @@ function sessionPlanToDbRow(sessionPlan: Partial<SessionPlan>) {
     main_goal_3: sessionPlan.mainGoal3,
     main_goal_4: sessionPlan.mainGoal4,
     explanation_of_behaviour: sessionPlan.explanationOfBehaviour,
-    has_main_goals: sessionPlan.hasMainGoals !== undefined ? sessionPlan.hasMainGoals : true,
     action_points: sessionPlan.actionPoints,
     edited_action_points: sessionPlan.editedActionPoints || {},
     document_edit_url: sessionPlan.documentEditUrl,
+    no_first_page: sessionPlan.noFirstPage || false,
   };
 }
 

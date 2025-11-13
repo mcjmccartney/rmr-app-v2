@@ -79,10 +79,10 @@ function SessionPlanContent() {
       mainGoal3: formData.mainGoal3,
       mainGoal4: formData.mainGoal4,
       explanationOfBehaviour: formData.explanationOfBehaviour,
-      hasMainGoals: hasMainGoals,
       actionPoints: selectedActionPoints,
       editedActionPoints: editableActionPoints,
-      sessionNumber: sessionNumber
+      sessionNumber: sessionNumber,
+      noFirstPage: !hasMainGoals // Set to true when Remove button is clicked
     };
 
     let savedPlan;
@@ -160,11 +160,13 @@ function SessionPlanContent() {
           // Use existing session number if plan already exists
           setSessionNumber(existingPlan.sessionNumber);
 
-          // Load hasMainGoals state (default to true for existing plans without this field)
-          setHasMainGoals(existingPlan.hasMainGoals !== undefined ? existingPlan.hasMainGoals : true);
-
           if (existingPlan.editedActionPoints) {
             setEditableActionPoints(existingPlan.editedActionPoints);
+          }
+
+          // Set hasMainGoals based on noFirstPage field
+          if (existingPlan.noFirstPage !== undefined) {
+            setHasMainGoals(!existingPlan.noFirstPage);
           }
 
           // Check if document URL exists
