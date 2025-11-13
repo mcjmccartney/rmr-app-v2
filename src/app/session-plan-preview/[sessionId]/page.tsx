@@ -312,14 +312,19 @@ export default function SessionPlanPreviewPage() {
     color: #222;
   }
 
+  /* Decrease line height for paragraph text */
+  p {
+    line-height: 1.4;
+  }
+
   /* === Headers use Cooper Black === */
   /* Headings use Cooper Black */
-h1, h2, h3 {
+h1, h2 {
   font-family: "Cooper Black", Arial, sans-serif !important;
   font-weight: normal; /* Cooper is already heavy */
 }
 
-h4, h5, h6 {
+h3, h4, h5, h6 {
   font-family: "Cooper Black 2", Arial, sans-serif !important;
   font-weight: normal; /* Cooper is already heavy */
 }
@@ -468,6 +473,20 @@ h4, h5, h6 {
             ))}
           </div>
         )}
+
+        {/* Reminder Section - Always at the end of the last page */}
+        <div className="mt-16 mb-8">
+          <h3 className="text-2xl text-gray-900 mb-4">Reminder:</h3>
+          <p className="text-gray-900 text-base leading-relaxed">
+            I'm here to support you and your dog from a behavioural perspective. Sometimes, behavioural
+            challenges can be linked to pain, diet, or physical discomfort, so I may highlight these areas if
+            they seem relevant based on behavioural symptoms you've shared with me or that I've
+            observed. Any thoughts I share within this report or any other communication with you around
+            health, food, or physical wellbeing are intended to guide your conversations with your vet,
+            physiotherapist, or nutritionist. I'm not a vet and don't offer medical advice or diagnosis.
+          </p>
+        </div>
+
         </div> {/* Close Main Content Area */}
       </div>
     </>
