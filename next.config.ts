@@ -19,10 +19,6 @@ export default withPWA({
   register: true,
   skipWaiting: true,
   disable: false, // Enable PWA in all environments
-  cacheOnFrontEndNav: true,
-  fallbacks: {
-    document: '/offline.html',
-  },
   runtimeCaching: [
     {
       urlPattern: /\.(?:jpg|jpeg|gif|png|svg|ico|webp)$/i,
