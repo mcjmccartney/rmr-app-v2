@@ -434,8 +434,8 @@ h1, h2, h3, h4, h5, h6 {
 
         {/* Main Content Area with Padding */}
         <div className="px-6 py-6">
-          {/* First Page - Only show if noFirstPage is false AND there's content to show */}
-          {!sessionPlan.noFirstPage && (mainGoals.length > 0 || explanationOfBehaviour) && (
+          {/* First Page - Show if user has NOT clicked Remove (noFirstPage is false or undefined) */}
+          {!sessionPlan.noFirstPage && (
             <>
               {/* Title */}
               <h1 className="text-5xl text-gray-900 mb-10">{title}</h1>
@@ -479,8 +479,8 @@ h1, h2, h3, h4, h5, h6 {
             </>
           )}
 
-          {/* Title - On first page when noFirstPage is true OR when there's no content for first page */}
-          {(sessionPlan.noFirstPage || (!mainGoals.length && !explanationOfBehaviour)) && (
+          {/* Title - On first page when user clicked Remove (noFirstPage is true) */}
+          {sessionPlan.noFirstPage && (
             <h1 className="text-5xl text-gray-900 mb-10">{title}</h1>
           )}
 
