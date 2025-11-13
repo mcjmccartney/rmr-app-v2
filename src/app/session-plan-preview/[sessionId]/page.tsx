@@ -5,7 +5,6 @@ import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { SessionPlan, Session, Client, ActionPoint } from '@/types';
 import SafeHtmlRenderer from '@/components/SafeHtmlRenderer';
-import { FileDown } from 'lucide-react';
 
 interface EditableActionPoint {
   header: string;
@@ -272,45 +271,20 @@ export default function SessionPlanPreviewPage() {
 
   console.log('About to render session plan content - title:', title, 'mainGoals:', mainGoals.length);
 
-  // Function to save as PDF using browser print
-  const handleSavePDF = () => {
-    // Save original title
-    const originalTitle = document.title;
-
-    // Set title to desired filename (e.g., "Session 3 - Millie")
-    document.title = title || 'Session Plan';
-
-    // Trigger print dialog
-    window.print();
-
-    // Restore original title after print dialog closes
-    setTimeout(() => {
-      document.title = originalTitle;
-    }, 100);
-  };
+  // Set document title for PDF filename when component loads
+  useEffect(() => {
+    if (title) {
+      document.title = title;
+    }
+    return () => {
+      document.title = 'Raising My Rescue';
+    };
+  }, [title]);
 
   return (
     <>
-      {/* Fixed Header Bar with Save as PDF Button */}
-      <div className="fixed top-0 left-0 right-0 bg-white border-b border-gray-300 shadow-sm z-[10000] print:hidden">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-          <h1 className="text-lg font-semibold text-gray-800">Session Plan Preview</h1>
-          <button
-            onClick={handleSavePDF}
-            className="bg-[#4f6749] hover:bg-[#3d5138] text-white px-4 py-2 rounded-md transition-colors duration-200 flex items-center gap-2"
-            title="Save as PDF"
-            aria-label="Save as PDF"
-          >
-            <FileDown size={20} />
-            <span>Save as PDF</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Add padding to account for fixed header */}
-      <div className="pt-16">
-        {/* Paged.js styles for pagination */}
-        <style>{`
+      {/* Paged.js styles for pagination */}
+      <style>{`
   /* === Cooper Black Font === */
   @font-face {
   font-family: 'Cooper Black';
@@ -496,7 +470,6 @@ h4, h5, h6 {
         )}
         </div> {/* Close Main Content Area */}
       </div>
-      </div> {/* Close padding wrapper */}
     </>
   );
 }
