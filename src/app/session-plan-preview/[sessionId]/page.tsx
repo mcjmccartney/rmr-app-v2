@@ -364,21 +364,21 @@ export default function SessionPlanPreviewPage() {
   dangerouslySetInnerHTML={{
     __html: `
       @page {
-        size: A4;
-        margin: 120px 0 40px 0; /* Top margin must match header height */
-        background: #ecebdd;
+  size: A4;
+  margin: 180px 0 40px 0;   /* top matches header height */
+  background: #ecebdd;
 
-        @top-center {
-          content: "";
-          background-image: url("https://i.ibb.co/Z1bz4gg9/Screenshot-2025-11-13-at-09-10-22.png");
-          background-size: contain;
-          background-repeat: no-repeat;
-          background-position: center;
-          display: block;
-          height: 120px;
-          width: 100%;
-        }
-      }
+  @top-center {
+    content: "";
+    background-image: url("https://i.ibb.co/Z1bz4gg9/Screenshot-2025-11-13-at-09-10-22.png");
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    display: block;
+    height: 180px;   /* same as top margin */
+    width: 100%;
+  }
+}
 
       /* Required for paged.js to render margin boxes visually */
       .pagedjs_margin-content {
