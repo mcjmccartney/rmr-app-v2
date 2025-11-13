@@ -28,20 +28,6 @@ export default function SessionPlanPreviewPage() {
   const [editableActionPoints, setEditableActionPoints] = useState<EditableActionPoint[]>([]);
   const [pagedJsReady, setPagedJsReady] = useState(false);
 
-  // Load Google Fonts first to avoid CORS issues with Paged.js
-  useEffect(() => {
-    const fontLink = document.createElement('link');
-    fontLink.rel = 'stylesheet';
-    fontLink.href = 'https://fonts.googleapis.com/css2?family=Cooper+Black&display=swap';
-    document.head.appendChild(fontLink);
-
-    return () => {
-      if (document.head.contains(fontLink)) {
-        document.head.removeChild(fontLink);
-      }
-    };
-  }, []);
-
   // Load Paged.js ONLY after content is ready
   useEffect(() => {
     // Only load Paged.js after we have content
@@ -289,12 +275,27 @@ export default function SessionPlanPreviewPage() {
     <>
       {/* Paged.js styles for pagination */}
       <style>{`
+  /* === Cooper Black Font === */
+  @font-face {
+    font-family: 'Cooper Black';
+    src: url('/fonts/coopbl-webfont.woff2') format('woff2'),
+         url('/fonts/coopbl-webfont.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+  }
+
   /* === Base Layout === */
   body {
     background: #ecebdd;
     margin: 0;
-    font-family: "Helvetica", sans-serif;
+    font-family: Arial, sans-serif;
     color: #222;
+  }
+
+  /* === Headers use Cooper Black === */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Cooper Black', Arial, sans-serif;
   }
 
   .page-header {
