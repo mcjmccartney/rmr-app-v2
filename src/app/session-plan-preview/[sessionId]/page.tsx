@@ -277,13 +277,13 @@ export default function SessionPlanPreviewPage() {
       <style>{`
   /* === Cooper Black Font === */
   @font-face {
-    font-family: 'Cooper Black';
-    src: url('/fonts/coopbl-webfont.woff2') format('woff2'),
-         url('/fonts/coopbl-webfont.woff') format('woff');
-    font-weight: normal;
-    font-style: normal;
-    font-display: swap;
-  }
+  font-family: 'CooperBlackBT';
+  src: url('/fonts/cooperblkbt-regular-webfont.woff2') format('woff2'),
+       url('/fonts/cooperblkbt-regular-webfont.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
 
   /* === Base Layout === */
   body {
@@ -294,9 +294,11 @@ export default function SessionPlanPreviewPage() {
   }
 
   /* === Headers use Cooper Black === */
-  h1, h2, h3, h4, h5, h6 {
-    font-family: 'Cooper Black', Arial, sans-serif;
-  }
+  /* Headings use Cooper Black */
+h1, h2, h3, h4, h5, h6 {
+  font-family: "CooperBlackBT", Arial, sans-serif !important;
+  font-weight: normal; /* Cooper is already heavy */
+}
 
   .page-header {
   display: none !important;
@@ -368,25 +370,6 @@ export default function SessionPlanPreviewPage() {
 
       {/* === ACTUAL DOCUMENT === */}
       <div className="content-wrapper">
-          {/* Header */}
-        <div
-          style={{ backgroundColor: "#4f6749" }}
-          className="p-2 page-header flex items-center justify-between"
-        >
-          {/* Left Image */}
-          <img
-            src="https://i.ibb.co/tp6WV8TN/Screenshot-2025-11-12-at-13-38-12.png"
-            alt="Raising My Rescue Text Logo"
-            className="h-16 w-auto"
-          />
-
-          {/* Right Logo */}
-          <img
-            src="https://i.ibb.co/0V6pRF85/Screenshot-2025-11-12-at-13-17-36.png"
-            alt="Raising My Rescue Logo"
-            className="h-16 w-auto ml-4"
-          />
-        </div>
 
         {/* Main Content Area with Padding */}
         <div className="px-6 py-6">
