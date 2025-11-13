@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { SessionPlan, Session, Client, ActionPoint } from '@/types';
 import SafeHtmlRenderer from '@/components/SafeHtmlRenderer';
+import { Download } from 'lucide-react';
 
 interface EditableActionPoint {
   header: string;
@@ -271,8 +272,37 @@ export default function SessionPlanPreviewPage() {
 
   console.log('About to render session plan content - title:', title, 'mainGoals:', mainGoals.length);
 
+  // Function to save as PDF without print dialog
+  const handleSavePDF = () => {
+    // Use the browser's print functionality but with a filename
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(document.documentElement.outerHTML);
+      printWindow.document.close();
+      printWindow.focus();
+
+      // Set the document title to the session title for the PDF filename
+      printWindow.document.title = title || 'Session Plan';
+
+      // Trigger print
+      setTimeout(() => {
+        printWindow.print();
+        printWindow.close();
+      }, 250);
+    }
+  };
+
   return (
     <>
+      {/* Floating PDF Save Button */}
+      <button
+        onClick={handleSavePDF}
+        className="fixed bottom-8 right-8 bg-[#4f6749] hover:bg-[#3d5138] text-white rounded-full p-4 shadow-lg z-50 transition-colors duration-200"
+        title="Save as PDF"
+      >
+        <Download size={24} />
+      </button>
+
       {/* Paged.js styles for pagination */}
       <style>{`
   /* === Cooper Black Font === */
@@ -321,12 +351,17 @@ h4, h5, h6 {
   /* === Paged.js Preview Styling (minimal overrides) === */
   .pagedjs_pages {
     background: #525659;
-    padding: 20px;
+    padding: 40px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
   }
 
   .pagedjs_page {
     background: #ecebdd;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+    margin: 0 auto;
   }
 
   /* Ensure all Paged.js elements have the correct background */
@@ -383,6 +418,11 @@ h4, h5, h6 {
       box-shadow: none;
       margin: 0;
       border: none;
+    }
+
+    /* Hide floating button when printing */
+    button[title="Save as PDF"] {
+      display: none !important;
     }
   }
 `}</style>
