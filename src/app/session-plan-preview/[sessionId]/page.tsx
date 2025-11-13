@@ -319,12 +319,12 @@ export default function SessionPlanPreviewPage() {
 
   /* === Headers use Cooper Black === */
   /* Headings use Cooper Black */
-h1, h2 {
+ {
   font-family: "Cooper Black", Arial, sans-serif !important;
   font-weight: normal; /* Cooper is already heavy */
 }
 
-h3, h4, h5, h6 {
+h1, h2, h3, h4, h5, h6 {
   font-family: "Cooper Black 2", Arial, sans-serif !important;
   font-weight: normal; /* Cooper is already heavy */
 }
@@ -430,7 +430,7 @@ h3, h4, h5, h6 {
         {/* Main Content Area with Padding */}
         <div className="px-6 py-6">
           {/* Title */}
-          <h2 className="text-4xl text-gray-900 mb-10">{title}</h2>
+          <h1 className="text-4xl text-gray-900 mb-10">{title}</h1>
 
           {/* Main Goals */}
         {mainGoals.length > 0 && (
@@ -467,7 +467,7 @@ h3, h4, h5, h6 {
         )}
 
         {/* Title - Always on second page */}
-          <h2 className="text-4xl text-gray-900 mb-10 mt-6 break-before-page">{title}</h2>
+          <h1 className="text-4xl text-gray-900 mb-10 mt-6 break-before-page">{title}</h1>
 
         {/* Action Points */}
         {editableActionPoints.length > 0 && (
@@ -485,7 +485,7 @@ h3, h4, h5, h6 {
             ))}
           </div>
         )}
-
+        </div> {/* Close Main Content Area */}
         {/* Reminder Section - Positioned at bottom of last page */}
         <div className="reminder-section">
           <h6 className="text-2xl text-gray-900 mb-3">Reminder:</h6>
@@ -498,8 +498,6 @@ h3, h4, h5, h6 {
             physiotherapist, or nutritionist. I'm not a vet and don't offer medical advice or diagnosis.
           </p>
         </div>
-
-        </div> {/* Close Main Content Area */}
       </div>
     </>
   );
