@@ -28,6 +28,16 @@ export default function SessionPlanPreviewPage() {
   const [editableActionPoints, setEditableActionPoints] = useState<EditableActionPoint[]>([]);
   const [pagedJsReady, setPagedJsReady] = useState(false);
 
+  // Set document title for PDF filename when component loads
+  useEffect(() => {
+    if (title) {
+      document.title = title;
+    }
+    return () => {
+      document.title = 'Raising My Rescue';
+    };
+  }, [title]);
+
   // Load Paged.js ONLY after content is ready
   useEffect(() => {
     // Only load Paged.js after we have content
@@ -270,16 +280,6 @@ export default function SessionPlanPreviewPage() {
   }
 
   console.log('About to render session plan content - title:', title, 'mainGoals:', mainGoals.length);
-
-  // Set document title for PDF filename when component loads
-  useEffect(() => {
-    if (title) {
-      document.title = title;
-    }
-    return () => {
-      document.title = 'Raising My Rescue';
-    };
-  }, [title]);
 
   return (
     <>
