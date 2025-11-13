@@ -236,13 +236,13 @@ html {
   display: block !important;
 }
 
-/* Body text (paragraphs, lists, general text)
+/* Body text (paragraphs, lists, general text) */
 body, p, div, span, li {
   font-family: Arial, sans-serif !important;
 }
 
- Headings use Cooper Black
+/* Headings use Cooper Black */
 h1, h2, h3, h4, h5, h6 {
-  font-family: "CooperBlackBT", Arial, sans-serif !important;
-  font-weight: normal; Cooper is already heavy
+  font-family: "Cooper Black", Arial, sans-serif !important;
+  font-weight: normal; /* Cooper is already heavy */
 }
