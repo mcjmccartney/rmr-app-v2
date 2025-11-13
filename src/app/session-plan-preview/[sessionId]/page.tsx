@@ -283,11 +283,18 @@ export default function SessionPlanPreviewPage() {
     color: #222;
   }
 
+  .page-header {
+  display: none !important;
+}
+
   /* === Paged.js Preview Styling (minimal overrides) === */
   .pagedjs_pages {
     background: #525659;
     padding: 20px;
   }
+
+  .pagedjs_pagebox > .pagedjs_area {
+    grid-row: auto;}
 
   .pagedjs_page {
     background: #ecebdd;
@@ -358,9 +365,20 @@ export default function SessionPlanPreviewPage() {
     __html: `
       @page {
         size: A4;
-        margin: 0;
+        margin: 100px 0 40px 0;
         background: #ecebdd;
       }
+
+      @top-center {
+    content: "";
+    background-image: url("https://i.ibb.co/Z1bz4gg9/Screenshot-2025-11-13-at-09-10-22.png");
+    background-size: contain;    /* or: cover */
+    background-repeat: no-repeat;
+    background-position: center;
+    display: block;
+    height: 100px; /* same as your top margin */
+    width: 100%;
+  }
     `,
   }}
 />
