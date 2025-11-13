@@ -329,16 +329,14 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: normal; /* Cooper is already heavy */
 }
 
-  /* Position reminder at bottom of last page */
+  /* Position reminder at bottom of page */
   .reminder-section {
-    position: running(reminder);
-  }
-
-  @page:last {
-    @bottom-left {
-      content: element(reminder);
-      width: 100%;
-    }
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 0 1.5rem 1.5rem 1.5rem;
+    background: #ecebdd;
   }
 
   .page-header {
@@ -359,6 +357,12 @@ h1, h2, h3, h4, h5, h6 {
     background: #ecebdd;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
     margin: 0 auto;
+    position: relative;
+  }
+
+  .pagedjs_page_content {
+    position: relative;
+    min-height: 100%;
   }
 
   /* Ensure all Paged.js elements have the correct background */
