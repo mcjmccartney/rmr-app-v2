@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { SessionPlan, Session, Client, ActionPoint } from '@/types';
 import SafeHtmlRenderer from '@/components/SafeHtmlRenderer';
-import { Download } from 'lucide-react';
+import { FileDown } from 'lucide-react';
 
 interface EditableActionPoint {
   header: string;
@@ -28,28 +28,6 @@ export default function SessionPlanPreviewPage() {
   const [explanationOfBehaviour, setExplanationOfBehaviour] = useState('');
   const [editableActionPoints, setEditableActionPoints] = useState<EditableActionPoint[]>([]);
   const [pagedJsReady, setPagedJsReady] = useState(false);
-  const [html2pdfReady, setHtml2pdfReady] = useState(false);
-
-  // Load html2pdf.js for PDF generation
-  useEffect(() => {
-    const script = document.createElement('script');
-    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
-    script.async = true;
-    script.onload = () => {
-      console.log('html2pdf.js loaded');
-      setHtml2pdfReady(true);
-    };
-    script.onerror = () => {
-      console.error('Failed to load html2pdf.js');
-    };
-    document.head.appendChild(script);
-
-    return () => {
-      if (document.head.contains(script)) {
-        document.head.removeChild(script);
-      }
-    };
-  }, []);
 
   // Load Paged.js ONLY after content is ready
   useEffect(() => {
@@ -294,39 +272,21 @@ export default function SessionPlanPreviewPage() {
 
   console.log('About to render session plan content - title:', title, 'mainGoals:', mainGoals.length);
 
-  // Function to save as PDF without print dialog
+  // Function to save as PDF using browser print
   const handleSavePDF = () => {
-    if (!html2pdfReady || !(window as any).html2pdf) {
-      alert('PDF generator is still loading. Please try again in a moment.');
-      return;
-    }
+    // Save original title
+    const originalTitle = document.title;
 
-    // Try to get the Paged.js rendered pages first, fallback to content-wrapper
-    const pagedContent = document.querySelector('.pagedjs_pages');
-    const element = pagedContent || document.querySelector('.content-wrapper');
+    // Set title to desired filename (e.g., "Session 3 - Millie")
+    document.title = title || 'Session Plan';
 
-    if (!element) {
-      alert('Content not found. Please try again.');
-      return;
-    }
+    // Trigger print dialog
+    window.print();
 
-    const filename = title ? `${title}.pdf` : 'Session Plan.pdf';
-
-    const opt = {
-      margin: 0,
-      filename: filename,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#525659'
-      },
-      jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' },
-      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
-    };
-
-    (window as any).html2pdf().set(opt).from(element).save();
+    // Restore original title after print dialog closes
+    setTimeout(() => {
+      document.title = originalTitle;
+    }, 100);
   };
 
   return (
@@ -519,14 +479,15 @@ h4, h5, h6 {
         </div> {/* Close Main Content Area */}
       </div>
 
-      {/* Floating PDF Save Button - Outside content wrapper so Paged.js doesn't paginate it */}
+      {/* Floating Save as PDF Button - Outside content wrapper so Paged.js doesn't paginate it */}
       <button
         onClick={handleSavePDF}
-        className="fixed bottom-8 right-8 bg-[#4f6749] hover:bg-[#3d5138] text-white rounded-full p-4 shadow-lg transition-colors duration-200"
+        className="fixed bottom-8 right-8 bg-[#4f6749] hover:bg-[#3d5138] text-white rounded-full p-4 shadow-lg transition-colors duration-200 flex items-center justify-center"
         style={{ zIndex: 9999 }}
         title="Save as PDF"
+        aria-label="Save as PDF"
       >
-        <Download size={24} />
+        <FileDown size={24} />
       </button>
     </>
   );
