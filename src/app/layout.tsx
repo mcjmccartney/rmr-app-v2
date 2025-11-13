@@ -93,12 +93,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           name="viewport"
           content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no, user-scalable=no, viewport-fit=cover"
         />
-
-        {/* ⭐ Cooper Black font */}
-        <link
-          href="https://fonts.googleapis.com/css2?family=Cooper+Black&display=swap"
-          rel="stylesheet"
-        />
       </head>
 
       <body className={`${inter.className} antialiased`}>

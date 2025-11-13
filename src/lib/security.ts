@@ -94,10 +94,10 @@ export function addSecurityHeaders(response: NextResponse, allowEmbedding: boole
   const csp = [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live https://js.stripe.com https://unpkg.com",
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-    "font-src 'self' https://fonts.gstatic.com",
+    "style-src 'self' 'unsafe-inline'",
+    "font-src 'self'",
     "img-src 'self' data: https: blob:",
-    "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://hook.eu1.make.com https://api.stripe.com https://docs.google.com https://www.googleapis.com https://api.mapbox.com https://fonts.googleapis.com",
+    "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://hook.eu1.make.com https://api.stripe.com https://docs.google.com https://www.googleapis.com https://api.mapbox.com",
     "frame-src 'self' https://js.stripe.com https://hooks.stripe.com",
     "worker-src 'self' blob:",
     "child-src 'self' blob:",
