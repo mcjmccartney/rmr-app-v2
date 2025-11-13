@@ -143,7 +143,7 @@ html {
 
 @page {
   size: A4;
-  margin: 140px 0 40px 0;  /* adjust based on the real height of your header */
+  margin: 120px 0 40px 0;  /* adjust based on the real height of your header */
 
   @top-center {
     content: "";
@@ -151,7 +151,7 @@ html {
     background-repeat: no-repeat;
     background-position: center;
     background-size: contain;
-    height: 140px;   /* MUST match the top margin */
+    height: 120px;   /* MUST match the top margin */
     width: 100%;
     display: block;
   }
