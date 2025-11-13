@@ -351,29 +351,6 @@ export default function SessionPlanPreviewPage() {
   }
 `}</style>
 
-      {/* === @page setup (Paged.js) === */}
-      <style
-  dangerouslySetInnerHTML={{
-    __html: `
-      @page {
-        size: A4;
-        margin: 100px 0 40px 0;
-
-        @top-center {
-          content: "HEADER TEST";
-          color: red;
-          font-size: 40px;
-          font-weight: bold;
-        }
-      }
-
-      .pagedjs_margin-content {
-        display: block !important;
-      }
-    `,
-  }}
-/>
-
       {/* === ACTUAL DOCUMENT === */}
       <div className="content-wrapper">
           {/* Header */}
