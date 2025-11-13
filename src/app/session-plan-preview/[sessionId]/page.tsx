@@ -434,7 +434,7 @@ h1, h2, h3, h4, h5, h6 {
         {/* Main Content Area with Padding */}
         <div className="px-6 py-6">
           {/* Title */}
-          <h1 className="text-4xl text-gray-900 mb-10">{title}</h1>
+          <h1 className="text-5xl text-gray-900 mb-10">{title}</h1>
 
           {/* Main Goals */}
         {mainGoals.length > 0 && (
@@ -471,7 +471,7 @@ h1, h2, h3, h4, h5, h6 {
         )}
 
         {/* Title - Always on second page */}
-          <h1 className="text-4xl text-gray-900 mb-10 mt-6 break-before-page">{title}</h1>
+          <h1 className="text-5xl text-gray-900 mb-10 mt-6 break-before-page">{title}</h1>
 
         {/* Action Points */}
         {editableActionPoints.length > 0 && (
