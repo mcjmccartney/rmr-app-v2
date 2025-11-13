@@ -27,10 +27,19 @@ export default function ServiceWorkerRegistration() {
             const newWorker = registration.installing;
             if (newWorker) {
               newWorker.addEventListener('statechange', () => {
-                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                  console.log('New service worker installed, reloading page...');
-                  // The service worker already has skipWaiting() in it, so just reload
-                  window.location.reload();
+                console.log('New service worker state:', newWorker.state);
+
+                // If there's a controller (existing SW), wait for 'installed' state
+                if (navigator.serviceWorker.controller) {
+                  if (newWorker.state === 'installed') {
+                    console.log('New service worker installed, reloading page...');
+                    window.location.reload();
+                  }
+                } else {
+                  // No controller means first install, wait for 'activated'
+                  if (newWorker.state === 'activated') {
+                    console.log('Service worker activated for first time');
+                  }
                 }
               });
             }
