@@ -336,6 +336,11 @@ h1, h2, h3, h4, h5, h6 {
     break-inside: avoid;
   }
 
+  /* Add top margin when Action Point starts on a new page */
+  .action-point-box {
+    margin-top: 3rem; /* 48px - same as mt-12 */
+  }
+
   .break-before-page {
     page-break-before: always;
     break-before: page;
@@ -412,7 +417,7 @@ h1, h2, h3, h4, h5, h6 {
 
         {/* Action Points (next page) */}
         {editableActionPoints.length > 0 && (
-          <div className="mb-6 space-y-12">
+          <div className="mt-12 mb-6 space-y-6">
             {editableActionPoints.map((actionPoint, index) => (
               <div key={index} className="action-point-box relative">
                 <h4 className="absolute -top-5 left-4 bg-[#ecebdd] px-2 italic text-3xl">
