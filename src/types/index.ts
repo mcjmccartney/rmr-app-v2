@@ -50,6 +50,7 @@ export interface SessionPlan {
   mainGoal3?: string;
   mainGoal4?: string;
   explanationOfBehaviour?: string;
+  hasMainGoals?: boolean; // Whether main goals section is included (not removed)
   actionPoints: string[]; // Array of ActionPoint IDs
   editedActionPoints?: { [actionPointId: string]: EditableActionPoint }; // Custom edited action point content
   documentEditUrl?: string; // Google Doc edit URL from Make.com

@@ -98,6 +98,7 @@ export default function SessionPlanPreviewPage() {
           mainGoal3: planData.main_goal_3,
           mainGoal4: planData.main_goal_4,
           explanationOfBehaviour: planData.explanation_of_behaviour,
+          hasMainGoals: planData.has_main_goals !== undefined ? planData.has_main_goals : true,
           actionPoints: planData.action_points || [],
           editedActionPoints: planData.edited_action_points || {},
           documentEditUrl: planData.document_edit_url,
@@ -433,8 +434,8 @@ h1, h2, h3, h4, h5, h6 {
 
         {/* Main Content Area with Padding */}
         <div className="px-6 py-6">
-          {/* First Page - Only show if there are main goals or explanation of behaviour */}
-          {(mainGoals.length > 0 || explanationOfBehaviour) && (
+          {/* First Page - Only show if hasMainGoals is true (Remove button not clicked) */}
+          {sessionPlan.hasMainGoals !== false && (
             <>
               {/* Title */}
               <h1 className="text-5xl text-gray-900 mb-10">{title}</h1>
@@ -478,8 +479,8 @@ h1, h2, h3, h4, h5, h6 {
             </>
           )}
 
-          {/* Title - On first page when no main goals or explanation */}
-          {!(mainGoals.length > 0 || explanationOfBehaviour) && (
+          {/* Title - On first page when main goals section is removed */}
+          {sessionPlan.hasMainGoals === false && (
             <h1 className="text-5xl text-gray-900 mb-10">{title}</h1>
           )}
 
