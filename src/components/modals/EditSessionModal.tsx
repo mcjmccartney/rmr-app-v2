@@ -87,9 +87,27 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
       const client = state.clients.find(c => c.id === session.clientId);
       setSelectedClient(client || null);
 
+      // Get the correct dog name (prioritize client's current name)
+      let dogName = session.dogName || '';
+      if (session.dogName && client) {
+        // Check if session dog matches client's primary dog (case-insensitive)
+        if (client.dogName && session.dogName.toLowerCase() === client.dogName.toLowerCase()) {
+          dogName = client.dogName; // Use client's current name (may have been edited)
+        }
+        // Check if session dog matches any of the other dogs
+        else if (client.otherDogs && Array.isArray(client.otherDogs)) {
+          const matchingOtherDog = client.otherDogs.find(
+            dog => dog.toLowerCase() === session.dogName!.toLowerCase()
+          );
+          if (matchingOtherDog) {
+            dogName = matchingOtherDog; // Use the current name from otherDogs array
+          }
+        }
+      }
+
       setFormData({
         clientId: session.clientId || '', // Handle optional clientId for Group/RMR Live sessions
-        dogName: session.dogName || '',
+        dogName: dogName,
         sessionType: session.sessionType,
         date: session.bookingDate, // Already in YYYY-MM-DD format
         time: session.bookingTime.substring(0, 5), // Ensure HH:mm format (remove seconds)

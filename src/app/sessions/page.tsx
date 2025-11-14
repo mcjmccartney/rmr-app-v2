@@ -29,6 +29,31 @@ export default function SessionsPage() {
   const [addModalType, setAddModalType] = useState<'session' | 'client'>('session');
   const [expandedMonths, setExpandedMonths] = useState<Set<string>>(new Set());
 
+  // Helper function to get the correct dog name (prioritizes client's current name over session's stored name)
+  const getSessionDogName = (session: Session, client: Client | undefined): string => {
+    if (!session.dogName) {
+      return client?.dogName || '';
+    }
+    if (!client) {
+      return session.dogName;
+    }
+    // Check if session dog matches client's primary dog (case-insensitive)
+    if (client.dogName && session.dogName.toLowerCase() === client.dogName.toLowerCase()) {
+      return client.dogName; // Use client's current name (may have been edited)
+    }
+    // Check if session dog matches any of the other dogs
+    if (client.otherDogs && Array.isArray(client.otherDogs)) {
+      const matchingOtherDog = client.otherDogs.find(
+        dog => dog.toLowerCase() === session.dogName!.toLowerCase()
+      );
+      if (matchingOtherDog) {
+        return matchingOtherDog; // Use the current name from otherDogs array
+      }
+    }
+    // Fallback to session's dog name
+    return session.dogName;
+  };
+
   // Check for returnSessionId parameter to restore selected session when returning from session-plan
   useEffect(() => {
     const returnSessionId = searchParams.get('returnSessionId');
@@ -239,9 +264,14 @@ export default function SessionsPage() {
                                   {client ? (
                                     <>
                                       {client.firstName} {client.lastName}
-                                      <span className="text-sm font-normal text-gray-500">
-                                        {getClientDogsPart(client)}
-                                      </span>
+                                      {(() => {
+                                        const dogName = getSessionDogName(session, client);
+                                        return dogName ? (
+                                          <span className="text-sm font-normal text-gray-500">
+                                            {' '}w/ {dogName}
+                                          </span>
+                                        ) : null;
+                                      })()}
                                     </>
                                   ) : isGroupOrRMRLive ? session.sessionType : 'Unknown Client'}
                                 </h3>
