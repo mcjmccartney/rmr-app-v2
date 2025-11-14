@@ -231,16 +231,29 @@ export default function SessionPlanPreviewPage() {
         // Set explanation
         setExplanationOfBehaviour(plan.explanationOfBehaviour || '');
 
-        // Build editable action points
+        // Build editable action points and replace old dog name with current one
         const editableAPs: EditableActionPoint[] = [];
         if (actionPointsData) {
+          // Get the old dog name from session (what was stored)
+          const oldDogName = sess.dogName;
+
           for (const apId of plan.actionPoints) {
             const actionPoint = actionPointsData.find((ap) => ap.id === apId);
             if (actionPoint) {
               const edited = plan.editedActionPoints?.[apId];
+              let header = edited?.header || actionPoint.header;
+              let details = edited?.details || actionPoint.details;
+
+              // Replace old dog name with current dog name (case-insensitive)
+              if (oldDogName && dogName && oldDogName.toLowerCase() !== dogName.toLowerCase()) {
+                const regex = new RegExp(`\\b${oldDogName}\\b`, 'gi');
+                header = header.replace(regex, dogName);
+                details = details.replace(regex, dogName);
+              }
+
               editableAPs.push({
-                header: edited?.header || actionPoint.header,
-                details: edited?.details || actionPoint.details,
+                header,
+                details,
               });
             }
           }

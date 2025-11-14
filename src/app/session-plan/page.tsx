@@ -161,7 +161,25 @@ function SessionPlanContent() {
           setSessionNumber(existingPlan.sessionNumber);
 
           if (existingPlan.editedActionPoints) {
-            setEditableActionPoints(existingPlan.editedActionPoints);
+            // Replace old dog name with current dog name in action points
+            const currentDogName = getSessionDogName();
+            const oldDogName = currentSession?.dogName;
+
+            if (oldDogName && currentDogName && oldDogName.toLowerCase() !== currentDogName.toLowerCase()) {
+              const regex = new RegExp(`\\b${oldDogName}\\b`, 'gi');
+              const updatedActionPoints: { [key: string]: { header: string; details: string } } = {};
+
+              Object.entries(existingPlan.editedActionPoints).forEach(([key, value]) => {
+                updatedActionPoints[key] = {
+                  header: value.header.replace(regex, currentDogName),
+                  details: value.details.replace(regex, currentDogName),
+                };
+              });
+
+              setEditableActionPoints(updatedActionPoints);
+            } else {
+              setEditableActionPoints(existingPlan.editedActionPoints);
+            }
           }
 
           // Set hasMainGoals based on noFirstPage field, but keep collapsed
