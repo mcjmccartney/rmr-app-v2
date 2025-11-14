@@ -62,7 +62,14 @@ export default function SessionPlanPreviewPage() {
   const script = document.createElement("script");
   script.src = "https://unpkg.com/pagedjs/dist/paged.polyfill.js";
   script.async = true;
-  script.onload = () => setPagedJsReady(true);
+  script.onload = () => {
+    setPagedJsReady(true);
+    // Signal that pagination is complete for PDF generators
+    setTimeout(() => {
+      document.body.setAttribute('data-paged-ready', 'true');
+      console.log('Paged.js ready signal set');
+    }, 1000); // Wait 1 second after Paged.js loads to ensure pagination is complete
+  };
   document.body.appendChild(script);
 
   return () => {
@@ -304,6 +311,9 @@ export default function SessionPlanPreviewPage() {
 
   return (
     <>
+      {/* Meta tag for PDF services to wait for rendering */}
+      <meta name="pdfshift-wait-for-selector" content="[data-paged-ready='true']" />
+
       {/* Paged.js styles for pagination */}
       <style>{`
   /* === Cooper Black Font === */
