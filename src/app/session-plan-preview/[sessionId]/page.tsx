@@ -330,21 +330,14 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: normal; /* Cooper is already heavy */
 }
 
-  /* Reminder section - flows naturally to last page */
+  /* Position reminder at bottom of page */
   .reminder-section {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 0 1.5rem 1.5rem 1.5rem;
     background: #ecebdd;
-    page-break-inside: avoid;
-    break-inside: avoid;
-    page-break-before: auto;
-    break-before: auto;
-  }
-
-  /* Add space before reminder to push it down when there's room */
-  .reminder-section::before {
-    content: '';
-    display: block;
-    height: 0;
-    margin-bottom: 0;
   }
 
   .page-header {
@@ -513,9 +506,10 @@ h1, h2, h3, h4, h5, h6 {
             ))}
           </div>
         )}
+        </div> {/* Close Main Content Area */}
 
-        {/* Reminder Section - Flows naturally after action points */}
-        <div className="reminder-section mt-12">
+        {/* Reminder Section - Positioned at bottom of page */}
+        <div className="reminder-section">
           <h6 className="text-2xl text-gray-900 mb-3">Reminder:</h6>
           <p className="text-gray-900 text-base leading-relaxed mb-0">
             I'm here to support you and your dog from a behavioural perspective. Sometimes, behavioural
@@ -526,7 +520,6 @@ h1, h2, h3, h4, h5, h6 {
             physiotherapist, or nutritionist. I'm not a vet and don't offer medical advice or diagnosis.
           </p>
         </div>
-        </div> {/* Close Main Content Area */}
       </div>
     </>
   );
