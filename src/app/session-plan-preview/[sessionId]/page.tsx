@@ -386,11 +386,32 @@ export default function SessionPlanPreviewPage() {
 
         // Build editable action points and replace old dog name with current one
         const editableAPs: EditableActionPoint[] = [];
-        if (actionPointsData) {
-          // Get the old dog name from session (what was stored)
-          const oldDogName = sess.dogName;
+        // Get the old dog name from session (what was stored)
+        const oldDogName = sess.dogName;
 
-          for (const apId of plan.actionPoints) {
+        for (const apId of plan.actionPoints) {
+          // Check if this is a blank action point (custom added)
+          if (apId.startsWith('blank-')) {
+            // For blank action points, use the edited content directly
+            const edited = plan.editedActionPoints?.[apId];
+            if (edited && edited.header && edited.details) {
+              let header = edited.header;
+              let details = edited.details;
+
+              // Replace old dog name with current dog name (case-insensitive)
+              if (oldDogName && dogName && oldDogName.toLowerCase() !== dogName.toLowerCase()) {
+                const regex = new RegExp(`\\b${oldDogName}\\b`, 'gi');
+                header = header.replace(regex, dogName);
+                details = details.replace(regex, dogName);
+              }
+
+              editableAPs.push({
+                header,
+                details,
+              });
+            }
+          } else if (actionPointsData) {
+            // For library action points, look them up
             const actionPoint = actionPointsData.find((ap: any) => ap.id === apId);
             if (actionPoint) {
               const edited = plan.editedActionPoints?.[apId];
