@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
 import { SessionPlan, Session, Client, ActionPoint } from '@/types';
 import SafeHtmlRenderer from '@/components/SafeHtmlRenderer';
 
@@ -73,19 +72,18 @@ export default function SessionPlanPreviewPage() {
         setLoading(true);
         setError(null);
 
-        // Fetch session plan
-        const { data: planData, error: planError } = await supabase
-          .from('session_plans')
-          .select('*')
-          .eq('session_id', sessionId)
-          .single();
+        // Fetch all data from public API endpoint (bypasses RLS)
+        const response = await fetch(`/api/session-plan-preview/${sessionId}`);
 
-        if (planError) {
-          console.error('Session plan error:', planError);
-          setError('Session plan not found');
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error('API error:', errorData);
+          setError(errorData.error || 'Failed to load session plan');
           setLoading(false);
           return;
         }
+
+        const { sessionPlan: planData, session: sessionData, client: clientData, actionPoints: actionPointsData } = await response.json();
 
         console.log('Session plan fetched:', planData);
 
@@ -108,15 +106,9 @@ export default function SessionPlanPreviewPage() {
 
         setSessionPlan(plan);
 
-        // Fetch session
-        const { data: sessionData, error: sessionError } = await supabase
-          .from('sessions')
-          .select('*')
-          .eq('id', sessionId)
-          .single();
-
-        if (sessionError) {
-          console.error('Session error:', sessionError);
+        // Use session data from API
+        if (!sessionData) {
+          console.error('Session not found');
           setError('Session not found');
           setLoading(false);
           return;
@@ -146,46 +138,32 @@ export default function SessionPlanPreviewPage() {
 
         setSession(sess);
 
-        // Fetch client if session has clientId
-        let clientData = null;
-        if (sess.clientId) {
-          const { data: fetchedClientData, error: clientError } = await supabase
-            .from('clients')
-            .select('*')
-            .eq('id', sess.clientId)
-            .single();
-
-          if (!clientError && fetchedClientData) {
-            const cli: Client = {
-              id: fetchedClientData.id,
-              firstName: fetchedClientData.first_name,
-              lastName: fetchedClientData.last_name,
-              partnerName: fetchedClientData.partner_name,
-              dogName: fetchedClientData.dog_name,
-              otherDogs: fetchedClientData.other_dogs || [],
-              phone: fetchedClientData.phone,
-              email: fetchedClientData.email,
-              address: fetchedClientData.address,
-              active: fetchedClientData.active,
-              membership: fetchedClientData.membership,
-              avatar: fetchedClientData.avatar,
-              behaviouralBriefId: fetchedClientData.behavioural_brief_id,
-              booking_terms_signed: fetchedClientData.booking_terms_signed,
-              booking_terms_signed_date: fetchedClientData.booking_terms_signed_date,
-            };
-            setClient(cli);
-            clientData = cli;
-          }
+        // Use client data from API
+        let cli: Client | null = null;
+        if (clientData) {
+          cli = {
+            id: clientData.id,
+            firstName: clientData.first_name,
+            lastName: clientData.last_name,
+            partnerName: clientData.partner_name,
+            dogName: clientData.dog_name,
+            otherDogs: clientData.other_dogs || [],
+            phone: clientData.phone,
+            email: clientData.email,
+            address: clientData.address,
+            active: clientData.active,
+            membership: clientData.membership,
+            avatar: clientData.avatar,
+            behaviouralBriefId: clientData.behavioural_brief_id,
+            booking_terms_signed: clientData.booking_terms_signed,
+            booking_terms_signed_date: clientData.booking_terms_signed_date,
+          };
+          setClient(cli);
         }
 
-        // Fetch all action points
-        const { data: actionPointsData, error: actionPointsError } = await supabase
-          .from('action_points')
-          .select('*')
-          .order('header');
-
-        if (!actionPointsError && actionPointsData) {
-          const aps: ActionPoint[] = actionPointsData.map((ap) => ({
+        // Use action points from API
+        if (actionPointsData) {
+          const aps: ActionPoint[] = actionPointsData.map((ap: any) => ({
             id: ap.id,
             header: ap.header,
             details: ap.details,
@@ -238,7 +216,7 @@ export default function SessionPlanPreviewPage() {
           const oldDogName = sess.dogName;
 
           for (const apId of plan.actionPoints) {
-            const actionPoint = actionPointsData.find((ap) => ap.id === apId);
+            const actionPoint = actionPointsData.find((ap: any) => ap.id === apId);
             if (actionPoint) {
               const edited = plan.editedActionPoints?.[apId];
               let header = edited?.header || actionPoint.header;
