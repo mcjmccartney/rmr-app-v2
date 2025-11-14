@@ -47,7 +47,7 @@ function SessionPlanContent() {
   const [selectedActionPoints, setSelectedActionPoints] = useState<string[]>([]);
   const [showActionPointsModal, setShowActionPointsModal] = useState(false);
   const [showMainGoals, setShowMainGoals] = useState(false);
-  const [hasMainGoals, setHasMainGoals] = useState(true);
+  const [hasMainGoals, setHasMainGoals] = useState(false); // Default to false (removed state)
   const [editableActionPoints, setEditableActionPoints] = useState<{[key: string]: {header: string, details: string}}>({});
   const [expandedActionPoints, setExpandedActionPoints] = useState<Set<string>>(new Set());
   const [existingSessionPlan, setExistingSessionPlan] = useState<SessionPlan | null>(null);

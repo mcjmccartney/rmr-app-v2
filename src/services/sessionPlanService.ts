@@ -15,7 +15,7 @@ function dbRowToSessionPlan(row: Record<string, any>): SessionPlan {
     actionPoints: row.action_points || [],
     editedActionPoints: row.edited_action_points || {},
     documentEditUrl: row.document_edit_url,
-    noFirstPage: row.no_first_page || false,
+    noFirstPage: row.no_first_page !== undefined ? row.no_first_page : true, // Default to true (removed state)
     createdAt: new Date(row.created_at),
     updatedAt: new Date(row.updated_at),
   };
@@ -35,7 +35,7 @@ function sessionPlanToDbRow(sessionPlan: Partial<SessionPlan>) {
     action_points: sessionPlan.actionPoints,
     edited_action_points: sessionPlan.editedActionPoints || {},
     document_edit_url: sessionPlan.documentEditUrl,
-    no_first_page: sessionPlan.noFirstPage || false,
+    no_first_page: sessionPlan.noFirstPage !== undefined ? sessionPlan.noFirstPage : true, // Default to true (removed state)
   };
 }
 

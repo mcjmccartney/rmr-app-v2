@@ -101,7 +101,7 @@ export default function SessionPlanPreviewPage() {
           actionPoints: planData.action_points || [],
           editedActionPoints: planData.edited_action_points || {},
           documentEditUrl: planData.document_edit_url,
-          noFirstPage: planData.no_first_page || false,
+          noFirstPage: planData.no_first_page !== undefined ? planData.no_first_page : true, // Default to true (removed state)
           createdAt: new Date(planData.created_at),
           updatedAt: new Date(planData.updated_at),
         };
