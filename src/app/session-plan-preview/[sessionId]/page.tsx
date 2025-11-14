@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { SessionPlan, Session, Client, ActionPoint } from '@/types';
 import SafeHtmlRenderer from '@/components/SafeHtmlRenderer';
 
@@ -13,7 +13,9 @@ interface EditableActionPoint {
 export default function SessionPlanPreviewPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const sessionId = params.sessionId as string;
+  const isPrintMode = searchParams.get('print') === 'true';
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -325,7 +327,7 @@ export default function SessionPlanPreviewPage() {
 
   /* === Base Layout === */
   body {
-    background: #ecebdd;
+    background: ${isPrintMode ? 'white' : '#ecebdd'};
     margin: 0;
     font-family: Arial, sans-serif;
     color: #222;
@@ -371,17 +373,17 @@ h1, h2, h3, h4, h5, h6 {
 
   /* === Paged.js Preview Styling (minimal overrides) === */
   .pagedjs_pages {
-    background: #525659;
-    padding: 40px 20px;
+    background: ${isPrintMode ? 'transparent' : '#525659'};
+    padding: ${isPrintMode ? '0' : '40px 20px'};
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 30px;
+    gap: ${isPrintMode ? '0' : '30px'};
   }
 
   .pagedjs_page {
     background: #ecebdd;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+    box-shadow: ${isPrintMode ? 'none' : '0 0 20px rgba(0, 0, 0, 0.3)'};
     margin: 0 auto;
     position: relative;
   }
