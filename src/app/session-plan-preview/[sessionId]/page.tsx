@@ -135,14 +135,14 @@ export default function SessionPlanPreviewPage() {
           console.log(`Capturing page ${i + 1}/${pages.length}...`);
 
           const canvas = await html2canvas(pages[i] as HTMLElement, {
-            scale: 2,
+            scale: 3,
             backgroundColor: '#ecebdd',
             logging: false,
             useCORS: true,
             allowTaint: true
           });
 
-          const imgData = canvas.toDataURL('image/jpeg', 0.95);
+          const imgData = canvas.toDataURL('image/png');
 
           if (i > 0) {
             pdf.addPage();
