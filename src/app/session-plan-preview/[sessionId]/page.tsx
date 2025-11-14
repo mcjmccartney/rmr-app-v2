@@ -79,15 +79,166 @@ export default function SessionPlanPreviewPage() {
   };
 }, [loading, sessionPlan, pagedJsReady]);
 
-  // Dispatch session data to layout for button component
+  // Create button imperatively after Paged.js finishes - completely outside React
   useEffect(() => {
-    if (session && client && sessionPlan) {
-      const event = new CustomEvent('sessionDataLoaded', {
-        detail: { session, client, sessionPlan }
-      });
-      window.dispatchEvent(event);
-    }
-  }, [session, client, sessionPlan]);
+    if (!session || !client || !sessionPlan || isPrintMode || !pagedJsReady) return;
+
+    // Create button element directly in DOM
+    const button = document.createElement('button');
+    button.id = 'pdf-generate-button-external';
+    button.textContent = 'Generate PDF Email';
+    button.style.cssText = `
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background-color: #973b00;
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.5rem;
+      font-weight: 500;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      border: none;
+      cursor: pointer;
+      z-index: 999999;
+      font-family: inherit;
+      font-size: 1rem;
+      transition: all 0.2s;
+    `;
+
+    let isGenerating = false;
+
+    const generatePDF = async () => {
+      if (isGenerating) return;
+      isGenerating = true;
+      button.textContent = 'Generating PDF...';
+      button.style.backgroundColor = '#7a2f00';
+      button.disabled = true;
+      button.style.opacity = '0.5';
+      button.style.cursor = 'not-allowed';
+
+      try {
+        const html2canvas = (await import('html2canvas')).default;
+        const { jsPDF } = await import('jspdf');
+
+        const pages = document.querySelectorAll('.pagedjs_page');
+
+        if (pages.length === 0) {
+          alert('No pages found. Please wait for the document to render.');
+          return;
+        }
+
+        console.log(`Capturing ${pages.length} pages...`);
+
+        const pdf = new jsPDF('portrait', 'mm', 'a4');
+
+        for (let i = 0; i < pages.length; i++) {
+          console.log(`Capturing page ${i + 1}/${pages.length}...`);
+
+          const canvas = await html2canvas(pages[i] as HTMLElement, {
+            scale: 2,
+            backgroundColor: '#ecebdd',
+            logging: false,
+            useCORS: true,
+            allowTaint: true
+          });
+
+          const imgData = canvas.toDataURL('image/jpeg', 0.95);
+
+          if (i > 0) {
+            pdf.addPage();
+          }
+
+          pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297);
+        }
+
+        console.log('PDF generated, uploading to Supabase...');
+
+        const pdfBlob = pdf.output('blob');
+
+        const formData = new FormData();
+        formData.append('file', pdfBlob, `session-plan-${session.id}.pdf`);
+        formData.append('sessionId', session.id);
+
+        const uploadResponse = await fetch('/api/upload-pdf', {
+          method: 'POST',
+          body: formData
+        });
+
+        if (!uploadResponse.ok) {
+          const errorData = await uploadResponse.json();
+          throw new Error(`Failed to upload PDF: ${errorData.error}`);
+        }
+
+        const { pdfUrl } = await uploadResponse.json();
+        console.log('PDF uploaded to:', pdfUrl);
+
+        console.log('Sending to Make.com webhook...');
+
+        const response = await fetch('https://hook.eu1.make.com/lbfmnhl3xpf7c0y2sfos3vdln6y1fmqm', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            sessionId: session.id,
+            pdfUrl: pdfUrl,
+            clientEmail: client.email,
+            clientFirstName: client.firstName,
+            clientLastName: client.lastName,
+            dogName: session.dogName || client.dogName,
+            sessionNumber: sessionPlan.sessionNumber,
+            bookingDate: session.bookingDate,
+            bookingTime: session.bookingTime,
+            emailSubject: `Session ${sessionPlan.sessionNumber} Plan - ${session.dogName || client.dogName}`,
+            timestamp: new Date().toISOString()
+          })
+        });
+
+        if (response.ok) {
+          alert('PDF sent successfully! Check your email for the draft.');
+          console.log('PDF sent to Make.com successfully');
+        } else {
+          const errorText = await response.text();
+          throw new Error(`Failed to send PDF: ${response.status} - ${errorText}`);
+        }
+
+      } catch (error) {
+        console.error('Error generating PDF:', error);
+        alert('Failed to generate PDF. Please try again.');
+      } finally {
+        isGenerating = false;
+        button.textContent = 'Generate PDF Email';
+        button.style.backgroundColor = '#973b00';
+        button.disabled = false;
+        button.style.opacity = '1';
+        button.style.cursor = 'pointer';
+      }
+    };
+
+    button.addEventListener('click', generatePDF);
+
+    button.addEventListener('mouseenter', () => {
+      if (!isGenerating) {
+        button.style.backgroundColor = '#7a2f00';
+      }
+    });
+
+    button.addEventListener('mouseleave', () => {
+      if (!isGenerating) {
+        button.style.backgroundColor = '#973b00';
+      }
+    });
+
+    // Append directly to body, not to any React-managed element
+    document.body.appendChild(button);
+
+    return () => {
+      // Cleanup
+      if (document.body.contains(button)) {
+        document.body.removeChild(button);
+      }
+    };
+  }, [session, client, sessionPlan, isPrintMode, pagedJsReady]);
 
   useEffect(() => {
     async function fetchData() {
