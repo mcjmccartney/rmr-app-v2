@@ -27,43 +27,48 @@ export default function SessionPlanPreviewPage() {
   const [editableActionPoints, setEditableActionPoints] = useState<EditableActionPoint[]>([]);
   const [pagedJsReady, setPagedJsReady] = useState(false);
 
-  // Set document title for PDF filename when component loads
   useEffect(() => {
-    if (title) {
-      document.title = title;
+  if (loading || !sessionPlan || pagedJsReady) return;
+
+  const ua = navigator.userAgent.toLowerCase();
+
+  const botAgents = [
+    "wkhtmltopdf",
+    "chrome-lighthouse",
+    "headless",
+    "pdf",
+    "node",
+    "fetch",
+    "make",
+    "zapier",
+    "insomnia",
+    "postman"
+  ];
+
+  const isBot = botAgents.some(a => ua.includes(a));
+  const forcePrint = window.location.search.includes("pagedjs=print");
+
+  // ❌ DO NOT load Paged.js in PDF mode / automation
+  if (isBot || forcePrint) {
+    console.log("Skipping Paged.js (bot/PDF mode)");
+    setPagedJsReady(true);
+    return;
+  }
+
+  // ✅ Load Paged.js only for real browsers
+  console.log("Loading Paged.js preview for browser…");
+  const script = document.createElement("script");
+  script.src = "https://unpkg.com/pagedjs/dist/paged.polyfill.js";
+  script.async = true;
+  script.onload = () => setPagedJsReady(true);
+  document.body.appendChild(script);
+
+  return () => {
+    if (document.body.contains(script)) {
+      document.body.removeChild(script);
     }
-    return () => {
-      document.title = 'Raising My Rescue';
-    };
-  }, [title]);
-
-  // Load Paged.js ONLY after content is ready
-  useEffect(() => {
-    // Only load Paged.js after we have content
-    if (!loading && sessionPlan && !pagedJsReady) {
-      console.log('Content ready, loading Paged.js...');
-
-      const script = document.createElement('script');
-      script.src = 'https://unpkg.com/pagedjs/dist/paged.polyfill.js';
-      script.async = true;
-      script.onload = () => {
-        console.log('Paged.js loaded and will auto-process content');
-        setPagedJsReady(true);
-      };
-      script.onerror = () => {
-        console.error('Failed to load Paged.js');
-        setPagedJsReady(true);
-      };
-      document.body.appendChild(script);
-
-      return () => {
-        // Cleanup: remove script when component unmounts
-        if (document.body.contains(script)) {
-          document.body.removeChild(script);
-        }
-      };
-    }
-  }, [loading, sessionPlan, pagedJsReady]);
+  };
+}, [loading, sessionPlan, pagedJsReady]);
 
   useEffect(() => {
     async function fetchData() {
