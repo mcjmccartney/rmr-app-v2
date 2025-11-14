@@ -28,4 +28,8 @@ module.exports = {
     },
   },
   plugins: [],
+  // Disable oklch colors - use RGB instead for html2canvas compatibility
+  experimental: {
+    colorFormat: 'rgb',
+  },
 }
