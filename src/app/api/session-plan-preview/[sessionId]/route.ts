@@ -15,9 +15,10 @@ const supabaseAdmin = createClient(
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { sessionId: string } }
+  context: { params: Promise<{ sessionId: string }> }
 ) {
   try {
+    const params = await context.params;
     const sessionId = params.sessionId;
 
     if (!sessionId) {
