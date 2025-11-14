@@ -423,9 +423,26 @@ export default function SessionPlanPreviewPage() {
   console.log('About to render session plan content - title:', title, 'mainGoals:', mainGoals.length);
 
   return (
-    <>
+    <div className="relative">
       {/* Meta tag for PDF services to wait for rendering */}
       <meta name="pdfshift-wait-for-selector" content="[data-paged-ready='true']" />
+
+      {/* Floating Button for PDF Generation - OUTSIDE Paged.js content */}
+      {!isPrintMode && (
+        <button
+          onClick={generateAndSendPDF}
+          disabled={isGeneratingPDF}
+          className="fixed bottom-8 right-8 text-white px-6 py-3 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{
+            backgroundColor: isGeneratingPDF ? '#7a2f00' : '#973b00',
+            zIndex: 9999 // Ensure it's above everything
+          }}
+          onMouseEnter={(e) => !isGeneratingPDF && (e.currentTarget.style.backgroundColor = '#7a2f00')}
+          onMouseLeave={(e) => !isGeneratingPDF && (e.currentTarget.style.backgroundColor = '#973b00')}
+        >
+          {isGeneratingPDF ? 'Generating PDF...' : 'Generate PDF Email'}
+        </button>
+      )}
 
       {/* Paged.js styles for pagination */}
       <style>{`
@@ -675,21 +692,7 @@ h1, h2, h3, h4, h5, h6 {
           </p>
         </div>
       </div>
-
-      {/* Floating Button for PDF Generation */}
-      {!isPrintMode && (
-        <button
-          onClick={generateAndSendPDF}
-          disabled={isGeneratingPDF}
-          className="fixed bottom-8 right-8 text-white px-6 py-3 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed z-50"
-          style={{ backgroundColor: '#973b00' }}
-          onMouseEnter={(e) => !isGeneratingPDF && (e.currentTarget.style.backgroundColor = '#7a2f00')}
-          onMouseLeave={(e) => !isGeneratingPDF && (e.currentTarget.style.backgroundColor = '#973b00')}
-        >
-          {isGeneratingPDF ? 'Generating PDF...' : 'Generate PDF Email'}
-        </button>
-      )}
-    </>
+    </div>
   );
 }
 

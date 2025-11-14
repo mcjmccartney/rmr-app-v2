@@ -655,6 +655,33 @@ function SessionPlanContent() {
     window.open(previewUrl, '_blank');
   };
 
+  const handleGeneratePDFEmail = async () => {
+    if (!currentSession || !currentClient) return;
+
+    setIsGeneratingDoc(true);
+
+    try {
+      // Save the session plan first
+      await saveSessionPlan();
+
+      // Open preview page in a new window and let user click the button there
+      const previewUrl = `/session-plan-preview/${currentSession.id}`;
+      const previewWindow = window.open(previewUrl, '_blank');
+
+      if (!previewWindow) {
+        alert('Please allow popups to generate PDF email');
+      } else {
+        alert('Preview page opened. Click "Generate PDF Email" button to create the email draft.');
+      }
+
+    } catch (error) {
+      console.error('Failed to save session plan:', error);
+      alert('Failed to save session plan. Please try again.');
+    } finally {
+      setIsGeneratingDoc(false);
+    }
+  };
+
   const handleReGenerate = async () => {
     if (!currentSession || !currentClient) return;
 
@@ -1221,6 +1248,17 @@ function SessionPlanContent() {
                     className="w-full bg-white text-amber-800 py-3 px-4 rounded-lg font-medium border border-amber-800 hover:bg-amber-800/10 transition-colors"
                   >
                     Preview & Generate PDF
+                  </button>
+
+                  <button
+                    onClick={handleGeneratePDFEmail}
+                    disabled={isGeneratingDoc}
+                    className="w-full text-white py-3 px-4 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: '#973b00' }}
+                    onMouseEnter={(e) => !isGeneratingDoc && (e.currentTarget.style.backgroundColor = '#7a2f00')}
+                    onMouseLeave={(e) => !isGeneratingDoc && (e.currentTarget.style.backgroundColor = '#973b00')}
+                  >
+                    {isGeneratingDoc ? 'Opening Preview...' : 'Generate PDF Email'}
                   </button>
 
                   {!generatedDocUrl ? (
