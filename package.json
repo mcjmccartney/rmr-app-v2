@@ -30,6 +30,7 @@
     "react-map-gl": "^7.1.9"
   },
   "devDependencies": {
+    "@csstools/postcss-oklab-function": "^4.0.12",
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
