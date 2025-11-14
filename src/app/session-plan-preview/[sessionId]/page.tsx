@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { createPortal } from 'react-dom';
 import { SessionPlan, Session, Client, ActionPoint } from '@/types';
 import SafeHtmlRenderer from '@/components/SafeHtmlRenderer';
 
@@ -29,6 +30,12 @@ export default function SessionPlanPreviewPage() {
   const [editableActionPoints, setEditableActionPoints] = useState<EditableActionPoint[]>([]);
   const [pagedJsReady, setPagedJsReady] = useState(false);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Set mounted state for portal rendering
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   useEffect(() => {
   if (loading || !sessionPlan || pagedJsReady) return;
@@ -423,25 +430,26 @@ export default function SessionPlanPreviewPage() {
   console.log('About to render session plan content - title:', title, 'mainGoals:', mainGoals.length);
 
   return (
-    <div className="relative">
+    <>
       {/* Meta tag for PDF services to wait for rendering */}
       <meta name="pdfshift-wait-for-selector" content="[data-paged-ready='true']" />
 
-      {/* Floating Button for PDF Generation - OUTSIDE Paged.js content */}
-      {!isPrintMode && (
+      {/* Floating Button for PDF Generation - Rendered via Portal to body */}
+      {!isPrintMode && isMounted && typeof window !== 'undefined' && createPortal(
         <button
           onClick={generateAndSendPDF}
           disabled={isGeneratingPDF}
           className="fixed bottom-8 right-8 text-white px-6 py-3 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           style={{
             backgroundColor: isGeneratingPDF ? '#7a2f00' : '#973b00',
-            zIndex: 9999 // Ensure it's above everything
+            zIndex: 99999 // Ensure it's above everything including Paged.js
           }}
           onMouseEnter={(e) => !isGeneratingPDF && (e.currentTarget.style.backgroundColor = '#7a2f00')}
           onMouseLeave={(e) => !isGeneratingPDF && (e.currentTarget.style.backgroundColor = '#973b00')}
         >
           {isGeneratingPDF ? 'Generating PDF...' : 'Generate PDF Email'}
-        </button>
+        </button>,
+        document.body
       )}
 
       {/* Paged.js styles for pagination */}
@@ -692,7 +700,7 @@ h1, h2, h3, h4, h5, h6 {
           </p>
         </div>
       </div>
-    </div>
+    </>
   );
 }
 
