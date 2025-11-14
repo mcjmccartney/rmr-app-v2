@@ -164,11 +164,11 @@ function SessionPlanContent() {
             setEditableActionPoints(existingPlan.editedActionPoints);
           }
 
-          // Set hasMainGoals and showMainGoals based on noFirstPage field
+          // Set hasMainGoals based on noFirstPage field, but keep collapsed
           if (existingPlan.noFirstPage !== undefined) {
             const shouldShowMainGoals = !existingPlan.noFirstPage;
             setHasMainGoals(shouldShowMainGoals);
-            setShowMainGoals(shouldShowMainGoals);
+            setShowMainGoals(false); // Always start collapsed
           }
 
           // Check if document URL exists
@@ -598,7 +598,7 @@ function SessionPlanContent() {
   // Add main goals section back
   const addMainGoals = useCallback(() => {
     setHasMainGoals(true);
-    setShowMainGoals(true);
+    setShowMainGoals(false); // Keep collapsed when added
     setLegacyHasUnsavedChanges(true);
     trackChange('hasTextChanges', false);
   }, [trackChange]);
