@@ -139,7 +139,35 @@ export default function SessionPlanPreviewPage() {
             backgroundColor: '#ecebdd',
             logging: false,
             useCORS: true,
-            allowTaint: true
+            allowTaint: true,
+            ignoreElements: (_element) => {
+              // Skip elements that might have problematic styles
+              return false;
+            },
+            onclone: (clonedDoc) => {
+              // Convert oklch colors to hex in the cloned document
+              const allElements = clonedDoc.querySelectorAll('*');
+              allElements.forEach((el) => {
+                const htmlEl = el as HTMLElement;
+                const computedStyle = window.getComputedStyle(el);
+
+                // Get computed colors (browser converts oklch to rgb)
+                const bgColor = computedStyle.backgroundColor;
+                const color = computedStyle.color;
+                const borderColor = computedStyle.borderColor;
+
+                // Apply computed colors directly to inline styles
+                if (bgColor && bgColor !== 'rgba(0, 0, 0, 0)' && bgColor !== 'transparent') {
+                  htmlEl.style.backgroundColor = bgColor;
+                }
+                if (color && color !== 'rgba(0, 0, 0, 0)' && color !== 'transparent') {
+                  htmlEl.style.color = color;
+                }
+                if (borderColor && borderColor !== 'rgba(0, 0, 0, 0)' && borderColor !== 'transparent') {
+                  htmlEl.style.borderColor = borderColor;
+                }
+              });
+            }
           });
 
           const imgData = canvas.toDataURL('image/jpeg', 0.95);
