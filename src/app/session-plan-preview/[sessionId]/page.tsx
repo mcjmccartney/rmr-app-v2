@@ -142,7 +142,7 @@ export default function SessionPlanPreviewPage() {
             allowTaint: true
           });
 
-          const imgData = canvas.toDataURL('image/jpeg', 1.0);
+          const imgData = canvas.toDataURL('image/jpeg', 0.95);
 
           if (i > 0) {
             pdf.addPage();
