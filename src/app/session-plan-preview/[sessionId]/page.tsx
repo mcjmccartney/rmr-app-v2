@@ -362,6 +362,13 @@ h1, h2, h3, h4, h5, h6 {
     background: #ecebdd;
   }
 
+  /* Spacer to reserve space for reminder and force page break if needed */
+  .reminder-spacer {
+    height: 280px; /* Approximate height of reminder section */
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
   .page-header {
   display: none !important;
 }
@@ -528,6 +535,9 @@ h1, h2, h3, h4, h5, h6 {
             ))}
           </div>
         )}
+
+        {/* Spacer to reserve space for reminder and force page break if needed */}
+        <div className="reminder-spacer"></div>
         </div> {/* Close Main Content Area */}
 
         {/* Reminder Section - Positioned at bottom of page */}
