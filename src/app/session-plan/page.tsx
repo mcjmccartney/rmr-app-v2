@@ -295,6 +295,23 @@ function SessionPlanContent() {
   // (currentSession and currentClient moved up for scope)
 
   const getSessionDogName = (): string => {
+    // If session has a dog name, check if it matches client's primary dog (case-insensitive)
+    // If it does, use the client's current dog name (to reflect any edits)
+    if (currentSession?.dogName && currentClient?.dogName) {
+      if (currentSession.dogName.toLowerCase() === currentClient.dogName.toLowerCase()) {
+        return currentClient.dogName; // Use client's current name (may have been edited)
+      }
+      // Check if session dog matches any of the other dogs
+      if (currentClient.otherDogs && Array.isArray(currentClient.otherDogs)) {
+        const matchingOtherDog = currentClient.otherDogs.find(
+          dog => dog.toLowerCase() === currentSession.dogName.toLowerCase()
+        );
+        if (matchingOtherDog) {
+          return matchingOtherDog; // Use the current name from otherDogs array
+        }
+      }
+    }
+    // Fallback to session dog name, then client primary dog name
     return currentSession?.dogName || currentClient?.dogName || 'Unknown Dog';
   };
 

@@ -143,6 +143,31 @@ export default function CalendarPage() {
   const [showMobileDayModal, setShowMobileDayModal] = useState(false);
   const [selectedDaySessions, setSelectedDaySessions] = useState<Session[]>([]);
   const [selectedDayDate, setSelectedDayDate] = useState<Date | null>(null);
+
+  // Helper function to get the correct dog name (prioritizes client's current name over session's stored name)
+  const getSessionDogName = (session: Session, client: Client | undefined): string => {
+    if (!session.dogName) {
+      return client?.dogName || '';
+    }
+    if (!client) {
+      return session.dogName;
+    }
+    // Check if session dog matches client's primary dog (case-insensitive)
+    if (client.dogName && session.dogName.toLowerCase() === client.dogName.toLowerCase()) {
+      return client.dogName; // Use client's current name (may have been edited)
+    }
+    // Check if session dog matches any of the other dogs
+    if (client.otherDogs && Array.isArray(client.otherDogs)) {
+      const matchingOtherDog = client.otherDogs.find(
+        dog => dog.toLowerCase() === session.dogName!.toLowerCase()
+      );
+      if (matchingOtherDog) {
+        return matchingOtherDog; // Use the current name from otherDogs array
+      }
+    }
+    // Fallback to session's dog name
+    return session.dogName;
+  };
   const [hideWeekends, setHideWeekends] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -226,8 +251,8 @@ export default function CalendarPage() {
           const clientName = client ? `${client.firstName} ${client.lastName}`.toLowerCase() : '';
           if (clientName.includes(searchLower)) return true;
 
-          // Search in dog name
-          const dogName = (session.dogName || client?.dogName || '').toLowerCase();
+          // Search in dog name (use helper to get correct name)
+          const dogName = getSessionDogName(session, client).toLowerCase();
           if (dogName.includes(searchLower)) return true;
 
           // Search in session type
@@ -477,8 +502,8 @@ export default function CalendarPage() {
           const clientName = client ? `${client.firstName} ${client.lastName}`.toLowerCase() : '';
           if (clientName.includes(searchLower)) return true;
 
-          // Search in dog name
-          const dogName = (session.dogName || client?.dogName || '').toLowerCase();
+          // Search in dog name (use helper to get correct name)
+          const dogName = getSessionDogName(session, client).toLowerCase();
           if (dogName.includes(searchLower)) return true;
 
           // Search in session type
@@ -701,8 +726,9 @@ export default function CalendarPage() {
 
                       // For Group and RMR Live sessions, show session type instead of "Unknown Client"
                       const isGroupOrRMRLive = session.sessionType === 'Group' || session.sessionType === 'RMR Live';
+                      const dogName = getSessionDogName(session, client);
                       const fullDisplayText = client
-                        ? `${timeOnly} | ${client.firstName} ${client.lastName}${session.dogName ? ` w/ ${session.dogName}` : client.dogName ? ` w/ ${client.dogName}` : ''}`
+                        ? `${timeOnly} | ${client.firstName} ${client.lastName}${dogName ? ` w/ ${dogName}` : ''}`
                         : isGroupOrRMRLive
                         ? `${timeOnly} | ${session.sessionType}`
                         : `${timeOnly} | Unknown Client`;
@@ -784,7 +810,10 @@ export default function CalendarPage() {
             <div className="text-lg font-medium">
               {formatTime(firstSession.bookingTime)} | {
                 firstSessionClient
-                  ? `${firstSessionClient.firstName} ${firstSessionClient.lastName}${firstSession.dogName ? ` w/ ${firstSession.dogName}` : firstSessionClient.dogName ? ` w/ ${firstSessionClient.dogName}` : ''}`
+                  ? (() => {
+                      const dogName = getSessionDogName(firstSession, firstSessionClient);
+                      return `${firstSessionClient.firstName} ${firstSessionClient.lastName}${dogName ? ` w/ ${dogName}` : ''}`;
+                    })()
                   : firstSession.sessionType // For Group and RMR Live sessions without a specific client
               }
             </div>
@@ -881,8 +910,9 @@ export default function CalendarPage() {
               {selectedDaySessions.map(session => {
                 const client = state.clients.find(c => c.id === session.clientId);
                 const isGroupOrRMRLive = session.sessionType === 'Group' || session.sessionType === 'RMR Live';
+                const dogName = getSessionDogName(session, client);
                 const displayName = client
-                  ? `${client.firstName} ${client.lastName}${session.dogName ? ` w/ ${session.dogName}` : client.dogName ? ` w/ ${client.dogName}` : ''}`
+                  ? `${client.firstName} ${client.lastName}${dogName ? ` w/ ${dogName}` : ''}`
                   : isGroupOrRMRLive
                   ? session.sessionType
                   : 'Unknown Client';
@@ -956,8 +986,9 @@ export default function CalendarPage() {
                 {selectedDaySessions.map(session => {
                   const client = state.clients.find(c => c.id === session.clientId);
                   const isGroupOrRMRLive = session.sessionType === 'Group' || session.sessionType === 'RMR Live';
+                  const dogName = getSessionDogName(session, client);
                   const displayName = client
-                    ? `${client.firstName} ${client.lastName}${session.dogName ? ` w/ ${session.dogName}` : client.dogName ? ` w/ ${client.dogName}` : ''}`
+                    ? `${client.firstName} ${client.lastName}${dogName ? ` w/ ${dogName}` : ''}`
                     : isGroupOrRMRLive
                     ? session.sessionType
                     : 'Unknown Client';

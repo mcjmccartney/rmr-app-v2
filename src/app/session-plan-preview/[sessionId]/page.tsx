@@ -193,8 +193,30 @@ export default function SessionPlanPreviewPage() {
           setActionPoints(aps);
         }
 
-        // Build title
-        const dogName = sess.dogName || clientData?.dogName || 'Dog';
+        // Build title - prioritize client's current dog name over session's stored name
+        let dogName = 'Dog';
+        const sessionDogName = sess.dogName;
+        if (sessionDogName && clientData) {
+          // Check if session dog matches client's primary dog (case-insensitive)
+          if (clientData.dogName && sessionDogName.toLowerCase() === clientData.dogName.toLowerCase()) {
+            dogName = clientData.dogName; // Use client's current name (may have been edited)
+          }
+          // Check if session dog matches any of the other dogs
+          else if (clientData.otherDogs && Array.isArray(clientData.otherDogs)) {
+            const matchingOtherDog = clientData.otherDogs.find(
+              (dog: string) => dog.toLowerCase() === sessionDogName.toLowerCase()
+            );
+            if (matchingOtherDog) {
+              dogName = matchingOtherDog; // Use the current name from otherDogs array
+            } else {
+              dogName = sessionDogName; // Fallback to session's dog name
+            }
+          } else {
+            dogName = sessionDogName; // Fallback to session's dog name
+          }
+        } else {
+          dogName = sessionDogName || clientData?.dogName || 'Dog';
+        }
         const titleText = `Session ${plan.sessionNumber} - ${dogName}`;
         setTitle(titleText);
 
