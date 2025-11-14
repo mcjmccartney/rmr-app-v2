@@ -82,7 +82,7 @@ export async function middleware(req: NextRequest) {
     // Handle dynamic routes like /payment-confirmed/[sessionId]
     if (route === '/payment-confirmed' && req.nextUrl.pathname.startsWith('/payment-confirmed/')) return true;
     return false;
-  });
+  }) || req.nextUrl.pathname.startsWith('/session-plan-preview/');
 
   // Check if current path should allow embedding
   const allowEmbedding = embeddableRoutes.includes(req.nextUrl.pathname);
