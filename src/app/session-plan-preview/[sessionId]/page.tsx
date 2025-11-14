@@ -338,6 +338,13 @@ h1, h2, h3, h4, h5, h6 {
     right: 0;
     padding: 0 1.5rem 1.5rem 1.5rem;
     background: #ecebdd;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Add padding to content wrapper to prevent overlap with reminder */
+  .px-6.py-6 {
+    padding-bottom: 200px !important; /* Reserve space for reminder section */
   }
 
   .page-header {
@@ -390,6 +397,12 @@ h1, h2, h3, h4, h5, h6 {
   /* Add top margin when Action Point starts on a new page */
   .action-point-box {
     margin-top: 3rem; /* 48px - same as mt-12 */
+  }
+
+  /* Ensure action points container allows proper page breaks */
+  .mt-12.mb-6.space-y-6 {
+    page-break-inside: auto;
+    break-inside: auto;
   }
 
   .break-before-page {
