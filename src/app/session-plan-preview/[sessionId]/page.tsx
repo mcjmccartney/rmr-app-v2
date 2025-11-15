@@ -756,7 +756,7 @@ h1, h2, h3, h4, h5, h6 {
 
         {/* Reminder Section - Positioned at bottom of page */}
         <div className="reminder-section" style={{ margin: '0px 30px' }}>
-          <h6 className="text-2xl text-gray-900 mb-3">Reminder:</h6>
+          <p className="font-bold text-gray-900">Reminder:</p>
           <p className="text-gray-900 text-base leading-relaxed mb-0">
             I'm here to support you and your dog from a behavioural perspective. Sometimes, behavioural
             challenges can be linked to pain, diet, or physical discomfort, so I may highlight these areas if
