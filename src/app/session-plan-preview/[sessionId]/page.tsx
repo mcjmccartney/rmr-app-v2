@@ -698,7 +698,7 @@ h1, h2, h3, h4, h5, h6 {
                   </h3>
                   <div className="relative">
                     {/* Text content with fixed right padding at top, fluid at bottom */}
-                    <div className="rounded-md" style={{ paddingRight: '165px' }}>
+                    <div className="rounded-md" style={{ paddingRight: '165px', paddingTop: '4px' }}>
                       <SafeHtmlRenderer html={explanationOfBehaviour} />
                     </div>
                     {/* Pawprints image positioned absolutely on the right */}
