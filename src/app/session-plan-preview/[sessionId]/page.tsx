@@ -695,8 +695,20 @@ h1, h2, h3, h4, h5, h6 {
                   <h3 className="text-gray-900 italic text-3xl mb-2">
                     Explanation of Behaviour
                   </h3>
-                  <div className="rounded-md">
-                    <SafeHtmlRenderer html={explanationOfBehaviour} />
+                  <div className="flex gap-6">
+                    {/* Text content on the left */}
+                    <div className="flex-1 rounded-md">
+                      <SafeHtmlRenderer html={explanationOfBehaviour} />
+                    </div>
+                    {/* Pawprints image on the right */}
+                    <div className="w-24 flex-shrink-0">
+                      <img
+                        src="https://i.ibb.co/k6Dcmnws/Paws.png"
+                        alt="Pawprints"
+                        className="w-full h-auto"
+                        style={{ maxHeight: '100%', objectFit: 'contain' }}
+                      />
+                    </div>
                   </div>
                 </div>
               )}
