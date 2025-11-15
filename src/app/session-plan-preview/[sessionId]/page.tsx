@@ -695,18 +695,24 @@ h1, h2, h3, h4, h5, h6 {
                   <h3 className="text-gray-900 italic text-3xl mb-2">
                     Explanation of Behaviour
                   </h3>
-                  <div className="relative">
-                    {/* Text content with right padding to make room for image */}
-                    <div className="rounded-md" style={{ paddingRight: '180px' }}>
+                  <div>
+                    {/* Pawprints image floated to the right with shape-outside for fluid text wrapping */}
+                    <img
+                      src="https://i.ibb.co/k6Dcmnws/Paws.png"
+                      alt="Pawprints"
+                      style={{
+                        float: 'right',
+                        height: '480px',
+                        width: 'auto',
+                        marginLeft: '20px',
+                        marginTop: '-40px',
+                        shapeOutside: 'url(https://i.ibb.co/k6Dcmnws/Paws.png)',
+                        shapeMargin: '10px'
+                      }}
+                    />
+                    {/* Text content flows around the image shape */}
+                    <div className="rounded-md">
                       <SafeHtmlRenderer html={explanationOfBehaviour} />
-                    </div>
-                    {/* Pawprints image positioned absolutely on the right - fixed 480px height, cropped 30px from top */}
-                    <div className="absolute top-0 right-0" style={{ height: '480px', overflow: 'hidden' }}>
-                      <img
-                        src="https://i.ibb.co/k6Dcmnws/Paws.png"
-                        alt="Pawprints"
-                        style={{ height: '510px', width: 'auto', objectFit: 'cover', marginTop: '-30px' }}
-                      />
                     </div>
                   </div>
                 </div>
