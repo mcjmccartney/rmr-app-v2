@@ -529,7 +529,6 @@ export default function SessionPlanPreviewPage() {
   p {
     line-height: 1.3;
     font-size: 14.5px;
-    letter-spacing: -0.5px;
     word-spacing: 1.2px;
   }
 
