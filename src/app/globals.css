@@ -102,6 +102,7 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
   font-size: 14.5px;
+  letter-spacing: -0.3px;
 }
 
 /* Mobile-first responsive design */

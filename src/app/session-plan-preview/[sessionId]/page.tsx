@@ -529,6 +529,7 @@ export default function SessionPlanPreviewPage() {
   p {
     line-height: 1.2;
     font-size: 14.5px;
+    letter-spacing: -0.3px;
   }
 
   /* === Headers use Cooper Black === */
@@ -697,11 +698,11 @@ h1, h2, h3, h4, h5, h6 {
                   </h3>
                   <div className="relative">
                     {/* Text content with fixed right padding at top, fluid at bottom */}
-                    <div className="rounded-md" style={{ paddingRight: '175px' }}>
+                    <div className="rounded-md" style={{ paddingRight: '165px' }}>
                       <SafeHtmlRenderer html={explanationOfBehaviour} />
                     </div>
                     {/* Pawprints image positioned absolutely on the right */}
-                    <div className="absolute top-0 right-0" style={{ height: '480px', width: 'auto' }}>
+                    <div className="absolute top-0 right-0" style={{ height: '480px', width: '150px' }}>
                       <img
                         src="https://i.ibb.co/k6Dcmnws/Paws.png"
                         alt="Pawprints"
@@ -709,7 +710,8 @@ h1, h2, h3, h4, h5, h6 {
                           height: '580px',
                           width: 'auto',
                           objectFit: 'cover',
-                          marginTop: '-40px'
+                          marginTop: '-40px',
+                          marginRight: '-45px',
                         }}
                       />
                     </div>
