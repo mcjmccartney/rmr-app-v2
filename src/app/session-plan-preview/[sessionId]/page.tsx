@@ -527,7 +527,7 @@ export default function SessionPlanPreviewPage() {
 
   /* Decrease line height for paragraph text */
   p {
-    line-height: 1.2;
+    line-height: 1.3;
     font-size: 14.5px;
     letter-spacing: -0.3px;
   }
