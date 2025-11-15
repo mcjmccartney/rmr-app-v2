@@ -700,12 +700,12 @@ h1, h2, h3, h4, h5, h6 {
                     <div className="rounded-md" style={{ paddingRight: '180px' }}>
                       <SafeHtmlRenderer html={explanationOfBehaviour} />
                     </div>
-                    {/* Pawprints image positioned absolutely on the right - fixed 450px height */}
-                    <div className="absolute top-0 right-0">
+                    {/* Pawprints image positioned absolutely on the right - fixed 480px height, cropped 30px from top */}
+                    <div className="absolute top-0 right-0" style={{ height: '480px', overflow: 'hidden' }}>
                       <img
                         src="https://i.ibb.co/k6Dcmnws/Paws.png"
                         alt="Pawprints"
-                        style={{ height: '450px', width: 'auto', objectFit: 'contain' }}
+                        style={{ height: '510px', width: 'auto', objectFit: 'cover', marginTop: '-30px' }}
                       />
                     </div>
                   </div>
