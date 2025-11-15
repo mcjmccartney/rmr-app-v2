@@ -527,7 +527,8 @@ export default function SessionPlanPreviewPage() {
 
   /* Decrease line height for paragraph text */
   p {
-    line-height: 1.4;
+    line-height: 1.15;
+    font-size: 12px;
   }
 
   /* === Headers use Cooper Black === */
