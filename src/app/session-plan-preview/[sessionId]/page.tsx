@@ -527,8 +527,8 @@ export default function SessionPlanPreviewPage() {
 
   /* Decrease line height for paragraph text */
   p {
-    line-height: 1.15;
-    font-size: 12px;
+    line-height: 1.2;
+    font-size: 13px;
   }
 
   /* === Headers use Cooper Black === */
@@ -584,6 +584,8 @@ h1, h2, h3, h4, h5, h6 {
   .pagedjs_page_content {
     position: relative;
     min-height: 100%;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
   }
 
   /* Ensure all Paged.js elements have the correct background */
@@ -591,6 +593,13 @@ h1, h2, h3, h4, h5, h6 {
   .pagedjs_margin-content,
   .pagedjs_area {
     background-color: #ecebdd !important;
+  }
+
+  /* Top and bottom margin boxes should extend full width (no left/right padding) */
+  .pagedjs_margin-top,
+  .pagedjs_margin-bottom {
+    margin-left: -1.5rem;
+    margin-right: -1.5rem;
   }
 
   .content-wrapper {
