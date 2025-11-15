@@ -697,7 +697,7 @@ h1, h2, h3, h4, h5, h6 {
                   </h3>
                   <div className="relative">
                     {/* Text content with fixed right padding at top, fluid at bottom */}
-                    <div className="rounded-md" style={{ paddingRight: '180px' }}>
+                    <div className="rounded-md" style={{ paddingRight: '175px' }}>
                       <SafeHtmlRenderer html={explanationOfBehaviour} />
                     </div>
                     {/* Pawprints image positioned absolutely on the right */}
@@ -706,7 +706,7 @@ h1, h2, h3, h4, h5, h6 {
                         src="https://i.ibb.co/k6Dcmnws/Paws.png"
                         alt="Pawprints"
                         style={{
-                          height: '540px',
+                          height: '580px',
                           width: 'auto',
                           objectFit: 'cover',
                           marginTop: '-40px'
@@ -714,17 +714,6 @@ h1, h2, h3, h4, h5, h6 {
                       />
                     </div>
                     {/* Invisible shape element for bottom fluid wrapping only */}
-                    <div
-                      style={{
-                        float: 'right',
-                        width: '150px',
-                        height: '480px',
-                        marginTop: '240px',
-                        shapeOutside: 'polygon(100% 0%, 100% 100%, 60% 100%, 70% 80%, 80% 60%, 90% 40%, 95% 20%, 100% 0%)',
-                        shapeMargin: '10px',
-                        pointerEvents: 'none'
-                      }}
-                    />
                   </div>
                 </div>
               )}
