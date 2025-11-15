@@ -528,7 +528,7 @@ export default function SessionPlanPreviewPage() {
   /* Decrease line height for paragraph text */
   p {
     line-height: 1.2;
-    font-size: 13px;
+    font-size: 14px;
   }
 
   /* === Headers use Cooper Black === */
@@ -665,7 +665,7 @@ h1, h2, h3, h4, h5, h6 {
           {!sessionPlan.noFirstPage && (
             <>
               {/* Title */}
-              <h1 className="text-5xl text-gray-900 mb-10">{title}</h1>
+              <h1 className="text-4xl text-gray-900 mb-10">{title}</h1>
 
               {/* Main Goals */}
               {mainGoals.length > 0 && (
@@ -702,14 +702,14 @@ h1, h2, h3, h4, h5, h6 {
               )}
 
               {/* Title - On second page when first page exists */}
-              <h1 className="text-5xl text-gray-900 mb-10 mt-6 break-before-page">{title}</h1>
+              <h1 className="text-4xl text-gray-900 mb-10 mt-6 break-before-page">{title}</h1>
             </>
           )}
 
 
           {/* Title - On first page when user clicked Remove (noFirstPage is true) */}
           {sessionPlan.noFirstPage && (
-            <h1 className="text-5xl text-gray-900 mb-10">{title}</h1>
+            <h1 className="text-4xl text-gray-900 mb-10">{title}</h1>
           )}
           
 
