@@ -706,7 +706,7 @@ h1, h2, h3, h4, h5, h6 {
           )}
 
 
-          {/* Title - On first page when user clicked Remove (noFirstPage is true) }
+          {/* Title - On first page when user clicked Remove (noFirstPage is true) */}
           {sessionPlan.noFirstPage && (
             <h1 className="text-5xl text-gray-900 mb-10">{title}</h1>
           )}
