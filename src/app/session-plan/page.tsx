@@ -1046,7 +1046,7 @@ function SessionPlanContent() {
                 {/* Action Points Section */}
                 <div>
                   <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="block text-base font-medium text-gray-700">
                       Action Points ({selectedActionPoints.length})
                     </label>
                   </div>
@@ -1092,10 +1092,10 @@ function SessionPlanContent() {
                             {/* Collapsible Header */}
                             <button
                               onClick={() => toggleActionPointExpansion(actionPointId)}
-                              className="w-full bg-gray-50 text-gray-700 px-4 py-3 rounded-t-md hover:bg-gray-100 transition-colors text-sm font-medium flex items-center justify-between"
+                              className="w-full bg-gray-50 text-gray-700 px-4 py-3 rounded-t-md hover:bg-gray-100 transition-colors text-base font-medium flex items-center justify-between"
                             >
                               <div className="flex items-center min-w-0 flex-1 mr-2 text-left">
-                                <span className="text-xs text-gray-500 mr-2 flex-shrink-0">#{index + 1}</span>
+                                <span className="text-sm text-gray-500 mr-2 flex-shrink-0">#{index + 1}</span>
                                 <div className="relative flex-1 min-w-0">
                                   <span className="block text-left pr-8">{getActionPointTitle()}</span>
                                   {/* Fade effect overlay */}
@@ -1162,27 +1162,27 @@ function SessionPlanContent() {
                               <div className="border-t border-gray-200 p-4 bg-white rounded-b-md">
                                 {/* Editable Header */}
                                 <div className="mb-4">
-                                  <label className="block text-xs font-medium text-gray-600 mb-2">
+                                  <label className="block text-sm font-medium text-gray-600 mb-2">
                                     Header
                                   </label>
                                   <RichTextEditor
                                     value={editableContent.header}
                                     onChange={(value) => updateEditableActionPoint(actionPointId, 'header', value)}
                                     placeholder="Action point header"
-                                    className="w-full text-sm"
+                                    className="w-full text-base"
                                   />
                                 </div>
 
                                 {/* Editable Details */}
                                 <div>
-                                  <label className="block text-xs font-medium text-gray-600 mb-2">
+                                  <label className="block text-sm font-medium text-gray-600 mb-2">
                                     Details
                                   </label>
                                   <RichTextEditor
                                     value={editableContent.details}
                                     onChange={(value) => updateEditableActionPoint(actionPointId, 'details', value)}
                                     placeholder="Action point details"
-                                    className="w-full text-sm"
+                                    className="w-full text-base"
                                   />
                                 </div>
                               </div>
