@@ -741,7 +741,7 @@ h1, h2, h3, h4, h5, h6 {
                   <SafeHtmlRenderer html={actionPoint.header} className="inline" />
                 </h3>
 
-                <div className="border-[3px] border-[#4f6749] rounded-md p-4 text-gray-900 leading-relaxed" style={{ paddingTop: '22px' }}>
+                <div className="border-[3px] border-[#4f6749] rounded-md p-4 text-gray-900 leading-relaxed" style={{ paddingTop: '22px', fontSize: '14.5px' }}>
                   <SafeHtmlRenderer html={actionPoint.details} />
                 </div>
               </div>
