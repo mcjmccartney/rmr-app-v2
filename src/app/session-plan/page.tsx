@@ -644,14 +644,16 @@ function SessionPlanContent() {
 
     try {
       await saveSessionPlan();
+      // Add a small delay to ensure database is updated before preview loads
+      await new Promise(resolve => setTimeout(resolve, 300));
     } catch (error) {
       // Continue with PDF preview even if save fails
       console.error('Failed to save session plan:', error);
     }
 
     // Open the dedicated preview page in a new window
-    // The preview page will auto-trigger the print dialog
-    const previewUrl = `/session-plan-preview/${currentSession.id}`;
+    // Add cache-busting parameter to force fresh data
+    const previewUrl = `/session-plan-preview/${currentSession.id}?t=${Date.now()}`;
     window.open(previewUrl, '_blank');
   };
 
