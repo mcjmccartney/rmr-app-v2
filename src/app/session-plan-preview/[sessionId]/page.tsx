@@ -584,8 +584,6 @@ h1, h2, h3, h4, h5, h6 {
   .pagedjs_page_content {
     position: relative;
     min-height: 100%;
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
   }
 
   /* Ensure all Paged.js elements have the correct background */
@@ -593,13 +591,6 @@ h1, h2, h3, h4, h5, h6 {
   .pagedjs_margin-content,
   .pagedjs_area {
     background-color: #ecebdd !important;
-  }
-
-  /* Top and bottom margin boxes should extend full width (no left/right padding) */
-  .pagedjs_margin-top,
-  .pagedjs_margin-bottom {
-    margin-left: -1.5rem;
-    margin-right: -1.5rem;
   }
 
   .content-wrapper {
@@ -669,7 +660,7 @@ h1, h2, h3, h4, h5, h6 {
       <div className="content-wrapper">
 
         {/* Main Content Area with Padding */}
-        <div className="px-6 py-6">
+        <div className="px-6 py-6" style="margin: 0px 28px;">
           {/* First Page - Show if user has NOT clicked Remove (noFirstPage is false or undefined) */}
           {!sessionPlan.noFirstPage && (
             <>
@@ -744,7 +735,7 @@ h1, h2, h3, h4, h5, h6 {
         </div> {/* Close Main Content Area */}
 
         {/* Reminder Section - Positioned at bottom of page */}
-        <div className="reminder-section">
+        <div className="reminder-section" style="margin: 0px 28px">
           <h6 className="text-2xl text-gray-900 mb-3">Reminder:</h6>
           <p className="text-gray-900 text-base leading-relaxed mb-0">
             I'm here to support you and your dog from a behavioural perspective. Sometimes, behavioural
