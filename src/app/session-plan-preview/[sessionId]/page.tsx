@@ -611,7 +611,7 @@ h1, h2, h3, h4, h5, h6 {
 
   /* Add top margin when Action Point starts on a new page */
   .action-point-box {
-    margin-top: 3rem; /* 48px - same as mt-12 */
+    margin-top: 2.5rem; /* 48px - same as mt-12 */
   }
 
   /* Ensure action points container allows proper page breaks */
