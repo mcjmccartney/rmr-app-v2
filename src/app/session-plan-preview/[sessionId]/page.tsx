@@ -676,7 +676,7 @@ h1, h2, h3, h4, h5, h6 {
                     Main Goals
                   </h3>
                   <div className="border-[3px] border-[#4f6749] rounded-md p-6">
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-4">
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-4 font-size-14.5px">
                       {mainGoals.map((goal, index) => (
                         <div key={index} className="flex items-start">
                           <span className="font-medium text-gray-700 mr-2">•</span>
