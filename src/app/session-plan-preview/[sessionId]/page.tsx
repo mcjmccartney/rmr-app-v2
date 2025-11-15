@@ -135,7 +135,7 @@ export default function SessionPlanPreviewPage() {
           console.log(`Capturing page ${i + 1}/${pages.length}...`);
 
           const canvas = await html2canvas(pages[i] as HTMLElement, {
-            scale: 2.5,
+            scale: 2,
             backgroundColor: '#ecebdd',
             logging: false,
             useCORS: true,
