@@ -697,16 +697,15 @@ h1, h2, h3, h4, h5, h6 {
                   </h3>
                   <div className="relative">
                     {/* Text content with right padding to make room for image */}
-                    <div className="rounded-md" style={{ paddingRight: '120px' }}>
+                    <div className="rounded-md" style={{ paddingRight: '180px' }}>
                       <SafeHtmlRenderer html={explanationOfBehaviour} />
                     </div>
-                    {/* Pawprints image positioned absolutely on the right */}
-                    <div className="absolute top-0 right-0 bottom-0" style={{ width: '100px' }}>
+                    {/* Pawprints image positioned absolutely on the right - fixed 450px height */}
+                    <div className="absolute top-0 right-0">
                       <img
                         src="https://i.ibb.co/k6Dcmnws/Paws.png"
                         alt="Pawprints"
-                        className="w-full h-full"
-                        style={{ objectFit: 'contain', objectPosition: 'top right' }}
+                        style={{ height: '450px', width: 'auto', objectFit: 'contain' }}
                       />
                     </div>
                   </div>
