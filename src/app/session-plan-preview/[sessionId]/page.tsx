@@ -36,29 +36,22 @@ export default function SessionPlanPreviewPage() {
     const ua = navigator.userAgent.toLowerCase();
 
     const botAgents = [
-      'wkhtmltopdf',
-      'chrome-lighthouse',
-      'headless',
-      'pdf',
-      'node',
-      'fetch',
-      'make',
-      'zapier',
-      'insomnia',
-      'postman',
-    ];
+  "wkhtmltopdf",
+  "chrome-lighthouse",
+  "headless",
+  "node"
+];
 
     const isBot = botAgents.some((a) => ua.includes(a));
     const forcePrint = window.location.search.includes('pagedjs=print');
 
-    // Skip Paged.js in automation / bots
-    if (isBot || forcePrint) {
-      console.log('Skipping Paged.js (bot/PDF mode)');
-      // If any external PDF generator relies on this:
-      document.body.setAttribute('data-paged-ready', 'true');
-      setPagedJsReady(true);
-      return;
-    }
+    // Never skip PagedJS when printing
+if (isBot && !forcePrint) {
+  console.log("Skipping Paged.js for bots (non-print)");
+  document.body.setAttribute("data-paged-ready", "true");
+  setPagedJsReady(true);
+  return;
+}
 
     console.log('Loading Paged.js preview for browser…');
     const script = document.createElement('script');
