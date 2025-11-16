@@ -111,15 +111,15 @@ export default function SessionPlanPreviewPage() {
 
       try {
         const params = new URLSearchParams({
-          sessionId: session.id,
-          clientEmail: client.email,
-          clientFirstName: client.firstName,
-          clientLastName: client.lastName,
-          dogName: session.dogName || client.dogName,
-          sessionNumber: sessionPlan.sessionNumber.toString(),
-          bookingDate: session.bookingDate ?? "",
-          bookingTime: session.bookingTime ?? "",
-        });
+  sessionId: String(session.id),
+  clientEmail: client.email ?? "",
+  clientFirstName: client.firstName ?? "",
+  clientLastName: client.lastName ?? "",
+  dogName: session.dogName ?? client.dogName ?? "",
+  sessionNumber: String(sessionPlan.sessionNumber),
+  bookingDate: session.bookingDate ?? "",
+  bookingTime: session.bookingTime ?? "",
+});
 
         const res = await fetch(`/api/generate-session-plan-pdf?${params}`);
         const data = await res.json();
