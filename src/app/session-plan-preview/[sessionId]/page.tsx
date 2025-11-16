@@ -117,7 +117,14 @@ export default function SessionPlanPreviewPage() {
 
   try {
     // Build the Paged.js print URL that iLovePDF will load
-    const previewUrl = `${window.location.origin}/session-plan-preview/${session.id}?pagedjs=print`;
+    // Copy current query params
+const currentParams = new URLSearchParams(window.location.search);
+
+// Add pagedjs override
+currentParams.set("pagedjs", "print");
+
+// Construct print URL keeping original params (i.e., ?t=xxxx)
+const previewUrl = `${window.location.origin}/session-plan-preview/${session.id}?${currentParams.toString()}`;
 
     // Send to Make
     await fetch("https://hook.eu1.make.com/lbfmnhl3xpf7c0y2sfos3vdln6y1fmqm", {
