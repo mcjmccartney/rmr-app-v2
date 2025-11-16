@@ -81,7 +81,78 @@ export default function SessionPlanPreviewPage() {
 
   // Create button imperatively after Paged.js finishes - completely outside React
   useEffect(() => {
-    if (!session || !client || !sessionPlan || isPrintMode || !pagedJsReady) return;
+  if (!session || !client || !sessionPlan || isPrintMode || !pagedJsReady) return;
+
+  const button = document.createElement("button");
+  button.id = "pdf-generate-button-external";
+  button.textContent = "Generate PDF Email";
+  button.style.cssText = `
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    background-color: #973b00;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    border: none;
+    cursor: pointer;
+    z-index: 999999;
+    font-family: inherit;
+    font-size: 1rem;
+    transition: all 0.2s;
+  `;
+
+  let loading = false;
+
+  const generate = async () => {
+    if (loading) return;
+    loading = true;
+
+    button.textContent = "Generating...";
+    button.style.opacity = "0.5";
+    button.disabled = true;
+
+    try {
+      const params = new URLSearchParams({
+        sessionId: session.id,
+        clientEmail: client.email,
+        clientFirstName: client.firstName,
+        clientLastName: client.lastName,
+        dogName: session.dogName || client.dogName,
+        sessionNumber: sessionPlan.sessionNumber.toString(),
+        bookingDate: session.bookingDate ?? "",
+        bookingTime: session.bookingTime ?? "",
+      });
+
+      const res = await fetch(`/api/generate-session-plan-pdf?${params}`);
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      alert("PDF sent! 🎉 Check your email draft.");
+
+    } catch (err) {
+      console.error(err);
+      alert("PDF failed. Please try again.");
+    } finally {
+      loading = false;
+      button.textContent = "Generate PDF Email";
+      button.disabled = false;
+      button.style.opacity = "1";
+    }
+  };
+
+  button.addEventListener("click", generate);
+  document.body.appendChild(button);
+
+  return () => {
+    if (document.body.contains(button)) {
+      document.body.removeChild(button);
+    }
+  };
+}, [session, client, sessionPlan, isPrintMode, pagedJsReady]);
 
     // Create button element directly in DOM
     const button = document.createElement('button');
@@ -139,7 +210,7 @@ export default function SessionPlanPreviewPage() {
 
           const canvas = await html2canvas(pages[i] as HTMLElement, {
             // Higher scale for better text quality (3x instead of 2x)
-            scale: 3,
+            scale: 2,
             backgroundColor: '#ecebdd',
             logging: false,
             useCORS: true,
@@ -164,14 +235,14 @@ export default function SessionPlanPreviewPage() {
           });
 
           // Use PNG instead of JPEG for better text quality (lossless compression)
-          const imgData = canvas.toDataURL('image/png');
+          //const imgData = canvas.toDataURL('image/png');
 
           if (i > 0) {
             pdf.addPage();
           }
 
           //Add image with compression to balance quality and file size
-          pdf.addImage(imgData, 'PNG', 0, 0, 210, 297, undefined, 'FAST');
+          pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297, undefined, 'FAST');
         }
 
         console.log('PDF generated, uploading to Supabase...');
