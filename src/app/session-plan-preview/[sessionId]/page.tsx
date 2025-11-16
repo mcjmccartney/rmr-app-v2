@@ -108,136 +108,45 @@ export default function SessionPlanPreviewPage() {
     let isGenerating = false;
 
     const generatePDF = async () => {
-      if (isGenerating) return;
-      isGenerating = true;
+  if (isGenerating) return;
+  isGenerating = true;
 
-      button.textContent = 'Generating PDF...';
-      button.style.backgroundColor = '#7a2f00';
-      button.disabled = true;
-      button.style.opacity = '0.5';
-      button.style.cursor = 'not-allowed';
+  button.textContent = "Sending...";
+  button.style.opacity = "0.5";
+  button.disabled = true;
 
-      try {
-        const html2canvas = (await import('html2canvas')).default;
-        const { jsPDF } = await import('jspdf');
+  try {
+    // Build the Paged.js print URL that iLovePDF will load
+    const previewUrl = `${window.location.origin}/session-plan-preview/${session.id}?pagedjs=print`;
 
-        // Ensure fonts are fully loaded
-        await (document as any).fonts?.ready?.catch?.(() => {});
+    // Send to Make
+    await fetch("https://hook.eu1.make.com/lbfmnhl3xpf7c0y2sfos3vdln6y1fmqm", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        previewUrl,
+        sessionId: session.id,
+        clientEmail: client.email,
+        clientFirstName: client.firstName,
+        clientLastName: client.lastName,
+        dogName: session.dogName || client.dogName,
+        sessionNumber: sessionPlan.sessionNumber,
+        bookingDate: session.bookingDate,
+        bookingTime: session.bookingTime,
+      }),
+    });
 
-        const pages = document.querySelectorAll('.pagedjs_page');
-
-        if (pages.length === 0) {
-          alert('No pages found. Please wait for the document to render.');
-          return;
-        }
-
-        console.log(`Capturing ${pages.length} pages...`);
-
-        const pdf = new jsPDF('portrait', 'mm', 'a4');
-
-        for (let i = 0; i < pages.length; i++) {
-          console.log(`Capturing page ${i + 1}/${pages.length}...`);
-
-          const canvas = await html2canvas(pages[i] as HTMLElement, {
-            scale: 3, // higher scale for sharper text
-            backgroundColor: '#ecebdd',
-            logging: false,
-            useCORS: true,
-            allowTaint: true,
-            windowWidth: 794,
-            windowHeight: 1123,
-            imageTimeout: 15000,
-            onclone: (clonedDoc) => {
-              const style = clonedDoc.createElement('style');
-              style.textContent = `
-                * {
-                  -webkit-font-smoothing: antialiased !important;
-                  -moz-osx-font-smoothing: grayscale !important;
-                  text-rendering: optimizeLegibility !important;
-                }
-              `;
-              clonedDoc.head.appendChild(style);
-            },
-          });
-
-          // Use PNG for better text quality (lossless)
-          const imgData = canvas.toDataURL('image/png');
-
-          if (i > 0) {
-            pdf.addPage();
-          }
-
-          // A4: 210 x 297 mm
-          pdf.addImage(imgData, 'PNG', 0, 0, 210, 297, undefined, 'FAST');
-        }
-
-        console.log('PDF generated, uploading to Supabase...');
-
-        const pdfBlob = pdf.output('blob');
-
-        const formData = new FormData();
-        formData.append('file', pdfBlob, `session-plan-${session.id}.pdf`);
-        formData.append('sessionId', session.id);
-
-        const uploadResponse = await fetch('/api/upload-pdf', {
-          method: 'POST',
-          body: formData,
-        });
-
-        if (!uploadResponse.ok) {
-          const errorData = await uploadResponse.json();
-          throw new Error(`Failed to upload PDF: ${errorData.error}`);
-        }
-
-        const { pdfUrl } = await uploadResponse.json();
-        console.log('PDF uploaded to:', pdfUrl);
-
-        console.log('Sending to Make.com webhook...');
-
-        const response = await fetch(
-          'https://hook.eu1.make.com/lbfmnhl3xpf7c0y2sfos3vdln6y1fmqm',
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              sessionId: session.id,
-              pdfUrl,
-              clientEmail: client.email,
-              clientFirstName: client.firstName,
-              clientLastName: client.lastName,
-              dogName: session.dogName || client.dogName,
-              sessionNumber: sessionPlan.sessionNumber,
-              bookingDate: session.bookingDate,
-              bookingTime: session.bookingTime,
-              emailSubject: `Session ${sessionPlan.sessionNumber} Plan - ${
-                session.dogName || client.dogName
-              }`,
-              timestamp: new Date().toISOString(),
-            }),
-          }
-        );
-
-        if (response.ok) {
-          alert('PDF sent successfully! Check your email for the draft.');
-          console.log('PDF sent to Make.com successfully');
-        } else {
-          const errorText = await response.text();
-          throw new Error(`Failed to send PDF: ${response.status} - ${errorText}`);
-        }
-      } catch (error) {
-        console.error('Error generating PDF:', error);
-        alert('Failed to generate PDF. Please try again.');
-      } finally {
-        isGenerating = false;
-        button.textContent = 'Generate PDF Email';
-        button.style.backgroundColor = '#973b00';
-        button.disabled = false;
-        button.style.opacity = '1';
-        button.style.cursor = 'pointer';
-      }
-    };
+    alert("PDF request sent to Make.com! Check your email shortly.");
+  } catch (err) {
+    console.error(err);
+    alert("Failed to send request to Make. Please try again.");
+  } finally {
+    isGenerating = false;
+    button.textContent = "Generate PDF Email";
+    button.style.opacity = "1";
+    button.disabled = false;
+  }
+};
 
     button.addEventListener('click', generatePDF);
     button.addEventListener('mouseenter', () => {
