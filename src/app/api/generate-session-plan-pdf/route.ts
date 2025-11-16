@@ -154,3 +154,7 @@ export async function GET(req: Request) {
     );
   }
 }
+
+const { data: listData, error: listError } = await supabase.storage.listBuckets();
+console.log("Buckets in this project =", listData);
+console.log("Bucket error =", listError);
