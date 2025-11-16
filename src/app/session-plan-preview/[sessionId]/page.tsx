@@ -75,99 +75,109 @@ if (isBot && !forcePrint) {
 
   // Floating "Generate PDF Email" button using html2canvas + jsPDF (client-side)
   useEffect(() => {
-    if (!session || !client || !sessionPlan || isPrintMode || !pagedJsReady) return;
+  if (!session || !client || !sessionPlan) return;
 
-    const button = document.createElement('button');
-    button.id = 'pdf-generate-button-external';
-    button.textContent = 'Generate PDF Email';
-    button.style.cssText = `
-      position: fixed;
-      bottom: 2rem;
-      right: 2rem;
-      background-color: #973b00;
-      color: white;
-      padding: 0.75rem 1.5rem;
-      border-radius: 0.5rem;
-      font-weight: 500;
-      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-      border: none;
-      cursor: pointer;
-      z-index: 999999;
-      font-family: inherit;
-      font-size: 1rem;
-      transition: all 0.2s;
-    `;
+  const button = document.createElement("button");
+  button.id = "pdf-generate-button-external";
+  button.textContent = "Generate PDF Email";
+  button.style.cssText = `
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    background-color: #973b00;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+    border: none;
+    cursor: pointer;
+    z-index: 999999;
+    font-size: 1rem;
+  `;
 
-    let isGenerating = false;
+  button.addEventListener("click", () => {
+    button.textContent = "Printing…";
 
-    const generatePDF = async () => {
-  if (isGenerating) return;
-  isGenerating = true;
+    // 🔹 1. Trigger Chrome Print
+    window.print();
 
-  button.textContent = "Sending...";
-  button.style.opacity = "0.5";
-  button.disabled = true;
+    // 🔹 2. After printing, open PDF file picker
+    const afterPrint = () => {
+      button.textContent = "Upload PDF…";
 
-  try {
-    // Build the Paged.js print URL that iLovePDF will load
-    // Copy current query params
-const currentParams = new URLSearchParams(window.location.search);
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = "application/pdf";
 
-// Add pagedjs override
-currentParams.set("pagedjs", "print");
+      input.onchange = async (e: any) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
 
-// Construct print URL keeping original params (i.e., ?t=xxxx)
-const previewUrl = `${window.location.origin}/session-plan-preview/${session.id}?${currentParams.toString()}`;
+        button.textContent = "Uploading…";
 
-    // Send to Make
-    await fetch("https://hook.eu1.make.com/lbfmnhl3xpf7c0y2sfos3vdln6y1fmqm", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        previewUrl,
-        sessionId: session.id,
-        clientEmail: client.email,
-        clientFirstName: client.firstName,
-        clientLastName: client.lastName,
-        dogName: session.dogName || client.dogName,
-        sessionNumber: sessionPlan.sessionNumber,
-        bookingDate: session.bookingDate,
-        bookingTime: session.bookingTime,
-      }),
-    });
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("sessionId", session.id);
 
-    alert("PDF request sent to Make.com! Check your email shortly.");
-  } catch (err) {
-    console.error(err);
-    alert("Failed to send request to Make. Please try again.");
-  } finally {
-    isGenerating = false;
-    button.textContent = "Generate PDF Email";
-    button.style.opacity = "1";
-    button.disabled = false;
-  }
-};
+        const uploadRes = await fetch("/api/upload-final-pdf", {
+          method: "POST",
+          body: formData,
+        });
 
-    button.addEventListener('click', generatePDF);
-    button.addEventListener('mouseenter', () => {
-      if (!isGenerating) {
-        button.style.backgroundColor = '#7a2f00';
-      }
-    });
-    button.addEventListener('mouseleave', () => {
-      if (!isGenerating) {
-        button.style.backgroundColor = '#973b00';
-      }
-    });
+        const json = await uploadRes.json();
 
-    document.body.appendChild(button);
+        if (!uploadRes.ok) {
+          alert("Upload failed: " + json.error);
+          button.textContent = "Generate PDF Email";
+          return;
+        }
 
-    return () => {
-      if (document.body.contains(button)) {
-        document.body.removeChild(button);
-      }
+        button.textContent = "Sending Email…";
+
+        // 🔹 4. Let Make.com send the email
+        await fetch("https://hook.eu1.make.com/lbfmnhl3xpf7c0y2sfos3vdln6y1fmqm", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            sessionId: session.id,
+            pdfUrl: json.pdfUrl,
+            clientEmail: client.email,
+            clientFirstName: client.firstName,
+            clientLastName: client.lastName,
+            dogName: session.dogName || client.dogName,
+            sessionNumber: sessionPlan.sessionNumber,
+            bookingDate: session.bookingDate,
+            bookingTime: session.bookingTime,
+            emailSubject: `Session ${sessionPlan.sessionNumber} Plan - ${
+              session.dogName || client.dogName
+            }`,
+            timestamp: new Date().toISOString(),
+          }),
+        });
+
+        alert("PDF uploaded and sent to email draft!");
+
+        button.textContent = "Generate PDF Email";
+      };
+
+      input.click();
+
+      // Remove listener
+      window.removeEventListener("afterprint", afterPrint);
     };
-  }, [session, client, sessionPlan, isPrintMode, pagedJsReady]);
+
+    window.addEventListener("afterprint", afterPrint);
+  });
+
+  document.body.appendChild(button);
+
+  return () => {
+    if (document.body.contains(button)) {
+      document.body.removeChild(button);
+    }
+  };
+}, [session, client, sessionPlan]);
 
   // Fetch data (unchanged from your logic)
   useEffect(() => {
