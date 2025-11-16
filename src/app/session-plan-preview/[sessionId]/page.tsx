@@ -244,7 +244,7 @@ if (isBot && !forcePrint) {
           createdAt: new Date(planData.created_at),
           updatedAt: new Date(planData.updated_at),
         };
-
+        
         setSessionPlan(plan);
 
         if (!sessionData) {
@@ -253,7 +253,7 @@ if (isBot && !forcePrint) {
           setLoading(false);
           return;
         }
-        
+
         console.log('Session fetched:', sessionData);
 
         const sess: Session = {
