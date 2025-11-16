@@ -171,7 +171,7 @@ export default function SessionPlanPreviewPage() {
           }
 
           //Add image with compression to balance quality and file size
-          //pdf.addImage(imgData, 'PNG', 0, 0, 210, 297, undefined, 'FAST');
+          pdf.addImage(imgData, 'PNG', 0, 0, 210, 297, undefined, 'FAST');
         }
 
         console.log('PDF generated, uploading to Supabase...');
