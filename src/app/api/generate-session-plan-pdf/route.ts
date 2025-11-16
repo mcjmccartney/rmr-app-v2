@@ -1,88 +1,104 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import chromium from "@sparticuz/chromium";
 import playwright from "playwright-core";
+
+// --- Supabase ---
 import { createClient } from "@supabase/supabase-js";
 
-export const maxDuration = 60;
-export const dynamic = "force-dynamic";
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
-export async function GET(req: NextRequest) {
+export const maxDuration = 300; // Vercel max limit
+
+export async function GET(req: Request) {
   try {
-    const sessionId = req.nextUrl.searchParams.get("sessionId");
+    const { searchParams } = new URL(req.url);
+
+    // Extract params safely
+    const sessionId = searchParams.get("sessionId")!;
+    const clientEmail = searchParams.get("clientEmail") ?? "";
+    const clientFirstName = searchParams.get("clientFirstName") ?? "";
+    const clientLastName = searchParams.get("clientLastName") ?? "";
+    const dogName = searchParams.get("dogName") ?? "";
+    const sessionNumber = searchParams.get("sessionNumber") ?? "";
+    const bookingDate = searchParams.get("bookingDate") ?? "";
+    const bookingTime = searchParams.get("bookingTime") ?? "";
+
     if (!sessionId) {
-      return NextResponse.json({ error: "Missing sessionId" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Missing required sessionId" },
+        { status: 400 }
+      );
     }
 
-    const clientEmail = req.nextUrl.searchParams.get("clientEmail");
-    const clientFirstName = req.nextUrl.searchParams.get("clientFirstName");
-    const clientLastName = req.nextUrl.searchParams.get("clientLastName");
-    const dogName = req.nextUrl.searchParams.get("dogName");
-    const sessionNumber = req.nextUrl.searchParams.get("sessionNumber");
-    const bookingDate = req.nextUrl.searchParams.get("bookingDate");
-    const bookingTime = req.nextUrl.searchParams.get("bookingTime");
+    console.log("Launching Chromium...");
 
-    const BASE_URL =
-      process.env.BASE_URL || "https://rmrcms.vercel.app";
+    const executablePath = await chromium.executablePath();
 
-    const url = `${BASE_URL}/session-plan-preview/${sessionId}?pagedjs=print`;
-
-    console.log("Generating PDF for:", url);
-
-    // --------- LAUNCH CHROME ----------
     const browser = await playwright.chromium.launch({
       args: chromium.args,
-      executablePath: await chromium.executablePath(),
+      executablePath,
       headless: true,
     });
 
-    const page = await browser.newPage({
-      viewport: { width: 1200, height: 1600 },
+    const page = await browser.newPage();
+
+    const previewUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/session-plan-preview/${sessionId}?pagedjs=print`;
+
+    console.log("Navigating to:", previewUrl);
+
+    await page.goto(previewUrl, {
+      waitUntil: "networkidle",
+      timeout: 120_000,
     });
 
-    await page.goto(url, { waitUntil: "networkidle", timeout: 40000 });
-    await page.waitForSelector("[data-paged-ready='true']", { timeout: 40000 });
+    // Wait for Paged.js ready attribute
+    await page.waitForFunction(
+      () => document.body.getAttribute("data-paged-ready") === "true",
+      { timeout: 120_000 }
+    );
+
+    console.log("Paged.js ready. Generating PDF...");
 
     const pdfBuffer = await page.pdf({
       format: "A4",
       printBackground: true,
-      preferCSSPageSize: true,
-      margin: { top: 0, right: 0, bottom: 0, left: 0 },
+      margin: { top: "0", right: "0", bottom: "0", left: "0" },
     });
 
     await browser.close();
 
-    // -----------------------------------
-    //  UPLOAD PDF TO SUPABASE STORAGE
-    // -----------------------------------
+    // --- Upload to Supabase ---
+    const filePath = `session-plans/${sessionId}-${Date.now()}.pdf`;
 
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
-
-    const fileName = `session-plan-${sessionId}-${Date.now()}.pdf`;
-
-    const { data: uploadData, error: uploadError } = await supabase.storage
+    const upload = await supabase.storage
       .from("session-plans")
-      .upload(fileName, pdfBuffer, {
+      .upload(filePath, pdfBuffer, {
         contentType: "application/pdf",
       });
 
-    if (uploadError) throw uploadError;
+    if (upload.error) {
+      console.error("Upload error:", upload.error);
+      return NextResponse.json(
+        { error: upload.error.message },
+        { status: 500 }
+      );
+    }
 
-    const { data: urlData } = supabase.storage
+    const { data: publicUrlData } = supabase.storage
       .from("session-plans")
-      .getPublicUrl(fileName);
+      .getPublicUrl(filePath);
 
-    const pdfUrl = urlData.publicUrl;
+    const pdfUrl = publicUrlData.publicUrl;
 
-    console.log("PDF stored at:", pdfUrl);
+    console.log("PDF uploaded:", pdfUrl);
 
-    // -----------------------------------
-    // SEND TO MAKE.COM WEBHOOK
-    // -----------------------------------
+    // --- Send to Make.com ---
+    console.log("Sending webhook to Make.com...");
 
-    const webhookResponse = await fetch(
+    const makeRes = await fetch(
       "https://hook.eu1.make.com/lbfmnhl3xpf7c0y2sfos3vdln6y1fmqm",
       {
         method: "POST",
@@ -103,16 +119,22 @@ export async function GET(req: NextRequest) {
       }
     );
 
-    if (!webhookResponse.ok) {
-      const text = await webhookResponse.text();
-      throw new Error(`Make.com error: ${text}`);
+    if (!makeRes.ok) {
+      const text = await makeRes.text();
+      console.error("Make.com error:", text);
+      return NextResponse.json(
+        { error: `Make.com error: ${text}` },
+        { status: 500 }
+      );
     }
 
-    return NextResponse.json({ pdfUrl, success: true });
-  } catch (error: any) {
-    console.error("PDF Generator Error:", error);
+    console.log("Webhook sent successfully.");
+
+    return NextResponse.json({ success: true, pdfUrl });
+  } catch (err: any) {
+    console.error("Unhandled PDF generation error:", err);
     return NextResponse.json(
-      { error: error.message || "Failed to generate PDF" },
+      { error: err.message || "Unknown error" },
       { status: 500 }
     );
   }
