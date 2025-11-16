@@ -19,7 +19,6 @@ export default function SessionPlanPreviewPage() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
   const [sessionPlan, setSessionPlan] = useState<SessionPlan | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [client, setClient] = useState<Client | null>(null);
@@ -31,7 +30,7 @@ export default function SessionPlanPreviewPage() {
   const [pagedJsReady, setPagedJsReady] = useState(false);
 
   /* -------------------------------------------
-     LOAD PAGED.JS FOR BROWSER PREVIEW ONLY
+     PAGED.JS LOADER
   -------------------------------------------- */
   useEffect(() => {
     if (loading || !sessionPlan || pagedJsReady) return;
@@ -51,24 +50,18 @@ export default function SessionPlanPreviewPage() {
     };
 
     document.body.appendChild(script);
-
-    return () => {
-      if (document.body.contains(script)) document.body.removeChild(script);
-    };
   }, [loading, sessionPlan, pagedJsReady]);
 
   /* -------------------------------------------
-     THE NEW PRINT → UPLOAD → EMAIL WORKFLOW
-     (works on Mac + Windows Chrome)
+     PRINT → UPLOAD → EMAIL BUTTON
   -------------------------------------------- */
   useEffect(() => {
     if (!sessionPlan) return;
 
-    console.log("🟢 Button effect mounted");
-
     const button = document.createElement("button");
     button.id = "pdf-export-btn";
     button.textContent = "Generate PDF Email";
+
     button.style.cssText = `
       position: fixed;
       bottom: 2rem;
@@ -88,14 +81,13 @@ export default function SessionPlanPreviewPage() {
     document.body.appendChild(button);
 
     button.onclick = () => {
-      console.log("🟡 Button clicked → print()");
-
+      console.log("🟡 Print triggered");
       button.textContent = "Printing…";
 
       window.print();
 
       const afterPrint = () => {
-        console.log("🟢 afterprint fired");
+        console.log("🟢 Print dialog closed");
 
         const input = document.createElement("input");
         input.type = "file";
@@ -105,7 +97,7 @@ export default function SessionPlanPreviewPage() {
           const file = e.target.files?.[0];
           if (!file) return;
 
-          console.log("📄 PDF selected:", file);
+          console.log("📄 PDF chosen");
 
           button.textContent = "Uploading…";
 
@@ -113,23 +105,21 @@ export default function SessionPlanPreviewPage() {
           formData.append("file", file);
           formData.append("sessionId", sessionPlan.sessionId);
 
-          const uploadRes = await fetch("/api/upload-final-pdf", {
+          const upload = await fetch("/api/upload-final-pdf", {
             method: "POST",
             body: formData,
           });
 
-          const json = await uploadRes.json();
+          const json = await upload.json();
 
-          if (!uploadRes.ok) {
+          if (!upload.ok) {
             alert("Upload failed: " + json.error);
             button.textContent = "Generate PDF Email";
             return;
           }
 
-          console.log("✔ Uploaded:", json.pdfUrl);
-          button.textContent = "Sending email…";
+          button.textContent = "Sending Email…";
 
-          // SEND TO MAKE.COM
           await fetch("https://hook.eu1.make.com/lbfmnhl3xpf7c0y2sfos3vdln6y1fmqm", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -141,12 +131,10 @@ export default function SessionPlanPreviewPage() {
               clientLastName: client?.lastName,
               dogName: session?.dogName || client?.dogName,
               sessionNumber: sessionPlan.sessionNumber,
-              emailSubject: `Session ${sessionPlan.sessionNumber} Plan`,
-              timestamp: new Date().toISOString(),
             }),
           });
 
-          alert("PDF uploaded and emailed!");
+          alert("PDF emailed!");
           button.textContent = "Generate PDF Email";
         };
 
@@ -154,7 +142,6 @@ export default function SessionPlanPreviewPage() {
         window.removeEventListener("afterprint", afterPrint);
       };
 
-      // Works on Windows Chrome + Mac Chrome
       const mediaQuery = window.matchMedia("print");
       mediaQuery.addEventListener("change", (e) => {
         if (!e.matches) afterPrint();
@@ -169,23 +156,22 @@ export default function SessionPlanPreviewPage() {
   }, [sessionPlan, client, session]);
 
   /* -------------------------------------------
-     FETCH SESSION DATA
+     FETCH DATA
   -------------------------------------------- */
   useEffect(() => {
     async function load() {
       try {
-        console.log("Fetching session data…");
-
         const res = await fetch(`/api/session-plan-preview/${sessionId}`);
         const json = await res.json();
 
-        if (!res.ok) throw new Error(json.error || "Failed");
+        if (!res.ok) throw new Error(json.error);
 
         const plan = json.sessionPlan;
-        const sessionData = json.session;
-        const clientData = json.client;
-        const apData = json.actionPoints;
+        const sess = json.session;
+        const cli = json.client;
+        const apList = json.actionPoints;
 
+        /* Build plan */
         const planObj: SessionPlan = {
           id: plan.id,
           sessionId: plan.session_id,
@@ -204,78 +190,35 @@ export default function SessionPlanPreviewPage() {
         };
 
         setSessionPlan(planObj);
-
-        const sess: Session = {
-          id: sessionData.id,
-          clientId: sessionData.client_id,
-          dogName: sessionData.dog_name,
-          sessionType: sessionData.session_type,
-          bookingDate: sessionData.booking_date,
-          bookingTime: sessionData.booking_time,
-          notes: sessionData.notes,
-          quote: sessionData.quote,
-          email: sessionData.email,
-          sessionPlanId: sessionData.session_plan_id,
-          sessionPaid: sessionData.session_paid,
-          paymentConfirmedAt: sessionData.payment_confirmed_at,
-          sessionPlanSent: sessionData.session_plan_sent,
-          questionnaireBypass: sessionData.questionnaire_bypass,
-          specialMarking: sessionData.special_marking,
-          eventId: sessionData.event_id,
-          googleMeetLink: sessionData.google_meet_link,
-        };
-
         setSession(sess);
-
-        const cli: Client = {
-          id: clientData.id,
-          firstName: clientData.first_name,
-          lastName: clientData.last_name,
-          dogName: clientData.dog_name,
-          otherDogs: clientData.other_dogs || [],
-          email: clientData.email,
-          phone: clientData.phone,
-          partnerName: clientData.partner_name,
-          address: clientData.address,
-          active: clientData.active,
-          membership: clientData.membership,
-          behaviouralBriefId: clientData.behavioural_brief_id,
-          avatar: clientData.avatar,
-          booking_terms_signed: clientData.booking_terms_signed,
-          booking_terms_signed_date: clientData.booking_terms_signed_date,
-        };
-
         setClient(cli);
 
-        const goals = [
+        /* Goals */
+        setMainGoals([
           plan.main_goal_1,
           plan.main_goal_2,
           plan.main_goal_3,
           plan.main_goal_4,
-        ].filter(Boolean);
-
-        setMainGoals(goals);
+        ].filter(Boolean));
 
         setExplanationOfBehaviour(plan.explanation_of_behaviour || "");
 
-        const editable: EditableActionPoint[] = [];
-
-        for (const apId of plan.action_points || []) {
-          const ap = apData.find((x: any) => x.id === apId);
+        /* Action points */
+        const aps: EditableActionPoint[] = [];
+        for (const id of plan.action_points || []) {
+          const ap = apList.find((x: any) => x.id === id);
           if (!ap) continue;
 
-          const edited = plan.edited_action_points?.[apId];
-
-          editable.push({
+          const edited = plan.edited_action_points?.[id];
+          aps.push({
             header: edited?.header || ap.header,
             details: edited?.details || ap.details,
           });
         }
+        setEditableActionPoints(aps);
 
-        setEditableActionPoints(editable);
-
-        // Build title
-        const dogName = sess.dogName || cli.dogName || "Dog";
+        /* Title */
+        const dogName = sess.dog_name || cli.dog_name || "Dog";
         setTitle(`Session ${plan.session_number} - ${dogName}`);
 
         setLoading(false);
@@ -290,7 +233,7 @@ export default function SessionPlanPreviewPage() {
   }, [sessionId]);
 
   /* -------------------------------------------
-     RENDER UI (unchanged)
+     UI RENDER
   -------------------------------------------- */
 
   if (loading) return <div className="min-h-screen bg-white"></div>;
@@ -298,10 +241,68 @@ export default function SessionPlanPreviewPage() {
 
   return (
     <>
-      {/* THE REST OF YOUR JSX LAYOUT BELOW — unchanged */}
-      {/* Keeping your styling, layout, SafeHtmlRenderer, etc. */}
+      <meta name="pdfshift-wait-for-selector" content="[data-paged-ready='true']" />
 
-      {/* ... */}
+      {/* WRAP ALL CONTENT SO PAGED.JS CAN SEE IT */}
+      <div id="paged-content">
+
+        {/* --- ALL YOUR ORIGINAL STYLES (unchanged) --- */}
+        <style>{`
+          body {
+            background: ${isPrintMode ? 'white' : '#ecebdd'};
+            margin: 0;
+            font-family: Arial, sans-serif;
+          }
+        `}</style>
+
+        {/* --- CONTENT WRAPPER --- */}
+        <div className="content-wrapper px-6 py-6">
+
+          <h1 className="text-4xl mb-10">{title}</h1>
+
+          {/* Goals */}
+          {mainGoals.length > 0 && (
+            <div className="mb-8">
+              <h3 className="text-3xl mb-3 italic">Main Goals</h3>
+
+              {mainGoals.map((g, i) => (
+                <p key={i} className="mb-2 text-gray-800">
+                  • <SafeHtmlRenderer html={g} />
+                </p>
+              ))}
+            </div>
+          )}
+
+          {/* Explanation */}
+          {explanationOfBehaviour && (
+            <div className="mb-10">
+              <h3 className="text-3xl italic mb-3">Explanation of Behaviour</h3>
+              <SafeHtmlRenderer html={explanationOfBehaviour} />
+            </div>
+          )}
+
+          {/* Action Points */}
+          {editableActionPoints.length > 0 && (
+            <div className="space-y-8">
+              {editableActionPoints.map((ap, i) => (
+                <div key={i}>
+                  <h3 className="text-3xl italic mb-3">
+                    <SafeHtmlRenderer html={ap.header} />
+                  </h3>
+                  <div className="border-2 rounded-md p-4 bg-white">
+                    <SafeHtmlRenderer html={ap.details} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="mt-20 text-sm text-gray-700">
+            <strong>Reminder:</strong> Behavioural reports are for guidance only.
+          </div>
+        </div>
+
+      </div>
     </>
   );
 }
