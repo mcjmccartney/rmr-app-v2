@@ -73,10 +73,13 @@ if (isBot && !forcePrint) {
     };
   }, [loading, sessionPlan, pagedJsReady]);
 
-  // Floating "Generate PDF Email" button using browser print
+  // Floating "Generate PDF Email" button using browser print workflow
 useEffect(() => {
-  if (!session || !client || !sessionPlan) return;
+  if (!sessionPlan) return; // keep it simple
 
+  console.log("🟢 Button effect running…");
+
+  // --- Create Button ---
   const button = document.createElement("button");
   button.id = "pdf-generate-button-external";
   button.textContent = "Generate PDF Email";
@@ -89,7 +92,7 @@ useEffect(() => {
     padding: 0.75rem 1.5rem;
     border-radius: 0.5rem;
     font-weight: 500;
-    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
     border: none;
     cursor: pointer;
     z-index: 999999;
@@ -98,15 +101,15 @@ useEffect(() => {
 
   document.body.appendChild(button);
 
+  // --- CLICK HANDLER ---
   button.onclick = () => {
-    console.log("Generate PDF Email button clicked!");
+    console.log("🟡 CLICKED → Generate PDF Email");
     button.textContent = "Printing…";
 
     window.print();
 
     const afterPrint = () => {
-      console.log("afterprint event fired!");
-      button.textContent = "Upload PDF…";
+      console.log("🟢 afterprint fired");
 
       const input = document.createElement("input");
       input.type = "file";
@@ -116,11 +119,13 @@ useEffect(() => {
         const file = e.target.files?.[0];
         if (!file) return;
 
+        console.log("📄 PDF selected:", file);
+
         button.textContent = "Uploading…";
 
         const formData = new FormData();
         formData.append("file", file);
-        formData.append("sessionId", session.id);
+        formData.append("sessionId", sessionPlan.sessionId);
 
         const uploadRes = await fetch("/api/upload-final-pdf", {
           method: "POST",
@@ -135,29 +140,21 @@ useEffect(() => {
           return;
         }
 
+        console.log("✔ Uploaded:", json.pdfUrl);
         button.textContent = "Sending Email…";
 
         await fetch("https://hook.eu1.make.com/lbfmnhl3xpf7c0y2sfos3vdln6y1fmqm", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            sessionId: session.id,
+            sessionId: sessionPlan.sessionId,
             pdfUrl: json.pdfUrl,
-            clientEmail: client.email,
-            clientFirstName: client.firstName,
-            clientLastName: client.lastName,
-            dogName: session.dogName || client.dogName,
             sessionNumber: sessionPlan.sessionNumber,
-            bookingDate: session.bookingDate,
-            bookingTime: session.bookingTime,
-            emailSubject: `Session ${sessionPlan.sessionNumber} Plan - ${
-              session.dogName || client.dogName
-            }`,
-            timestamp: new Date().toISOString(),
           }),
         });
 
-        alert("PDF uploaded and email sent!");
+        console.log("📧 Email sent!");
+        alert("PDF sent via email!");
         button.textContent = "Generate PDF Email";
       };
 
@@ -168,12 +165,13 @@ useEffect(() => {
     window.addEventListener("afterprint", afterPrint);
   };
 
+  // Cleanup
   return () => {
     if (document.body.contains(button)) {
       document.body.removeChild(button);
     }
   };
-}, [session, client, sessionPlan]);
+}, [sessionPlan]);
 
   // Fetch data (unchanged from your logic)
   useEffect(() => {
