@@ -96,9 +96,29 @@ if (isBot && !forcePrint) {
     font-size: 1rem;
   `;
 
-  button.addEventListener("click", () => {
+  button.onclick = () => {
   console.log("Generate PDF Email button clicked!");
-    button.textContent = "Printing…";
+  button.textContent = "Printing…";
+  window.print();
+
+  const afterPrint = () => {
+    console.log("afterprint event fired!");
+
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "application/pdf";
+
+    input.onchange = (e: any) => {
+      console.log("PDF chosen:", e.target.files?.[0]);
+    };
+
+    input.click();
+
+    window.removeEventListener("afterprint", afterPrint);
+  };
+
+  window.addEventListener("afterprint", afterPrint);
+};
 
     // 🔹 1. Trigger Chrome Print
     window.print();
