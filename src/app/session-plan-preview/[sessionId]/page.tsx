@@ -120,6 +120,9 @@ export default function SessionPlanPreviewPage() {
         const html2canvas = (await import('html2canvas')).default;
         const { jsPDF } = await import('jspdf');
 
+        // Wait for all fonts to be fully loaded before generating PDF
+        await document.fonts.ready;
+
         const pages = document.querySelectorAll('.pagedjs_page');
 
         if (pages.length === 0) {
@@ -135,20 +138,40 @@ export default function SessionPlanPreviewPage() {
           console.log(`Capturing page ${i + 1}/${pages.length}...`);
 
           const canvas = await html2canvas(pages[i] as HTMLElement, {
-            scale: 2,
+            // Higher scale for better text quality (3x instead of 2x)
+            scale: 3,
             backgroundColor: '#ecebdd',
             logging: false,
             useCORS: true,
-            allowTaint: true
+            allowTaint: true,
+            // Set explicit window dimensions for consistent rendering
+            windowWidth: 794,  // A4 width at 96 DPI
+            windowHeight: 1123, // A4 height at 96 DPI
+            // Increase timeout for font and image loading
+            imageTimeout: 15000,
+            // Callback to optimize fonts for PDF rendering
+            onclone: (clonedDoc) => {
+              const style = clonedDoc.createElement('style');
+              style.textContent = `
+                * {
+                  -webkit-font-smoothing: antialiased !important;
+                  -moz-osx-font-smoothing: grayscale !important;
+                  text-rendering: optimizeLegibility !important;
+                }
+              `;
+              clonedDoc.head.appendChild(style);
+            }
           });
 
-          const imgData = canvas.toDataURL('image/jpeg', 1.0);
+          // Use PNG instead of JPEG for better text quality (lossless compression)
+          const imgData = canvas.toDataURL('image/png');
 
           if (i > 0) {
             pdf.addPage();
           }
 
-          pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297);
+          // Add image with compression to balance quality and file size
+          pdf.addImage(imgData, 'PNG', 0, 0, 210, 297, undefined, 'FAST');
         }
 
         console.log('PDF generated, uploading to Supabase...');
