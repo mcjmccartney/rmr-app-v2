@@ -120,6 +120,10 @@ export default function SessionPlanPreviewPage() {
         const html2canvas = (await import('html2canvas')).default;
         const { jsPDF } = await import('jspdf');
 
+        // Wait for fonts to be fully loaded
+        await document.fonts.ready;
+        console.log('Fonts loaded');
+
         const pages = document.querySelectorAll('.pagedjs_page');
 
         if (pages.length === 0) {
@@ -139,10 +143,29 @@ export default function SessionPlanPreviewPage() {
             backgroundColor: '#ecebdd',
             logging: false,
             useCORS: true,
-            allowTaint: true
+            allowTaint: true,
+            imageTimeout: 15000,
+            windowWidth: pages[i].scrollWidth,
+            windowHeight: pages[i].scrollHeight,
+            onclone: (clonedDoc) => {
+              // Replace custom fonts with web-safe fonts for better PDF rendering
+              const style = clonedDoc.createElement('style');
+              style.textContent = `
+                * {
+                  font-family: Arial, Helvetica, sans-serif !important;
+                  text-rendering: geometricPrecision !important;
+                  -webkit-font-smoothing: antialiased !important;
+                }
+                h1, h2, h3, h4, h5, h6 {
+                  font-family: Arial, Helvetica, sans-serif !important;
+                  font-weight: bold !important;
+                }
+              `;
+              clonedDoc.head.appendChild(style);
+            }
           });
 
-          const imgData = canvas.toDataURL('image/jpeg', 1.0);
+          const imgData = canvas.toDataURL('image/jpeg', 0.95);
 
           if (i > 0) {
             pdf.addPage();
@@ -528,7 +551,7 @@ export default function SessionPlanPreviewPage() {
   /* Decrease line height for paragraph text */
   p {
     line-height: 1.3;
-    font-size: 15px;
+    font-size: 14.5px;
   }
 
   /* === Headers use Cooper Black === */
