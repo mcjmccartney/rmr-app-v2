@@ -31,52 +31,61 @@ export default function SessionPlanPreviewPage() {
 
   // Load Paged.js only in browser mode
   useEffect(() => {
-    if (loading || !sessionPlan || pagedJsReady) return;
+  if (loading || !sessionPlan || pagedJsReady) return;
 
-    const ua = navigator.userAgent.toLowerCase();
+  const ua = navigator.userAgent.toLowerCase();
 
-    const botAgents = [
-      "wkhtmltopdf",
-      "chrome-lighthouse",
-      "headless",
-      "pdf",
-      "node",
-      "fetch",
-      "make",
-      "zapier",
-      "insomnia",
-      "postman"
-    ];
+  const botAgents = [
+    "wkhtmltopdf",
+    "chrome-lighthouse",
+    "headless",
+    "pdf",
+    "node",
+    "fetch",
+    "make",
+    "zapier",
+    "insomnia",
+    "postman"
+  ];
 
-    const forcePrint = window.location.search.includes("pagedjs=print");
+  const isBot = botAgents.some(a => ua.includes(a));
+  const forcePrint = window.location.search.includes("pagedjs=print");
 
-if (isBot || forcePrint) {
-  console.log("Skipping Paged.js (bot/PDF mode)");
+  // ❌ Do NOT load Paged.js for bots, headless, or Playwright PDF mode
+  if (isBot || forcePrint) {
+    console.log("Skipping Paged.js (bot/PDF mode)");
 
-  // ⚠️ CRITICAL FIX: ensure playwright detects ready state
-  document.body.setAttribute("data-paged-ready", "true");
+    // ⚠️ CRITICAL FIX: ensure Playwright sees ready state
+    document.body.setAttribute("data-paged-ready", "true");
 
-  setPagedJsReady(true);
-  return;
-}
+    setPagedJsReady(true);
+    return;
+  }
 
-    const script = document.createElement("script");
-    script.src = "https://unpkg.com/pagedjs/dist/paged.polyfill.js";
-    script.async = true;
-    script.onload = () => {
-      setPagedJsReady(true);
-      setTimeout(() => {
-        document.body.setAttribute("data-paged-ready", "true");
-      }, 1000);
-    };
-    document.body.appendChild(script);
+  // ✅ Load Paged.js only in real browsers
+  console.log("Loading Paged.js preview for browser…");
 
-    return () => {
-      if (document.body.contains(script)) {
-        document.body.removeChild(script);
-      }
-    };
-  }, [loading, sessionPlan, pagedJsReady]);
+  const script = document.createElement("script");
+  script.src = "https://unpkg.com/pagedjs/dist/paged.polyfill.js";
+  script.async = true;
+  script.onload = () => {
+    setPagedJsReady(true);
+
+    // Give Paged.js time to paginate
+    setTimeout(() => {
+      document.body.setAttribute("data-paged-ready", "true");
+      console.log("Paged.js ready signal set");
+    }, 1000);
+  };
+
+  document.body.appendChild(script);
+
+  return () => {
+    if (document.body.contains(script)) {
+      document.body.removeChild(script);
+    }
+  };
+}, [loading, sessionPlan, pagedJsReady]);
 
   // NEW PDF BUTTON — Calls Vercel Serverless Playwright PDF API
   useEffect(() => {
