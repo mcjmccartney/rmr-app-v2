@@ -253,7 +253,7 @@ if (isBot && !forcePrint) {
           setLoading(false);
           return;
         }
-
+        
         console.log('Session fetched:', sessionData);
 
         const sess: Session = {
