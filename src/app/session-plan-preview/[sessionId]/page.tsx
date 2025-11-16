@@ -97,6 +97,7 @@ if (isBot && !forcePrint) {
   `;
 
   button.addEventListener("click", () => {
+  console.log("Generate PDF Email button clicked!");
     button.textContent = "Printing…";
 
     // 🔹 1. Trigger Chrome Print
