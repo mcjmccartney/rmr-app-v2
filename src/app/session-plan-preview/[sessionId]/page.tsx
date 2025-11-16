@@ -73,8 +73,8 @@ if (isBot && !forcePrint) {
     };
   }, [loading, sessionPlan, pagedJsReady]);
 
-  // Floating "Generate PDF Email" button using html2canvas + jsPDF (client-side)
-  useEffect(() => {
+  // Floating "Generate PDF Email" button using browser print
+useEffect(() => {
   if (!session || !client || !sessionPlan) return;
 
   const button = document.createElement("button");
@@ -96,35 +96,16 @@ if (isBot && !forcePrint) {
     font-size: 1rem;
   `;
 
+  document.body.appendChild(button);
+
   button.onclick = () => {
-  console.log("Generate PDF Email button clicked!");
-  button.textContent = "Printing…";
-  window.print();
+    console.log("Generate PDF Email button clicked!");
+    button.textContent = "Printing…";
 
-  const afterPrint = () => {
-    console.log("afterprint event fired!");
-
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = "application/pdf";
-
-    input.onchange = (e: any) => {
-      console.log("PDF chosen:", e.target.files?.[0]);
-    };
-
-    input.click();
-
-    window.removeEventListener("afterprint", afterPrint);
-  };
-
-  window.addEventListener("afterprint", afterPrint);
-};
-
-    // 🔹 1. Trigger Chrome Print
     window.print();
 
-    // 🔹 2. After printing, open PDF file picker
     const afterPrint = () => {
+      console.log("afterprint event fired!");
       button.textContent = "Upload PDF…";
 
       const input = document.createElement("input");
@@ -156,7 +137,6 @@ if (isBot && !forcePrint) {
 
         button.textContent = "Sending Email…";
 
-        // 🔹 4. Let Make.com send the email
         await fetch("https://hook.eu1.make.com/lbfmnhl3xpf7c0y2sfos3vdln6y1fmqm", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -177,21 +157,16 @@ if (isBot && !forcePrint) {
           }),
         });
 
-        alert("PDF uploaded and sent to email draft!");
-
+        alert("PDF uploaded and email sent!");
         button.textContent = "Generate PDF Email";
       };
 
       input.click();
-
-      // Remove listener
       window.removeEventListener("afterprint", afterPrint);
     };
 
     window.addEventListener("afterprint", afterPrint);
-  });
-
-  document.body.appendChild(button);
+  };
 
   return () => {
     if (document.body.contains(button)) {
@@ -244,7 +219,7 @@ if (isBot && !forcePrint) {
           createdAt: new Date(planData.created_at),
           updatedAt: new Date(planData.updated_at),
         };
-        
+
         setSessionPlan(plan);
 
         if (!sessionData) {
