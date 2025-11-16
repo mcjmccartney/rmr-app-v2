@@ -48,13 +48,17 @@ export default function SessionPlanPreviewPage() {
       "postman"
     ];
 
-    const isBot = botAgents.some(a => ua.includes(a));
     const forcePrint = window.location.search.includes("pagedjs=print");
 
-    if (isBot || forcePrint) {
-      setPagedJsReady(true);
-      return;
-    }
+if (isBot || forcePrint) {
+  console.log("Skipping Paged.js (bot/PDF mode)");
+
+  // ⚠️ CRITICAL FIX: ensure playwright detects ready state
+  document.body.setAttribute("data-paged-ready", "true");
+
+  setPagedJsReady(true);
+  return;
+}
 
     const script = document.createElement("script");
     script.src = "https://unpkg.com/pagedjs/dist/paged.polyfill.js";
