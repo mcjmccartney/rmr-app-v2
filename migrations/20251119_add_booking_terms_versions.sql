@@ -77,6 +77,11 @@ ON CONFLICT (version_number) DO NOTHING;
 -- Enable Row Level Security
 ALTER TABLE booking_terms_versions ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Public can read active booking terms version" ON booking_terms_versions;
+DROP POLICY IF EXISTS "Authenticated users can read all booking terms versions" ON booking_terms_versions;
+DROP POLICY IF EXISTS "Authenticated users can manage booking terms versions" ON booking_terms_versions;
+
 -- Create policies for booking_terms_versions
 -- Allow public read access to active version (for client-facing page)
 CREATE POLICY "Public can read active booking terms version" ON booking_terms_versions
