@@ -74,6 +74,22 @@ VALUES (
 )
 ON CONFLICT (version_number) DO NOTHING;
 
+-- Enable Row Level Security
+ALTER TABLE booking_terms_versions ENABLE ROW LEVEL SECURITY;
+
+-- Create policies for booking_terms_versions
+-- Allow public read access to active version (for client-facing page)
+CREATE POLICY "Public can read active booking terms version" ON booking_terms_versions
+    FOR SELECT USING (is_active = true);
+
+-- Allow authenticated users to read all versions (for admin page)
+CREATE POLICY "Authenticated users can read all booking terms versions" ON booking_terms_versions
+    FOR SELECT USING (auth.role() = 'authenticated');
+
+-- Allow authenticated users to insert/update/delete versions (for admin page)
+CREATE POLICY "Authenticated users can manage booking terms versions" ON booking_terms_versions
+    FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+
 -- Add comment
 COMMENT ON TABLE booking_terms_versions IS 'Stores different versions of booking terms with version control';
 COMMENT ON COLUMN booking_terms_versions.is_active IS 'Only one version should be active at a time - this is what clients will sign';
