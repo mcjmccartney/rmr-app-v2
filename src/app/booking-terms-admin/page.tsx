@@ -20,7 +20,6 @@ export default function BookingTermsAdminPage() {
   const { user, loading } = useAuth()
   const router = useRouter()
   const [versions, setVersions] = useState<BookingTermsVersion[]>([])
-  const [isAdmin, setIsAdmin] = useState(false)
   const [loadingData, setLoadingData] = useState(true)
   const [editingVersion, setEditingVersion] = useState<BookingTermsVersion | null>(null)
   const [editingHtml, setEditingHtml] = useState('')
@@ -44,14 +43,13 @@ export default function BookingTermsAdminPage() {
     try {
       const res = await fetch('/api/booking-terms-versions')
       const data = await res.json()
-      
+
       if (res.status === 403) {
-        alert('You do not have permission to access this page')
-        router.push('/')
+        alert('You do not have permission to access this page. Please log in.')
+        router.push('/login')
         return
       }
-      
-      setIsAdmin(data.isAdmin)
+
       setVersions(data.versions || [])
     } catch (error) {
       console.error('Error loading versions:', error)
@@ -172,10 +170,6 @@ export default function BookingTermsAdminPage() {
         </div>
       </div>
     )
-  }
-
-  if (!isAdmin) {
-    return null
   }
 
   return (

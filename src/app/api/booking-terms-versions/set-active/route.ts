@@ -2,14 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { createServerClient } from '@supabase/ssr';
 
-// Helper to get admin emails from environment
-function getAdminEmailsFromEnv(): string[] {
-  const adminEmailsStr = process.env.ADMIN_EMAILS || '';
-  return adminEmailsStr.split(',').map(e => e.trim()).filter(Boolean);
-}
-
-// Helper to check if user is admin
-async function isUserAdmin(req: NextRequest): Promise<boolean> {
+// Helper to check if user is authenticated
+async function isUserAuthenticated(req: NextRequest): Promise<boolean> {
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -25,18 +19,15 @@ async function isUserAdmin(req: NextRequest): Promise<boolean> {
   );
 
   const { data: { session } } = await supabase.auth.getSession();
-  const adminEmails = getAdminEmailsFromEnv();
-  const userEmail = session?.user?.email || null;
-  
-  return !!(userEmail && adminEmails.includes(userEmail));
+  return !!session?.user;
 }
 
 // POST - Set a version as active (deactivates all others)
 export async function POST(req: NextRequest) {
-  const isAdmin = await isUserAdmin(req);
+  const isAuthenticated = await isUserAuthenticated(req);
 
-  if (!isAdmin) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+  if (!isAuthenticated) {
+    return NextResponse.json({ error: 'Unauthorized - Please log in' }, { status: 403 });
   }
 
   const body = await req.json();
