@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { createServerClient } from '@supabase/ssr';
 
 // Helper to check if user is authenticated
-async function isUserAuthenticated(req: NextRequest): Promise<{ isAuthenticated: boolean; userEmail: string | null }> {
+async function isUserAuthenticated(req: NextRequest): Promise<{ isAuthenticated: boolean; userId: string | null }> {
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -19,10 +19,10 @@ async function isUserAuthenticated(req: NextRequest): Promise<{ isAuthenticated:
   );
 
   const { data: { session } } = await supabase.auth.getSession();
-  const userEmail = session?.user?.email || null;
+  const userId = session?.user?.id || null;
   const isAuthenticated = !!session?.user;
 
-  return { isAuthenticated, userEmail };
+  return { isAuthenticated, userId };
 }
 
 // GET - Fetch all versions
@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
 
 // POST - Create new version
 export async function POST(req: NextRequest) {
-  const { isAuthenticated, userEmail } = await isUserAuthenticated(req);
+  const { isAuthenticated, userId } = await isUserAuthenticated(req);
 
   if (!isAuthenticated) {
     return NextResponse.json({ error: 'Unauthorized - Please log in' }, { status: 403 });
@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
       title,
       html_content,
       is_active: false,
-      created_by: userEmail
+      created_by: userId
     }])
     .select()
     .single();
