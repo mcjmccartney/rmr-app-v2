@@ -52,6 +52,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Get the active version
+    const { data: activeVersion } = await supabaseServiceRole
+      .from('booking_terms_versions')
+      .select('id')
+      .eq('is_active', true)
+      .single();
+
     let bookingTerms;
     let createError;
 
@@ -60,7 +67,8 @@ export async function POST(request: NextRequest) {
       const { data: updatedBookingTerms, error: updateError } = await supabaseServiceRole
         .from('booking_terms')
         .update({
-          submitted: new Date().toISOString()
+          submitted: new Date().toISOString(),
+          version_id: activeVersion?.id || null
         })
         .eq('email', email.toLowerCase().trim())
         .select()
@@ -74,7 +82,8 @@ export async function POST(request: NextRequest) {
         .from('booking_terms')
         .insert([{
           email: email.toLowerCase().trim(),
-          submitted: new Date().toISOString()
+          submitted: new Date().toISOString(),
+          version_id: activeVersion?.id || null
         }])
         .select()
         .single();

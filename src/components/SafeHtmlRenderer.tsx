@@ -29,19 +29,31 @@ function sanitizeHtml(html: string): string {
     sanitized = '<p>' + sanitized + '</p>';
   }
 
-  // Only allow specific safe tags
-  const allowedTags = ['b', 'strong', 'i', 'em', 'u', 'br', 'p', 'div', 'span'];
+  // Only allow specific safe tags (expanded for booking terms content)
+  const allowedTags = ['b', 'strong', 'i', 'em', 'u', 'br', 'p', 'div', 'span', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li'];
   const tagRegex = /<\/?([a-zA-Z][a-zA-Z0-9]*)\b[^>]*>/g;
-  
+
   sanitized = sanitized.replace(tagRegex, (match, tagName) => {
     if (allowedTags.includes(tagName.toLowerCase())) {
       // For closing tags, just return them as-is
       if (match.startsWith('</')) {
         return match;
       }
-      // For opening tags, remove any attributes except basic ones
-      const basicTag = `<${tagName.toLowerCase()}>`;
-      return basicTag;
+      // For opening tags, preserve class and style attributes for formatting
+      const classMatch = match.match(/class\s*=\s*["']([^"']*)["']/i);
+      const styleMatch = match.match(/style\s*=\s*["']([^"']*)["']/i);
+
+      let attributes = '';
+      if (classMatch) {
+        attributes += ` class="${classMatch[1]}"`;
+      }
+      if (styleMatch) {
+        // Only allow safe CSS properties
+        const safeStyle = styleMatch[1].replace(/(expression|javascript|behavior)/gi, '');
+        attributes += ` style="${safeStyle}"`;
+      }
+
+      return `<${tagName.toLowerCase()}${attributes}>`;
     }
     return ''; // Remove disallowed tags
   });
