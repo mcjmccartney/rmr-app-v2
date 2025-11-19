@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Bold, Italic, Underline } from 'lucide-react';
+import { Bold, Italic, Underline, Link as LinkIcon, Unlink } from 'lucide-react';
 
 interface RichTextEditorProps {
   value: string;
@@ -23,23 +23,43 @@ export default function RichTextEditor({
   const [selectionState, setSelectionState] = useState({
     bold: false,
     italic: false,
-    underline: false
+    underline: false,
+    link: false
   });
+  const [showLinkModal, setShowLinkModal] = useState(false);
+  const [linkUrl, setLinkUrl] = useState('');
+  const [linkText, setLinkText] = useState('');
 
   // Update selection state when selection changes
   const updateSelectionState = () => {
     try {
+      // Check if selection is within a link
+      const selection = window.getSelection();
+      let isLink = false;
+      if (selection && selection.rangeCount > 0) {
+        let node = selection.anchorNode;
+        while (node && node !== editorRef.current) {
+          if (node.nodeName === 'A') {
+            isLink = true;
+            break;
+          }
+          node = node.parentNode;
+        }
+      }
+
       setSelectionState({
         bold: document.queryCommandState('bold'),
         italic: document.queryCommandState('italic'),
-        underline: document.queryCommandState('underline')
+        underline: document.queryCommandState('underline'),
+        link: isLink
       });
     } catch {
       // Fallback if queryCommandState fails
       setSelectionState({
         bold: false,
         italic: false,
-        underline: false
+        underline: false,
+        link: false
       });
     }
   };
@@ -135,6 +155,67 @@ export default function RichTextEditor({
     handleInput();
   };
 
+  // Handle link insertion
+  const handleAddLink = () => {
+    if (disabled) return;
+
+    const selection = window.getSelection();
+    if (selection && selection.toString().length > 0) {
+      // User has selected text
+      setLinkText(selection.toString());
+      setLinkUrl('https://');
+    } else {
+      // No text selected
+      setLinkText('');
+      setLinkUrl('https://');
+    }
+    setShowLinkModal(true);
+  };
+
+  // Insert the link
+  const insertLink = () => {
+    if (!linkUrl) return;
+
+    const selection = window.getSelection();
+    if (linkText && (!selection || selection.toString().length === 0)) {
+      // Insert new link with text
+      const linkHtml = `<a href="${linkUrl}" target="_blank" rel="noopener noreferrer" style="color: #973b00; text-decoration: underline;">${linkText}</a>`;
+      document.execCommand('insertHTML', false, linkHtml);
+    } else {
+      // Wrap selected text in link
+      document.execCommand('createLink', false, linkUrl);
+      // Style the link
+      const selection = window.getSelection();
+      if (selection && selection.rangeCount > 0) {
+        let node = selection.anchorNode;
+        while (node && node !== editorRef.current) {
+          if (node.nodeName === 'A') {
+            (node as HTMLAnchorElement).setAttribute('target', '_blank');
+            (node as HTMLAnchorElement).setAttribute('rel', 'noopener noreferrer');
+            (node as HTMLAnchorElement).style.color = '#973b00';
+            (node as HTMLAnchorElement).style.textDecoration = 'underline';
+            break;
+          }
+          node = node.parentNode;
+        }
+      }
+    }
+
+    setShowLinkModal(false);
+    setLinkUrl('');
+    setLinkText('');
+    editorRef.current?.focus();
+    handleInput();
+  };
+
+  // Remove link
+  const handleRemoveLink = () => {
+    if (disabled) return;
+    document.execCommand('unlink', false);
+    editorRef.current?.focus();
+    handleInput();
+  };
+
   // Handle focus events
   const handleFocus = () => {
     setIsFocused(true);
@@ -170,43 +251,71 @@ export default function RichTextEditor({
 
 
   return (
-    <div className={`border border-gray-300 rounded-md ${isFocused ? 'ring-2 ring-amber-800 border-amber-800' : ''} ${className}`}>
-      {/* Toolbar */}
-      <div className="flex items-center gap-1 p-2 border-b border-gray-200 bg-gray-50">
-        <button
-          type="button"
-          onClick={() => formatText('bold')}
-          disabled={disabled}
-          className={`p-2 rounded hover:bg-gray-200 transition-colors ${
-            selectionState.bold ? 'bg-gray-300' : ''
-          } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-          title="Bold (Ctrl+B)"
-        >
-          <Bold size={16} />
-        </button>
-        <button
-          type="button"
-          onClick={() => formatText('italic')}
-          disabled={disabled}
-          className={`p-2 rounded hover:bg-gray-200 transition-colors ${
-            selectionState.italic ? 'bg-gray-300' : ''
-          } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-          title="Italic (Ctrl+I)"
-        >
-          <Italic size={16} />
-        </button>
-        <button
-          type="button"
-          onClick={() => formatText('underline')}
-          disabled={disabled}
-          className={`p-2 rounded hover:bg-gray-200 transition-colors ${
-            selectionState.underline ? 'bg-gray-300' : ''
-          } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-          title="Underline (Ctrl+U)"
-        >
-          <Underline size={16} />
-        </button>
-      </div>
+    <>
+      <div className={`border border-gray-300 rounded-md ${isFocused ? 'ring-2 ring-amber-800 border-amber-800' : ''} ${className}`}>
+        {/* Toolbar */}
+        <div className="flex items-center gap-1 p-2 border-b border-gray-200 bg-gray-50">
+          <button
+            type="button"
+            onClick={() => formatText('bold')}
+            disabled={disabled}
+            className={`p-2 rounded hover:bg-gray-200 transition-colors ${
+              selectionState.bold ? 'bg-gray-300' : ''
+            } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+            title="Bold (Ctrl+B)"
+          >
+            <Bold size={16} />
+          </button>
+          <button
+            type="button"
+            onClick={() => formatText('italic')}
+            disabled={disabled}
+            className={`p-2 rounded hover:bg-gray-200 transition-colors ${
+              selectionState.italic ? 'bg-gray-300' : ''
+            } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+            title="Italic (Ctrl+I)"
+          >
+            <Italic size={16} />
+          </button>
+          <button
+            type="button"
+            onClick={() => formatText('underline')}
+            disabled={disabled}
+            className={`p-2 rounded hover:bg-gray-200 transition-colors ${
+              selectionState.underline ? 'bg-gray-300' : ''
+            } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+            title="Underline (Ctrl+U)"
+          >
+            <Underline size={16} />
+          </button>
+
+          <div className="w-px h-6 bg-gray-300 mx-1" />
+
+          <button
+            type="button"
+            onClick={handleAddLink}
+            disabled={disabled}
+            className={`p-2 rounded hover:bg-gray-200 transition-colors ${
+              selectionState.link ? 'bg-gray-300' : ''
+            } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+            title="Add Link"
+          >
+            <LinkIcon size={16} />
+          </button>
+          {selectionState.link && (
+            <button
+              type="button"
+              onClick={handleRemoveLink}
+              disabled={disabled}
+              className={`p-2 rounded hover:bg-gray-200 transition-colors ${
+                disabled ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+              title="Remove Link"
+            >
+              <Unlink size={16} />
+            </button>
+          )}
+        </div>
 
       {/* Editor */}
       <div
@@ -230,14 +339,73 @@ export default function RichTextEditor({
         data-placeholder={placeholder}
       />
 
-      {/* Placeholder styling */}
-      <style jsx>{`
-        [contenteditable]:empty:before {
-          content: attr(data-placeholder);
-          color: #9ca3af;
-          pointer-events: none;
-        }
-      `}</style>
-    </div>
+        {/* Placeholder styling */}
+        <style jsx>{`
+          [contenteditable]:empty:before {
+            content: attr(data-placeholder);
+            color: #9ca3af;
+            pointer-events: none;
+          }
+        `}</style>
+      </div>
+
+      {/* Link Modal */}
+      {showLinkModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-xl">
+            <h3 className="text-lg font-semibold mb-4 text-gray-900">Insert Link</h3>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Link Text {!linkText && '(optional)'}
+                </label>
+                <input
+                  type="text"
+                  value={linkText}
+                  onChange={(e) => setLinkText(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                  placeholder="Enter link text"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  URL
+                </label>
+                <input
+                  type="url"
+                  value={linkUrl}
+                  onChange={(e) => setLinkUrl(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                  placeholder="https://example.com"
+                  autoFocus
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-2 mt-6">
+              <button
+                onClick={insertLink}
+                className="px-4 py-2 text-white rounded-lg font-medium transition-colors"
+                style={{ backgroundColor: '#973b00' }}
+              >
+                Insert Link
+              </button>
+              <button
+                onClick={() => {
+                  setShowLinkModal(false);
+                  setLinkUrl('');
+                  setLinkText('');
+                }}
+                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 font-medium transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
