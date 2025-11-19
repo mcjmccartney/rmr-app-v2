@@ -12,7 +12,7 @@ import AddModal from '@/components/AddModal';
 import { Session, Client } from '@/types';
 
 import { formatDateTime, formatFullMonthYear, formatClientWithAllDogs, getClientDogsPart } from '@/utils/dateFormatting';
-import { Calendar, UserPlus, ChevronDown, ChevronRight, Target, Edit3 } from 'lucide-react';
+import { Calendar, UserPlus, ChevronDown, ChevronRight, Target, Edit3, FileText } from 'lucide-react';
 
 export default function SessionsPage() {
   const { state } = useApp();
@@ -162,6 +162,10 @@ export default function SessionsPage() {
     router.push('/action-points');
   };
 
+  const handleBookingTermsAdmin = () => {
+    router.push('/booking-terms-admin');
+  };
+
 
 
   const toggleMonth = (monthKey: string) => {
@@ -184,6 +188,12 @@ export default function SessionsPage() {
         <Header
           title="Sessions"
           buttons={[
+            {
+              icon: FileText,
+              onClick: handleBookingTermsAdmin,
+              title: 'Booking Terms',
+              iconOnly: true
+            },
             {
               icon: Target,
               onClick: handleActionPoints,

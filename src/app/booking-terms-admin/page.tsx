@@ -5,6 +5,8 @@ import { useAuth } from '@/context/AuthContext'
 import { useRouter } from 'next/navigation'
 import RichTextEditor from '@/components/RichTextEditor'
 import SafeHtmlRenderer from '@/components/SafeHtmlRenderer'
+import Header from '@/components/layout/Header'
+import { ArrowLeft } from 'lucide-react'
 
 interface BookingTermsVersion {
   id: string
@@ -163,9 +165,9 @@ export default function BookingTermsAdminPage() {
 
   if (loading || loadingData) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-800 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading...</p>
         </div>
       </div>
@@ -173,134 +175,155 @@ export default function BookingTermsAdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-6xl mx-auto">
-        <div className="mb-6 flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-gray-900">Booking Terms Management</h1>
-          <button
-            onClick={handleCreateNew}
-            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-          >
-            Create New Version
-          </button>
-        </div>
+    <div className="min-h-screen bg-white flex flex-col">
+      <div className="bg-amber-800">
+        <Header
+          title="Booking Terms"
+          showAddButton={false}
+        />
+      </div>
 
-        {(editingVersion || showNewVersionForm) ? (
-          <div className="bg-white rounded-lg shadow p-6 mb-6">
-            <h2 className="text-xl font-semibold mb-4">
-              {showNewVersionForm ? 'Create New Version' : `Edit Version ${editingVersion?.version_number}`}
-            </h2>
-            
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Title
-              </label>
-              <input
-                type="text"
-                value={editingTitle}
-                onChange={(e) => setEditingTitle(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                placeholder="e.g., Service Agreement v2"
-              />
-            </div>
+      <div className="px-4 pb-4 bg-gray-50 flex-1">
+        <div className="mt-4">
+          {/* Back Button and Create New Button */}
+          <div className="mb-4 flex justify-between items-center">
+            <button
+              onClick={() => router.back()}
+              className="flex items-center gap-2 text-amber-800 hover:text-amber-900 font-medium"
+            >
+              <ArrowLeft size={20} />
+              Back
+            </button>
+            <button
+              onClick={handleCreateNew}
+              className="px-4 py-2 text-white rounded-lg font-medium transition-colors"
+              style={{ backgroundColor: '#973b00' }}
+            >
+              Create New Version
+            </button>
+          </div>
 
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Content
-              </label>
-              <RichTextEditor value={editingHtml} onChange={setEditingHtml} />
-            </div>
+          {(editingVersion || showNewVersionForm) ? (
+            <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+              <h2 className="text-xl font-semibold mb-4 text-gray-900">
+                {showNewVersionForm ? 'Create New Version' : `Edit Version ${editingVersion?.version_number}`}
+              </h2>
 
-            <div className="flex gap-2 mb-6">
-              <button
-                onClick={showNewVersionForm ? handleSaveNew : handleSave}
-                disabled={saving}
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
-              >
-                {saving ? 'Saving...' : 'Save'}
-              </button>
-              <button
-                onClick={handleCancelEdit}
-                className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
-              >
-                Cancel
-              </button>
-            </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Title
+                </label>
+                <input
+                  type="text"
+                  value={editingTitle}
+                  onChange={(e) => setEditingTitle(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                  placeholder="e.g., Service Agreement v2"
+                />
+              </div>
 
-            <div className="border-t pt-6">
-              <h3 className="text-lg font-medium mb-2">Preview</h3>
-              <div className="border rounded p-4 bg-gray-50">
-                <SafeHtmlRenderer html={editingHtml} />
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Content
+                </label>
+                <RichTextEditor value={editingHtml} onChange={setEditingHtml} />
+              </div>
+
+              <div className="flex gap-2 mb-6">
+                <button
+                  onClick={showNewVersionForm ? handleSaveNew : handleSave}
+                  disabled={saving}
+                  className="px-4 py-2 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
+                  style={{ backgroundColor: '#973b00' }}
+                >
+                  {saving ? 'Saving...' : 'Save'}
+                </button>
+                <button
+                  onClick={handleCancelEdit}
+                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 font-medium transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+
+              <div className="border-t pt-6">
+                <h3 className="text-lg font-medium mb-2 text-gray-900">Preview</h3>
+                <div className="border rounded-lg p-4 bg-gray-50">
+                  <SafeHtmlRenderer html={editingHtml} />
+                </div>
               </div>
             </div>
-          </div>
-        ) : (
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Version
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Title
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Last Updated
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {versions.map((version) => (
-                  <tr key={version.id}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      v{version.version_number}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {version.title}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {version.is_active ? (
-                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                          Active
-                        </span>
-                      ) : (
-                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
-                          Inactive
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(version.updated_at).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                      <button
-                        onClick={() => handleEdit(version)}
-                        className="text-blue-600 hover:text-blue-900"
-                      >
-                        Edit
-                      </button>
-                      {!version.is_active && (
-                        <button
-                          onClick={() => handleSetActive(version.id)}
-                          className="text-green-600 hover:text-green-900"
-                        >
-                          Set Active
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+          ) : (
+            <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Version
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Title
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Last Updated
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {versions.map((version) => (
+                      <tr key={version.id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          v{version.version_number}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {version.title}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {version.is_active ? (
+                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                              Active
+                            </span>
+                          ) : (
+                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                              Inactive
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {new Date(version.updated_at).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                          <button
+                            onClick={() => handleEdit(version)}
+                            className="hover:text-amber-900 font-medium"
+                            style={{ color: '#973b00' }}
+                          >
+                            Edit
+                          </button>
+                          {!version.is_active && (
+                            <button
+                              onClick={() => handleSetActive(version.id)}
+                              className="text-green-600 hover:text-green-900 font-medium"
+                            >
+                              Set Active
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )
