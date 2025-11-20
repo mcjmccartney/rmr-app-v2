@@ -30,7 +30,7 @@ function sanitizeHtml(html: string): string {
   }
 
   // Only allow specific safe tags (expanded for booking terms content)
-  const allowedTags = ['b', 'strong', 'i', 'em', 'u', 'br', 'p', 'div', 'span', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li'];
+  const allowedTags = ['b', 'strong', 'i', 'em', 'u', 'br', 'p', 'div', 'span', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'a'];
   const tagRegex = /<\/?([a-zA-Z][a-zA-Z0-9]*)\b[^>]*>/g;
 
   sanitized = sanitized.replace(tagRegex, (match, tagName) => {
@@ -42,6 +42,9 @@ function sanitizeHtml(html: string): string {
       // For opening tags, preserve class and style attributes for formatting
       const classMatch = match.match(/class\s*=\s*["']([^"']*)["']/i);
       const styleMatch = match.match(/style\s*=\s*["']([^"']*)["']/i);
+      const hrefMatch = match.match(/href\s*=\s*["']([^"']*)["']/i);
+      const targetMatch = match.match(/target\s*=\s*["']([^"']*)["']/i);
+      const relMatch = match.match(/rel\s*=\s*["']([^"']*)["']/i);
 
       let attributes = '';
       if (classMatch) {
@@ -51,6 +54,20 @@ function sanitizeHtml(html: string): string {
         // Only allow safe CSS properties
         const safeStyle = styleMatch[1].replace(/(expression|javascript|behavior)/gi, '');
         attributes += ` style="${safeStyle}"`;
+      }
+      // For anchor tags, preserve href, target, and rel attributes
+      if (tagName.toLowerCase() === 'a') {
+        if (hrefMatch) {
+          // Ensure href doesn't contain javascript:
+          const safeHref = hrefMatch[1].replace(/javascript:/gi, '');
+          attributes += ` href="${safeHref}"`;
+        }
+        if (targetMatch) {
+          attributes += ` target="${targetMatch[1]}"`;
+        }
+        if (relMatch) {
+          attributes += ` rel="${relMatch[1]}"`;
+        }
       }
 
       return `<${tagName.toLowerCase()}${attributes}>`;
@@ -104,7 +121,7 @@ export default function SafeHtmlRenderer({
 
   return (
     <div
-      className={`${className} [&_p]:mb-4 [&_p:last-child]:mb-0`}
+      className={`${className} [&_p]:mb-4 [&_p:last-child]:mb-0 [&_a]:cursor-pointer [&_a]:hover:opacity-80`}
       dangerouslySetInnerHTML={{ __html: sanitizedHtml || fallback }}
       style={{
         wordBreak: 'break-word',
