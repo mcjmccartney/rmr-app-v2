@@ -32,7 +32,6 @@ INSERT INTO booking_terms_versions (version_number, title, html_content, is_acti
 VALUES (
   1,
   'Service Agreement v1',
-  now(),
   '<div class="space-y-6">
     <div>
       <h2 class="text-xl font-semibold mb-4" style="color: #4f6749;">1-1 Sessions</h2>
@@ -72,7 +71,8 @@ VALUES (
       </div>
     </div>
   </div>',
-  true
+  true,
+  now()
 )
 ON CONFLICT (version_number) DO NOTHING;
 
