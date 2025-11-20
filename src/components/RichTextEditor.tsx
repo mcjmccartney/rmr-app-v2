@@ -29,6 +29,7 @@ export default function RichTextEditor({
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [linkUrl, setLinkUrl] = useState('');
   const [linkText, setLinkText] = useState('');
+  const savedSelectionRef = useRef<Range | null>(null);
 
   // Update selection state when selection changes
   const updateSelectionState = () => {
@@ -160,12 +161,21 @@ export default function RichTextEditor({
     if (disabled) return;
 
     const selection = window.getSelection();
-    if (selection && selection.toString().length > 0) {
-      // User has selected text
-      setLinkText(selection.toString());
-      setLinkUrl('https://');
+    if (selection && selection.rangeCount > 0) {
+      // Save the current selection range
+      savedSelectionRef.current = selection.getRangeAt(0).cloneRange();
+
+      if (selection.toString().length > 0) {
+        // User has selected text
+        setLinkText(selection.toString());
+        setLinkUrl('https://');
+      } else {
+        // No text selected
+        setLinkText('');
+        setLinkUrl('https://');
+      }
     } else {
-      // No text selected
+      savedSelectionRef.current = null;
       setLinkText('');
       setLinkUrl('https://');
     }
@@ -176,17 +186,29 @@ export default function RichTextEditor({
   const insertLink = () => {
     if (!linkUrl) return;
 
+    // Restore the saved selection
+    if (savedSelectionRef.current && editorRef.current) {
+      const selection = window.getSelection();
+      if (selection) {
+        selection.removeAllRanges();
+        selection.addRange(savedSelectionRef.current);
+      }
+    }
+
+    // Focus the editor
+    editorRef.current?.focus();
+
     const selection = window.getSelection();
-    if (linkText && (!selection || selection.toString().length === 0)) {
-      // Insert new link with text
-      const linkHtml = `<a href="${linkUrl}" target="_blank" rel="noopener noreferrer" style="color: #973b00; text-decoration: underline;">${linkText}</a>`;
+    if (linkText && savedSelectionRef.current && savedSelectionRef.current.collapsed) {
+      // Insert new link with text (no text was selected)
+      const linkHtml = `<a href="${linkUrl}" target="_blank" rel="noopener noreferrer" style="color: #973b00; text-decoration: underline;">${linkText}</a>&nbsp;`;
       document.execCommand('insertHTML', false, linkHtml);
-    } else {
+    } else if (selection && selection.toString().length > 0) {
       // Wrap selected text in link
       document.execCommand('createLink', false, linkUrl);
-      // Style the link
-      const selection = window.getSelection();
-      if (selection && selection.rangeCount > 0) {
+
+      // Style the link - find the newly created link
+      if (selection.rangeCount > 0) {
         let node = selection.anchorNode;
         while (node && node !== editorRef.current) {
           if (node.nodeName === 'A') {
@@ -201,11 +223,14 @@ export default function RichTextEditor({
       }
     }
 
+    // Trigger the input handler to save changes
+    handleInput();
+
+    // Clean up
     setShowLinkModal(false);
     setLinkUrl('');
     setLinkText('');
-    editorRef.current?.focus();
-    handleInput();
+    savedSelectionRef.current = null;
   };
 
   // Remove link
@@ -397,6 +422,7 @@ export default function RichTextEditor({
                   setShowLinkModal(false);
                   setLinkUrl('');
                   setLinkText('');
+                  savedSelectionRef.current = null;
                 }}
                 className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 font-medium transition-colors"
               >
