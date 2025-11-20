@@ -52,10 +52,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get the active version
+    // Get the active version with activated_at date
     const { data: activeVersion } = await supabaseServiceRole
       .from('booking_terms_versions')
-      .select('id')
+      .select('id, activated_at')
       .eq('is_active', true)
       .single();
 
@@ -101,13 +101,21 @@ export async function POST(request: NextRequest) {
       .eq('email', email.toLowerCase().trim())
       .single();
 
+    // Format the booking terms version display
+    let termsVersion = 'Unknown';
+    if (activeVersion?.activated_at) {
+      const activationDate = new Date(activeVersion.activated_at).toLocaleDateString('en-GB');
+      termsVersion = `From ${activationDate}`;
+    }
+
     if (clientData && !clientError) {
       // Update client with booking terms signed status
       await supabaseServiceRole
         .from('clients')
         .update({
           booking_terms_signed: true,
-          booking_terms_signed_date: new Date().toISOString()
+          booking_terms_signed_date: new Date().toISOString(),
+          booking_terms_version: termsVersion
         })
         .eq('id', clientData.id);
     } else {
@@ -124,7 +132,8 @@ export async function POST(request: NextRequest) {
           .from('clients')
           .update({
             booking_terms_signed: true,
-            booking_terms_signed_date: new Date().toISOString()
+            booking_terms_signed_date: new Date().toISOString(),
+            booking_terms_version: termsVersion
           })
           .eq('id', aliasData.client_id);
       }
@@ -168,10 +177,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Check if booking terms exist for this email
+    // Check if booking terms exist for this email and get the version they signed
     const { data: bookingTerms, error } = await supabaseServiceRole
       .from('booking_terms')
-      .select('*')
+      .select('*, version:booking_terms_versions(id, version_number, title, html_content, activated_at)')
       .eq('email', email.toLowerCase().trim())
       .single();
 
@@ -179,7 +188,7 @@ export async function GET(request: NextRequest) {
       throw error;
     }
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       exists: !!bookingTerms,
       bookingTerms: bookingTerms || null
     });

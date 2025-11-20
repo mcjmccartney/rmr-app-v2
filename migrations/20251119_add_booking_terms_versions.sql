@@ -8,10 +8,11 @@ CREATE TABLE IF NOT EXISTS booking_terms_versions (
   title text NOT NULL,
   html_content text NOT NULL,
   is_active boolean DEFAULT false,
+  activated_at timestamptz,
   created_by uuid,
   created_at timestamptz DEFAULT now(),
   updated_at timestamptz DEFAULT now(),
-  
+
   -- Ensure version numbers are unique
   UNIQUE(version_number)
 );
@@ -27,10 +28,11 @@ ALTER TABLE booking_terms ADD COLUMN IF NOT EXISTS version_id uuid REFERENCES bo
 CREATE INDEX IF NOT EXISTS idx_booking_terms_version_id ON booking_terms(version_id);
 
 -- Insert the current booking terms as version 1 (active)
-INSERT INTO booking_terms_versions (version_number, title, html_content, is_active)
+INSERT INTO booking_terms_versions (version_number, title, html_content, is_active, activated_at)
 VALUES (
   1,
   'Service Agreement v1',
+  now(),
   '<div class="space-y-6">
     <div>
       <h2 class="text-xl font-semibold mb-4" style="color: #4f6749;">1-1 Sessions</h2>
@@ -95,8 +97,13 @@ CREATE POLICY "Authenticated users can read all booking terms versions" ON booki
 CREATE POLICY "Authenticated users can manage booking terms versions" ON booking_terms_versions
     FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
 
+-- Add booking_terms_version column to clients table to store the activated_at date of the version they signed
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS booking_terms_version TEXT;
+
 -- Add comment
 COMMENT ON TABLE booking_terms_versions IS 'Stores different versions of booking terms with version control';
 COMMENT ON COLUMN booking_terms_versions.is_active IS 'Only one version should be active at a time - this is what clients will sign';
+COMMENT ON COLUMN booking_terms_versions.activated_at IS 'Timestamp when this version was set as active';
 COMMENT ON COLUMN booking_terms.version_id IS 'References which version of the terms was signed';
+COMMENT ON COLUMN clients.booking_terms_version IS 'Stores the activated_at date of the booking terms version the client signed (e.g., "From 19/11/2025")';
 

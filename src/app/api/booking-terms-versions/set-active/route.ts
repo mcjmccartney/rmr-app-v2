@@ -52,10 +52,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: deactivateError.message }, { status: 500 });
   }
 
-  // Then, activate the selected version
+  // Then, activate the selected version and set activated_at timestamp
   const { data: activeVersion, error: activateError } = await supabase
     .from('booking_terms_versions')
-    .update({ is_active: true, updated_at: new Date().toISOString() })
+    .update({
+      is_active: true,
+      activated_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    })
     .eq('id', versionId)
     .select()
     .single();

@@ -14,6 +14,7 @@ interface BookingTermsVersion {
   title: string
   html_content: string
   is_active: boolean
+  activated_at: string | null
   created_at: string
   updated_at: string
 }
@@ -28,6 +29,29 @@ export default function BookingTermsAdminPage() {
   const [editingTitle, setEditingTitle] = useState('')
   const [saving, setSaving] = useState(false)
   const [showNewVersionForm, setShowNewVersionForm] = useState(false)
+
+  // Helper function to format version display based on activation date
+  const formatVersionDisplay = (version: BookingTermsVersion, allVersions: BookingTermsVersion[]) => {
+    if (!version.activated_at) {
+      return 'Not Activated'
+    }
+
+    // Sort versions by activation date
+    const sortedVersions = [...allVersions]
+      .filter(v => v.activated_at)
+      .sort((a, b) => new Date(a.activated_at!).getTime() - new Date(b.activated_at!).getTime())
+
+    const versionIndex = sortedVersions.findIndex(v => v.id === version.id)
+    const activationDate = new Date(version.activated_at).toLocaleDateString('en-GB')
+
+    // If it's the first version
+    if (versionIndex === 0) {
+      return `Before ${activationDate}`
+    }
+
+    // For all other versions
+    return `From ${activationDate}`
+  }
 
   useEffect(() => {
     if (!loading && !user) {
@@ -280,7 +304,7 @@ export default function BookingTermsAdminPage() {
                     {versions.map((version) => (
                       <tr key={version.id} className="hover:bg-gray-50 transition-colors">
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          v{version.version_number}
+                          {formatVersionDisplay(version, versions)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {version.title}

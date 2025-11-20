@@ -52,7 +52,10 @@ function BookingTermsContent() {
           const response = await fetch(`/api/booking-terms?email=${encodeURIComponent(decodedEmail)}`);
           if (response.ok) {
             const result = await response.json();
-            if (result.exists) {
+            if (result.exists && result.bookingTerms?.version) {
+              // If they've already signed, show the version they signed instead of active version
+              setActiveVersion(result.bookingTerms.version);
+              setLoadingVersion(false);
               // Redirect to completion page only for non-update requests
               window.location.href = '/booking-terms-completed';
               return;
