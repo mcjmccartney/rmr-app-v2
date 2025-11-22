@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { SessionPlan, Session, Client, ActionPoint } from '@/types';
 import SafeHtmlRenderer from '@/components/SafeHtmlRenderer';
@@ -30,6 +31,14 @@ export default function SessionPlanPreviewPage() {
   const [pagedJsReady, setPagedJsReady] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [buttonText, setButtonText] = useState('Generate PDF & Send Email');
+  const [mounted, setMounted] = useState(false);
+
+  /* -------------------------------------------
+     MOUNT CHECK FOR PORTAL
+  -------------------------------------------- */
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   /* -------------------------------------------
      PAGED.JS LOADER
@@ -202,25 +211,35 @@ export default function SessionPlanPreviewPage() {
   if (loading) return <div className="min-h-screen bg-white"></div>;
   if (error) return <div>Error: {error}</div>;
 
+  // Render button using portal to document.body to avoid Paged.js interference
+  const renderButton = () => {
+    if (!mounted || isPrintMode) return null;
+
+    return createPortal(
+      <button
+        onClick={handleGeneratePDF}
+        disabled={isGenerating}
+        className="pdf-generate-button fixed bottom-8 right-8 text-white font-medium px-6 py-3 rounded-lg shadow-lg transition-all duration-300 hover:shadow-xl"
+        style={{
+          backgroundColor: buttonText.includes('✓') ? '#059669' : '#973b00',
+          opacity: isGenerating ? 0.7 : 1,
+          cursor: isGenerating ? 'wait' : 'pointer',
+          zIndex: 999999,
+          position: 'fixed',
+        }}
+      >
+        {buttonText}
+      </button>,
+      document.body
+    );
+  };
+
   return (
     <>
       <meta name="pdfshift-wait-for-selector" content="[data-paged-ready='true']" />
 
-      {/* GENERATE PDF BUTTON - OUTSIDE PAGED.JS CONTENT */}
-      {!isPrintMode && (
-        <button
-          onClick={handleGeneratePDF}
-          disabled={isGenerating}
-          className="pdf-generate-button fixed bottom-8 right-8 text-white font-medium px-6 py-3 rounded-lg shadow-lg transition-all duration-300 z-[999999] hover:shadow-xl"
-          style={{
-            backgroundColor: buttonText.includes('✓') ? '#059669' : '#973b00',
-            opacity: isGenerating ? 0.7 : 1,
-            cursor: isGenerating ? 'wait' : 'pointer',
-          }}
-        >
-          {buttonText}
-        </button>
-      )}
+      {/* GENERATE PDF BUTTON - RENDERED VIA PORTAL TO BODY */}
+      {renderButton()}
 
       {/* WRAP ALL CONTENT SO PAGED.JS CAN SEE IT */}
       <div id="paged-content">
