@@ -345,9 +345,9 @@ export default function SessionPlanPreviewPage() {
           />
         </div>
 
-        {/* PAGE 2+ - Action Points (flowing, not one per page) */}
-        {editableActionPoints.length > 0 && (
-          <div className="page">
+        {/* PAGE 2+ - Action Points (one per page to prevent splitting) */}
+        {editableActionPoints.length > 0 && editableActionPoints.map((ap, i) => (
+          <div key={i} className="page">
             {/* Header Banner */}
             <img
               src="https://i.ibb.co/qYk7fyKf/Header-Banner.png"
@@ -356,41 +356,43 @@ export default function SessionPlanPreviewPage() {
             />
 
             <div className="page-content">
-              {/* Title on Page 2 */}
-              <h1 style={{ fontSize: '2.25rem', marginBottom: '2.5rem', fontWeight: 'bold' }}>
-                {title}
-              </h1>
+              {/* Title on first Action Point page only */}
+              {i === 0 && (
+                <h1 style={{ fontSize: '2.25rem', marginBottom: '2.5rem', fontWeight: 'bold' }}>
+                  {title}
+                </h1>
+              )}
 
-              {/* Action Points - flow naturally, don't split */}
-              {editableActionPoints.map((ap, i) => (
-                <div key={i} className="action-point" style={{ position: 'relative', marginBottom: '2rem' }}>
-                  <h3 style={{
-                    fontSize: '1.875rem',
-                    fontStyle: 'italic',
-                    position: 'absolute',
-                    top: '-1rem',
-                    left: '1.5rem',
-                    background: '#e6e6db',
-                    padding: '0 0.5rem',
-                    zIndex: 1
-                  }}>
-                    <SafeHtmlRenderer html={ap.header} />
-                  </h3>
-                  <div style={{
-                    border: '5px solid #4e6749',
-                    borderRadius: '0.5rem',
-                    padding: '1.5rem 1rem 1rem 1rem',
-                    fontFamily: 'Arial, sans-serif'
-                  }}>
-                    <SafeHtmlRenderer html={ap.details} />
-                  </div>
+              {/* Action Point */}
+              <div className="action-point" style={{ position: 'relative', marginBottom: '2rem' }}>
+                <h3 style={{
+                  fontSize: '1.875rem',
+                  fontStyle: 'italic',
+                  position: 'absolute',
+                  top: '-1rem',
+                  left: '1.5rem',
+                  background: '#e6e6db',
+                  padding: '0 0.5rem',
+                  zIndex: 1
+                }}>
+                  <SafeHtmlRenderer html={ap.header} />
+                </h3>
+                <div style={{
+                  border: '5px solid #4e6749',
+                  borderRadius: '0.5rem',
+                  padding: '1.5rem 1rem 1rem 1rem',
+                  fontFamily: 'Arial, sans-serif'
+                }}>
+                  <SafeHtmlRenderer html={ap.details} />
                 </div>
-              ))}
-
-              {/* Reminder at the end */}
-              <div style={{ marginTop: '3rem', fontSize: '0.875rem', color: '#374151' }}>
-                <strong>Reminder:</strong> Behavioural reports are for guidance only.
               </div>
+
+              {/* Reminder on last action point */}
+              {i === editableActionPoints.length - 1 && (
+                <div style={{ marginTop: '3rem', fontSize: '0.875rem', color: '#374151' }}>
+                  <strong>Reminder:</strong> Behavioural reports are for guidance only.
+                </div>
+              )}
             </div>
 
             {/* Footer for Page 2+ */}
@@ -400,7 +402,7 @@ export default function SessionPlanPreviewPage() {
               className="page-footer"
             />
           </div>
-        )}
+        ))}
       </div>
     </>
   );
