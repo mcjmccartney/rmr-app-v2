@@ -269,7 +269,7 @@ export default function SessionPlanPreviewPage() {
         }
 
         .page-content {
-          padding: 1rem 2rem;
+          padding: 1rem 3.4rem;
         }
 
         .action-point {
@@ -337,15 +337,30 @@ export default function SessionPlanPreviewPage() {
 
             {/* Main Goals */}
             {mainGoals.length > 0 && (
-              <div style={{ marginBottom: '2rem' }}>
-                <h3 style={{ fontSize: '1.875rem', marginBottom: '0.75rem', fontStyle: 'italic' }}>
+              <div style={{ marginBottom: '2rem', position: 'relative' }}>
+                <h3 style={{
+                  fontSize: '1.875rem',
+                  fontStyle: 'italic',
+                  position: 'absolute',
+                  top: '-1rem',
+                  left: '1.5rem',
+                  background: '#e6e6db',
+                  padding: '0 0.5rem',
+                  zIndex: 1
+                }}>
                   Main Goals
                 </h3>
-                {mainGoals.map((g, i) => (
-                  <p key={i} style={{ marginBottom: '0.5rem', color: '#1f2937' }}>
-                    • <SafeHtmlRenderer html={g} />
-                  </p>
-                ))}
+                <div style={{
+                  border: '5px solid #4e6749',
+                  borderRadius: '0.5rem',
+                  padding: '1.5rem 1rem 1rem 1rem'
+                }}>
+                  {mainGoals.map((g, i) => (
+                    <p key={i} style={{ marginBottom: '0.5rem', color: '#1f2937', fontFamily: 'Arial, sans-serif' }}>
+                      • <SafeHtmlRenderer html={g} />
+                    </p>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -355,7 +370,9 @@ export default function SessionPlanPreviewPage() {
                 <h3 style={{ fontSize: '1.875rem', fontStyle: 'italic', marginBottom: '0.75rem' }}>
                   Explanation of Behaviour
                 </h3>
-                <SafeHtmlRenderer html={explanationOfBehaviour} />
+                <div style={{ fontFamily: 'Arial, sans-serif' }}>
+                  <SafeHtmlRenderer html={explanationOfBehaviour} />
+                </div>
               </div>
             )}
           </div>
@@ -369,10 +386,6 @@ export default function SessionPlanPreviewPage() {
         </div>
 
         {/* PAGE 2+ - Action Points */}
-        <h1 style={{ fontSize: '2.25rem', marginBottom: '2.5rem', fontWeight: 'bold' }}>
-              {title}
-            </h1>
-
         {editableActionPoints.length > 0 && editableActionPoints.map((ap, i) => (
           <div key={i} className="page">
             {/* Header Banner */}
@@ -382,16 +395,29 @@ export default function SessionPlanPreviewPage() {
               className="page-header"
             />
 
+            <h1 style={{ fontSize: '2.25rem', marginBottom: '2.5rem', fontWeight: 'bold' }}>
+              {title}
+            </h1>
+
             <div className="page-content">
-              <div className="action-point">
-                <h3 style={{ fontSize: '1.875rem', fontStyle: 'italic', marginBottom: '0.75rem' }}>
+              <div className="action-point" style={{ position: 'relative' }}>
+                <h3 style={{
+                  fontSize: '1.875rem',
+                  fontStyle: 'italic',
+                  position: 'absolute',
+                  top: '-1rem',
+                  left: '1.5rem',
+                  background: '#e6e6db',
+                  padding: '0 0.5rem',
+                  zIndex: 1
+                }}>
                   <SafeHtmlRenderer html={ap.header} />
                 </h3>
                 <div style={{
-                  border: '2px solid #e5e7eb',
-                  borderRadius: '0.375rem',
-                  padding: '1rem',
-                  background: '#f9fafb'
+                  border: '5px solid #4e6749',
+                  borderRadius: '0.5rem',
+                  padding: '1.5rem 1rem 1rem 1rem',
+                  fontFamily: 'Arial, sans-serif'
                 }}>
                   <SafeHtmlRenderer html={ap.details} />
                 </div>
