@@ -171,67 +171,78 @@ export default function SessionPlanPreviewPage() {
   if (loading) return <div className="min-h-screen bg-white flex items-center justify-center">Loading...</div>;
   if (error) return <div className="min-h-screen bg-white flex items-center justify-center">Error: {error}</div>;
 
-  // Get base URL for absolute font paths (needed for Playwright PDF generation)
-  const baseUrl = typeof window !== 'undefined'
-    ? window.location.origin
-    : process.env.NEXT_PUBLIC_BASE_URL || 'https://rmrcms.vercel.app';
-
   return (
     <>
+      {/* Preload fonts */}
+      <link rel="preload" href="/fonts/cooperltbt-regular-webfont.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+      <link rel="preload" href="/fonts/cooperltbt-bold-webfont.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+      <link rel="preload" href="/fonts/cooperltbt-italic-webfont.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+
       {/* FONT FACES */}
       <style>{`
         @font-face {
           font-family: 'Cooper Lt BT';
-          src: url('${baseUrl}/fonts/cooperltbt-regular-webfont.woff2') format('woff2'),
-               url('${baseUrl}/fonts/cooperltbt-regular-webfont.woff') format('woff');
-          font-weight: normal;
+          src: local('Cooper Lt BT'),
+               url('/fonts/cooperltbt-regular-webfont.woff2') format('woff2'),
+               url('/fonts/cooperltbt-regular-webfont.woff') format('woff');
+          font-weight: 400;
           font-style: normal;
           font-display: block;
         }
 
         @font-face {
           font-family: 'Cooper Lt BT';
-          src: url('${baseUrl}/fonts/cooperltbt-bold-webfont.woff2') format('woff2'),
-               url('${baseUrl}/fonts/cooperltbt-bold-webfont.woff') format('woff');
-          font-weight: bold;
+          src: local('Cooper Lt BT Bold'),
+               url('/fonts/cooperltbt-bold-webfont.woff2') format('woff2'),
+               url('/fonts/cooperltbt-bold-webfont.woff') format('woff');
+          font-weight: 700;
           font-style: normal;
           font-display: block;
         }
 
         @font-face {
           font-family: 'Cooper Lt BT';
-          src: url('${baseUrl}/fonts/cooperltbt-italic-webfont.woff2') format('woff2'),
-               url('${baseUrl}/fonts/cooperltbt-italic-webfont.woff') format('woff');
-          font-weight: normal;
+          src: local('Cooper Lt BT Italic'),
+               url('/fonts/cooperltbt-italic-webfont.woff2') format('woff2'),
+               url('/fonts/cooperltbt-italic-webfont.woff') format('woff');
+          font-weight: 400;
           font-style: italic;
           font-display: block;
         }
 
         @font-face {
           font-family: 'Cooper Lt BT';
-          src: url('${baseUrl}/fonts/cooperltbt-bolditalic-webfont.woff2') format('woff2'),
-               url('${baseUrl}/fonts/cooperltbt-bolditalic-webfont.woff') format('woff');
-          font-weight: bold;
+          src: local('Cooper Lt BT Bold Italic'),
+               url('/fonts/cooperltbt-bolditalic-webfont.woff2') format('woff2'),
+               url('/fonts/cooperltbt-bolditalic-webfont.woff') format('woff');
+          font-weight: 700;
           font-style: italic;
           font-display: block;
         }
 
         @font-face {
           font-family: 'Cooper Md BT';
-          src: url('${baseUrl}/fonts/coopermdbt-regular-webfont.woff2') format('woff2'),
-               url('${baseUrl}/fonts/coopermdbt-regular-webfont.woff') format('woff');
-          font-weight: normal;
+          src: local('Cooper Md BT'),
+               url('/fonts/coopermdbt-regular-webfont.woff2') format('woff2'),
+               url('/fonts/coopermdbt-regular-webfont.woff') format('woff');
+          font-weight: 400;
           font-style: normal;
           font-display: block;
         }
 
         @font-face {
           font-family: 'Cooper Blk BT';
-          src: url('${baseUrl}/fonts/cooperblkbt-regular-webfont.woff2') format('woff2'),
-               url('${baseUrl}/fonts/cooperblkbt-regular-webfont.woff') format('woff');
-          font-weight: normal;
+          src: local('Cooper Blk BT'),
+               url('/fonts/cooperblkbt-regular-webfont.woff2') format('woff2'),
+               url('/fonts/cooperblkbt-regular-webfont.woff') format('woff');
+          font-weight: 400;
           font-style: normal;
           font-display: block;
+        }
+
+        body, html {
+          -webkit-font-smoothing: antialiased;
+          -moz-osx-font-smoothing: grayscale;
         }
 
         @page {
@@ -364,10 +375,13 @@ export default function SessionPlanPreviewPage() {
                 <div style={{
                   border: '5px solid #4e6749',
                   borderRadius: '0.5rem',
-                  padding: '1.5rem 1rem 1rem 1rem'
+                  padding: '1.5rem 1rem 1rem 1rem',
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: '0.5rem 2rem'
                 }}>
                   {mainGoals.map((g, i) => (
-                    <p key={i} style={{ marginBottom: '0.5rem', color: '#1f2937', fontFamily: 'Arial, sans-serif' }}>
+                    <p key={i} style={{ margin: 0, color: '#1f2937', fontFamily: 'Arial, sans-serif' }}>
                       • <SafeHtmlRenderer html={g} />
                     </p>
                   ))}
@@ -396,9 +410,9 @@ export default function SessionPlanPreviewPage() {
           />
         </div>
 
-        {/* PAGE 2+ - Action Points */}
-        {editableActionPoints.length > 0 && editableActionPoints.map((ap, i) => (
-          <div key={i} className="page">
+        {/* PAGE 2+ - Action Points (flowing, not one per page) */}
+        {editableActionPoints.length > 0 && (
+          <div className="page">
             {/* Header Banner */}
             <img
               src="https://i.ibb.co/qYk7fyKf/Header-Banner.png"
@@ -406,40 +420,42 @@ export default function SessionPlanPreviewPage() {
               className="page-header"
             />
 
-            <h1 style={{ fontSize: '2.25rem', marginBottom: '2.5rem', fontWeight: 'bold' }}>
-              {title}
-            </h1>
-
             <div className="page-content">
-              <div className="action-point" style={{ position: 'relative' }}>
-                <h3 style={{
-                  fontSize: '1.875rem',
-                  fontStyle: 'italic',
-                  position: 'absolute',
-                  top: '-1rem',
-                  left: '1.5rem',
-                  background: '#e6e6db',
-                  padding: '0 0.5rem',
-                  zIndex: 1
-                }}>
-                  <SafeHtmlRenderer html={ap.header} />
-                </h3>
-                <div style={{
-                  border: '5px solid #4e6749',
-                  borderRadius: '0.5rem',
-                  padding: '1.5rem 1rem 1rem 1rem',
-                  fontFamily: 'Arial, sans-serif'
-                }}>
-                  <SafeHtmlRenderer html={ap.details} />
-                </div>
-              </div>
+              {/* Title on Page 2 */}
+              <h1 style={{ fontSize: '2.25rem', marginBottom: '2.5rem', fontWeight: 'bold' }}>
+                {title}
+              </h1>
 
-              {/* Reminder on last action point */}
-              {i === editableActionPoints.length - 1 && (
-                <div style={{ marginTop: '5rem', fontSize: '0.875rem', color: '#374151' }}>
-                  <strong>Reminder:</strong> Behavioural reports are for guidance only.
+              {/* Action Points - flow naturally, don't split */}
+              {editableActionPoints.map((ap, i) => (
+                <div key={i} className="action-point" style={{ position: 'relative', marginBottom: '2rem' }}>
+                  <h3 style={{
+                    fontSize: '1.875rem',
+                    fontStyle: 'italic',
+                    position: 'absolute',
+                    top: '-1rem',
+                    left: '1.5rem',
+                    background: '#e6e6db',
+                    padding: '0 0.5rem',
+                    zIndex: 1
+                  }}>
+                    <SafeHtmlRenderer html={ap.header} />
+                  </h3>
+                  <div style={{
+                    border: '5px solid #4e6749',
+                    borderRadius: '0.5rem',
+                    padding: '1.5rem 1rem 1rem 1rem',
+                    fontFamily: 'Arial, sans-serif'
+                  }}>
+                    <SafeHtmlRenderer html={ap.details} />
+                  </div>
                 </div>
-              )}
+              ))}
+
+              {/* Reminder at the end */}
+              <div style={{ marginTop: '3rem', fontSize: '0.875rem', color: '#374151' }}>
+                <strong>Reminder:</strong> Behavioural reports are for guidance only.
+              </div>
             </div>
 
             {/* Footer for Page 2+ */}
@@ -449,7 +465,7 @@ export default function SessionPlanPreviewPage() {
               className="page-footer"
             />
           </div>
-        ))}
+        )}
       </div>
     </>
   );

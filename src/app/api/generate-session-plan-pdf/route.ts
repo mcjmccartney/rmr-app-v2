@@ -79,8 +79,18 @@ export async function GET(req: Request) {
     // Wait for fonts to load
     await page.evaluate(() => document.fonts.ready);
 
+    // Log loaded fonts for debugging
+    const loadedFonts = await page.evaluate(() => {
+      const fonts = [];
+      for (const font of document.fonts) {
+        fonts.push(`${font.family} ${font.weight} ${font.style} - ${font.status}`);
+      }
+      return fonts;
+    });
+    console.log("[PDF-GEN] Loaded fonts:", loadedFonts);
+
     // Add extra delay to ensure fonts are fully rendered
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(3000);
 
     console.log("[PDF-GEN] Fonts loaded — generating PDF with Playwright...");
 
