@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import { SessionPlan, Session, Client, ActionPoint } from '@/types';
 import SafeHtmlRenderer from '@/components/SafeHtmlRenderer';
 
@@ -12,10 +12,8 @@ interface EditableActionPoint {
 
 export default function SessionPlanPreviewPage() {
   const params = useParams();
-  const router = useRouter();
   const searchParams = useSearchParams();
   const sessionId = params.sessionId as string;
-  const isPrintMode = searchParams.get("print") === "true";
   const isPlaywrightMode = searchParams.get("playwright") === "true";
 
   const [loading, setLoading] = useState(true);
@@ -28,52 +26,24 @@ export default function SessionPlanPreviewPage() {
   const [mainGoals, setMainGoals] = useState<string[]>([]);
   const [explanationOfBehaviour, setExplanationOfBehaviour] = useState('');
   const [title, setTitle] = useState('');
-  const [pagedJsReady, setPagedJsReady] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [buttonText, setButtonText] = useState('Generate PDF & Send Email');
 
   /* -------------------------------------------
-     PAGED.JS LOADER (Only for user preview, not Playwright)
+     SIGNAL READY FOR PLAYWRIGHT
   -------------------------------------------- */
   useEffect(() => {
-    // Skip Paged.js if Playwright is generating the PDF
-    if (isPlaywrightMode) {
-      console.log("🤖 Playwright mode detected - skipping Paged.js");
-      // Set ready immediately for Playwright
+    if (!loading) {
+      // Signal that content is ready (for Playwright PDF generation)
       document.body.setAttribute("data-paged-ready", "true");
-      return;
     }
-
-    if (loading || !sessionPlan || pagedJsReady) return;
-
-    console.log("👁️ User preview mode - Loading Paged.js…");
-
-    const script = document.createElement("script");
-    script.src = "https://unpkg.com/pagedjs/dist/paged.polyfill.js";
-    script.async = true;
-
-    script.onload = () => {
-      console.log("Paged.js loaded.");
-      setPagedJsReady(true);
-      setTimeout(() => {
-        document.body.setAttribute("data-paged-ready", "true");
-      }, 1000);
-    };
-
-    document.body.appendChild(script);
-  }, [loading, sessionPlan, pagedJsReady, isPlaywrightMode]);
+  }, [loading]);
 
   /* -------------------------------------------
-     AUTOMATED PDF GENERATION HANDLER
+     PDF GENERATION HANDLER
   -------------------------------------------- */
   const handleGeneratePDF = async () => {
-    console.log("🔵 Button clicked!");
-    console.log("Session Plan:", sessionPlan);
-    console.log("Session:", session);
-    console.log("Client:", client);
-
     if (!sessionPlan || !session || !client) {
-      console.error("❌ Missing required data:", { sessionPlan, session, client });
       alert("Missing required data. Please refresh the page and try again.");
       return;
     }
@@ -82,21 +52,17 @@ export default function SessionPlanPreviewPage() {
     setButtonText("Generating PDF...");
 
     try {
-      console.log("🟡 Starting server-side PDF generation");
-
-      // Build query parameters for the API
       const params = new URLSearchParams({
         sessionId: sessionPlan.sessionId,
-        clientEmail: client?.email || '',
-        clientFirstName: client?.firstName || '',
-        clientLastName: client?.lastName || '',
-        dogName: session?.dogName || client?.dogName || '',
+        clientEmail: client.email || '',
+        clientFirstName: client.firstName || '',
+        clientLastName: client.lastName || '',
+        dogName: session.dogName || client.dogName || '',
         sessionNumber: sessionPlan.sessionNumber?.toString() || '1',
-        bookingDate: session?.bookingDate || '',
-        bookingTime: session?.bookingTime || '',
+        bookingDate: session.bookingDate || '',
+        bookingTime: session.bookingTime || '',
       });
 
-      // Call the server-side PDF generation API
       const response = await fetch(`/api/generate-session-plan-pdf?${params}`);
       const result = await response.json();
 
@@ -104,33 +70,20 @@ export default function SessionPlanPreviewPage() {
         throw new Error(result.error || 'Failed to generate PDF');
       }
 
-      console.log("✅ PDF generated successfully:", result.pdfUrl);
+      setButtonText("✓ PDF Created!");
+      alert('PDF generated successfully!\n\nAn Outlook draft email has been created.');
 
-      // Update button to show success
-      setButtonText("✓ Email Draft Created!");
-
-      // Show success message
-      alert(
-        'PDF generated successfully!\n\n' +
-        'An Outlook draft email has been created with the PDF attached.\n' +
-        'Check your Outlook drafts folder to review and send.'
-      );
-
-      // Optionally open the PDF
       if (result.pdfUrl && confirm('Would you like to view the PDF?')) {
         window.open(result.pdfUrl, '_blank');
       }
 
-      // Reset button after 3 seconds
       setTimeout(() => {
         setButtonText("Generate PDF & Send Email");
         setIsGenerating(false);
       }, 3000);
 
     } catch (error: any) {
-      console.error('❌ PDF generation error:', error);
-      alert(`Failed to generate PDF: ${error.message}\n\nPlease try again.`);
-
+      alert(`Failed to generate PDF: ${error.message}`);
       setButtonText("Generate PDF & Send Email");
       setIsGenerating(false);
     }
@@ -214,27 +167,24 @@ export default function SessionPlanPreviewPage() {
   }, [sessionId]);
 
   /* -------------------------------------------
-     UI RENDER
+     RENDER
   -------------------------------------------- */
-
-  if (loading) return <div className="min-h-screen bg-white"></div>;
-  if (error) return <div>Error: {error}</div>;
+  if (loading) return <div className="min-h-screen bg-white flex items-center justify-center">Loading...</div>;
+  if (error) return <div className="min-h-screen bg-white flex items-center justify-center">Error: {error}</div>;
 
   return (
-    <>
-      <meta name="pdfshift-wait-for-selector" content="[data-paged-ready='true']" />
+    <div style={{
+      minHeight: '100vh',
+      background: isPlaywrightMode ? 'white' : '#ecebdd',
+      fontFamily: 'Arial, sans-serif',
+      position: 'relative'
+    }}>
 
-      {/* GENERATE PDF BUTTON - Only show in user preview mode */}
-      {!isPrintMode && !isPlaywrightMode && (
+      {/* PDF GENERATION BUTTON - Only in user preview mode */}
+      {!isPlaywrightMode && (
         <button
-          onClick={(e) => {
-            console.log("🔵 Button onClick fired!", e);
-            handleGeneratePDF();
-          }}
-          onMouseEnter={() => console.log("🟢 Mouse entered button")}
-          onMouseDown={() => console.log("🟡 Mouse down on button")}
+          onClick={handleGeneratePDF}
           disabled={isGenerating}
-          className="pdf-generate-button"
           style={{
             position: 'fixed',
             bottom: '2rem',
@@ -250,102 +200,88 @@ export default function SessionPlanPreviewPage() {
             zIndex: 999999,
             fontSize: '1rem',
             opacity: isGenerating ? 0.7 : 1,
-            transition: 'all 0.3s ease',
-            pointerEvents: 'auto',
           }}
         >
           {buttonText}
         </button>
       )}
 
-      {/* WRAP ALL CONTENT SO PAGED.JS CAN SEE IT */}
-      <div id="paged-content">
+      {/* SESSION PLAN CONTENT */}
+      <div style={{
+        maxWidth: '800px',
+        margin: '0 auto',
+        padding: '2rem',
+        background: 'white',
+        minHeight: '100vh'
+      }}>
 
-        {/* --- STYLES --- */}
-        <style>{`
-          body {
-            background: ${isPrintMode || isPlaywrightMode ? 'white' : '#ecebdd'};
-            margin: 0;
-            font-family: Arial, sans-serif;
-          }
+        <h1 style={{ fontSize: '2.25rem', marginBottom: '2.5rem', fontWeight: 'bold' }}>
+          {title}
+        </h1>
 
-          /* CSS @page rules for Playwright PDF generation */
-          @page {
-            size: A4;
-            margin: 0;
-          }
-
-          /* Hide button when printing */
-          @media print {
-            .pdf-generate-button {
-              display: none !important;
-            }
-          }
-
-          /* Page break utilities for Playwright mode */
-          ${isPlaywrightMode ? `
-            .page-break-before {
-              page-break-before: always;
-            }
-
-            .page-break-after {
-              page-break-after: always;
-            }
-
-            .avoid-page-break {
-              page-break-inside: avoid;
-            }
-          ` : ''}
-        `}</style>
-
-        {/* --- CONTENT WRAPPER --- */}
-        <div className="content-wrapper px-6 py-6">
-
-          <h1 className="text-4xl mb-10">{title}</h1>
-
-          {/* Goals */}
-          {mainGoals.length > 0 && (
-            <div className="mb-8">
-              <h3 className="text-3xl mb-3 italic">Main Goals</h3>
-
-              {mainGoals.map((g, i) => (
-                <p key={i} className="mb-2 text-gray-800">
-                  • <SafeHtmlRenderer html={g} />
-                </p>
-              ))}
-            </div>
-          )}
-
-          {/* Explanation */}
-          {explanationOfBehaviour && (
-            <div className="mb-10">
-              <h3 className="text-3xl italic mb-3">Explanation of Behaviour</h3>
-              <SafeHtmlRenderer html={explanationOfBehaviour} />
-            </div>
-          )}
-
-          {/* Action Points */}
-          {editableActionPoints.length > 0 && (
-            <div className="space-y-8">
-              {editableActionPoints.map((ap, i) => (
-                <div key={i}>
-                  <h3 className="text-3xl italic mb-3">
-                    <SafeHtmlRenderer html={ap.header} />
-                  </h3>
-                  <div className="border-2 rounded-md p-4 bg-white">
-                    <SafeHtmlRenderer html={ap.details} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          <div className="mt-20 text-sm text-gray-700">
-            <strong>Reminder:</strong> Behavioural reports are for guidance only.
+        {/* Main Goals */}
+        {mainGoals.length > 0 && (
+          <div style={{ marginBottom: '2rem' }}>
+            <h3 style={{ fontSize: '1.875rem', marginBottom: '0.75rem', fontStyle: 'italic' }}>
+              Main Goals
+            </h3>
+            {mainGoals.map((g, i) => (
+              <p key={i} style={{ marginBottom: '0.5rem', color: '#1f2937' }}>
+                • <SafeHtmlRenderer html={g} />
+              </p>
+            ))}
           </div>
-        </div>
+        )}
 
+        {/* Explanation of Behaviour */}
+        {explanationOfBehaviour && (
+          <div style={{ marginBottom: '2.5rem' }}>
+            <h3 style={{ fontSize: '1.875rem', fontStyle: 'italic', marginBottom: '0.75rem' }}>
+              Explanation of Behaviour
+            </h3>
+            <SafeHtmlRenderer html={explanationOfBehaviour} />
+          </div>
+        )}
+
+        {/* Action Points */}
+        {editableActionPoints.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+            {editableActionPoints.map((ap, i) => (
+              <div key={i}>
+                <h3 style={{ fontSize: '1.875rem', fontStyle: 'italic', marginBottom: '0.75rem' }}>
+                  <SafeHtmlRenderer html={ap.header} />
+                </h3>
+                <div style={{
+                  border: '2px solid #e5e7eb',
+                  borderRadius: '0.375rem',
+                  padding: '1rem',
+                  background: '#f9fafb'
+                }}>
+                  <SafeHtmlRenderer html={ap.details} />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div style={{ marginTop: '5rem', fontSize: '0.875rem', color: '#374151' }}>
+          <strong>Reminder:</strong> Behavioural reports are for guidance only.
+        </div>
       </div>
-    </>
+
+      {/* CSS for PDF generation */}
+      <style>{`
+        @page {
+          size: A4;
+          margin: 20mm;
+        }
+
+        @media print {
+          button {
+            display: none !important;
+          }
+        }
+      `}</style>
+    </div>
   );
 }
