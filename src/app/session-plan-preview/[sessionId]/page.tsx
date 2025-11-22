@@ -200,12 +200,15 @@ export default function SessionPlanPreviewPage() {
 
         .page {
           width: 210mm;
-          min-height: 297mm;
+          height: 297mm;
           background: #e6e6db;
           position: relative;
           page-break-after: always;
           margin: 0 auto 2rem auto;
           box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
         }
 
         .page:last-child {
@@ -228,11 +231,14 @@ export default function SessionPlanPreviewPage() {
 
         .page-content {
           padding: 1rem 3.4rem;
+          flex: 1;
+          overflow: auto;
         }
 
         .action-point {
           page-break-inside: avoid;
           break-inside: avoid;
+          margin-bottom: 2rem;
         }
 
         @media print {
@@ -345,64 +351,80 @@ export default function SessionPlanPreviewPage() {
           />
         </div>
 
-        {/* PAGE 2+ - Action Points (one per page to prevent splitting) */}
-        {editableActionPoints.length > 0 && editableActionPoints.map((ap, i) => (
-          <div key={i} className="page">
-            {/* Header Banner */}
-            <img
-              src="https://i.ibb.co/qYk7fyKf/Header-Banner.png"
-              alt="Header"
-              className="page-header"
-            />
+        {/* PAGE 2+ - Action Points (2 per page to prevent splitting) */}
+        {editableActionPoints.length > 0 && (() => {
+          const pages = [];
+          const pointsPerPage = 2;
 
-            <div className="page-content">
-              {/* Title on first Action Point page only */}
-              {i === 0 && (
-                <h1 style={{ fontSize: '2.25rem', marginBottom: '2.5rem', fontWeight: 'bold' }}>
-                  {title}
-                </h1>
-              )}
+          for (let pageIndex = 0; pageIndex < Math.ceil(editableActionPoints.length / pointsPerPage); pageIndex++) {
+            const startIdx = pageIndex * pointsPerPage;
+            const endIdx = Math.min(startIdx + pointsPerPage, editableActionPoints.length);
+            const pagePoints = editableActionPoints.slice(startIdx, endIdx);
+            const isLastPage = endIdx === editableActionPoints.length;
 
-              {/* Action Point */}
-              <div className="action-point" style={{ position: 'relative', marginBottom: '2rem' }}>
-                <h3 style={{
-                  fontSize: '1.875rem',
-                  fontStyle: 'italic',
-                  position: 'absolute',
-                  top: '-1rem',
-                  left: '1.5rem',
-                  background: '#e6e6db',
-                  padding: '0 0.5rem',
-                  zIndex: 1
-                }}>
-                  <SafeHtmlRenderer html={ap.header} />
-                </h3>
-                <div style={{
-                  border: '5px solid #4e6749',
-                  borderRadius: '0.5rem',
-                  padding: '1.5rem 1rem 1rem 1rem',
-                  fontFamily: 'Arial, sans-serif'
-                }}>
-                  <SafeHtmlRenderer html={ap.details} />
+            pages.push(
+              <div key={`action-page-${pageIndex}`} className="page">
+                {/* Header Banner */}
+                <img
+                  src="https://i.ibb.co/qYk7fyKf/Header-Banner.png"
+                  alt="Header"
+                  className="page-header"
+                />
+
+                <div className="page-content">
+                  {/* Title on first Action Point page only */}
+                  {pageIndex === 0 && (
+                    <h1 style={{ fontSize: '2.25rem', marginBottom: '2.5rem', fontWeight: 'bold' }}>
+                      {title}
+                    </h1>
+                  )}
+
+                  {/* Action Points for this page */}
+                  {pagePoints.map((ap, i) => (
+                    <div key={startIdx + i} className="action-point" style={{ position: 'relative' }}>
+                      <h3 style={{
+                        fontSize: '1.875rem',
+                        fontStyle: 'italic',
+                        position: 'absolute',
+                        top: '-1rem',
+                        left: '1.5rem',
+                        background: '#e6e6db',
+                        padding: '0 0.5rem',
+                        zIndex: 1
+                      }}>
+                        <SafeHtmlRenderer html={ap.header} />
+                      </h3>
+                      <div style={{
+                        border: '5px solid #4e6749',
+                        borderRadius: '0.5rem',
+                        padding: '1.5rem 1rem 1rem 1rem',
+                        fontFamily: 'Arial, sans-serif'
+                      }}>
+                        <SafeHtmlRenderer html={ap.details} />
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* Reminder on last page */}
+                  {isLastPage && (
+                    <div style={{ marginTop: '3rem', fontSize: '0.875rem', color: '#374151' }}>
+                      <strong>Reminder:</strong> Behavioural reports are for guidance only.
+                    </div>
+                  )}
                 </div>
+
+                {/* Footer for Page 2+ */}
+                <img
+                  src="https://i.ibb.co/3Y4bTFNt/Screenshot-2025-11-13-at-15-28-11.png"
+                  alt="Footer Page 2+"
+                  className="page-footer"
+                />
               </div>
+            );
+          }
 
-              {/* Reminder on last action point */}
-              {i === editableActionPoints.length - 1 && (
-                <div style={{ marginTop: '3rem', fontSize: '0.875rem', color: '#374151' }}>
-                  <strong>Reminder:</strong> Behavioural reports are for guidance only.
-                </div>
-              )}
-            </div>
-
-            {/* Footer for Page 2+ */}
-            <img
-              src="https://i.ibb.co/3Y4bTFNt/Screenshot-2025-11-13-at-15-28-11.png"
-              alt="Footer Page 2+"
-              className="page-footer"
-            />
-          </div>
-        ))}
+          return pages;
+        })()}
       </div>
     </>
   );
