@@ -234,16 +234,25 @@ export default function SessionPlanPreviewPage() {
           }
         }
 
+        .pdf-viewer {
+          background: #525659;
+          min-height: 100vh;
+          padding: 2rem 0;
+        }
+
         .page {
           width: 210mm;
           min-height: 297mm;
-          background: #eaeade;
+          background: #e6e6db;
           position: relative;
           page-break-after: always;
+          margin: 0 auto 2rem auto;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
         }
 
         .page:last-child {
           page-break-after: auto;
+          margin-bottom: 0;
         }
 
         .page-header {
@@ -267,11 +276,21 @@ export default function SessionPlanPreviewPage() {
           page-break-inside: avoid;
           break-inside: avoid;
         }
+
+        @media print {
+          .pdf-viewer {
+            background: white;
+            padding: 0;
+          }
+
+          .page {
+            margin: 0;
+            box-shadow: none;
+          }
+        }
       `}</style>
 
-      <div style={{
-        minHeight: '100vh',
-        background: '#eaeade',
+      <div className="pdf-viewer" style={{
         fontFamily: "'Cooper Lt BT', Georgia, serif",
         position: 'relative'
       }}>
@@ -350,6 +369,10 @@ export default function SessionPlanPreviewPage() {
         </div>
 
         {/* PAGE 2+ - Action Points */}
+        <h1 style={{ fontSize: '2.25rem', marginBottom: '2.5rem', fontWeight: 'bold' }}>
+              {title}
+            </h1>
+
         {editableActionPoints.length > 0 && editableActionPoints.map((ap, i) => (
           <div key={i} className="page">
             {/* Header Banner */}
