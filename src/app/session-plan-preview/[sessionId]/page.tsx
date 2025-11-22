@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import { SessionPlan, Session, Client, ActionPoint } from '@/types';
 import SafeHtmlRenderer from '@/components/SafeHtmlRenderer';
+import { cooperLtBT } from '@/app/fonts';
 
 interface EditableActionPoint {
   header: string;
@@ -173,73 +174,8 @@ export default function SessionPlanPreviewPage() {
 
   return (
     <>
-      {/* Preload fonts */}
-      <link rel="preload" href="/fonts/cooperltbt-regular-webfont.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
-      <link rel="preload" href="/fonts/cooperltbt-bold-webfont.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
-      <link rel="preload" href="/fonts/cooperltbt-italic-webfont.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
-
-      {/* FONT FACES */}
+      {/* CSS for fonts and page layout */}
       <style>{`
-        @font-face {
-          font-family: 'Cooper Lt BT';
-          src: local('Cooper Lt BT'),
-               url('/fonts/cooperltbt-regular-webfont.woff2') format('woff2'),
-               url('/fonts/cooperltbt-regular-webfont.woff') format('woff');
-          font-weight: 400;
-          font-style: normal;
-          font-display: block;
-        }
-
-        @font-face {
-          font-family: 'Cooper Lt BT';
-          src: local('Cooper Lt BT Bold'),
-               url('/fonts/cooperltbt-bold-webfont.woff2') format('woff2'),
-               url('/fonts/cooperltbt-bold-webfont.woff') format('woff');
-          font-weight: 700;
-          font-style: normal;
-          font-display: block;
-        }
-
-        @font-face {
-          font-family: 'Cooper Lt BT';
-          src: local('Cooper Lt BT Italic'),
-               url('/fonts/cooperltbt-italic-webfont.woff2') format('woff2'),
-               url('/fonts/cooperltbt-italic-webfont.woff') format('woff');
-          font-weight: 400;
-          font-style: italic;
-          font-display: block;
-        }
-
-        @font-face {
-          font-family: 'Cooper Lt BT';
-          src: local('Cooper Lt BT Bold Italic'),
-               url('/fonts/cooperltbt-bolditalic-webfont.woff2') format('woff2'),
-               url('/fonts/cooperltbt-bolditalic-webfont.woff') format('woff');
-          font-weight: 700;
-          font-style: italic;
-          font-display: block;
-        }
-
-        @font-face {
-          font-family: 'Cooper Md BT';
-          src: local('Cooper Md BT'),
-               url('/fonts/coopermdbt-regular-webfont.woff2') format('woff2'),
-               url('/fonts/coopermdbt-regular-webfont.woff') format('woff');
-          font-weight: 400;
-          font-style: normal;
-          font-display: block;
-        }
-
-        @font-face {
-          font-family: 'Cooper Blk BT';
-          src: local('Cooper Blk BT'),
-               url('/fonts/cooperblkbt-regular-webfont.woff2') format('woff2'),
-               url('/fonts/cooperblkbt-regular-webfont.woff') format('woff');
-          font-weight: 400;
-          font-style: normal;
-          font-display: block;
-        }
-
         body, html {
           -webkit-font-smoothing: antialiased;
           -moz-osx-font-smoothing: grayscale;
@@ -312,8 +248,7 @@ export default function SessionPlanPreviewPage() {
         }
       `}</style>
 
-      <div className="pdf-viewer" style={{
-        fontFamily: "'Cooper Lt BT', Georgia, serif",
+      <div className={`pdf-viewer ${cooperLtBT.className}`} style={{
         position: 'relative'
       }}>
 
@@ -382,7 +317,7 @@ export default function SessionPlanPreviewPage() {
                 }}>
                   {mainGoals.map((g, i) => (
                     <p key={i} style={{ margin: 0, color: '#1f2937', fontFamily: 'Arial, sans-serif' }}>
-                      • <SafeHtmlRenderer html={g} />
+                      <SafeHtmlRenderer html={g} />
                     </p>
                   ))}
                 </div>
