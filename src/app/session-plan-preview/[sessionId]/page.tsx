@@ -171,56 +171,67 @@ export default function SessionPlanPreviewPage() {
   if (loading) return <div className="min-h-screen bg-white flex items-center justify-center">Loading...</div>;
   if (error) return <div className="min-h-screen bg-white flex items-center justify-center">Error: {error}</div>;
 
+  // Get base URL for absolute font paths (needed for Playwright PDF generation)
+  const baseUrl = typeof window !== 'undefined'
+    ? window.location.origin
+    : process.env.NEXT_PUBLIC_BASE_URL || 'https://rmrcms.vercel.app';
+
   return (
     <>
       {/* FONT FACES */}
       <style>{`
         @font-face {
           font-family: 'Cooper Lt BT';
-          src: url('/fonts/cooperltbt-regular-webfont.woff2') format('woff2'),
-               url('/fonts/cooperltbt-regular-webfont.woff') format('woff');
+          src: url('${baseUrl}/fonts/cooperltbt-regular-webfont.woff2') format('woff2'),
+               url('${baseUrl}/fonts/cooperltbt-regular-webfont.woff') format('woff');
           font-weight: normal;
           font-style: normal;
+          font-display: block;
         }
 
         @font-face {
           font-family: 'Cooper Lt BT';
-          src: url('/fonts/cooperltbt-bold-webfont.woff2') format('woff2'),
-               url('/fonts/cooperltbt-bold-webfont.woff') format('woff');
+          src: url('${baseUrl}/fonts/cooperltbt-bold-webfont.woff2') format('woff2'),
+               url('${baseUrl}/fonts/cooperltbt-bold-webfont.woff') format('woff');
           font-weight: bold;
           font-style: normal;
+          font-display: block;
         }
 
         @font-face {
           font-family: 'Cooper Lt BT';
-          src: url('/fonts/cooperltbt-italic-webfont.woff2') format('woff2'),
-               url('/fonts/cooperltbt-italic-webfont.woff') format('woff');
+          src: url('${baseUrl}/fonts/cooperltbt-italic-webfont.woff2') format('woff2'),
+               url('${baseUrl}/fonts/cooperltbt-italic-webfont.woff') format('woff');
           font-weight: normal;
           font-style: italic;
+          font-display: block;
         }
 
         @font-face {
           font-family: 'Cooper Lt BT';
-          src: url('/fonts/cooperltbt-bolditalic-webfont.woff2') format('woff2'),
-               url('/fonts/cooperltbt-bolditalic-webfont.woff') format('woff');
+          src: url('${baseUrl}/fonts/cooperltbt-bolditalic-webfont.woff2') format('woff2'),
+               url('${baseUrl}/fonts/cooperltbt-bolditalic-webfont.woff') format('woff');
           font-weight: bold;
           font-style: italic;
+          font-display: block;
         }
 
         @font-face {
           font-family: 'Cooper Md BT';
-          src: url('/fonts/coopermdbt-regular-webfont.woff2') format('woff2'),
-               url('/fonts/coopermdbt-regular-webfont.woff') format('woff');
+          src: url('${baseUrl}/fonts/coopermdbt-regular-webfont.woff2') format('woff2'),
+               url('${baseUrl}/fonts/coopermdbt-regular-webfont.woff') format('woff');
           font-weight: normal;
           font-style: normal;
+          font-display: block;
         }
 
         @font-face {
           font-family: 'Cooper Blk BT';
-          src: url('/fonts/cooperblkbt-regular-webfont.woff2') format('woff2'),
-               url('/fonts/cooperblkbt-regular-webfont.woff') format('woff');
+          src: url('${baseUrl}/fonts/cooperblkbt-regular-webfont.woff2') format('woff2'),
+               url('${baseUrl}/fonts/cooperblkbt-regular-webfont.woff') format('woff');
           font-weight: normal;
           font-style: normal;
+          font-display: block;
         }
 
         @page {

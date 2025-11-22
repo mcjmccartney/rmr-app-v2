@@ -74,7 +74,15 @@ export async function GET(req: Request) {
       { timeout: 30_000 } // Shorter timeout since no Paged.js processing
     );
 
-    console.log("[PDF-GEN] Content ready — generating PDF with Playwright...");
+    console.log("[PDF-GEN] Waiting for fonts to load...");
+
+    // Wait for fonts to load
+    await page.evaluate(() => document.fonts.ready);
+
+    // Add extra delay to ensure fonts are fully rendered
+    await page.waitForTimeout(1000);
+
+    console.log("[PDF-GEN] Fonts loaded — generating PDF with Playwright...");
 
     const pdfBuffer = await page.pdf({
       format: "A4",
