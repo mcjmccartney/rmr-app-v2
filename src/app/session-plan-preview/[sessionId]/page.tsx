@@ -262,6 +262,11 @@ export default function SessionPlanPreviewPage() {
         .page-content {
           padding: 1rem 2rem;
         }
+
+        .action-point {
+          page-break-inside: avoid;
+          break-inside: avoid;
+        }
       `}</style>
 
       <div style={{
@@ -297,7 +302,7 @@ export default function SessionPlanPreviewPage() {
           </button>
         )}
 
-        {/* PAGE 1 */}
+        {/* PAGE 1 - Title, Main Goals, Explanation of Behaviour */}
         <div className="page">
           {/* Header Banner */}
           <img
@@ -334,31 +339,6 @@ export default function SessionPlanPreviewPage() {
                 <SafeHtmlRenderer html={explanationOfBehaviour} />
               </div>
             )}
-
-            {/* Action Points */}
-            {editableActionPoints.length > 0 && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-                {editableActionPoints.map((ap, i) => (
-                  <div key={i}>
-                    <h3 style={{ fontSize: '1.875rem', fontStyle: 'italic', marginBottom: '0.75rem' }}>
-                      <SafeHtmlRenderer html={ap.header} />
-                    </h3>
-                    <div style={{
-                      border: '2px solid #e5e7eb',
-                      borderRadius: '0.375rem',
-                      padding: '1rem',
-                      background: '#f9fafb'
-                    }}>
-                      <SafeHtmlRenderer html={ap.details} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <div style={{ marginTop: '5rem', fontSize: '0.875rem', color: '#374151' }}>
-              <strong>Reminder:</strong> Behavioural reports are for guidance only.
-            </div>
           </div>
 
           {/* Footer for Page 1 */}
@@ -368,6 +348,48 @@ export default function SessionPlanPreviewPage() {
             className="page-footer"
           />
         </div>
+
+        {/* PAGE 2+ - Action Points */}
+        {editableActionPoints.length > 0 && editableActionPoints.map((ap, i) => (
+          <div key={i} className="page">
+            {/* Header Banner */}
+            <img
+              src="https://i.ibb.co/qYk7fyKf/Header-Banner.png"
+              alt="Header"
+              className="page-header"
+            />
+
+            <div className="page-content">
+              <div className="action-point">
+                <h3 style={{ fontSize: '1.875rem', fontStyle: 'italic', marginBottom: '0.75rem' }}>
+                  <SafeHtmlRenderer html={ap.header} />
+                </h3>
+                <div style={{
+                  border: '2px solid #e5e7eb',
+                  borderRadius: '0.375rem',
+                  padding: '1rem',
+                  background: '#f9fafb'
+                }}>
+                  <SafeHtmlRenderer html={ap.details} />
+                </div>
+              </div>
+
+              {/* Reminder on last action point */}
+              {i === editableActionPoints.length - 1 && (
+                <div style={{ marginTop: '5rem', fontSize: '0.875rem', color: '#374151' }}>
+                  <strong>Reminder:</strong> Behavioural reports are for guidance only.
+                </div>
+              )}
+            </div>
+
+            {/* Footer for Page 2+ */}
+            <img
+              src="https://i.ibb.co/3Y4bTFNt/Screenshot-2025-11-13-at-15-28-11.png"
+              alt="Footer Page 2+"
+              className="page-footer"
+            />
+          </div>
+        ))}
       </div>
     </>
   );
