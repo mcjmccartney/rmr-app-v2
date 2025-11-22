@@ -16,6 +16,7 @@ export default function SessionPlanPreviewPage() {
   const searchParams = useSearchParams();
   const sessionId = params.sessionId as string;
   const isPrintMode = searchParams.get("print") === "true";
+  const isPlaywrightMode = searchParams.get("playwright") === "true";
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -32,12 +33,20 @@ export default function SessionPlanPreviewPage() {
   const [buttonText, setButtonText] = useState('Generate PDF & Send Email');
 
   /* -------------------------------------------
-     PAGED.JS LOADER
+     PAGED.JS LOADER (Only for user preview, not Playwright)
   -------------------------------------------- */
   useEffect(() => {
+    // Skip Paged.js if Playwright is generating the PDF
+    if (isPlaywrightMode) {
+      console.log("🤖 Playwright mode detected - skipping Paged.js");
+      // Set ready immediately for Playwright
+      document.body.setAttribute("data-paged-ready", "true");
+      return;
+    }
+
     if (loading || !sessionPlan || pagedJsReady) return;
 
-    console.log("Loading Paged.js…");
+    console.log("👁️ User preview mode - Loading Paged.js…");
 
     const script = document.createElement("script");
     script.src = "https://unpkg.com/pagedjs/dist/paged.polyfill.js";
@@ -52,7 +61,7 @@ export default function SessionPlanPreviewPage() {
     };
 
     document.body.appendChild(script);
-  }, [loading, sessionPlan, pagedJsReady]);
+  }, [loading, sessionPlan, pagedJsReady, isPlaywrightMode]);
 
   /* -------------------------------------------
      AUTOMATED PDF GENERATION HANDLER
@@ -215,8 +224,8 @@ export default function SessionPlanPreviewPage() {
     <>
       <meta name="pdfshift-wait-for-selector" content="[data-paged-ready='true']" />
 
-      {/* GENERATE PDF BUTTON - BEFORE PAGED CONTENT */}
-      {!isPrintMode && (
+      {/* GENERATE PDF BUTTON - Only show in user preview mode */}
+      {!isPrintMode && !isPlaywrightMode && (
         <button
           onClick={(e) => {
             console.log("🔵 Button onClick fired!", e);
@@ -252,12 +261,18 @@ export default function SessionPlanPreviewPage() {
       {/* WRAP ALL CONTENT SO PAGED.JS CAN SEE IT */}
       <div id="paged-content">
 
-        {/* --- ALL YOUR ORIGINAL STYLES (unchanged) --- */}
+        {/* --- STYLES --- */}
         <style>{`
           body {
-            background: ${isPrintMode ? 'white' : '#ecebdd'};
+            background: ${isPrintMode || isPlaywrightMode ? 'white' : '#ecebdd'};
             margin: 0;
             font-family: Arial, sans-serif;
+          }
+
+          /* CSS @page rules for Playwright PDF generation */
+          @page {
+            size: A4;
+            margin: 0;
           }
 
           /* Hide button when printing */
@@ -266,6 +281,21 @@ export default function SessionPlanPreviewPage() {
               display: none !important;
             }
           }
+
+          /* Page break utilities for Playwright mode */
+          ${isPlaywrightMode ? `
+            .page-break-before {
+              page-break-before: always;
+            }
+
+            .page-break-after {
+              page-break-after: always;
+            }
+
+            .avoid-page-break {
+              page-break-inside: avoid;
+            }
+          ` : ''}
         `}</style>
 
         {/* --- CONTENT WRAPPER --- */}

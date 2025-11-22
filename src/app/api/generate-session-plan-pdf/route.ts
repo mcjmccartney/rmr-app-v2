@@ -62,7 +62,8 @@ export async function GET(req: Request) {
       }
     }
 
-    const previewUrl = `${baseUrl}/session-plan-preview/${sessionId}?pagedjs=print`;
+    // Use playwright=true to bypass Paged.js and use native CSS @page rules
+    const previewUrl = `${baseUrl}/session-plan-preview/${sessionId}?playwright=true`;
 
     console.log(`[PDF-GEN] Loading preview URL: ${previewUrl}`);
 
@@ -72,20 +73,21 @@ export async function GET(req: Request) {
       timeout: 120_000,
     });
 
-    console.log("[PDF-GEN] Page loaded, waiting for Paged.js...");
+    console.log("[PDF-GEN] Page loaded, waiting for content to be ready...");
 
-    // Wait for Paged.js signal
+    // Wait for ready signal (set immediately in Playwright mode)
     await page.waitForFunction(
       () => document.body.getAttribute("data-paged-ready") === "true",
-      { timeout: 120_000 }
+      { timeout: 30_000 } // Shorter timeout since no Paged.js processing
     );
 
-    console.log("[PDF-GEN] Paged.js ready — generating PDF...");
+    console.log("[PDF-GEN] Content ready — generating PDF with Playwright...");
 
     const pdfBuffer = await page.pdf({
       format: "A4",
       printBackground: true,
       margin: { top: "0", bottom: "0", left: "0", right: "0" },
+      preferCSSPageSize: true, // Use CSS @page rules for page sizing
     });
 
     console.log(`[PDF-GEN] PDF generated, size: ${pdfBuffer.length} bytes`);
