@@ -58,7 +58,16 @@ export default function SessionPlanPreviewPage() {
      AUTOMATED PDF GENERATION HANDLER
   -------------------------------------------- */
   const handleGeneratePDF = async () => {
-    if (!sessionPlan || !session || !client) return;
+    console.log("🔵 Button clicked!");
+    console.log("Session Plan:", sessionPlan);
+    console.log("Session:", session);
+    console.log("Client:", client);
+
+    if (!sessionPlan || !session || !client) {
+      console.error("❌ Missing required data:", { sessionPlan, session, client });
+      alert("Missing required data. Please refresh the page and try again.");
+      return;
+    }
 
     setIsGenerating(true);
     setButtonText("Generating PDF...");
@@ -209,7 +218,12 @@ export default function SessionPlanPreviewPage() {
       {/* GENERATE PDF BUTTON - BEFORE PAGED CONTENT */}
       {!isPrintMode && (
         <button
-          onClick={handleGeneratePDF}
+          onClick={(e) => {
+            console.log("🔵 Button onClick fired!", e);
+            handleGeneratePDF();
+          }}
+          onMouseEnter={() => console.log("🟢 Mouse entered button")}
+          onMouseDown={() => console.log("🟡 Mouse down on button")}
           disabled={isGenerating}
           className="pdf-generate-button"
           style={{
@@ -228,6 +242,7 @@ export default function SessionPlanPreviewPage() {
             fontSize: '1rem',
             opacity: isGenerating ? 0.7 : 1,
             transition: 'all 0.3s ease',
+            pointerEvents: 'auto',
           }}
         >
           {buttonText}
