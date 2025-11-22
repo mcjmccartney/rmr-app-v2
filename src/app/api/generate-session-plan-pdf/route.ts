@@ -169,6 +169,9 @@ export async function GET(req: Request) {
     });
   } catch (err: any) {
     console.error("[PDF-GEN] ❌ Unhandled error:", err);
+    console.error("[PDF-GEN] Error name:", err.name);
+    console.error("[PDF-GEN] Error message:", err.message);
+    console.error("[PDF-GEN] Error stack:", err.stack);
 
     // Ensure browser is closed on error
     if (browser) {
@@ -180,7 +183,10 @@ export async function GET(req: Request) {
     }
 
     return NextResponse.json(
-      { error: err.message || "Unknown error occurred during PDF generation" },
+      {
+        error: err.message || "Unknown error occurred during PDF generation",
+        details: err.stack || err.toString()
+      },
       { status: 500 }
     );
   }

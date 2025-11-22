@@ -67,7 +67,10 @@ export default function SessionPlanPreviewPage() {
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to generate PDF');
+        console.error('API Error Response:', result);
+        const errorMsg = result.error || 'Failed to generate PDF';
+        const errorDetails = result.details ? `\n\nDetails: ${result.details}` : '';
+        throw new Error(errorMsg + errorDetails);
       }
 
       setButtonText("✓ PDF Created!");
