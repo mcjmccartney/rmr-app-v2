@@ -73,12 +73,8 @@ export default function SessionPlanPreviewPage() {
         throw new Error(errorMsg + errorDetails);
       }
 
-      setButtonText("✓ PDF Created!");
-      alert('PDF generated successfully!\n\nAn Outlook draft email has been created.');
-
-      if (result.pdfUrl && confirm('Would you like to view the PDF?')) {
-        window.open(result.pdfUrl, '_blank');
-      }
+      setButtonText("✓ Email Draft Created!");
+      alert('PDF generated successfully!\n\nAn Outlook draft email has been created with the PDF attached.\nCheck your Outlook drafts folder to review and send.');
 
       setTimeout(() => {
         setButtonText("Generate PDF & Send Email");

@@ -1,13 +1,6 @@
 import { NextResponse } from "next/server";
 import chromium from "@sparticuz/chromium";
 import playwright from "playwright-core";
-import { createClient } from "@supabase/supabase-js";
-
-// --- Supabase Client (Service Role Required) ---
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 export const maxDuration = 300; // allow long Vercel runtimes
 
@@ -95,40 +88,17 @@ export async function GET(req: Request) {
     await browser.close();
     browser = null;
 
-    // --- Upload to Supabase ---
-    const filePath = `session-plans/${sessionId}-${Date.now()}.pdf`;
-
-    console.log(`[PDF-GEN] Uploading to Supabase: ${filePath}`);
-
-    const upload = await supabase.storage
-      .from("session-plans")
-      .upload(filePath, pdfBuffer, {
-        contentType: "application/pdf",
-      });
-
-    if (upload.error) {
-      console.error("[PDF-GEN] Supabase upload error:", upload.error);
-      return NextResponse.json(
-        { error: `Failed to upload PDF: ${upload.error.message}` },
-        { status: 500 }
-      );
-    }
-
-    // Get public URL
-    const { data: publicUrlData } = supabase.storage
-      .from("session-plans")
-      .getPublicUrl(filePath);
-
-    const pdfUrl = publicUrlData.publicUrl;
-
-    console.log(`[PDF-GEN] ✅ PDF uploaded successfully: ${pdfUrl}`);
+    // --- Convert PDF to Base64 for Make.com ---
+    const pdfBase64 = pdfBuffer.toString('base64');
+    console.log(`[PDF-GEN] PDF converted to base64, length: ${pdfBase64.length}`);
 
     // --- Send to Make.com ---
     console.log("[PDF-GEN] Sending webhook to Make.com...");
 
     const webhookData = {
       sessionId,
-      pdfUrl,
+      pdfBase64,
+      pdfFileName: `Session-${sessionNumber}-${dogName.replace(/\s+/g, '-')}.pdf`,
       clientEmail,
       clientFirstName,
       clientLastName,
@@ -140,7 +110,10 @@ export async function GET(req: Request) {
       timestamp: new Date().toISOString(),
     };
 
-    console.log("[PDF-GEN] Webhook payload:", JSON.stringify(webhookData, null, 2));
+    console.log("[PDF-GEN] Webhook payload (without base64):", {
+      ...webhookData,
+      pdfBase64: `[${pdfBase64.length} characters]`
+    });
 
     const makeRes = await fetch(
       "https://hook.eu1.make.com/lbfmnhl3xpf7c0y2sfos3vdln6y1fmqm",
@@ -164,7 +137,6 @@ export async function GET(req: Request) {
 
     return NextResponse.json({
       success: true,
-      pdfUrl,
       message: "PDF generated and email draft created successfully"
     });
   } catch (err: any) {
