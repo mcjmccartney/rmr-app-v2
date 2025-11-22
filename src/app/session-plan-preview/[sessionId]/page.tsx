@@ -53,14 +53,14 @@ export default function SessionPlanPreviewPage() {
   }, [loading, sessionPlan, pagedJsReady]);
 
   /* -------------------------------------------
-     PRINT → UPLOAD → EMAIL BUTTON
+     AUTOMATED PDF GENERATION BUTTON
   -------------------------------------------- */
   useEffect(() => {
-    if (!sessionPlan) return;
+    if (!sessionPlan || !session || !client) return;
 
     const button = document.createElement("button");
     button.id = "pdf-export-btn";
-    button.textContent = "Generate PDF Email";
+    button.textContent = "Generate PDF & Send Email";
 
     button.style.cssText = `
       position: fixed;
@@ -76,78 +76,77 @@ export default function SessionPlanPreviewPage() {
       cursor: pointer;
       z-index: 999999;
       font-size: 1rem;
+      transition: all 0.3s ease;
     `;
 
     document.body.appendChild(button);
 
-    button.onclick = () => {
-      console.log("🟡 Print triggered");
-      button.textContent = "Printing…";
+    button.onclick = async () => {
+      const originalText = button.textContent;
+      button.textContent = "Generating PDF...";
+      button.disabled = true;
+      button.style.opacity = "0.7";
+      button.style.cursor = "wait";
 
-      window.print();
+      try {
+        console.log("🟡 Starting server-side PDF generation");
 
-      const afterPrint = () => {
-        console.log("🟢 Print dialog closed");
+        // Build query parameters for the API
+        const params = new URLSearchParams({
+          sessionId: sessionPlan.sessionId,
+          clientEmail: client?.email || '',
+          clientFirstName: client?.firstName || '',
+          clientLastName: client?.lastName || '',
+          dogName: session?.dogName || client?.dogName || '',
+          sessionNumber: sessionPlan.sessionNumber?.toString() || '1',
+          bookingDate: session?.bookingDate || '',
+          bookingTime: session?.bookingTime || '',
+        });
 
-        const input = document.createElement("input");
-        input.type = "file";
-        input.accept = "application/pdf";
+        // Call the server-side PDF generation API
+        const response = await fetch(`/api/generate-session-plan-pdf?${params}`);
+        const result = await response.json();
 
-        input.onchange = async (e: any) => {
-          const file = e.target.files?.[0];
-          if (!file) return;
+        if (!response.ok) {
+          throw new Error(result.error || 'Failed to generate PDF');
+        }
 
-          console.log("📄 PDF chosen");
+        console.log("✅ PDF generated successfully:", result.pdfUrl);
 
-          button.textContent = "Uploading…";
+        // Update button to show success
+        button.textContent = "✓ Email Draft Created!";
+        button.style.backgroundColor = "#059669"; // Green success color
 
-          const formData = new FormData();
-          formData.append("file", file);
-          formData.append("sessionId", sessionPlan.sessionId);
+        // Show success message
+        alert(
+          'PDF generated successfully!\n\n' +
+          'An Outlook draft email has been created with the PDF attached.\n' +
+          'Check your Outlook drafts folder to review and send.'
+        );
 
-          const upload = await fetch("/api/upload-final-pdf", {
-            method: "POST",
-            body: formData,
-          });
+        // Optionally open the PDF
+        if (result.pdfUrl && confirm('Would you like to view the PDF?')) {
+          window.open(result.pdfUrl, '_blank');
+        }
 
-          const json = await upload.json();
+        // Reset button after 3 seconds
+        setTimeout(() => {
+          button.textContent = originalText;
+          button.style.backgroundColor = "#973b00";
+          button.disabled = false;
+          button.style.opacity = "1";
+          button.style.cursor = "pointer";
+        }, 3000);
 
-          if (!upload.ok) {
-            alert("Upload failed: " + json.error);
-            button.textContent = "Generate PDF Email";
-            return;
-          }
+      } catch (error: any) {
+        console.error('❌ PDF generation error:', error);
+        alert(`Failed to generate PDF: ${error.message}\n\nPlease try again.`);
 
-          button.textContent = "Sending Email…";
-
-          await fetch("https://hook.eu1.make.com/lbfmnhl3xpf7c0y2sfos3vdln6y1fmqm", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              sessionId: sessionPlan.sessionId,
-              pdfUrl: json.pdfUrl,
-              clientEmail: client?.email,
-              clientFirstName: client?.firstName,
-              clientLastName: client?.lastName,
-              dogName: session?.dogName || client?.dogName,
-              sessionNumber: sessionPlan.sessionNumber,
-            }),
-          });
-
-          alert("PDF emailed!");
-          button.textContent = "Generate PDF Email";
-        };
-
-        input.click();
-        window.removeEventListener("afterprint", afterPrint);
-      };
-
-      const mediaQuery = window.matchMedia("print");
-      mediaQuery.addEventListener("change", (e) => {
-        if (!e.matches) afterPrint();
-      });
-
-      window.addEventListener("afterprint", afterPrint);
+        button.textContent = originalText;
+        button.disabled = false;
+        button.style.opacity = "1";
+        button.style.cursor = "pointer";
+      }
     };
 
     return () => {

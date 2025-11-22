@@ -12,6 +12,8 @@ const supabase = createClient(
 export const maxDuration = 300; // allow long Vercel runtimes
 
 export async function GET(req: Request) {
+  let browser;
+
   try {
     const { searchParams } = new URL(req.url);
 
@@ -32,15 +34,20 @@ export async function GET(req: Request) {
       );
     }
 
-    console.log("Launching Chromium...");
+    console.log(`[PDF-GEN] Starting PDF generation for session ${sessionId}`);
+    console.log(`[PDF-GEN] Client: ${clientFirstName} ${clientLastName}, Dog: ${dogName}`);
+
+    console.log("[PDF-GEN] Launching Chromium...");
 
     const executablePath = await chromium.executablePath();
 
-    const browser = await playwright.chromium.launch({
+    browser = await playwright.chromium.launch({
       args: chromium.args,
       executablePath,
       headless: true,
     });
+
+    console.log("[PDF-GEN] Browser launched successfully");
 
     const page = await browser.newPage();
 
@@ -57,7 +64,7 @@ export async function GET(req: Request) {
 
     const previewUrl = `${baseUrl}/session-plan-preview/${sessionId}?pagedjs=print`;
 
-    console.log("Using preview URL:", previewUrl);
+    console.log(`[PDF-GEN] Loading preview URL: ${previewUrl}`);
 
     // --- Load the session plan preview ---
     await page.goto(previewUrl, {
@@ -65,13 +72,15 @@ export async function GET(req: Request) {
       timeout: 120_000,
     });
 
+    console.log("[PDF-GEN] Page loaded, waiting for Paged.js...");
+
     // Wait for Paged.js signal
     await page.waitForFunction(
       () => document.body.getAttribute("data-paged-ready") === "true",
       { timeout: 120_000 }
     );
 
-    console.log("Paged.js ready — generating PDF...");
+    console.log("[PDF-GEN] Paged.js ready — generating PDF...");
 
     const pdfBuffer = await page.pdf({
       format: "A4",
@@ -79,10 +88,15 @@ export async function GET(req: Request) {
       margin: { top: "0", bottom: "0", left: "0", right: "0" },
     });
 
+    console.log(`[PDF-GEN] PDF generated, size: ${pdfBuffer.length} bytes`);
+
     await browser.close();
+    browser = null;
 
     // --- Upload to Supabase ---
     const filePath = `session-plans/${sessionId}-${Date.now()}.pdf`;
+
+    console.log(`[PDF-GEN] Uploading to Supabase: ${filePath}`);
 
     const upload = await supabase.storage
       .from("session-plans")
@@ -91,9 +105,9 @@ export async function GET(req: Request) {
       });
 
     if (upload.error) {
-      console.error("Supabase upload error:", upload.error);
+      console.error("[PDF-GEN] Supabase upload error:", upload.error);
       return NextResponse.json(
-        { error: upload.error.message },
+        { error: `Failed to upload PDF: ${upload.error.message}` },
         { status: 500 }
       );
     }
@@ -105,56 +119,67 @@ export async function GET(req: Request) {
 
     const pdfUrl = publicUrlData.publicUrl;
 
-    console.log("PDF uploaded to Supabase:", pdfUrl);
+    console.log(`[PDF-GEN] ✅ PDF uploaded successfully: ${pdfUrl}`);
 
     // --- Send to Make.com ---
-    console.log("Sending webhook to Make.com...");
+    console.log("[PDF-GEN] Sending webhook to Make.com...");
+
+    const webhookData = {
+      sessionId,
+      pdfUrl,
+      clientEmail,
+      clientFirstName,
+      clientLastName,
+      dogName,
+      sessionNumber,
+      bookingDate,
+      bookingTime,
+      emailSubject: `Session ${sessionNumber} Plan - ${dogName}`,
+      timestamp: new Date().toISOString(),
+    };
+
+    console.log("[PDF-GEN] Webhook payload:", JSON.stringify(webhookData, null, 2));
 
     const makeRes = await fetch(
       "https://hook.eu1.make.com/lbfmnhl3xpf7c0y2sfos3vdln6y1fmqm",
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sessionId,
-          pdfUrl,
-          clientEmail,
-          clientFirstName,
-          clientLastName,
-          dogName,
-          sessionNumber,
-          bookingDate,
-          bookingTime,
-          emailSubject: `Session ${sessionNumber} Plan - ${dogName}`,
-          timestamp: new Date().toISOString(),
-        }),
+        body: JSON.stringify(webhookData),
       }
     );
 
     if (!makeRes.ok) {
       const msg = await makeRes.text();
-      console.error("Make.com webhook error:", msg);
+      console.error("[PDF-GEN] Make.com webhook error:", msg);
       return NextResponse.json(
-        { error: `Make.com error: ${msg}` },
+        { error: `Failed to send email webhook: ${msg}` },
         { status: 500 }
       );
     }
 
-    console.log("Webhook sent successfully.");
+    console.log("[PDF-GEN] ✅ Webhook sent successfully to Make.com");
 
     return NextResponse.json({
       success: true,
       pdfUrl,
+      message: "PDF generated and email draft created successfully"
     });
   } catch (err: any) {
-    console.error("Unhandled PDF generator error:", err);
+    console.error("[PDF-GEN] ❌ Unhandled error:", err);
+
+    // Ensure browser is closed on error
+    if (browser) {
+      try {
+        await browser.close();
+      } catch (closeErr) {
+        console.error("[PDF-GEN] Error closing browser:", closeErr);
+      }
+    }
+
     return NextResponse.json(
-      { error: err.message || "Unknown error" },
+      { error: err.message || "Unknown error occurred during PDF generation" },
       { status: 500 }
     );
   }
 }
-
-const { data: listData, error: listError } = await supabase.storage.listBuckets();
-console.log("Buckets in this project =", listData);
-console.log("Bucket error =", listError);
