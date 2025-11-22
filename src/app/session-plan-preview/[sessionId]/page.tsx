@@ -28,6 +28,8 @@ export default function SessionPlanPreviewPage() {
   const [explanationOfBehaviour, setExplanationOfBehaviour] = useState('');
   const [title, setTitle] = useState('');
   const [pagedJsReady, setPagedJsReady] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [buttonText, setButtonText] = useState('Generate PDF & Send Email');
 
   /* -------------------------------------------
      PAGED.JS LOADER
@@ -53,106 +55,68 @@ export default function SessionPlanPreviewPage() {
   }, [loading, sessionPlan, pagedJsReady]);
 
   /* -------------------------------------------
-     AUTOMATED PDF GENERATION BUTTON
+     AUTOMATED PDF GENERATION HANDLER
   -------------------------------------------- */
-  useEffect(() => {
+  const handleGeneratePDF = async () => {
     if (!sessionPlan || !session || !client) return;
 
-    const button = document.createElement("button");
-    button.id = "pdf-export-btn";
-    button.textContent = "Generate PDF & Send Email";
+    setIsGenerating(true);
+    setButtonText("Generating PDF...");
 
-    button.style.cssText = `
-      position: fixed;
-      bottom: 2rem;
-      right: 2rem;
-      background-color: #973b00;
-      color: white;
-      padding: 0.75rem 1.5rem;
-      border-radius: 0.5rem;
-      font-weight: 500;
-      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
-      border: none;
-      cursor: pointer;
-      z-index: 999999;
-      font-size: 1rem;
-      transition: all 0.3s ease;
-    `;
+    try {
+      console.log("🟡 Starting server-side PDF generation");
 
-    document.body.appendChild(button);
+      // Build query parameters for the API
+      const params = new URLSearchParams({
+        sessionId: sessionPlan.sessionId,
+        clientEmail: client?.email || '',
+        clientFirstName: client?.firstName || '',
+        clientLastName: client?.lastName || '',
+        dogName: session?.dogName || client?.dogName || '',
+        sessionNumber: sessionPlan.sessionNumber?.toString() || '1',
+        bookingDate: session?.bookingDate || '',
+        bookingTime: session?.bookingTime || '',
+      });
 
-    button.onclick = async () => {
-      const originalText = button.textContent;
-      button.textContent = "Generating PDF...";
-      button.disabled = true;
-      button.style.opacity = "0.7";
-      button.style.cursor = "wait";
+      // Call the server-side PDF generation API
+      const response = await fetch(`/api/generate-session-plan-pdf?${params}`);
+      const result = await response.json();
 
-      try {
-        console.log("🟡 Starting server-side PDF generation");
-
-        // Build query parameters for the API
-        const params = new URLSearchParams({
-          sessionId: sessionPlan.sessionId,
-          clientEmail: client?.email || '',
-          clientFirstName: client?.firstName || '',
-          clientLastName: client?.lastName || '',
-          dogName: session?.dogName || client?.dogName || '',
-          sessionNumber: sessionPlan.sessionNumber?.toString() || '1',
-          bookingDate: session?.bookingDate || '',
-          bookingTime: session?.bookingTime || '',
-        });
-
-        // Call the server-side PDF generation API
-        const response = await fetch(`/api/generate-session-plan-pdf?${params}`);
-        const result = await response.json();
-
-        if (!response.ok) {
-          throw new Error(result.error || 'Failed to generate PDF');
-        }
-
-        console.log("✅ PDF generated successfully:", result.pdfUrl);
-
-        // Update button to show success
-        button.textContent = "✓ Email Draft Created!";
-        button.style.backgroundColor = "#059669"; // Green success color
-
-        // Show success message
-        alert(
-          'PDF generated successfully!\n\n' +
-          'An Outlook draft email has been created with the PDF attached.\n' +
-          'Check your Outlook drafts folder to review and send.'
-        );
-
-        // Optionally open the PDF
-        if (result.pdfUrl && confirm('Would you like to view the PDF?')) {
-          window.open(result.pdfUrl, '_blank');
-        }
-
-        // Reset button after 3 seconds
-        setTimeout(() => {
-          button.textContent = originalText;
-          button.style.backgroundColor = "#973b00";
-          button.disabled = false;
-          button.style.opacity = "1";
-          button.style.cursor = "pointer";
-        }, 3000);
-
-      } catch (error: any) {
-        console.error('❌ PDF generation error:', error);
-        alert(`Failed to generate PDF: ${error.message}\n\nPlease try again.`);
-
-        button.textContent = originalText;
-        button.disabled = false;
-        button.style.opacity = "1";
-        button.style.cursor = "pointer";
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to generate PDF');
       }
-    };
 
-    return () => {
-      if (document.body.contains(button)) document.body.removeChild(button);
-    };
-  }, [sessionPlan, client, session]);
+      console.log("✅ PDF generated successfully:", result.pdfUrl);
+
+      // Update button to show success
+      setButtonText("✓ Email Draft Created!");
+
+      // Show success message
+      alert(
+        'PDF generated successfully!\n\n' +
+        'An Outlook draft email has been created with the PDF attached.\n' +
+        'Check your Outlook drafts folder to review and send.'
+      );
+
+      // Optionally open the PDF
+      if (result.pdfUrl && confirm('Would you like to view the PDF?')) {
+        window.open(result.pdfUrl, '_blank');
+      }
+
+      // Reset button after 3 seconds
+      setTimeout(() => {
+        setButtonText("Generate PDF & Send Email");
+        setIsGenerating(false);
+      }, 3000);
+
+    } catch (error: any) {
+      console.error('❌ PDF generation error:', error);
+      alert(`Failed to generate PDF: ${error.message}\n\nPlease try again.`);
+
+      setButtonText("Generate PDF & Send Email");
+      setIsGenerating(false);
+    }
+  };
 
   /* -------------------------------------------
      FETCH DATA
@@ -242,6 +206,22 @@ export default function SessionPlanPreviewPage() {
     <>
       <meta name="pdfshift-wait-for-selector" content="[data-paged-ready='true']" />
 
+      {/* GENERATE PDF BUTTON - OUTSIDE PAGED.JS CONTENT */}
+      {!isPrintMode && (
+        <button
+          onClick={handleGeneratePDF}
+          disabled={isGenerating}
+          className="pdf-generate-button fixed bottom-8 right-8 text-white font-medium px-6 py-3 rounded-lg shadow-lg transition-all duration-300 z-[999999] hover:shadow-xl"
+          style={{
+            backgroundColor: buttonText.includes('✓') ? '#059669' : '#973b00',
+            opacity: isGenerating ? 0.7 : 1,
+            cursor: isGenerating ? 'wait' : 'pointer',
+          }}
+        >
+          {buttonText}
+        </button>
+      )}
+
       {/* WRAP ALL CONTENT SO PAGED.JS CAN SEE IT */}
       <div id="paged-content">
 
@@ -251,6 +231,13 @@ export default function SessionPlanPreviewPage() {
             background: ${isPrintMode ? 'white' : '#ecebdd'};
             margin: 0;
             font-family: Arial, sans-serif;
+          }
+
+          /* Hide button when printing */
+          @media print {
+            .pdf-generate-button {
+              display: none !important;
+            }
           }
         `}</style>
 
