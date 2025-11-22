@@ -88,17 +88,37 @@ export async function GET(req: Request) {
     await browser.close();
     browser = null;
 
-    // --- Convert PDF to Base64 for Make.com ---
-    const pdfBase64 = pdfBuffer.toString('base64');
-    console.log(`[PDF-GEN] PDF converted to base64, length: ${pdfBase64.length}`);
+    // --- Send to Make.com using multipart/form-data ---
+    console.log("[PDF-GEN] Preparing multipart/form-data for Make.com...");
 
-    // --- Send to Make.com ---
-    console.log("[PDF-GEN] Sending webhook to Make.com...");
+    const pdfFileName = `Session-${sessionNumber}-${dogName.replace(/\s+/g, '-')}.pdf`;
 
-    const webhookData = {
+    // Create FormData with the PDF file and metadata
+    const FormData = (await import('formdata-node')).FormData;
+    const { Blob } = await import('buffer');
+
+    const formData = new FormData();
+
+    // Add the PDF file
+    const pdfBlob = new Blob([pdfBuffer], { type: 'application/pdf' });
+    formData.append('pdf', pdfBlob, pdfFileName);
+
+    // Add metadata as separate fields
+    formData.append('sessionId', sessionId);
+    formData.append('clientEmail', clientEmail);
+    formData.append('clientFirstName', clientFirstName);
+    formData.append('clientLastName', clientLastName);
+    formData.append('dogName', dogName);
+    formData.append('sessionNumber', sessionNumber);
+    formData.append('bookingDate', bookingDate);
+    formData.append('bookingTime', bookingTime);
+    formData.append('emailSubject', `Session ${sessionNumber} Plan - ${dogName}`);
+    formData.append('timestamp', new Date().toISOString());
+
+    console.log("[PDF-GEN] Sending multipart/form-data to Make.com...");
+    console.log("[PDF-GEN] PDF filename:", pdfFileName);
+    console.log("[PDF-GEN] Metadata:", {
       sessionId,
-      pdfBase64,
-      pdfFileName: `Session-${sessionNumber}-${dogName.replace(/\s+/g, '-')}.pdf`,
       clientEmail,
       clientFirstName,
       clientLastName,
@@ -106,21 +126,14 @@ export async function GET(req: Request) {
       sessionNumber,
       bookingDate,
       bookingTime,
-      emailSubject: `Session ${sessionNumber} Plan - ${dogName}`,
-      timestamp: new Date().toISOString(),
-    };
-
-    console.log("[PDF-GEN] Webhook payload (without base64):", {
-      ...webhookData,
-      pdfBase64: `[${pdfBase64.length} characters]`
     });
 
     const makeRes = await fetch(
       "https://hook.eu1.make.com/lbfmnhl3xpf7c0y2sfos3vdln6y1fmqm",
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(webhookData),
+        body: formData as any,
+        // Let FormData set the Content-Type with boundary
       }
     );
 
