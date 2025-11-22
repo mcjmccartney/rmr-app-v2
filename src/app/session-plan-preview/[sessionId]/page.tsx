@@ -172,107 +172,60 @@ export default function SessionPlanPreviewPage() {
   if (error) return <div className="min-h-screen bg-white flex items-center justify-center">Error: {error}</div>;
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: isPlaywrightMode ? 'white' : '#ecebdd',
-      fontFamily: 'Arial, sans-serif',
-      position: 'relative'
-    }}>
-
-      {/* PDF GENERATION BUTTON - Only in user preview mode */}
-      {!isPlaywrightMode && (
-        <button
-          onClick={handleGeneratePDF}
-          disabled={isGenerating}
-          style={{
-            position: 'fixed',
-            bottom: '2rem',
-            right: '2rem',
-            backgroundColor: buttonText.includes('✓') ? '#059669' : '#973b00',
-            color: 'white',
-            padding: '0.75rem 1.5rem',
-            borderRadius: '0.5rem',
-            fontWeight: '500',
-            boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)',
-            border: 'none',
-            cursor: isGenerating ? 'wait' : 'pointer',
-            zIndex: 999999,
-            fontSize: '1rem',
-            opacity: isGenerating ? 0.7 : 1,
-          }}
-        >
-          {buttonText}
-        </button>
-      )}
-
-      {/* SESSION PLAN CONTENT */}
-      <div style={{
-        maxWidth: '800px',
-        margin: '0 auto',
-        padding: '2rem',
-        background: 'white',
-        minHeight: '100vh'
-      }}>
-
-        <h1 style={{ fontSize: '2.25rem', marginBottom: '2.5rem', fontWeight: 'bold' }}>
-          {title}
-        </h1>
-
-        {/* Main Goals */}
-        {mainGoals.length > 0 && (
-          <div style={{ marginBottom: '2rem' }}>
-            <h3 style={{ fontSize: '1.875rem', marginBottom: '0.75rem', fontStyle: 'italic' }}>
-              Main Goals
-            </h3>
-            {mainGoals.map((g, i) => (
-              <p key={i} style={{ marginBottom: '0.5rem', color: '#1f2937' }}>
-                • <SafeHtmlRenderer html={g} />
-              </p>
-            ))}
-          </div>
-        )}
-
-        {/* Explanation of Behaviour */}
-        {explanationOfBehaviour && (
-          <div style={{ marginBottom: '2.5rem' }}>
-            <h3 style={{ fontSize: '1.875rem', fontStyle: 'italic', marginBottom: '0.75rem' }}>
-              Explanation of Behaviour
-            </h3>
-            <SafeHtmlRenderer html={explanationOfBehaviour} />
-          </div>
-        )}
-
-        {/* Action Points */}
-        {editableActionPoints.length > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-            {editableActionPoints.map((ap, i) => (
-              <div key={i}>
-                <h3 style={{ fontSize: '1.875rem', fontStyle: 'italic', marginBottom: '0.75rem' }}>
-                  <SafeHtmlRenderer html={ap.header} />
-                </h3>
-                <div style={{
-                  border: '2px solid #e5e7eb',
-                  borderRadius: '0.375rem',
-                  padding: '1rem',
-                  background: '#f9fafb'
-                }}>
-                  <SafeHtmlRenderer html={ap.details} />
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        <div style={{ marginTop: '5rem', fontSize: '0.875rem', color: '#374151' }}>
-          <strong>Reminder:</strong> Behavioural reports are for guidance only.
-        </div>
-      </div>
-
-      {/* CSS for PDF generation */}
+    <>
+      {/* FONT FACES */}
       <style>{`
+        @font-face {
+          font-family: 'Cooper Lt BT';
+          src: url('/fonts/cooperltbt-regular-webfont.woff2') format('woff2'),
+               url('/fonts/cooperltbt-regular-webfont.woff') format('woff');
+          font-weight: normal;
+          font-style: normal;
+        }
+
+        @font-face {
+          font-family: 'Cooper Lt BT';
+          src: url('/fonts/cooperltbt-bold-webfont.woff2') format('woff2'),
+               url('/fonts/cooperltbt-bold-webfont.woff') format('woff');
+          font-weight: bold;
+          font-style: normal;
+        }
+
+        @font-face {
+          font-family: 'Cooper Lt BT';
+          src: url('/fonts/cooperltbt-italic-webfont.woff2') format('woff2'),
+               url('/fonts/cooperltbt-italic-webfont.woff') format('woff');
+          font-weight: normal;
+          font-style: italic;
+        }
+
+        @font-face {
+          font-family: 'Cooper Lt BT';
+          src: url('/fonts/cooperltbt-bolditalic-webfont.woff2') format('woff2'),
+               url('/fonts/cooperltbt-bolditalic-webfont.woff') format('woff');
+          font-weight: bold;
+          font-style: italic;
+        }
+
+        @font-face {
+          font-family: 'Cooper Md BT';
+          src: url('/fonts/coopermdbt-regular-webfont.woff2') format('woff2'),
+               url('/fonts/coopermdbt-regular-webfont.woff') format('woff');
+          font-weight: normal;
+          font-style: normal;
+        }
+
+        @font-face {
+          font-family: 'Cooper Blk BT';
+          src: url('/fonts/cooperblkbt-regular-webfont.woff2') format('woff2'),
+               url('/fonts/cooperblkbt-regular-webfont.woff') format('woff');
+          font-weight: normal;
+          font-style: normal;
+        }
+
         @page {
           size: A4;
-          margin: 20mm;
+          margin: 0;
         }
 
         @media print {
@@ -280,7 +233,142 @@ export default function SessionPlanPreviewPage() {
             display: none !important;
           }
         }
+
+        .page {
+          width: 210mm;
+          min-height: 297mm;
+          background: #eaeade;
+          position: relative;
+          page-break-after: always;
+        }
+
+        .page:last-child {
+          page-break-after: auto;
+        }
+
+        .page-header {
+          width: 100%;
+          height: auto;
+        }
+
+        .page-footer {
+          width: 100%;
+          height: auto;
+          position: absolute;
+          bottom: 0;
+          left: 0;
+        }
+
+        .page-content {
+          padding: 1rem 2rem;
+        }
       `}</style>
-    </div>
+
+      <div style={{
+        minHeight: '100vh',
+        background: '#eaeade',
+        fontFamily: "'Cooper Lt BT', Georgia, serif",
+        position: 'relative'
+      }}>
+
+        {/* PDF GENERATION BUTTON - Only in user preview mode */}
+        {!isPlaywrightMode && (
+          <button
+            onClick={handleGeneratePDF}
+            disabled={isGenerating}
+            style={{
+              position: 'fixed',
+              bottom: '2rem',
+              right: '2rem',
+              backgroundColor: buttonText.includes('✓') ? '#059669' : '#973b00',
+              color: 'white',
+              padding: '0.75rem 1.5rem',
+              borderRadius: '0.5rem',
+              fontWeight: '500',
+              boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)',
+              border: 'none',
+              cursor: isGenerating ? 'wait' : 'pointer',
+              zIndex: 999999,
+              fontSize: '1rem',
+              opacity: isGenerating ? 0.7 : 1,
+            }}
+          >
+            {buttonText}
+          </button>
+        )}
+
+        {/* PAGE 1 */}
+        <div className="page">
+          {/* Header Banner */}
+          <img
+            src="https://i.ibb.co/qYk7fyKf/Header-Banner.png"
+            alt="Header"
+            className="page-header"
+          />
+
+          <div className="page-content">
+            <h1 style={{ fontSize: '2.25rem', marginBottom: '2.5rem', fontWeight: 'bold' }}>
+              {title}
+            </h1>
+
+            {/* Main Goals */}
+            {mainGoals.length > 0 && (
+              <div style={{ marginBottom: '2rem' }}>
+                <h3 style={{ fontSize: '1.875rem', marginBottom: '0.75rem', fontStyle: 'italic' }}>
+                  Main Goals
+                </h3>
+                {mainGoals.map((g, i) => (
+                  <p key={i} style={{ marginBottom: '0.5rem', color: '#1f2937' }}>
+                    • <SafeHtmlRenderer html={g} />
+                  </p>
+                ))}
+              </div>
+            )}
+
+            {/* Explanation of Behaviour */}
+            {explanationOfBehaviour && (
+              <div style={{ marginBottom: '2.5rem' }}>
+                <h3 style={{ fontSize: '1.875rem', fontStyle: 'italic', marginBottom: '0.75rem' }}>
+                  Explanation of Behaviour
+                </h3>
+                <SafeHtmlRenderer html={explanationOfBehaviour} />
+              </div>
+            )}
+
+            {/* Action Points */}
+            {editableActionPoints.length > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                {editableActionPoints.map((ap, i) => (
+                  <div key={i}>
+                    <h3 style={{ fontSize: '1.875rem', fontStyle: 'italic', marginBottom: '0.75rem' }}>
+                      <SafeHtmlRenderer html={ap.header} />
+                    </h3>
+                    <div style={{
+                      border: '2px solid #e5e7eb',
+                      borderRadius: '0.375rem',
+                      padding: '1rem',
+                      background: '#f9fafb'
+                    }}>
+                      <SafeHtmlRenderer html={ap.details} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div style={{ marginTop: '5rem', fontSize: '0.875rem', color: '#374151' }}>
+              <strong>Reminder:</strong> Behavioural reports are for guidance only.
+            </div>
+          </div>
+
+          {/* Footer for Page 1 */}
+          <img
+            src="https://i.ibb.co/MkVL9vXD/Screenshot-2025-11-13-at-15-28-11.png"
+            alt="Footer Page 1"
+            className="page-footer"
+          />
+        </div>
+      </div>
+    </>
   );
 }
