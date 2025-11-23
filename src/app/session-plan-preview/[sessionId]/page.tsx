@@ -479,8 +479,7 @@ export default function SessionPlanPreviewPage() {
 
                 <div style={{
                   fontFamily: 'Arial, sans-serif',
-                  display: 'flex',
-                  gap: '1.5rem'
+                  display: 'flex'
                 }}>
                   <div style={{ flex: 1 }}>
                     <SafeHtmlRenderer html={explanationOfBehaviour} />
