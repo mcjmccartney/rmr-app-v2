@@ -236,7 +236,6 @@ export default function SessionPlanPreviewPage() {
       }
 
       setButtonText("✓ Email Draft Created!");
-      alert('PDF generated successfully!\n\nAn Outlook draft email has been created with the PDF attached.');
 
       setTimeout(() => {
         setButtonText("Generate PDF & Send Email");
