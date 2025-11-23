@@ -355,99 +355,109 @@ export default function SessionPlanPreviewPage() {
           />
         </div>
 
-        {/* PAGE 2+ - Action Points (flow naturally with page breaks) */}
-        {editableActionPoints.length > 0 && (
-          <div className="action-points-container">
-            {/* Header Banner - will repeat on each page */}
-            <img
-              src="https://i.ibb.co/qYk7fyKf/Header-Banner.png"
-              alt="Header"
-              style={{
-                width: '100%',
-                height: 'auto',
-                marginBottom: '20px'
-              }}
-            />
+        {/* PAGE 2+ - Action Points (2 per page) */}
+        {editableActionPoints.length > 0 && (() => {
+          const pages = [];
+          const pointsPerPage = 2;
 
-            <div style={{ padding: '0rem 3.4rem', paddingBottom: '140px' }}>
-              {/* Title */}
-              <h1 style={{ fontSize: '2.25rem', marginBottom: '2.5rem', fontWeight: 'bold' }}>
-                {title}
-              </h1>
+          for (let pageIndex = 0; pageIndex < Math.ceil(editableActionPoints.length / pointsPerPage); pageIndex++) {
+            const startIdx = pageIndex * pointsPerPage;
+            const endIdx = Math.min(startIdx + pointsPerPage, editableActionPoints.length);
+            const pagePoints = editableActionPoints.slice(startIdx, endIdx);
+            const isLastPage = endIdx === editableActionPoints.length;
 
-              {/* Action Points Title */}
-              <h2 style={{
-                fontSize: '2rem',
-                fontWeight: 'bold',
-                marginBottom: '2rem',
-                marginTop: '1rem'
-              }}>
-                Action Points
-              </h2>
+            pages.push(
+              <div key={`action-page-${pageIndex}`} className="page">
+                {/* Header Banner */}
+                <img
+                  src="https://i.ibb.co/qYk7fyKf/Header-Banner.png"
+                  alt="Header"
+                  className="page-header"
+                />
 
-              {/* Action Points - flow naturally */}
-              {editableActionPoints.map((ap, i) => (
-                <div
-                  key={i}
-                  className="action-point"
-                  style={{
-                    position: 'relative',
-                    marginTop: i === 0 ? '2rem' : '0',
-                    marginBottom: '2rem'
-                  }}
-                >
-                  <h3 style={{
-                    fontSize: '1.875rem',
-                    fontStyle: 'italic',
-                    position: 'absolute',
-                    top: '-1rem',
-                    left: '1.5rem',
-                    background: '#e6e6db',
-                    padding: '0 0.5rem',
-                    zIndex: 1
-                  }}>
-                    <SafeHtmlRenderer html={ap.header} />
-                  </h3>
+                <div className="page-content">
+                  {/* Title on first Action Point page only */}
+                  {pageIndex === 0 && (
+                    <>
+                      <h1 style={{ fontSize: '2.25rem', marginBottom: '2.5rem', fontWeight: 'bold' }}>
+                        {title}
+                      </h1>
+                      <h2 style={{
+                        fontSize: '2rem',
+                        fontWeight: 'bold',
+                        marginBottom: '2rem',
+                        marginTop: '1rem'
+                      }}>
+                        Action Points
+                      </h2>
+                    </>
+                  )}
+
+                  {/* Action Points for this page */}
+                  {pagePoints.map((ap, i) => (
+                    <div
+                      key={startIdx + i}
+                      className="action-point"
+                      style={{
+                        position: 'relative',
+                        marginTop: (pageIndex === 0 && i === 0) ? '2rem' : (pageIndex > 0 && i === 0) ? '2rem' : '0',
+                        marginBottom: '2rem'
+                      }}
+                    >
+                      <h3 style={{
+                        fontSize: '1.875rem',
+                        fontStyle: 'italic',
+                        position: 'absolute',
+                        top: '-1rem',
+                        left: '1.5rem',
+                        background: '#e6e6db',
+                        padding: '0 0.5rem',
+                        zIndex: 1
+                      }}>
+                        <SafeHtmlRenderer html={ap.header} />
+                      </h3>
+                      <div style={{
+                        border: '5px solid #4e6749',
+                        borderRadius: '0.5rem',
+                        padding: '1.5rem 1rem 1rem 1rem',
+                        fontFamily: 'Arial, sans-serif'
+                      }}>
+                        <SafeHtmlRenderer html={ap.details} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Reminder on last page - absolutely positioned above footer */}
+                {isLastPage && (
                   <div style={{
-                    border: '5px solid #4e6749',
-                    borderRadius: '0.5rem',
-                    padding: '1.5rem 1rem 1rem 1rem',
+                    position: 'absolute',
+                    bottom: '120px',
+                    left: '3.4rem',
+                    right: '3.4rem',
+                    fontSize: '16px',
                     fontFamily: 'Arial, sans-serif'
                   }}>
-                    <SafeHtmlRenderer html={ap.details} />
+                    <p style={{ margin: 0 }}>
+                      <strong>Reminder:</strong>
+                      <br />
+                      I'm here to support you and your dog from a behavioural perspective. Sometimes, behavioural challenges can be linked to pain, diet, or physical discomfort, so I may highlight these areas if they seem relevant based on behavioural symptoms you've shared with me or that I've observed. Any thoughts I share within this report or any other communication with you around health, food, or physical wellbeing are intended to guide your conversations with your vet, physiotherapist, or nutritionist. I'm not a vet and don't offer medical advice or diagnosis.
+                    </p>
                   </div>
-                </div>
-              ))}
+                )}
 
-              {/* Reminder */}
-              <div style={{
-                marginTop: '3rem',
-                fontSize: '16px',
-                fontFamily: 'Arial, sans-serif',
-                pageBreakInside: 'avoid'
-              }}>
-                <p style={{ margin: 0 }}>
-                  <strong>Reminder:</strong>
-                  <br />
-                  I'm here to support you and your dog from a behavioural perspective. Sometimes, behavioural challenges can be linked to pain, diet, or physical discomfort, so I may highlight these areas if they seem relevant based on behavioural symptoms you've shared with me or that I've observed. Any thoughts I share within this report or any other communication with you around health, food, or physical wellbeing are intended to guide your conversations with your vet, physiotherapist, or nutritionist. I'm not a vet and don't offer medical advice or diagnosis.
-                </p>
+                {/* Footer for Page 2+ */}
+                <img
+                  src="https://i.ibb.co/3Y4bTFNt/Screenshot-2025-11-13-at-15-28-11.png"
+                  alt="Footer Page 2+"
+                  className="page-footer"
+                />
               </div>
-            </div>
+            );
+          }
 
-            {/* Footer - will repeat on each page */}
-            <img
-              src="https://i.ibb.co/3Y4bTFNt/Screenshot-2025-11-13-at-15-28-11.png"
-              alt="Footer"
-              style={{
-                width: '100%',
-                height: 'auto',
-                position: 'fixed',
-                bottom: 0,
-                left: 0
-              }}
-            />
-          </div>
-        )}
+          return pages;
+        })()}
       </div>
     </>
   );
