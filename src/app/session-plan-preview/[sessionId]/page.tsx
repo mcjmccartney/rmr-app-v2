@@ -1,15 +1,174 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import { SessionPlan, Session, Client, ActionPoint } from '@/types';
 import SafeHtmlRenderer from '@/components/SafeHtmlRenderer';
 import { cooperLtBT } from '@/app/fonts';
 
-interface EditableActionPoint {
-  header: string;
-  details: string;
+/* -----------------------------------------------------------------------
+   NEW COMPONENT — DYNAMIC ACTION POINT PAGINATION
+------------------------------------------------------------------------ */
+function DynamicActionPointPages({ title, editableActionPoints }) {
+  const [pages, setPages] = useState([]);
+
+  useEffect(() => {
+    if (!editableActionPoints || editableActionPoints.length === 0) return;
+
+    // Approx A4 height in px (297mm * 3.78)
+    const PAGE_HEIGHT = 297 * 3.78; // ~1122px
+    const CONTENT_MAX = PAGE_HEIGHT - 250; 
+    // 250px reserved for header/footer (tuned to match your layout)
+
+    const tempWrapper = document.createElement('div');
+    tempWrapper.style.position = 'absolute';
+    tempWrapper.style.visibility = 'hidden';
+    tempWrapper.style.width = '210mm';
+    tempWrapper.style.padding = '0 3.4rem';
+    tempWrapper.style.fontFamily = 'Arial, sans-serif';
+    document.body.appendChild(tempWrapper);
+
+    const builtPages = [];
+    let currentPage = [];
+    let currentHeight = 0;
+
+    editableActionPoints.forEach((ap) => {
+      const block = document.createElement('div');
+      block.style.border = '5px solid #4e6749';
+      block.style.padding = '1.5rem 1rem 1rem 1rem';
+      block.style.marginBottom = '2rem';
+      block.innerHTML = `
+        <h3 style="font-size:1.875rem;font-style:italic;margin-bottom:1rem;">
+          ${ap.header}
+        </h3>
+        ${ap.details}
+      `;
+      tempWrapper.appendChild(block);
+
+      const blockHeight = block.offsetHeight;
+      tempWrapper.innerHTML = ''; // clean for next measure
+
+      if (currentHeight + blockHeight > CONTENT_MAX) {
+        builtPages.push(currentPage);
+        currentPage = [];
+        currentHeight = 0;
+      }
+
+      currentPage.push(ap);
+      currentHeight += blockHeight;
+    });
+
+    // Push last page
+    if (currentPage.length > 0) builtPages.push(currentPage);
+
+    document.body.removeChild(tempWrapper);
+    setPages(builtPages);
+  }, [editableActionPoints]);
+
+  return (
+    <>
+      {pages.map((page, pageIndex) => {
+        const isLast = pageIndex === pages.length - 1;
+
+        return (
+          <div key={pageIndex} className="page">
+            <img
+              src="https://i.ibb.co/qYk7fyKf/Header-Banner.png"
+              alt="Header"
+              className="page-header"
+            />
+
+            <div className="page-content">
+              {pageIndex === 0 && (
+                <h1 style={{
+                  fontSize: '2.25rem',
+                  marginBottom: '2.5rem',
+                  fontWeight: 'bold'
+                }}>
+                  {title}
+                </h1>
+              )}
+
+              {page.map((ap, i) => (
+                <div
+                  key={i}
+                  className="action-point"
+                  style={{
+                    marginBottom: '2rem',
+                    position: 'relative'
+                  }}
+                >
+                  <h3
+                    style={{
+                      fontSize: '1.875rem',
+                      fontStyle: 'italic',
+                      position: 'absolute',
+                      top: '-1rem',
+                      left: '1.5rem',
+                      background: '#e6e6db',
+                      padding: '0 0.5rem',
+                      zIndex: 1
+                    }}
+                  >
+                    <SafeHtmlRenderer html={ap.header} />
+                  </h3>
+
+                  <div
+                    style={{
+                      border: '5px solid #4e6749',
+                      borderRadius: '0.5rem',
+                      padding: '1.5rem 1rem 1rem 1rem',
+                      fontFamily: 'Arial, sans-serif'
+                    }}
+                  >
+                    <SafeHtmlRenderer html={ap.details} />
+                  </div>
+                </div>
+              ))}
+
+              {/* LAST PAGE REMINDER - fixed position above footer */}
+              {isLast && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    bottom: '120px',
+                    left: '3.4rem',
+                    right: '3.4rem',
+                    fontSize: '16px',
+                    fontFamily: 'Arial, sans-serif'
+                  }}
+                >
+                  <p style={{ margin: 0 }}>
+                    <strong>Reminder:</strong><br />
+                    I'm here to support you and your dog from a behavioural perspective.
+                    Sometimes, behavioural challenges can be linked to pain, diet, or
+                    physical discomfort, so I may highlight these areas if they seem
+                    relevant based on behavioural symptoms you've shared with me or that
+                    I've observed. Any thoughts I share within this report or any other
+                    communication with you around health, food, or physical wellbeing are
+                    intended to guide your conversations with your vet, physiotherapist,
+                    or nutritionist. I'm not a vet and don't offer medical advice or
+                    diagnosis.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <img
+              src="https://i.ibb.co/3Y4bTFNt/Screenshot-2025-11-13-at-15-28-11.png"
+              alt="Footer"
+              className="page-footer"
+            />
+          </div>
+        );
+      })}
+    </>
+  );
 }
+
+/* -----------------------------------------------------------------------
+   ORIGINAL PAGE COMPONENT — MERGED WITH DYNAMIC PAGINATION
+------------------------------------------------------------------------ */
 
 export default function SessionPlanPreviewPage() {
   const params = useParams();
@@ -22,27 +181,19 @@ export default function SessionPlanPreviewPage() {
   const [sessionPlan, setSessionPlan] = useState<SessionPlan | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [client, setClient] = useState<Client | null>(null);
-  const [actionPoints, setActionPoints] = useState<ActionPoint[]>([]);
-  const [editableActionPoints, setEditableActionPoints] = useState<EditableActionPoint[]>([]);
+  const [editableActionPoints, setEditableActionPoints] = useState([]);
   const [mainGoals, setMainGoals] = useState<string[]>([]);
   const [explanationOfBehaviour, setExplanationOfBehaviour] = useState('');
   const [title, setTitle] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [buttonText, setButtonText] = useState('Generate PDF & Send Email');
 
-  /* -------------------------------------------
-     SIGNAL READY FOR PLAYWRIGHT
-  -------------------------------------------- */
   useEffect(() => {
     if (!loading) {
-      // Signal that content is ready (for Playwright PDF generation)
       document.body.setAttribute("data-paged-ready", "true");
     }
   }, [loading]);
 
-  /* -------------------------------------------
-     PDF GENERATION HANDLER
-  -------------------------------------------- */
   const handleGeneratePDF = async () => {
     if (!sessionPlan || !session || !client) {
       alert("Missing required data. Please refresh the page and try again.");
@@ -68,14 +219,13 @@ export default function SessionPlanPreviewPage() {
       const result = await response.json();
 
       if (!response.ok) {
-        console.error('API Error Response:', result);
         const errorMsg = result.error || 'Failed to generate PDF';
         const errorDetails = result.details ? `\n\nDetails: ${result.details}` : '';
         throw new Error(errorMsg + errorDetails);
       }
 
       setButtonText("✓ Email Draft Created!");
-      alert('PDF generated successfully!\n\nAn Outlook draft email has been created with the PDF attached.\nCheck your Outlook drafts folder to review and send.');
+      alert('PDF generated successfully!\n\nAn Outlook draft email has been created with the PDF attached.');
 
       setTimeout(() => {
         setButtonText("Generate PDF & Send Email");
@@ -89,15 +239,11 @@ export default function SessionPlanPreviewPage() {
     }
   };
 
-  /* -------------------------------------------
-     FETCH DATA
-  -------------------------------------------- */
   useEffect(() => {
     async function load() {
       try {
         const res = await fetch(`/api/session-plan-preview/${sessionId}`);
         const json = await res.json();
-
         if (!res.ok) throw new Error(json.error);
 
         const plan = json.sessionPlan;
@@ -105,7 +251,6 @@ export default function SessionPlanPreviewPage() {
         const cli = json.client;
         const apList = json.actionPoints;
 
-        /* Build plan */
         const planObj: SessionPlan = {
           id: plan.id,
           sessionId: plan.session_id,
@@ -127,7 +272,6 @@ export default function SessionPlanPreviewPage() {
         setSession(sess);
         setClient(cli);
 
-        /* Goals */
         setMainGoals([
           plan.main_goal_1,
           plan.main_goal_2,
@@ -135,14 +279,12 @@ export default function SessionPlanPreviewPage() {
           plan.main_goal_4,
         ].filter(Boolean));
 
-        setExplanationOfBehaviour(plan.explanation_of_behaviour || "");
+        setExplanationOfBehaviour(plan.explanation_of_behaviour || '');
 
-        /* Action points */
-        const aps: EditableActionPoint[] = [];
+        const aps = [];
         for (const id of plan.action_points || []) {
           const ap = apList.find((x: any) => x.id === id);
           if (!ap) continue;
-
           const edited = plan.edited_action_points?.[id];
           aps.push({
             header: edited?.header || ap.header,
@@ -151,13 +293,11 @@ export default function SessionPlanPreviewPage() {
         }
         setEditableActionPoints(aps);
 
-        /* Title */
         const dogName = sess.dog_name || cli.dog_name || "Dog";
         setTitle(`Session ${plan.session_number} - ${dogName}`);
 
         setLoading(false);
       } catch (err) {
-        console.error(err);
         setError("Failed to load data");
         setLoading(false);
       }
@@ -166,19 +306,14 @@ export default function SessionPlanPreviewPage() {
     if (sessionId) load();
   }, [sessionId]);
 
-  /* -------------------------------------------
-     RENDER
-  -------------------------------------------- */
   if (loading) return <div className="min-h-screen bg-white flex items-center justify-center">Loading...</div>;
   if (error) return <div className="min-h-screen bg-white flex items-center justify-center">Error: {error}</div>;
 
   return (
     <>
-      {/* CSS for fonts and page layout */}
       <style>{`
         body, html {
           -webkit-font-smoothing: antialiased;
-          -moz-osx-font-smoothing: grayscale;
         }
 
         @page {
@@ -187,9 +322,7 @@ export default function SessionPlanPreviewPage() {
         }
 
         @media print {
-          button {
-            display: none !important;
-          }
+          button { display: none !important; }
         }
 
         .pdf-viewer {
@@ -205,7 +338,7 @@ export default function SessionPlanPreviewPage() {
           position: relative;
           page-break-after: always;
           margin: 0 auto 2rem auto;
-          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+          box-shadow: 0 4px 6px rgba(0,0,0,0.3);
           overflow: hidden;
           display: flex;
           flex-direction: column;
@@ -213,7 +346,6 @@ export default function SessionPlanPreviewPage() {
 
         .page:last-child {
           page-break-after: auto;
-          margin-bottom: 0;
         }
 
         .page-header {
@@ -224,25 +356,15 @@ export default function SessionPlanPreviewPage() {
 
         .page-footer {
           width: 100%;
-          height: auto;
           position: absolute;
           bottom: 0;
           left: 0;
         }
 
         .page-content {
-          padding: 0rem 3.4rem;
+          padding: 0 3.4rem;
           flex: 1;
-        }
-
-        .action-point {
-          page-break-inside: avoid;
-          break-inside: avoid;
-          margin-bottom: 2rem;
-        }
-
-        .action-points-container {
-          page-break-before: always;
+          position: relative;
         }
 
         @media print {
@@ -250,7 +372,6 @@ export default function SessionPlanPreviewPage() {
             background: white;
             padding: 0;
           }
-
           .page {
             margin: 0;
             box-shadow: none;
@@ -258,11 +379,8 @@ export default function SessionPlanPreviewPage() {
         }
       `}</style>
 
-      <div className={`pdf-viewer ${cooperLtBT.className}`} style={{
-        position: 'relative'
-      }}>
+      <div className={`pdf-viewer ${cooperLtBT.className}`}>
 
-        {/* PDF GENERATION BUTTON - Only in user preview mode */}
         {!isPlaywrightMode && (
           <button
             onClick={handleGeneratePDF}
@@ -276,21 +394,17 @@ export default function SessionPlanPreviewPage() {
               padding: '0.75rem 1.5rem',
               borderRadius: '0.5rem',
               fontWeight: '500',
-              boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)',
               border: 'none',
               cursor: isGenerating ? 'wait' : 'pointer',
               zIndex: 999999,
-              fontSize: '1rem',
-              opacity: isGenerating ? 0.7 : 1,
             }}
           >
             {buttonText}
           </button>
         )}
 
-        {/* PAGE 1 - Title, Main Goals, Explanation of Behaviour */}
+        {/* PAGE 1 */}
         <div className="page">
-          {/* Header Banner */}
           <img
             src="https://i.ibb.co/qYk7fyKf/Header-Banner.png"
             alt="Header"
@@ -298,35 +412,41 @@ export default function SessionPlanPreviewPage() {
           />
 
           <div className="page-content">
-            <h1 style={{ fontSize: '2.25rem', marginBottom: '2.5rem', fontWeight: 'bold' }}>
+            <h1 style={{
+              fontSize: '2.25rem',
+              marginBottom: '2.5rem',
+              fontWeight: 'bold'
+            }}>
               {title}
             </h1>
 
-            {/* Main Goals */}
             {mainGoals.length > 0 && (
               <div style={{ marginBottom: '2rem', position: 'relative' }}>
-                <h3 style={{
-                  fontSize: '1.875rem',
-                  fontStyle: 'italic',
-                  position: 'absolute',
-                  top: '-1rem',
-                  left: '1.5rem',
-                  background: '#e6e6db',
-                  padding: '0 0.5rem',
-                  zIndex: 1
-                }}>
+                <h3
+                  style={{
+                    fontSize: '1.875rem',
+                    fontStyle: 'italic',
+                    position: 'absolute',
+                    top: '-1rem',
+                    left: '1.5rem',
+                    background: '#e6e6db',
+                    padding: '0 0.5rem',
+                    zIndex: 1
+                  }}
+                >
                   Main Goals
                 </h3>
+
                 <div style={{
                   border: '5px solid #4e6749',
                   borderRadius: '0.5rem',
-                  padding: '1.5rem 1rem 1rem 1rem',
+                  padding: '1.5rem 1rem 1rem',
                   display: 'grid',
                   gridTemplateColumns: '1fr 1fr',
                   gap: '0.5rem 2rem'
                 }}>
                   {mainGoals.map((g, i) => (
-                    <p key={i} style={{ margin: 0, color: '#1f2937', fontFamily: 'Arial, sans-serif' }}>
+                    <p key={i} style={{ margin: 0 }}>
                       <SafeHtmlRenderer html={g} />
                     </p>
                   ))}
@@ -334,12 +454,18 @@ export default function SessionPlanPreviewPage() {
               </div>
             )}
 
-            {/* Explanation of Behaviour */}
             {explanationOfBehaviour && (
               <div style={{ marginBottom: '2.5rem' }}>
-                <h3 style={{ fontSize: '1.875rem', fontStyle: 'italic', marginBottom: '0.75rem' }}>
+                <h3
+                  style={{
+                    fontSize: '1.875rem',
+                    fontStyle: 'italic',
+                    marginBottom: '0.75rem'
+                  }}
+                >
                   Explanation of Behaviour
                 </h3>
+
                 <div style={{ fontFamily: 'Arial, sans-serif' }}>
                   <SafeHtmlRenderer html={explanationOfBehaviour} />
                 </div>
@@ -347,7 +473,6 @@ export default function SessionPlanPreviewPage() {
             )}
           </div>
 
-          {/* Footer for Page 1 */}
           <img
             src="https://i.ibb.co/MkVL9vXD/Screenshot-2025-11-13-at-15-28-11.png"
             alt="Footer Page 1"
@@ -355,101 +480,12 @@ export default function SessionPlanPreviewPage() {
           />
         </div>
 
-        {/* PAGE 2+ - Action Points (2 per page) */}
-        {editableActionPoints.length > 0 && (() => {
-          const pages = [];
-          const pointsPerPage = 2;
+        {/* DYNAMIC ACTION POINT PAGES */}
+        <DynamicActionPointPages
+          title={title}
+          editableActionPoints={editableActionPoints}
+        />
 
-          for (let pageIndex = 0; pageIndex < Math.ceil(editableActionPoints.length / pointsPerPage); pageIndex++) {
-            const startIdx = pageIndex * pointsPerPage;
-            const endIdx = Math.min(startIdx + pointsPerPage, editableActionPoints.length);
-            const pagePoints = editableActionPoints.slice(startIdx, endIdx);
-            const isLastPage = endIdx === editableActionPoints.length;
-
-            pages.push(
-              <div key={`action-page-${pageIndex}`} className="page">
-                {/* Header Banner */}
-                <img
-                  src="https://i.ibb.co/qYk7fyKf/Header-Banner.png"
-                  alt="Header"
-                  className="page-header"
-                />
-
-                <div className="page-content">
-                  {/* Title on first Action Point page only */}
-                  {pageIndex === 0 && (
-                    <>
-                      <h1 style={{ fontSize: '2.25rem', marginBottom: '2.5rem', fontWeight: 'bold' }}>
-                        {title}
-                      </h1>
-                    </>
-                  )}
-
-                  {/* Action Points for this page */}
-                  {pagePoints.map((ap, i) => (
-                    <div
-                      key={startIdx + i}
-                      className="action-point"
-                      style={{
-                        position: 'relative',
-                        marginTop: (pageIndex === 0 && i === 0) ? '2rem' : (pageIndex > 0 && i === 0) ? '2rem' : '0',
-                        marginBottom: '2rem'
-                      }}
-                    >
-                      <h3 style={{
-                        fontSize: '1.875rem',
-                        fontStyle: 'italic',
-                        position: 'absolute',
-                        top: '-1rem',
-                        left: '1.5rem',
-                        background: '#e6e6db',
-                        padding: '0 0.5rem',
-                        zIndex: 1
-                      }}>
-                        <SafeHtmlRenderer html={ap.header} />
-                      </h3>
-                      <div style={{
-                        border: '5px solid #4e6749',
-                        borderRadius: '0.5rem',
-                        padding: '1.5rem 1rem 1rem 1rem',
-                        fontFamily: 'Arial, sans-serif'
-                      }}>
-                        <SafeHtmlRenderer html={ap.details} />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Reminder on last page - absolutely positioned above footer */}
-                {isLastPage && (
-                  <div style={{
-                    position: 'absolute',
-                    bottom: '120px',
-                    left: '3.4rem',
-                    right: '3.4rem',
-                    fontSize: '16px',
-                    fontFamily: 'Arial, sans-serif'
-                  }}>
-                    <p style={{ margin: 0 }}>
-                      <strong>Reminder:</strong>
-                      <br />
-                      I'm here to support you and your dog from a behavioural perspective. Sometimes, behavioural challenges can be linked to pain, diet, or physical discomfort, so I may highlight these areas if they seem relevant based on behavioural symptoms you've shared with me or that I've observed. Any thoughts I share within this report or any other communication with you around health, food, or physical wellbeing are intended to guide your conversations with your vet, physiotherapist, or nutritionist. I'm not a vet and don't offer medical advice or diagnosis.
-                    </p>
-                  </div>
-                )}
-
-                {/* Footer for Page 2+ */}
-                <img
-                  src="https://i.ibb.co/3Y4bTFNt/Screenshot-2025-11-13-at-15-28-11.png"
-                  alt="Footer Page 2+"
-                  className="page-footer"
-                />
-              </div>
-            );
-          }
-
-          return pages;
-        })()}
       </div>
     </>
   );
