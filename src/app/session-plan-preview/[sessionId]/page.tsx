@@ -352,99 +352,81 @@ export default function SessionPlanPreviewPage() {
           />
         </div>
 
-        {/* PAGE 2+ - Action Points (2 per page to prevent splitting) */}
-        {editableActionPoints.length > 0 && (() => {
-          const pages = [];
-          const pointsPerPage = 2;
+        {/* PAGE 2+ - Action Points (flow naturally) */}
+        {editableActionPoints.length > 0 && (
+          <div className="page">
+            {/* Header Banner */}
+            <img
+              src="https://i.ibb.co/qYk7fyKf/Header-Banner.png"
+              alt="Header"
+              className="page-header"
+            />
 
-          for (let pageIndex = 0; pageIndex < Math.ceil(editableActionPoints.length / pointsPerPage); pageIndex++) {
-            const startIdx = pageIndex * pointsPerPage;
-            const endIdx = Math.min(startIdx + pointsPerPage, editableActionPoints.length);
-            const pagePoints = editableActionPoints.slice(startIdx, endIdx);
-            const isLastPage = endIdx === editableActionPoints.length;
+            <div className="page-content">
+              {/* Title */}
+              <h1 style={{ fontSize: '2.25rem', marginBottom: '2.5rem', fontWeight: 'bold' }}>
+                {title}
+              </h1>
 
-            pages.push(
-              <div key={`action-page-${pageIndex}`} className="page">
-                {/* Header Banner */}
-                <img
-                  src="https://i.ibb.co/qYk7fyKf/Header-Banner.png"
-                  alt="Header"
-                  className="page-header"
-                />
-
-                <div className="page-content">
-                  {/* Title on first Action Point page only */}
-                  {pageIndex === 0 && (
-                    <h1 style={{ fontSize: '2.25rem', marginBottom: '2.5rem', fontWeight: 'bold' }}>
-                      {title}
-                    </h1>
-                  )}
-
-                  {/* Action Points for this page */}
-                  {pagePoints.map((ap, i) => (
-                    <div
-                      key={startIdx + i}
-                      className="action-point"
-                      style={{
-                        position: 'relative',
-                        marginTop: (pageIndex === 0 && i === 0) ? '3rem' : (pageIndex > 0 && i === 0) ? '2rem' : '0'
-                      }}
-                    >
-                      <h3 style={{
-                        fontSize: '1.875rem',
-                        fontStyle: 'italic',
-                        position: 'absolute',
-                        top: '-1rem',
-                        left: '1.5rem',
-                        padding: '0 0.5rem',
-                        zIndex: 1
-                      }}>
-                        <SafeHtmlRenderer html={ap.header} />
-                      </h3>
-                      <div style={{
-                        border: '5px solid #4e6749',
-                        borderRadius: '0.5rem',
-                        padding: '1.5rem 1rem 1rem 1rem',
-                        fontFamily: 'Arial, sans-serif'
-                      }}>
-                        <SafeHtmlRenderer html={ap.details} />
-                      </div>
-                    </div>
-                  ))}
-
-
-                </div>
-
-                {/* Reminder on last page - absolutely positioned above footer */}
-                {isLastPage && (
-                  <div style={{
+              {/* Action Points - flow naturally */}
+              {editableActionPoints.map((ap, i) => (
+                <div
+                  key={i}
+                  className="action-point"
+                  style={{
+                    position: 'relative',
+                    marginTop: i === 0 ? '3rem' : '0',
+                    marginBottom: '2rem'
+                  }}
+                >
+                  <h3 style={{
+                    fontSize: '1.875rem',
+                    fontStyle: 'italic',
                     position: 'absolute',
-                    bottom: '120px', // Adjust based on footer height
-                    left: '3.4rem',
-                    right: '3.4rem',
-                    fontSize: '16px',
+                    top: '-1rem',
+                    left: '1.5rem',
+                    background: '#e6e6db',
+                    padding: '0 0.5rem',
+                    zIndex: 1
+                  }}>
+                    <SafeHtmlRenderer html={ap.header} />
+                  </h3>
+                  <div style={{
+                    border: '5px solid #4e6749',
+                    borderRadius: '0.5rem',
+                    padding: '1.5rem 1rem 1rem 1rem',
                     fontFamily: 'Arial, sans-serif'
                   }}>
-                    <p style={{ margin: 0 }}>
-                      <strong>Reminder:</strong>
-                      <br />
-                      I'm here to support you and your dog from a behavioural perspective. Sometimes, behavioural challenges can be linked to pain, diet, or physical discomfort, so I may highlight these areas if they seem relevant based on behavioural symptoms you've shared with me or that I've observed. Any thoughts I share within this report or any other communication with you around health, food, or physical wellbeing are intended to guide your conversations with your vet, physiotherapist, or nutritionist. I'm not a vet and don't offer medical advice or diagnosis.
-                    </p>
+                    <SafeHtmlRenderer html={ap.details} />
                   </div>
-                )}
+                </div>
+              ))}
+            </div>
 
-                {/* Footer for Page 2+ */}
-                <img
-                  src="https://i.ibb.co/3Y4bTFNt/Screenshot-2025-11-13-at-15-28-11.png"
-                  alt="Footer Page 2+"
-                  className="page-footer"
-                />
-              </div>
-            );
-          }
+            {/* Reminder - absolutely positioned above footer */}
+            <div style={{
+              position: 'absolute',
+              bottom: '120px',
+              left: '3.4rem',
+              right: '3.4rem',
+              fontSize: '16px',
+              fontFamily: 'Arial, sans-serif'
+            }}>
+              <p style={{ margin: 0 }}>
+                <strong>Reminder:</strong>
+                <br />
+                I'm here to support you and your dog from a behavioural perspective. Sometimes, behavioural challenges can be linked to pain, diet, or physical discomfort, so I may highlight these areas if they seem relevant based on behavioural symptoms you've shared with me or that I've observed. Any thoughts I share within this report or any other communication with you around health, food, or physical wellbeing are intended to guide your conversations with your vet, physiotherapist, or nutritionist. I'm not a vet and don't offer medical advice or diagnosis.
+              </p>
+            </div>
 
-          return pages;
-        })()}
+            {/* Footer for Page 2+ */}
+            <img
+              src="https://i.ibb.co/3Y4bTFNt/Screenshot-2025-11-13-at-15-28-11.png"
+              alt="Footer Page 2+"
+              className="page-footer"
+            />
+          </div>
+        )}
       </div>
     </>
   );
