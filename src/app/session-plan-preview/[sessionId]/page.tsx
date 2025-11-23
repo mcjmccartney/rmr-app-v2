@@ -219,6 +219,7 @@ export default function SessionPlanPreviewPage() {
         .page-header {
           width: 100%;
           height: auto;
+          margin-bottom: 20px;
         }
 
         .page-footer {
@@ -230,7 +231,7 @@ export default function SessionPlanPreviewPage() {
         }
 
         .page-content {
-          padding: 1rem 3.4rem;
+          padding: 0rem 3.4rem;
           flex: 1;
           overflow: auto;
         }
@@ -381,14 +382,20 @@ export default function SessionPlanPreviewPage() {
 
                   {/* Action Points for this page */}
                   {pagePoints.map((ap, i) => (
-                    <div key={startIdx + i} className="action-point" style={{ position: 'relative' }}>
+                    <div
+                      key={startIdx + i}
+                      className="action-point"
+                      style={{
+                        position: 'relative',
+                        marginTop: (pageIndex === 0 && i === 0) ? '3rem' : (pageIndex > 0 && i === 0) ? '2rem' : '0'
+                      }}
+                    >
                       <h3 style={{
                         fontSize: '1.875rem',
                         fontStyle: 'italic',
                         position: 'absolute',
                         top: '-1rem',
                         left: '1.5rem',
-                        background: '#e6e6db',
                         padding: '0 0.5rem',
                         zIndex: 1
                       }}>
@@ -412,11 +419,10 @@ export default function SessionPlanPreviewPage() {
                 {isLastPage && (
                   <div style={{
                     position: 'absolute',
-                    bottom: '80px', // Adjust based on footer height
+                    bottom: '120px', // Adjust based on footer height
                     left: '3.4rem',
                     right: '3.4rem',
-                    fontSize: '0.875rem',
-                    color: '#374151',
+                    fontSize: '16px',
                     fontFamily: 'Arial, sans-serif'
                   }}>
                     <p style={{ margin: 0 }}>
