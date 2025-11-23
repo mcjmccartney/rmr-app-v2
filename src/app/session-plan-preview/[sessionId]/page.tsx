@@ -105,6 +105,7 @@ function DynamicActionPointPages({ title, editableActionPoints }: DynamicActionP
                   className="action-point"
                   style={{
                     marginBottom: '2rem',
+                    marginTop: (pageIndex === 0 && i === 0) ? '0' : (i === 0) ? '3rem' : '0',
                     position: 'relative'
                   }}
                 >
@@ -456,7 +457,7 @@ export default function SessionPlanPreviewPage() {
                   gap: '0.5rem 2rem'
                 }}>
                   {mainGoals.map((g, i) => (
-                    <p key={i} style={{ margin: 0 }}>
+                    <p key={i} style={{ margin: 0, fontFamily: 'Arial, sans-serif' }}>
                       <SafeHtmlRenderer html={g} />
                     </p>
                   ))}
