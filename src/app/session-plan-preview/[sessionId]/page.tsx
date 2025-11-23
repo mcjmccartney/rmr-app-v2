@@ -352,7 +352,7 @@ export default function SessionPlanPreviewPage() {
           />
         </div>
 
-        {/* PAGE 2+ - Action Points (flow naturally) */}
+        {/* PAGE 2 - Action Points Title */}
         {editableActionPoints.length > 0 && (
           <div className="page">
             {/* Header Banner */}
@@ -368,65 +368,92 @@ export default function SessionPlanPreviewPage() {
                 {title}
               </h1>
 
-              {/* Action Points - flow naturally */}
-              {editableActionPoints.map((ap, i) => (
-                <div
-                  key={i}
-                  className="action-point"
-                  style={{
-                    position: 'relative',
-                    marginTop: i === 0 ? '3rem' : '0',
-                    marginBottom: '2rem'
-                  }}
-                >
-                  <h3 style={{
-                    fontSize: '1.875rem',
-                    fontStyle: 'italic',
-                    position: 'absolute',
-                    top: '-1rem',
-                    left: '1.5rem',
-                    background: '#e6e6db',
-                    padding: '0 0.5rem',
-                    zIndex: 1
-                  }}>
-                    <SafeHtmlRenderer html={ap.header} />
-                  </h3>
-                  <div style={{
-                    border: '5px solid #4e6749',
-                    borderRadius: '0.5rem',
-                    padding: '1.5rem 1rem 1rem 1rem',
-                    fontFamily: 'Arial, sans-serif'
-                  }}>
-                    <SafeHtmlRenderer html={ap.details} />
-                  </div>
-                </div>
-              ))}
+              {/* Action Points Title */}
+              <h2 style={{
+                fontSize: '2rem',
+                fontWeight: 'bold',
+                marginBottom: '2rem',
+                marginTop: '1rem'
+              }}>
+                Action Points
+              </h2>
             </div>
 
-            {/* Reminder - absolutely positioned above footer */}
-            <div style={{
-              position: 'absolute',
-              bottom: '120px',
-              left: '3.4rem',
-              right: '3.4rem',
-              fontSize: '16px',
-              fontFamily: 'Arial, sans-serif'
-            }}>
-              <p style={{ margin: 0 }}>
-                <strong>Reminder:</strong>
-                <br />
-                I'm here to support you and your dog from a behavioural perspective. Sometimes, behavioural challenges can be linked to pain, diet, or physical discomfort, so I may highlight these areas if they seem relevant based on behavioural symptoms you've shared with me or that I've observed. Any thoughts I share within this report or any other communication with you around health, food, or physical wellbeing are intended to guide your conversations with your vet, physiotherapist, or nutritionist. I'm not a vet and don't offer medical advice or diagnosis.
-              </p>
-            </div>
-
-            {/* Footer for Page 2+ */}
+            {/* Footer for Page 2 */}
             <img
               src="https://i.ibb.co/3Y4bTFNt/Screenshot-2025-11-13-at-15-28-11.png"
-              alt="Footer Page 2+"
+              alt="Footer Page 2"
               className="page-footer"
             />
           </div>
         )}
+
+        {/* PAGE 3+ - Action Points (flow naturally across pages) */}
+        {editableActionPoints.map((ap, i) => (
+          <div key={i} className="page">
+            {/* Header Banner */}
+            <img
+              src="https://i.ibb.co/qYk7fyKf/Header-Banner.png"
+              alt="Header"
+              className="page-header"
+            />
+
+            <div className="page-content">
+              {/* Action Point */}
+              <div
+                className="action-point"
+                style={{
+                  position: 'relative',
+                  marginTop: '2rem',
+                  marginBottom: '2rem'
+                }}
+              >
+                <h3 style={{
+                  fontSize: '1.875rem',
+                  fontStyle: 'italic',
+                  position: 'absolute',
+                  top: '-1rem',
+                  left: '1.5rem',
+                  background: '#e6e6db',
+                  padding: '0 0.5rem',
+                  zIndex: 1
+                }}>
+                  <SafeHtmlRenderer html={ap.header} />
+                </h3>
+                <div style={{
+                  border: '5px solid #4e6749',
+                  borderRadius: '0.5rem',
+                  padding: '1.5rem 1rem 1rem 1rem',
+                  fontFamily: 'Arial, sans-serif'
+                }}>
+                  <SafeHtmlRenderer html={ap.details} />
+                </div>
+              </div>
+
+              {/* Reminder on last action point */}
+              {i === editableActionPoints.length - 1 && (
+                <div style={{
+                  marginTop: '3rem',
+                  fontSize: '16px',
+                  fontFamily: 'Arial, sans-serif'
+                }}>
+                  <p style={{ margin: 0 }}>
+                    <strong>Reminder:</strong>
+                    <br />
+                    I'm here to support you and your dog from a behavioural perspective. Sometimes, behavioural challenges can be linked to pain, diet, or physical discomfort, so I may highlight these areas if they seem relevant based on behavioural symptoms you've shared with me or that I've observed. Any thoughts I share within this report or any other communication with you around health, food, or physical wellbeing are intended to guide your conversations with your vet, physiotherapist, or nutritionist. I'm not a vet and don't offer medical advice or diagnosis.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <img
+              src="https://i.ibb.co/3Y4bTFNt/Screenshot-2025-11-13-at-15-28-11.png"
+              alt="Footer"
+              className="page-footer"
+            />
+          </div>
+        ))}
       </div>
     </>
   );
