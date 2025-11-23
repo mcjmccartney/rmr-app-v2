@@ -382,14 +382,6 @@ export default function SessionPlanPreviewPage() {
                       <h1 style={{ fontSize: '2.25rem', marginBottom: '2.5rem', fontWeight: 'bold' }}>
                         {title}
                       </h1>
-                      <h2 style={{
-                        fontSize: '2rem',
-                        fontWeight: 'bold',
-                        marginBottom: '2rem',
-                        marginTop: '1rem'
-                      }}>
-                        Action Points
-                      </h2>
                     </>
                   )}
 
