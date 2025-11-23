@@ -491,8 +491,8 @@ export default function SessionPlanPreviewPage() {
                     style={{
                       width: 'auto',
                       height: '500px',
-                      margin-right: '-25px',
-                      margin-top: '-50px'
+                      marginRight: '-25px',
+                      marginTop: '-50px'
                     }}
                   />
                 </div>
