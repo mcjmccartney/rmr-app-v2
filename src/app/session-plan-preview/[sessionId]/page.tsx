@@ -408,6 +408,7 @@ export default function SessionPlanPreviewPage() {
               border: 'none',
               cursor: isGenerating ? 'wait' : 'pointer',
               zIndex: 999999,
+              fontFamily: 'Arial, sans-serif',
             }}
           >
             {buttonText}
