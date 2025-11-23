@@ -415,7 +415,7 @@ export default function SessionPlanPreviewPage() {
                     bottom: '80px', // Adjust based on footer height
                     left: '3.4rem',
                     right: '3.4rem',
-                    fontSize: '1.875rem',
+                    fontSize: '0.875rem',
                     color: '#374151',
                     fontFamily: 'Arial, sans-serif'
                   }}>
