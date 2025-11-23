@@ -405,17 +405,28 @@ export default function SessionPlanPreviewPage() {
                     </div>
                   ))}
 
-                  {/* Reminder on last page */}
-                  {isLastPage && (
-                    <div style={{ marginTop: '3rem', fontSize: '0.875rem', color: '#374151', fontFamily: 'Arial, sans-serif', lineHeight: '1.6' }}>
-                      <p style={{ margin: 0 }}>
-                        <strong>Reminder:</strong>
-                        <br />
-                        I'm here to support you and your dog from a behavioural perspective. Sometimes, behavioural challenges can be linked to pain, diet, or physical discomfort, so I may highlight these areas if they seem relevant based on behavioural symptoms you've shared with me or that I've observed. Any thoughts I share within this report or any other communication with you around health, food, or physical wellbeing are intended to guide your conversations with your vet, physiotherapist, or nutritionist. I'm not a vet and don't offer medical advice or diagnosis.
-                      </p>
-                    </div>
-                  )}
+
                 </div>
+
+                {/* Reminder on last page - absolutely positioned above footer */}
+                {isLastPage && (
+                  <div style={{
+                    position: 'absolute',
+                    bottom: '80px', // Adjust based on footer height
+                    left: '3.4rem',
+                    right: '3.4rem',
+                    fontSize: '0.875rem',
+                    color: '#374151',
+                    fontFamily: 'Arial, sans-serif',
+                    lineHeight: '1.6'
+                  }}>
+                    <p style={{ margin: 0 }}>
+                      <strong>Reminder:</strong>
+                      <br />
+                      I'm here to support you and your dog from a behavioural perspective. Sometimes, behavioural challenges can be linked to pain, diet, or physical discomfort, so I may highlight these areas if they seem relevant based on behavioural symptoms you've shared with me or that I've observed. Any thoughts I share within this report or any other communication with you around health, food, or physical wellbeing are intended to guide your conversations with your vet, physiotherapist, or nutritionist. I'm not a vet and don't offer medical advice or diagnosis.
+                    </p>
+                  </div>
+                )}
 
                 {/* Footer for Page 2+ */}
                 <img
