@@ -105,7 +105,7 @@ function DynamicActionPointPages({ title, editableActionPoints }: DynamicActionP
                   className="action-point"
                   style={{
                     marginBottom: '2rem',
-                    marginTop: (pageIndex === 0 && i === 0) ? '0' : (i === 0) ? '3rem' : '0',
+                    marginTop: (pageIndex === 0 && i === 0) ? '0' : (i === 0) ? '2rem' : '0',
                     position: 'relative'
                   }}
                 >
@@ -466,7 +466,7 @@ export default function SessionPlanPreviewPage() {
             )}
 
             {explanationOfBehaviour && (
-              <div style={{ marginBottom: '2.5rem' }}>
+              <div style={{ marginBottom: '2.5rem', position: 'relative' }}>
                 <h3
                   style={{
                     fontSize: '1.875rem',
@@ -477,8 +477,23 @@ export default function SessionPlanPreviewPage() {
                   Explanation of Behaviour
                 </h3>
 
-                <div style={{ fontFamily: 'Arial, sans-serif' }}>
-                  <SafeHtmlRenderer html={explanationOfBehaviour} />
+                <div style={{
+                  fontFamily: 'Arial, sans-serif',
+                  display: 'flex',
+                  gap: '1.5rem'
+                }}>
+                  <div style={{ flex: 1 }}>
+                    <SafeHtmlRenderer html={explanationOfBehaviour} />
+                  </div>
+                  <img
+                    src="https://i.ibb.co/k6Dcmnws/Paws.png"
+                    alt="Paws"
+                    style={{
+                      width: '80px',
+                      height: 'auto',
+                      alignSelf: 'flex-start'
+                    }}
+                  />
                 </div>
               </div>
             )}
