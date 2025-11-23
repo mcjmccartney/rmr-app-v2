@@ -6,11 +6,21 @@ import { SessionPlan, Session, Client, ActionPoint } from '@/types';
 import SafeHtmlRenderer from '@/components/SafeHtmlRenderer';
 import { cooperLtBT } from '@/app/fonts';
 
+interface EditableActionPoint {
+  header: string;
+  details: string;
+}
+
 /* -----------------------------------------------------------------------
    NEW COMPONENT — DYNAMIC ACTION POINT PAGINATION
 ------------------------------------------------------------------------ */
-function DynamicActionPointPages({ title, editableActionPoints }) {
-  const [pages, setPages] = useState([]);
+interface DynamicActionPointPagesProps {
+  title: string;
+  editableActionPoints: EditableActionPoint[];
+}
+
+function DynamicActionPointPages({ title, editableActionPoints }: DynamicActionPointPagesProps) {
+  const [pages, setPages] = useState<EditableActionPoint[][]>([]);
 
   useEffect(() => {
     if (!editableActionPoints || editableActionPoints.length === 0) return;
@@ -28,8 +38,8 @@ function DynamicActionPointPages({ title, editableActionPoints }) {
     tempWrapper.style.fontFamily = 'Arial, sans-serif';
     document.body.appendChild(tempWrapper);
 
-    const builtPages = [];
-    let currentPage = [];
+    const builtPages: EditableActionPoint[][] = [];
+    let currentPage: EditableActionPoint[] = [];
     let currentHeight = 0;
 
     editableActionPoints.forEach((ap) => {
@@ -181,7 +191,7 @@ export default function SessionPlanPreviewPage() {
   const [sessionPlan, setSessionPlan] = useState<SessionPlan | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [client, setClient] = useState<Client | null>(null);
-  const [editableActionPoints, setEditableActionPoints] = useState([]);
+  const [editableActionPoints, setEditableActionPoints] = useState<EditableActionPoint[]>([]);
   const [mainGoals, setMainGoals] = useState<string[]>([]);
   const [explanationOfBehaviour, setExplanationOfBehaviour] = useState('');
   const [title, setTitle] = useState('');
