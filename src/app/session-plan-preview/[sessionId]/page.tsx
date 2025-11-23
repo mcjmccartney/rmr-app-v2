@@ -489,9 +489,10 @@ export default function SessionPlanPreviewPage() {
                     src="https://i.ibb.co/k6Dcmnws/Paws.png"
                     alt="Paws"
                     style={{
-                      width: '80px',
-                      height: 'auto',
-                      alignSelf: 'flex-start'
+                      width: 'auto',
+                      height: '500px',
+                      margin-right: '-25px',
+                      margin-top: '-50px'
                     }}
                   />
                 </div>
