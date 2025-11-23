@@ -415,10 +415,9 @@ export default function SessionPlanPreviewPage() {
                     bottom: '80px', // Adjust based on footer height
                     left: '3.4rem',
                     right: '3.4rem',
-                    fontSize: '0.875rem',
+                    fontSize: '1.875rem',
                     color: '#374151',
-                    fontFamily: 'Arial, sans-serif',
-                    lineHeight: '1.6'
+                    fontFamily: 'Arial, sans-serif'
                   }}>
                     <p style={{ margin: 0 }}>
                       <strong>Reminder:</strong>
