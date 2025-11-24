@@ -28,8 +28,8 @@ function DynamicActionPointPages({ title, editableActionPoints }: DynamicActionP
 
     // Approx A4 height in px (297mm * 3.78)
     const PAGE_HEIGHT = 297 * 3.78; // ~1122px
-    const CONTENT_MAX = PAGE_HEIGHT - 250;
-    // 250px reserved for header/footer (tuned to match your layout)
+    const CONTENT_MAX = PAGE_HEIGHT - 350;
+    // 350px reserved for header/footer to prevent overlap
     const REMINDER_HEIGHT = 300;
     // Approximate height needed for the reminder text
 
@@ -54,8 +54,17 @@ function DynamicActionPointPages({ title, editableActionPoints }: DynamicActionP
         <h3 style="font-size:1.875rem;font-style:italic;margin-bottom:1rem;">
           ${ap.header}
         </h3>
-        ${ap.details}
+        <div class="action-point-content">
+          ${ap.details}
+        </div>
       `;
+
+      // Apply paragraph spacing styles to match rendered output
+      const paragraphs = block.querySelectorAll('p');
+      paragraphs.forEach((p, index) => {
+        (p as HTMLElement).style.marginBottom = index === paragraphs.length - 1 ? '0' : '0.5rem';
+      });
+
       tempWrapper.appendChild(block);
 
       const blockHeight = block.offsetHeight;
@@ -142,6 +151,7 @@ function DynamicActionPointPages({ title, editableActionPoints }: DynamicActionP
                       padding: '1.5rem 1rem 1rem 1rem',
                       fontFamily: 'Arial, sans-serif'
                     }}
+                    className="[&_p]:mb-2 [&_p:last-child]:mb-0"
                   >
                     <SafeHtmlRenderer html={ap.details} />
                   </div>
