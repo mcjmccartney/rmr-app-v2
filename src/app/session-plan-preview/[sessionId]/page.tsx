@@ -21,14 +21,17 @@ interface DynamicActionPointPagesProps {
 
 function DynamicActionPointPages({ title, editableActionPoints }: DynamicActionPointPagesProps) {
   const [pages, setPages] = useState<EditableActionPoint[][]>([]);
+  const [needsSeparateReminderPage, setNeedsSeparateReminderPage] = useState(false);
 
   useEffect(() => {
     if (!editableActionPoints || editableActionPoints.length === 0) return;
 
     // Approx A4 height in px (297mm * 3.78)
     const PAGE_HEIGHT = 297 * 3.78; // ~1122px
-    const CONTENT_MAX = PAGE_HEIGHT - 250; 
+    const CONTENT_MAX = PAGE_HEIGHT - 250;
     // 250px reserved for header/footer (tuned to match your layout)
+    const REMINDER_HEIGHT = 300;
+    // Approximate height needed for the reminder text
 
     const tempWrapper = document.createElement('div');
     tempWrapper.style.position = 'absolute';
@@ -71,6 +74,12 @@ function DynamicActionPointPages({ title, editableActionPoints }: DynamicActionP
     // Push last page
     if (currentPage.length > 0) builtPages.push(currentPage);
 
+    // Check if there's enough space for the reminder on the last page
+    // If the last page content height + reminder height exceeds the max, create a separate page
+    const lastPageHeight = currentHeight;
+    const needsNewPage = lastPageHeight + REMINDER_HEIGHT > CONTENT_MAX;
+    setNeedsSeparateReminderPage(needsNewPage);
+
     document.body.removeChild(tempWrapper);
     setPages(builtPages);
   }, [editableActionPoints]);
@@ -78,7 +87,8 @@ function DynamicActionPointPages({ title, editableActionPoints }: DynamicActionP
   return (
     <>
       {pages.map((page, pageIndex) => {
-        const isLast = pageIndex === pages.length - 1;
+        const isLastActionPointPage = pageIndex === pages.length - 1;
+        const showReminderOnThisPage = isLastActionPointPage && !needsSeparateReminderPage;
 
         return (
           <div key={pageIndex} className="page">
@@ -138,12 +148,12 @@ function DynamicActionPointPages({ title, editableActionPoints }: DynamicActionP
                 </div>
               ))}
 
-              {/* LAST PAGE REMINDER - fixed position above footer */}
-              {isLast && (
+              {/* REMINDER - show on last action point page if there's room */}
+              {showReminderOnThisPage && (
                 <div
                   style={{
                     position: 'absolute',
-                    bottom: '120px',
+                    bottom: '80px',
                     left: '3.4rem',
                     right: '3.4rem',
                     fontSize: '16px',
@@ -174,6 +184,49 @@ function DynamicActionPointPages({ title, editableActionPoints }: DynamicActionP
           </div>
         );
       })}
+
+      {/* SEPARATE REMINDER PAGE - if needed */}
+      {needsSeparateReminderPage && (
+        <div className="page">
+          <img
+            src="https://i.ibb.co/qYk7fyKf/Header-Banner.png"
+            alt="Header"
+            className="page-header"
+          />
+
+          <div className="page-content">
+            <div
+              style={{
+                position: 'absolute',
+                bottom: '80px',
+                left: '3.4rem',
+                right: '3.4rem',
+                fontSize: '16px',
+                fontFamily: 'Arial, sans-serif'
+              }}
+            >
+              <p style={{ margin: 0 }}>
+                <strong>Reminder:</strong><br />
+                I'm here to support you and your dog from a behavioural perspective.
+                Sometimes, behavioural challenges can be linked to pain, diet, or
+                physical discomfort, so I may highlight these areas if they seem
+                relevant based on behavioural symptoms you've shared with me or that
+                I've observed. Any thoughts I share within this report or any other
+                communication with you around health, food, or physical wellbeing are
+                intended to guide your conversations with your vet, physiotherapist,
+                or nutritionist. I'm not a vet and don't offer medical advice or
+                diagnosis.
+              </p>
+            </div>
+          </div>
+
+          <img
+            src="https://i.ibb.co/qZMcS8m/Copy-of-Raising-My-Rescue.png"
+            alt="Footer"
+            className="page-footer"
+          />
+        </div>
+      )}
     </>
   );
 }
