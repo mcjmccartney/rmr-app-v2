@@ -414,97 +414,99 @@ export default function SessionPlanPreviewPage() {
           </button>
         )}
 
-        {/* PAGE 1 */}
-        <div className="page">
-          <img
-            src="https://i.ibb.co/qYk7fyKf/Header-Banner.png"
-            alt="Header"
-            className="page-header"
-          />
+        {/* PAGE 1 - Only render if noFirstPage is false */}
+        {!sessionPlan?.noFirstPage && (
+          <div className="page">
+            <img
+              src="https://i.ibb.co/qYk7fyKf/Header-Banner.png"
+              alt="Header"
+              className="page-header"
+            />
 
-          <div className="page-content">
-            <h1 style={{
-              fontSize: '2.25rem',
-              marginBottom: '2.5rem',
-              fontWeight: 'bold'
-            }}>
-              {title}
-            </h1>
+            <div className="page-content">
+              <h1 style={{
+                fontSize: '2.25rem',
+                marginBottom: '2.5rem',
+                fontWeight: 'bold'
+              }}>
+                {title}
+              </h1>
 
-            {mainGoals.length > 0 && (
-              <div style={{ marginBottom: '2rem', position: 'relative' }}>
-                <h3
-                  style={{
-                    fontSize: '1.875rem',
-                    fontStyle: 'italic',
-                    position: 'absolute',
-                    top: '-1rem',
-                    left: '1.5rem',
-                    background: '#eaeade',
-                    padding: '0 0.5rem',
-                    zIndex: 1
-                  }}
-                >
-                  Main Goals
-                </h3>
-
-                <div style={{
-                  border: '5px solid #4e6749',
-                  borderRadius: '0.5rem',
-                  padding: '1.5rem 1rem 1rem',
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 1fr',
-                  gap: '0.5rem 2rem'
-                }}>
-                  {mainGoals.map((g, i) => (
-                    <p key={i} style={{ margin: 0, fontFamily: 'Arial, sans-serif' }}>
-                      <SafeHtmlRenderer html={g} />
-                    </p>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {explanationOfBehaviour && (
-              <div style={{ marginBottom: '2.5rem', position: 'relative' }}>
-                <h3
-                  style={{
-                    fontSize: '1.875rem',
-                    fontStyle: 'italic',
-                    marginBottom: '0.75rem'
-                  }}
-                >
-                  Explanation of Behaviour
-                </h3>
-
-                <div style={{
-                  fontFamily: 'Arial, sans-serif',
-                  display: 'flex'
-                }}>
-                  <div style={{ flex: 1 }}>
-                    <SafeHtmlRenderer html={explanationOfBehaviour} />
-                  </div>
-                  <img
-                    src="https://i.ibb.co/k6Dcmnws/Paws.png"
-                    alt="Paws"
+              {mainGoals.length > 0 && (
+                <div style={{ marginBottom: '2rem', position: 'relative' }}>
+                  <h3
                     style={{
-                      width: 'auto',
-                      height: '500px',
-                      marginRight: '-25px',
-                      marginTop: '-50px'
+                      fontSize: '1.875rem',
+                      fontStyle: 'italic',
+                      position: 'absolute',
+                      top: '-1rem',
+                      left: '1.5rem',
+                      background: '#eaeade',
+                      padding: '0 0.5rem',
+                      zIndex: 1
                     }}
-                  />
-                </div>
-              </div>
-            )}
-          </div>
+                  >
+                    Main Goals
+                  </h3>
 
-          <img
-            src="https://i.ibb.co/MkVL9vXD/Screenshot-2025-11-13-at-15-28-11.png"
-            alt="Footer Page 1"
-            className="page-footer"
-          />
-        </div>
+                  <div style={{
+                    border: '5px solid #4e6749',
+                    borderRadius: '0.5rem',
+                    padding: '1.5rem 1rem 1rem',
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr',
+                    gap: '0.5rem 2rem'
+                  }}>
+                    {mainGoals.map((g, i) => (
+                      <p key={i} style={{ margin: 0, fontFamily: 'Arial, sans-serif' }}>
+                        <SafeHtmlRenderer html={g} />
+                      </p>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {explanationOfBehaviour && (
+                <div style={{ marginBottom: '2.5rem', position: 'relative' }}>
+                  <h3
+                    style={{
+                      fontSize: '1.875rem',
+                      fontStyle: 'italic',
+                      marginBottom: '0.75rem'
+                    }}
+                  >
+                    Explanation of Behaviour
+                  </h3>
+
+                  <div style={{
+                    fontFamily: 'Arial, sans-serif',
+                    display: 'flex'
+                  }}>
+                    <div style={{ flex: 1 }}>
+                      <SafeHtmlRenderer html={explanationOfBehaviour} />
+                    </div>
+                    <img
+                      src="https://i.ibb.co/k6Dcmnws/Paws.png"
+                      alt="Paws"
+                      style={{
+                        width: 'auto',
+                        height: '500px',
+                        marginRight: '-25px',
+                        marginTop: '-50px'
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <img
+              src="https://i.ibb.co/MkVL9vXD/Screenshot-2025-11-13-at-15-28-11.png"
+              alt="Footer Page 1"
+              className="page-footer"
+            />
+          </div>
+        )}
 
         {/* DYNAMIC ACTION POINT PAGES */}
         <DynamicActionPointPages
