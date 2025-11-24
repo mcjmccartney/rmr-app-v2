@@ -171,9 +171,8 @@ function DynamicActionPointPages({ title, editableActionPoints }: DynamicActionP
                       padding: '1.5rem 1rem 1rem 1rem',
                       fontFamily: 'Arial, sans-serif'
                     }}
-                    className="[&_p]:mb-2 [&_p:last-child]:mb-0"
                   >
-                    <SafeHtmlRenderer html={ap.details} />
+                    <SafeHtmlRenderer html={ap.details} paragraphSpacing="tight" />
                   </div>
                 </div>
               ))}

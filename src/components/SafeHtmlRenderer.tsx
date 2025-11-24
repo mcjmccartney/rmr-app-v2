@@ -7,6 +7,7 @@ interface SafeHtmlRendererProps {
   html: string;
   className?: string;
   fallback?: string;
+  paragraphSpacing?: 'tight' | 'normal'; // tight = mb-2, normal = mb-4
 }
 
 // HTML sanitizer using DOMPurify - industry standard security library
@@ -65,10 +66,11 @@ function textToHtml(text: string): string {
   return htmlText;
 }
 
-export default function SafeHtmlRenderer({ 
-  html, 
-  className = '', 
-  fallback = '' 
+export default function SafeHtmlRenderer({
+  html,
+  className = '',
+  fallback = '',
+  paragraphSpacing = 'normal'
 }: SafeHtmlRendererProps) {
   const sanitizedHtml = useMemo(() => {
     try {
@@ -83,9 +85,11 @@ export default function SafeHtmlRenderer({
     return null;
   }
 
+  const spacingClass = paragraphSpacing === 'tight' ? '[&_p]:mb-2' : '[&_p]:mb-4';
+
   return (
     <div
-      className={`${className} [&_p]:mb-4 [&_p:last-child]:mb-0 [&_a]:cursor-pointer [&_a]:hover:opacity-80`}
+      className={`${className} ${spacingClass} [&_p:last-child]:mb-0 [&_a]:cursor-pointer [&_a]:hover:opacity-80`}
       dangerouslySetInnerHTML={{ __html: sanitizedHtml || fallback }}
       style={{
         wordBreak: 'break-word',
