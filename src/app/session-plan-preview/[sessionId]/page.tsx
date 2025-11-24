@@ -167,7 +167,7 @@ function DynamicActionPointPages({ title, editableActionPoints }: DynamicActionP
             </div>
 
             <img
-              src="https://i.ibb.co/3Y4bTFNt/Screenshot-2025-11-13-at-15-28-11.png"
+              src="https://i.ibb.co/qZMcS8m/Copy-of-Raising-My-Rescue.png"
               alt="Footer"
               className="page-footer"
             />
@@ -294,13 +294,26 @@ export default function SessionPlanPreviewPage() {
 
         const aps = [];
         for (const id of plan.action_points || []) {
-          const ap = apList.find((x: any) => x.id === id);
-          if (!ap) continue;
-          const edited = plan.edited_action_points?.[id];
-          aps.push({
-            header: edited?.header || ap.header,
-            details: edited?.details || ap.details,
-          });
+          // Check if this is a custom/blank action point (starts with 'blank-')
+          if (id.startsWith('blank-')) {
+            // For custom action points, use only the edited content
+            const edited = plan.edited_action_points?.[id];
+            if (edited) {
+              aps.push({
+                header: edited.header || '',
+                details: edited.details || '',
+              });
+            }
+          } else {
+            // For predefined action points, look up in apList
+            const ap = apList.find((x: any) => x.id === id);
+            if (!ap) continue;
+            const edited = plan.edited_action_points?.[id];
+            aps.push({
+              header: edited?.header || ap.header,
+              details: edited?.details || ap.details,
+            });
+          }
         }
         setEditableActionPoints(aps);
 
@@ -439,7 +452,7 @@ export default function SessionPlanPreviewPage() {
                   <h3
                     style={{
                       fontSize: '1.875rem',
-                      fontFamily: 'italic',
+                      fontStyle: 'italic',
                       position: 'absolute',
                       top: '-1rem',
                       left: '1.5rem',
@@ -503,7 +516,7 @@ export default function SessionPlanPreviewPage() {
             </div>
 
             <img
-              src="https://i.ibb.co/MkVL9vXD/Screenshot-2025-11-13-at-15-28-11.png"
+              src="https://i.ibb.co/S7Kb8xjh/Copy-of-Raising-My-Rescue-1.png"
               alt="Footer Page 1"
               className="page-footer"
             />

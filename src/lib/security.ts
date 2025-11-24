@@ -94,20 +94,38 @@ export function addSecurityHeaders(response: NextResponse, allowEmbedding: boole
     ? "frame-ancestors 'self' https://www.raisingmyrescue.co.uk https://raisingmyrescue.co.uk"
     : "frame-ancestors 'none'";
 
+  // Note: 'unsafe-inline' and 'unsafe-eval' are security risks but currently required for:
+  // - Next.js development mode and hot reloading
+  // - Stripe.js integration
+  // - Rich text editor (TipTap/ProseMirror)
+  // TODO: Migrate to nonce-based CSP in future for better security
   const csp = [
     "default-src 'self'",
+    // Script sources - includes unsafe-inline/eval for compatibility
     "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live https://js.stripe.com https://unpkg.com",
+    // Style sources - unsafe-inline needed for dynamic styles
     "style-src 'self' 'unsafe-inline'",
+    // Font sources - only self-hosted
     "font-src 'self'",
+    // Image sources - allow data URIs, HTTPS, and blobs for uploaded images
     "img-src 'self' data: https: blob:",
-    "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://hook.eu1.make.com https://api.stripe.com https://docs.google.com https://www.googleapis.com https://api.mapbox.com",
+    // Connection sources - restrict to known APIs only
+    "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://hook.eu1.make.com https://api.stripe.com https://docs.google.com https://www.googleapis.com https://api.mapbox.com https://i.ibb.co",
+    // Frame sources - only Stripe
     "frame-src 'self' https://js.stripe.com https://hooks.stripe.com",
+    // Worker sources - for service workers and web workers
     "worker-src 'self' blob:",
+    // Child sources - for iframes and workers
     "child-src 'self' blob:",
+    // Frame ancestors - control who can embed this app
     frameAncestors,
+    // Base URI - prevent base tag injection
     "base-uri 'self'",
+    // Form action - only allow forms to submit to same origin
     "form-action 'self'",
+    // Object sources - block plugins like Flash
     "object-src 'none'",
+    // Upgrade insecure requests to HTTPS
     "upgrade-insecure-requests"
   ].join('; ');
   
