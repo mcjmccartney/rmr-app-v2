@@ -217,13 +217,13 @@ export default function SessionPlanPreviewPage() {
     try {
       const params = new URLSearchParams({
         sessionId: sessionPlan.sessionId,
-        clientEmail: client.email || '',
-        clientFirstName: client.firstName || '',
-        clientLastName: client.lastName || '',
-        dogName: session.dogName || client.dogName || '',
+        clientEmail: (client as any).email || '',
+        clientFirstName: (client as any).first_name || '',
+        clientLastName: (client as any).last_name || '',
+        dogName: (session as any).dog_name || (client as any).dog_name || '',
         sessionNumber: sessionPlan.sessionNumber?.toString() || '1',
-        bookingDate: session.bookingDate || '',
-        bookingTime: session.bookingTime || '',
+        bookingDate: (session as any).booking_date || '',
+        bookingTime: (session as any).booking_time || '',
       });
 
       const response = await fetch(`/api/generate-session-plan-pdf?${params}`);
