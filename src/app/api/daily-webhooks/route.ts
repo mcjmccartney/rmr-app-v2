@@ -1,9 +1,18 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { verifyWebhookApiKey } from '@/lib/webhookAuth';
 
 // Daily webhook endpoint - triggered by Supabase cron job at 8:00 AM UTC
-export async function POST() {
+export async function POST(request: NextRequest) {
   try {
+    // Verify webhook authentication (for cron jobs)
+    if (!verifyWebhookApiKey(request)) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
     console.log('[DAILY-WEBHOOKS] Starting daily webhook processing...');
     
     const supabase = createClient(

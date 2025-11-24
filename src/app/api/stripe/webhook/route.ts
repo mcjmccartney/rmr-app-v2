@@ -2,9 +2,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { clientEmailAliasService } from '@/services/clientEmailAliasService';
 import { sanitizeEmail, sanitizeString, addSecurityHeaders } from '@/lib/security';
+import { verifyWebhookApiKey } from '@/lib/webhookAuth';
 
 export async function POST(request: NextRequest) {
   try {
+    // Verify webhook authentication
+    if (!verifyWebhookApiKey(request)) {
+      return addSecurityHeaders(NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      ));
+    }
+
     // Create Supabase client with service role key to bypass RLS
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,

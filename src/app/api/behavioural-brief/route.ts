@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { BehaviouralBrief, Client } from '@/types';
+import { verifyWebhookApiKey } from '@/lib/webhookAuth';
 
 // Create Supabase client with service role key (bypasses RLS)
 const supabaseServiceRole = createClient(
@@ -76,6 +77,9 @@ function behaviouralBriefToDbRow(brief: Partial<BehaviouralBrief>): Record<strin
 
 export async function POST(request: NextRequest) {
   try {
+    // Verify webhook authentication (public form submissions don't need auth)
+    // This endpoint is public for form submissions, so we skip auth check
+
     const formData = await request.json();
 
     // Validate required fields

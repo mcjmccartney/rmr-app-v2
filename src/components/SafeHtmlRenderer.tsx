@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import DOMPurify from 'isomorphic-dompurify';
 
 interface SafeHtmlRendererProps {
   html: string;
@@ -8,73 +9,36 @@ interface SafeHtmlRendererProps {
   fallback?: string;
 }
 
-// Simple HTML sanitizer that only allows basic formatting tags
+// HTML sanitizer using DOMPurify - industry standard security library
 function sanitizeHtml(html: string): string {
   if (!html) return '';
-  
-  // Remove any script tags and their content
-  let sanitized = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
-  
-  // Remove any on* event handlers
-  sanitized = sanitized.replace(/\s*on\w+\s*=\s*["'][^"']*["']/gi, '');
-  
-  // Remove any javascript: links
-  sanitized = sanitized.replace(/javascript:/gi, '');
 
   // Convert double line breaks to paragraph breaks for better spacing
-  sanitized = sanitized.replace(/<br\s*\/?>\s*<br\s*\/?>/gi, '</p><p>');
+  let processed = html.replace(/<br\s*\/?>\s*<br\s*\/?>/gi, '</p><p>');
 
   // Wrap content in paragraphs if it contains paragraph breaks
-  if (sanitized.includes('</p><p>')) {
-    sanitized = '<p>' + sanitized + '</p>';
+  if (processed.includes('</p><p>')) {
+    processed = '<p>' + processed + '</p>';
   }
 
-  // Only allow specific safe tags (expanded for booking terms content)
-  const allowedTags = ['b', 'strong', 'i', 'em', 'u', 'br', 'p', 'div', 'span', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'a'];
-  const tagRegex = /<\/?([a-zA-Z][a-zA-Z0-9]*)\b[^>]*>/g;
-
-  sanitized = sanitized.replace(tagRegex, (match, tagName) => {
-    if (allowedTags.includes(tagName.toLowerCase())) {
-      // For closing tags, just return them as-is
-      if (match.startsWith('</')) {
-        return match;
-      }
-      // For opening tags, preserve class and style attributes for formatting
-      const classMatch = match.match(/class\s*=\s*["']([^"']*)["']/i);
-      const styleMatch = match.match(/style\s*=\s*["']([^"']*)["']/i);
-      const hrefMatch = match.match(/href\s*=\s*["']([^"']*)["']/i);
-      const targetMatch = match.match(/target\s*=\s*["']([^"']*)["']/i);
-      const relMatch = match.match(/rel\s*=\s*["']([^"']*)["']/i);
-
-      let attributes = '';
-      if (classMatch) {
-        attributes += ` class="${classMatch[1]}"`;
-      }
-      if (styleMatch) {
-        // Only allow safe CSS properties
-        const safeStyle = styleMatch[1].replace(/(expression|javascript|behavior)/gi, '');
-        attributes += ` style="${safeStyle}"`;
-      }
-      // For anchor tags, preserve href, target, and rel attributes
-      if (tagName.toLowerCase() === 'a') {
-        if (hrefMatch) {
-          // Ensure href doesn't contain javascript:
-          const safeHref = hrefMatch[1].replace(/javascript:/gi, '');
-          attributes += ` href="${safeHref}"`;
-        }
-        if (targetMatch) {
-          attributes += ` target="${targetMatch[1]}"`;
-        }
-        if (relMatch) {
-          attributes += ` rel="${relMatch[1]}"`;
-        }
-      }
-
-      return `<${tagName.toLowerCase()}${attributes}>`;
-    }
-    return ''; // Remove disallowed tags
+  // Use DOMPurify to sanitize HTML with strict configuration
+  const sanitized = DOMPurify.sanitize(processed, {
+    ALLOWED_TAGS: [
+      'b', 'strong', 'i', 'em', 'u', 'br', 'p', 'div', 'span',
+      'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+      'ul', 'ol', 'li', 'a'
+    ],
+    ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'style'],
+    ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|sms|cid|xmpp):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
+    KEEP_CONTENT: true,
+    RETURN_TRUSTED_TYPE: false,
+    // Additional security options
+    FORBID_TAGS: ['script', 'style', 'iframe', 'object', 'embed'],
+    FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover'],
+    ALLOW_DATA_ATTR: false,
+    SAFE_FOR_TEMPLATES: true
   });
-  
+
   return sanitized;
 }
 

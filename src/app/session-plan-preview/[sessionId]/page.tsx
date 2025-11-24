@@ -93,7 +93,8 @@ function DynamicActionPointPages({ title, editableActionPoints }: DynamicActionP
                 <h1 style={{
                   fontSize: '2.25rem',
                   marginBottom: '2.5rem',
-                  fontWeight: 'bold'
+                  fontWeight: 'bold',
+                  fontFamily: 'Arial, sans-serif'
                 }}>
                   {title}
                 </h1>
@@ -427,7 +428,8 @@ export default function SessionPlanPreviewPage() {
               <h1 style={{
                 fontSize: '2.25rem',
                 marginBottom: '2.5rem',
-                fontWeight: 'bold'
+                fontWeight: 'bold',
+                fontFamily: 'Arial, sans-serif'
               }}>
                 {title}
               </h1>
@@ -437,7 +439,7 @@ export default function SessionPlanPreviewPage() {
                   <h3
                     style={{
                       fontSize: '1.875rem',
-                      fontStyle: 'italic',
+                      fontFamily: 'italic',
                       position: 'absolute',
                       top: '-1rem',
                       left: '1.5rem',

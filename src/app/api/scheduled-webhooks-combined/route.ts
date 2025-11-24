@@ -1,5 +1,6 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { verifyWebhookApiKey } from '@/lib/webhookAuth';
 
 async function processWebhooks(sessions: any[], clients: any[], targetDays: number, webhookUrl: string) {
   const now = new Date();
@@ -163,10 +164,18 @@ async function processWebhooks(sessions: any[], clients: any[], targetDays: numb
   return { results, successCount, failureCount };
 }
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   const executionTime = new Date().toISOString();
 
   try {
+    // Verify webhook authentication (for cron jobs)
+    if (!verifyWebhookApiKey(request)) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
     console.log(`[COMBINED WEBHOOKS] Cron job triggered at ${executionTime}`);
 
     const supabase = createClient(

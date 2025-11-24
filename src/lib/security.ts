@@ -89,7 +89,10 @@ export function addSecurityHeaders(response: NextResponse, allowEmbedding: boole
   response.headers.set('Expires', '0');
 
   // Content Security Policy - adjust frame-ancestors based on embedding allowance
-  const frameAncestors = allowEmbedding ? "frame-ancestors 'self' *" : "frame-ancestors 'none'";
+  // Only allow embedding from trusted domains (main website)
+  const frameAncestors = allowEmbedding
+    ? "frame-ancestors 'self' https://www.raisingmyrescue.co.uk https://raisingmyrescue.co.uk"
+    : "frame-ancestors 'none'";
 
   const csp = [
     "default-src 'self'",

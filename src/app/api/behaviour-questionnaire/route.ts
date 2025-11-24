@@ -8,6 +8,8 @@ const supabaseServiceRole = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+// Note: This endpoint is public for form submissions, so no webhook auth required
+
 // Convert database row to Client type
 function dbRowToClient(row: Record<string, any>): Client {
   return {
