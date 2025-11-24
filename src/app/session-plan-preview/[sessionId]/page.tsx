@@ -116,7 +116,7 @@ function DynamicActionPointPages({ title, editableActionPoints }: DynamicActionP
                       position: 'absolute',
                       top: '-1rem',
                       left: '1.5rem',
-                      background: '#e6e6db',
+                      background: '#eaeade',
                       padding: '0 0.5rem',
                       zIndex: 1
                     }}
@@ -344,7 +344,7 @@ export default function SessionPlanPreviewPage() {
         .page {
           width: 210mm;
           height: 297mm;
-          background: #e6e6db;
+          background: #eaeade;
           position: relative;
           page-break-after: always;
           margin: 0 auto 2rem auto;
@@ -379,7 +379,7 @@ export default function SessionPlanPreviewPage() {
 
         @media print {
           .pdf-viewer {
-            background: white;
+            background: #eaeade;
             padding: 0;
           }
           .page {
@@ -440,7 +440,7 @@ export default function SessionPlanPreviewPage() {
                     position: 'absolute',
                     top: '-1rem',
                     left: '1.5rem',
-                    background: '#e6e6db',
+                    background: '#eaeade',
                     padding: '0 0.5rem',
                     zIndex: 1
                   }}
