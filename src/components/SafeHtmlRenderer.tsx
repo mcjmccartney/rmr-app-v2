@@ -40,7 +40,10 @@ function sanitizeHtml(html: string): string {
     SAFE_FOR_TEMPLATES: true
   });
 
-  return sanitized;
+  // Remove empty paragraphs that create unnecessary spacing
+  const cleaned = sanitized.replace(/<p>\s*<\/p>/gi, '');
+
+  return cleaned;
 }
 
 // Convert plain text to HTML with basic formatting preservation
