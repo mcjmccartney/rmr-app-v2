@@ -4,17 +4,42 @@
 -- WARNING: This will replace existing permissive policies with secure ones
 -- Make sure your application authentication is working before applying
 
--- 1. Drop existing permissive policies
+-- 1. Drop ALL existing policies (both permissive and secure)
 DROP POLICY IF EXISTS "Allow all operations on clients" ON clients;
+DROP POLICY IF EXISTS "Authenticated users can manage clients" ON clients;
+
 DROP POLICY IF EXISTS "Allow all operations on sessions" ON sessions;
+DROP POLICY IF EXISTS "Authenticated users can manage sessions" ON sessions;
+
 DROP POLICY IF EXISTS "Allow all operations on memberships" ON memberships;
+DROP POLICY IF EXISTS "Authenticated users can manage memberships" ON memberships;
+
 DROP POLICY IF EXISTS "Allow all operations on behavioural_briefs" ON behavioural_briefs;
+DROP POLICY IF EXISTS "Public can insert behavioural briefs" ON behavioural_briefs;
+DROP POLICY IF EXISTS "Authenticated users can read/update behavioural briefs" ON behavioural_briefs;
+DROP POLICY IF EXISTS "Authenticated users can update behavioural briefs" ON behavioural_briefs;
+
 DROP POLICY IF EXISTS "Allow all operations on behaviour_questionnaires" ON behaviour_questionnaires;
+DROP POLICY IF EXISTS "Public can insert behaviour questionnaires" ON behaviour_questionnaires;
+DROP POLICY IF EXISTS "Authenticated users can read/update behaviour questionnaires" ON behaviour_questionnaires;
+DROP POLICY IF EXISTS "Authenticated users can update behaviour questionnaires" ON behaviour_questionnaires;
+
 DROP POLICY IF EXISTS "Allow all operations on booking_terms" ON booking_terms;
+DROP POLICY IF EXISTS "Public can insert booking terms" ON booking_terms;
+DROP POLICY IF EXISTS "Authenticated users can read/update booking terms" ON booking_terms;
+DROP POLICY IF EXISTS "Authenticated users can update booking terms" ON booking_terms;
+
 DROP POLICY IF EXISTS "Allow all operations on client_email_aliases" ON client_email_aliases;
+DROP POLICY IF EXISTS "Authenticated users can manage client email aliases" ON client_email_aliases;
+
 DROP POLICY IF EXISTS "Allow all operations on action_points" ON action_points;
+DROP POLICY IF EXISTS "Authenticated users can manage action points" ON action_points;
+
 DROP POLICY IF EXISTS "Allow all operations on session_participants" ON session_participants;
+DROP POLICY IF EXISTS "Authenticated users can manage session participants" ON session_participants;
+
 DROP POLICY IF EXISTS "Allow all operations on session_plans" ON session_plans;
+DROP POLICY IF EXISTS "Authenticated users can manage session plans" ON session_plans;
 
 -- 2. Create secure policies for authenticated users only
 
