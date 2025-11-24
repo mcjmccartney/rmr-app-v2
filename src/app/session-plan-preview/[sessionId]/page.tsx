@@ -30,8 +30,6 @@ function DynamicActionPointPages({ title, editableActionPoints }: DynamicActionP
     const PAGE_HEIGHT = 297 * 3.78; // ~1122px
     const CONTENT_MAX = PAGE_HEIGHT - 350;
     // 350px reserved for header/footer to prevent overlap
-    const REMINDER_HEIGHT = 300;
-    // Approximate height needed for the reminder text
 
     const tempWrapper = document.createElement('div');
     tempWrapper.style.position = 'absolute';
@@ -40,6 +38,28 @@ function DynamicActionPointPages({ title, editableActionPoints }: DynamicActionP
     tempWrapper.style.padding = '0 3.4rem';
     tempWrapper.style.fontFamily = 'Arial, sans-serif';
     document.body.appendChild(tempWrapper);
+
+    // Measure the actual reminder height
+    const reminderBlock = document.createElement('div');
+    reminderBlock.style.fontSize = '16px';
+    reminderBlock.style.fontFamily = 'Arial, sans-serif';
+    reminderBlock.innerHTML = `
+      <p style="margin: 0;">
+        <strong>Reminder:</strong><br />
+        I'm here to support you and your dog from a behavioural perspective.
+        Sometimes, behavioural challenges can be linked to pain, diet, or
+        physical discomfort, so I may highlight these areas if they seem
+        relevant based on behavioural symptoms you've shared with me or that
+        I've observed. Any thoughts I share within this report or any other
+        communication with you around health, food, or physical wellbeing are
+        intended to guide your conversations with your vet, physiotherapist,
+        or nutritionist. I'm not a vet and don't offer medical advice or
+        diagnosis.
+      </p>
+    `;
+    tempWrapper.appendChild(reminderBlock);
+    const REMINDER_HEIGHT = reminderBlock.offsetHeight + 40; // Add some buffer
+    tempWrapper.innerHTML = '';
 
     const builtPages: EditableActionPoint[][] = [];
     let currentPage: EditableActionPoint[] = [];
