@@ -1,9 +1,16 @@
 import { Session } from '@/types';
 
-export const calculateQuote = (sessionType: Session['sessionType'], isMember: boolean): number => {
+export const calculateQuote = (
+  sessionType: Session['sessionType'],
+  isMember: boolean,
+  isFirstSession: boolean = false
+): number => {
   switch (sessionType) {
     case 'Online':
-      return isMember ? 50 : 70;
+      if (isFirstSession) {
+        return isMember ? 75 : 95; // First session pricing
+      }
+      return isMember ? 50 : 70; // Subsequent session pricing
     case 'Training - 1hr':
       return isMember ? 50 : 60; // £50 for members, £60 for non-members
     case 'Training - 30mins':
@@ -11,7 +18,10 @@ export const calculateQuote = (sessionType: Session['sessionType'], isMember: bo
     case 'Training - The Mount':
       return isMember ? 50 : 60; // Same pricing as Training - 1hr
     case 'In-Person':
-      return isMember ? 75 : 95;
+      if (isFirstSession) {
+        return isMember ? 100 : 120; // First session pricing
+      }
+      return isMember ? 70 : 90; // Subsequent session pricing
     case 'Online Catchup':
       return 30;
     case 'Group':

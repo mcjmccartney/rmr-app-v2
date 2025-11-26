@@ -184,6 +184,19 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
 
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
 
+  // Helper function to check if this is the client's first Online or In-Person session
+  const isFirstSession = (clientId: string, sessionType: Session['sessionType']): boolean => {
+    if (sessionType !== 'Online' && sessionType !== 'In-Person') {
+      return false; // Only apply first session pricing to Online and In-Person
+    }
+
+    const clientSessions = state.sessions.filter(
+      s => s.clientId === clientId && (s.sessionType === 'Online' || s.sessionType === 'In-Person')
+    );
+
+    return clientSessions.length === 0; // True if no existing Online/In-Person sessions
+  };
+
   const handleClientChange = (clientId: string) => {
     const client = state.clients.find(c => c.id === clientId);
     setSelectedClient(client || null);
@@ -191,19 +204,23 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
     // Set default dog name to primary dog if available
     const defaultDogName = client?.dogName || '';
 
+    const isFirst = isFirstSession(clientId, formData.sessionType);
+
     setFormData({
       ...formData,
       clientId,
       dogName: defaultDogName,
-      quote: calculateQuote(formData.sessionType, client?.membership || false).toString()
+      quote: calculateQuote(formData.sessionType, client?.membership || false, isFirst).toString()
     });
   };
 
   const handleSessionTypeChange = (sessionType: Session['sessionType']) => {
+    const isFirst = selectedClient ? isFirstSession(selectedClient.id, sessionType) : false;
+
     setFormData({
       ...formData,
       sessionType,
-      quote: calculateQuote(sessionType, selectedClient?.membership || false).toString()
+      quote: calculateQuote(sessionType, selectedClient?.membership || false, isFirst).toString()
     });
   };
 
@@ -379,8 +396,10 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
         />
         {selectedClient && (
           <p className="text-sm text-gray-500 mt-1">
-            Auto-calculated: £{calculateQuote(formData.sessionType, selectedClient.membership)}
+            Auto-calculated: £{calculateQuote(formData.sessionType, selectedClient.membership, isFirstSession(selectedClient.id, formData.sessionType))}
             {selectedClient.membership ? ' (Member)' : ' (Non-member)'}
+            {(formData.sessionType === 'Online' || formData.sessionType === 'In-Person') &&
+              isFirstSession(selectedClient.id, formData.sessionType) && ' - First Session'}
           </p>
         )}
       </div>
