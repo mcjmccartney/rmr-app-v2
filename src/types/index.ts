@@ -14,6 +14,7 @@ export interface Session {
   sessionType: 'In-Person' | 'Online' | 'Training - 1hr' | 'Training - 30mins' | 'Training - The Mount' | 'Online Catchup' | 'Group' | 'RMR Live' | 'Phone Call' | 'Coaching';
   bookingDate: string; // Date in YYYY-MM-DD format
   bookingTime: string; // Time in HH:mm format
+  sessionNumber?: number; // Session number for this client (counting only Online and In-Person sessions)
   notes?: string;
   quote: number;
   email?: string; // For linking during import

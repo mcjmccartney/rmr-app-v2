@@ -256,12 +256,31 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
     });
 
     try {
+      // Calculate session number for Online and In-Person sessions
+      let sessionNumber: number | undefined = undefined;
+      if (formData.clientId && (formData.sessionType === 'Online' || formData.sessionType === 'In-Person')) {
+        const clientSessions = state.sessions.filter(
+          s => s.clientId === formData.clientId && (s.sessionType === 'Online' || s.sessionType === 'In-Person')
+        );
+
+        // Sort by booking date and time to get chronological order
+        const sortedSessions = [...clientSessions].sort((a, b) => {
+          const dateA = new Date(`${a.bookingDate}T${a.bookingTime}`);
+          const dateB = new Date(`${b.bookingDate}T${b.bookingTime}`);
+          return dateA.getTime() - dateB.getTime();
+        });
+
+        // Session number is the count of existing sessions + 1
+        sessionNumber = sortedSessions.length + 1;
+      }
+
       await createSession({
         clientId: formData.clientId || undefined, // Allow undefined for Group/RMR Live sessions
         dogName: formData.dogName || undefined,
         sessionType: formData.sessionType,
         bookingDate: formData.date, // YYYY-MM-DD format
         bookingTime: formData.time, // HH:mm format
+        sessionNumber: sessionNumber,
         quote: parseFloat(formData.quote) || 0,
         notes: formData.notes || undefined,
       });

@@ -88,6 +88,7 @@ export type Database = {
           session_type: 'In-Person' | 'Online' | 'Training' | 'Online Catchup' | 'Group' | 'Phone Call' | 'Coaching'
           booking_date: string
           booking_time: string
+          session_number: number | null
           notes: string | null
           quote: number
           email: string | null
@@ -102,6 +103,7 @@ export type Database = {
           session_type: 'In-Person' | 'Online' | 'Training' | 'Online Catchup' | 'Group' | 'Phone Call' | 'Coaching'
           booking_date: string
           booking_time: string
+          session_number?: number | null
           notes?: string | null
           quote: number
           email?: string | null
@@ -116,6 +118,7 @@ export type Database = {
           session_type?: 'In-Person' | 'Online' | 'Training' | 'Online Catchup' | 'Group' | 'Phone Call' | 'Coaching'
           booking_date?: string
           booking_time?: string
+          session_number?: number | null
           notes?: string | null
           quote?: number
           email?: string | null

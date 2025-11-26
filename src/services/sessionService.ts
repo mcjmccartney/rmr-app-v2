@@ -25,6 +25,7 @@ function dbRowToSession(row: Record<string, any>): Session {
     sessionType: row.session_type,
     bookingDate,
     bookingTime,
+    sessionNumber: row.session_number || undefined, // Handle case where column doesn't exist yet
     notes: row.notes,
     quote: parseFloat(row.quote),
     email: row.email,
@@ -59,6 +60,11 @@ function sessionToDbRow(session: Partial<Session>) {
   // Only include dog_name if it's provided (for backward compatibility)
   if (session.dogName !== undefined) {
     dbRow.dog_name = session.dogName;
+  }
+
+  // Only include session_number if it's provided (for backward compatibility)
+  if (session.sessionNumber !== undefined) {
+    dbRow.session_number = session.sessionNumber;
   }
 
   // Handle both old and new database formats
