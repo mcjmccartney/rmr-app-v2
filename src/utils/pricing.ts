@@ -8,7 +8,7 @@ export const calculateQuote = (
   switch (sessionType) {
     case 'Online':
       if (isFirstSession) {
-        return isMember ? 75 : 95; // First session pricing
+        return isMember ? 70 : 90; // First session pricing
       }
       return isMember ? 50 : 70; // Subsequent session pricing
     case 'Training - 1hr':
@@ -21,7 +21,7 @@ export const calculateQuote = (
       if (isFirstSession) {
         return isMember ? 100 : 120; // First session pricing
       }
-      return isMember ? 70 : 90; // Subsequent session pricing
+      return isMember ? 75 : 95; // Subsequent session pricing
     case 'Online Catchup':
       return 30;
     case 'Group':
