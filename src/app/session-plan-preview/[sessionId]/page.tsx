@@ -118,6 +118,11 @@ function DynamicActionPointPages({ title, editableActionPoints }: DynamicActionP
       {pages.map((page, pageIndex) => {
         const isLastActionPointPage = pageIndex === pages.length - 1;
         const showReminderOnThisPage = isLastActionPointPage && !needsSeparateReminderPage;
+        // Use the new footer for middle pages, keep the final footer for the last page
+        const isLastPage = isLastActionPointPage && !needsSeparateReminderPage;
+        const footerImage = isLastPage
+          ? "https://i.ibb.co/qZMcS8m/Copy-of-Raising-My-Rescue.png"
+          : "https://i.ibb.co/Z6yY6r7M/Copy-of-Raising-My-Rescue-2.png";
 
         return (
           <div key={pageIndex} className="page">
@@ -206,7 +211,7 @@ function DynamicActionPointPages({ title, editableActionPoints }: DynamicActionP
             </div>
 
             <img
-              src="https://i.ibb.co/qZMcS8m/Copy-of-Raising-My-Rescue.png"
+              src={footerImage}
               alt="Footer"
               className="page-footer"
             />
