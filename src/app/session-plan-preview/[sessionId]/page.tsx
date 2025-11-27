@@ -58,7 +58,7 @@ function DynamicActionPointPages({ title, editableActionPoints }: DynamicActionP
       </p>
     `;
     tempWrapper.appendChild(reminderBlock);
-    const REMINDER_HEIGHT = reminderBlock.offsetHeight + 80; // Increased buffer for safety
+    const REMINDER_HEIGHT = reminderBlock.offsetHeight + 10; // 10px minimum spacing between last action point and reminder
     tempWrapper.innerHTML = '';
 
     const builtPages: EditableActionPoint[][] = [];
