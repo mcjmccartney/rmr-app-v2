@@ -58,7 +58,7 @@ function DynamicActionPointPages({ title, editableActionPoints }: DynamicActionP
       </p>
     `;
     tempWrapper.appendChild(reminderBlock);
-    const REMINDER_HEIGHT = reminderBlock.offsetHeight + 40; // Add some buffer
+    const REMINDER_HEIGHT = reminderBlock.offsetHeight + 80; // Increased buffer for safety
     tempWrapper.innerHTML = '';
 
     const builtPages: EditableActionPoint[][] = [];
@@ -79,10 +79,10 @@ function DynamicActionPointPages({ title, editableActionPoints }: DynamicActionP
         </div>
       `;
 
-      // Apply paragraph spacing styles to match rendered output
+      // Apply paragraph spacing styles to match rendered output (normal spacing like Explanation of Behaviour)
       const paragraphs = block.querySelectorAll('p');
       paragraphs.forEach((p, index) => {
-        (p as HTMLElement).style.marginBottom = index === paragraphs.length - 1 ? '0' : '0.5rem';
+        (p as HTMLElement).style.marginBottom = index === paragraphs.length - 1 ? '0' : '1rem';
       });
 
       tempWrapper.appendChild(block);
@@ -172,7 +172,7 @@ function DynamicActionPointPages({ title, editableActionPoints }: DynamicActionP
                       fontFamily: 'Arial, sans-serif'
                     }}
                   >
-                    <SafeHtmlRenderer html={ap.details} paragraphSpacing="tight" />
+                    <SafeHtmlRenderer html={ap.details} />
                   </div>
                 </div>
               ))}
