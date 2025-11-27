@@ -28,8 +28,9 @@ function DynamicActionPointPages({ title, editableActionPoints }: DynamicActionP
 
     // Approx A4 height in px (297mm * 3.78)
     const PAGE_HEIGHT = 297 * 3.78; // ~1122px
-    const CONTENT_MAX = PAGE_HEIGHT - 350;
-    // 350px reserved for header/footer to prevent overlap
+    // Header (113px) + margin (20px) + Footer (113px) = 246px
+    const CONTENT_MAX = PAGE_HEIGHT - 246;
+    // 246px reserved for header/footer based on actual measurements
 
     const tempWrapper = document.createElement('div');
     tempWrapper.style.position = 'absolute';
