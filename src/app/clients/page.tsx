@@ -205,7 +205,8 @@ function ClientsPageContent() {
       client.firstName?.toLowerCase().includes(searchTerm) ||
       client.lastName?.toLowerCase().includes(searchTerm) ||
       client.dogName?.toLowerCase().includes(searchTerm) ||
-      client.otherDogs?.some(dog => dog.toLowerCase().includes(searchTerm))
+      client.otherDogs?.some(dog => dog.toLowerCase().includes(searchTerm)) ||
+      client.email?.toLowerCase().includes(searchTerm)
     );
 
     // Apply filters - if both are off, show all; if both are on, show clients that match both

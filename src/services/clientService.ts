@@ -148,12 +148,12 @@ export const clientService = {
     return data ? dbRowToClient(data) : null
   },
 
-  // Search clients by name or dog name
+  // Search clients by name, dog name, or email
   async search(query: string): Promise<Client[]> {
     const { data, error } = await supabase
       .from('clients')
       .select('*')
-      .or(`first_name.ilike.%${query}%,last_name.ilike.%${query}%,dog_name.ilike.%${query}%`)
+      .or(`first_name.ilike.%${query}%,last_name.ilike.%${query}%,dog_name.ilike.%${query}%,email.ilike.%${query}%`)
       .order('created_at', { ascending: false })
 
     if (error) {
