@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { Client } from '@/types';
 import { useApp } from '@/context/AppContext';
 import SlideUpModal from './SlideUpModal';
+import { ClientEmailAliasService } from '@/services/clientEmailAliasService';
+import { X, Plus } from 'lucide-react';
 
 interface EditClientModalProps {
   client: Client | null;
@@ -12,7 +14,7 @@ interface EditClientModalProps {
 }
 
 export default function EditClientModal({ client, isOpen, onClose }: EditClientModalProps) {
-  const { updateClient } = useApp();
+  const { updateClient, state, loadClientEmailAliases } = useApp();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -25,6 +27,10 @@ export default function EditClientModal({ client, isOpen, onClose }: EditClientM
     active: true,
     membership: false
   });
+
+  const [emailAliases, setEmailAliases] = useState<string[]>([]);
+  const [newAlias, setNewAlias] = useState('');
+  const [isAddingAlias, setIsAddingAlias] = useState(false);
 
   useEffect(() => {
     if (client) {
@@ -40,8 +46,15 @@ export default function EditClientModal({ client, isOpen, onClose }: EditClientM
         active: client.active,
         membership: client.membership
       });
+
+      // Load email aliases for this client
+      const aliases = state.clientEmailAliases?.[client.id] || [];
+      const aliasEmails = aliases
+        .filter(alias => alias.email.toLowerCase() !== client.email?.toLowerCase())
+        .map(alias => alias.email);
+      setEmailAliases(aliasEmails);
     }
-  }, [client]);
+  }, [client, state.clientEmailAliases]);
 
 
 
@@ -58,6 +71,67 @@ export default function EditClientModal({ client, isOpen, onClose }: EditClientM
     const newOtherDogs = [...formData.otherDogs];
     newOtherDogs[index] = value;
     setFormData({ ...formData, otherDogs: newOtherDogs });
+  };
+
+  const handleAddEmailAlias = async () => {
+    if (!client || !newAlias.trim()) return;
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(newAlias.trim())) {
+      alert('Please enter a valid email address.');
+      return;
+    }
+
+    // Check if alias already exists
+    const normalizedNewAlias = newAlias.trim().toLowerCase();
+    if (formData.email?.toLowerCase() === normalizedNewAlias) {
+      alert('This email is already the primary email for this client.');
+      return;
+    }
+
+    if (emailAliases.some(alias => alias.toLowerCase() === normalizedNewAlias)) {
+      alert('This email alias already exists for this client.');
+      return;
+    }
+
+    setIsAddingAlias(true);
+    try {
+      await ClientEmailAliasService.addAlias(client.id, newAlias.trim(), false);
+      setEmailAliases([...emailAliases, newAlias.trim()]);
+      setNewAlias('');
+      // Reload aliases to update the state
+      await loadClientEmailAliases();
+    } catch (error) {
+      console.error('Failed to add email alias:', error);
+      alert('Failed to add email alias. Please try again.');
+    } finally {
+      setIsAddingAlias(false);
+    }
+  };
+
+  const handleRemoveEmailAlias = async (aliasEmail: string) => {
+    if (!client) return;
+
+    if (!confirm(`Remove email alias "${aliasEmail}"?`)) {
+      return;
+    }
+
+    try {
+      // Find the alias ID
+      const aliases = state.clientEmailAliases?.[client.id] || [];
+      const aliasToRemove = aliases.find(a => a.email === aliasEmail);
+
+      if (aliasToRemove) {
+        await ClientEmailAliasService.removeAlias(aliasToRemove.id);
+        setEmailAliases(emailAliases.filter(email => email !== aliasEmail));
+        // Reload aliases to update the state
+        await loadClientEmailAliases();
+      }
+    } catch (error) {
+      console.error('Failed to remove email alias:', error);
+      alert('Failed to remove email alias. Please try again.');
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -212,6 +286,60 @@ export default function EditClientModal({ client, isOpen, onClose }: EditClientM
             className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
             placeholder="Enter email address"
           />
+        </div>
+
+        {/* Email Aliases Section */}
+        <div>
+          <label className="block text-gray-700 text-sm font-medium mb-2">
+            Email Aliases (Optional)
+          </label>
+
+          {/* Display existing aliases */}
+          {emailAliases.length > 0 && (
+            <div className="mb-3 space-y-2">
+              {emailAliases.map((alias, index) => (
+                <div key={index} className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg">
+                  <span className="flex-1 text-sm text-gray-700">{alias}</span>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveEmailAlias(alias)}
+                    className="text-red-600 hover:text-red-700 transition-colors"
+                    title="Remove alias"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Add new alias */}
+          <div className="flex gap-2">
+            <input
+              type="email"
+              value={newAlias}
+              onChange={(e) => setNewAlias(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleAddEmailAlias();
+                }
+              }}
+              className="flex-1 px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-amber-500 focus:border-transparent text-sm"
+              placeholder="Add email alias"
+              disabled={isAddingAlias}
+            />
+            <button
+              type="button"
+              onClick={handleAddEmailAlias}
+              disabled={isAddingAlias || !newAlias.trim()}
+              className="px-4 py-2 bg-amber-800 text-white rounded-lg hover:bg-amber-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+              title="Add alias"
+            >
+              <Plus size={16} />
+              <span className="text-sm">Add</span>
+            </button>
+          </div>
         </div>
 
         <div>
