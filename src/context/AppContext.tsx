@@ -390,44 +390,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const clients = await clientService.getAll();
       dispatch({ type: 'SET_CLIENTS', payload: clients });
 
-      // Detect duplicates after loading clients (optimized with longer delay)
-      setTimeout(async () => {
-        try {
-          // Only run duplicate detection if we have a reasonable number of clients
-          if (clients.length > 100) {
-            console.log('⚠️ Large client dataset detected, skipping duplicate detection for performance');
-            debouncedDispatch({ type: 'SET_POTENTIAL_DUPLICATES', payload: [] }, 200);
-            return;
-          }
-
-          const allDuplicates = DuplicateDetectionService.detectDuplicates(clients);
-
-          // Filter out dismissed duplicates using database
-          let dismissedIds: string[] = [];
-          try {
-            dismissedIds = await dismissedDuplicatesService.getAllDismissedIds();
-          } catch (dbError) {
-            // Fallback to localStorage if database fails
-            try {
-              const stored = localStorage.getItem('dismissedDuplicates');
-              dismissedIds = stored ? JSON.parse(stored) : [];
-            } catch (storageError) {
-              dismissedIds = [];
-            }
-          }
-
-          const activeDuplicates = allDuplicates.filter(dup => !dismissedIds.includes(dup.id));
-
-          debouncedDispatch({ type: 'SET_POTENTIAL_DUPLICATES', payload: activeDuplicates }, 200);
-        } catch (error) {
-          console.error('❌ Duplicate detection failed:', error);
-          debouncedDispatch({ type: 'SET_POTENTIAL_DUPLICATES', payload: [] }, 200);
-        }
-      }, 2000); // Increased delay to 2 seconds
+      // Note: Duplicate detection is now manual - use detectDuplicates() function
+      // to scan for duplicates on demand from the duplicates page
     } catch (error) {
       console.error('Failed to load clients:', error);
     }
-  }, [debouncedDispatch]);
+  }, []);
 
   // Load sessions from Supabase with performance optimization
   const loadSessions = useCallback(async () => {
@@ -815,9 +783,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Detect potential duplicate clients
+  // Detect potential duplicate clients (manual scan)
   const detectDuplicates = async () => {
     try {
+      console.log(`🔍 Starting duplicate detection scan for ${state.clients.length} clients...`);
+
       const allDuplicates = DuplicateDetectionService.detectDuplicates(state.clients);
 
       // Filter out dismissed duplicates using database
@@ -836,8 +806,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       const activeDuplicates = allDuplicates.filter(dup => !dismissedIds.includes(dup.id));
       dispatch({ type: 'SET_POTENTIAL_DUPLICATES', payload: activeDuplicates });
+
+      console.log(`✅ Duplicate detection complete. Found ${activeDuplicates.length} potential duplicates.`);
     } catch (error) {
-      console.error('Failed to detect duplicates:', error);
+      console.error('❌ Failed to detect duplicates:', error);
       dispatch({ type: 'SET_POTENTIAL_DUPLICATES', payload: [] });
     }
   };

@@ -10,15 +10,17 @@ export default function DuplicatesPage() {
   const router = useRouter();
   const [showMergeModal, setShowMergeModal] = useState(false);
   const [mergingDuplicate, setMergingDuplicate] = useState<PotentialDuplicate | null>(null);
+  const [isScanning, setIsScanning] = useState(false);
 
   // Add error boundary for useApp hook
-  let state, dismissDuplicate, loadClients, clearDismissedDuplicates;
+  let state, dismissDuplicate, loadClients, clearDismissedDuplicates, detectDuplicates;
   try {
     const appContext = useApp();
     state = appContext.state;
     dismissDuplicate = appContext.dismissDuplicate;
     loadClients = appContext.loadClients;
     clearDismissedDuplicates = appContext.clearDismissedDuplicates;
+    detectDuplicates = appContext.detectDuplicates;
     console.log('App context loaded successfully', { duplicatesCount: state.potentialDuplicates.length });
   } catch (error) {
     console.error('Error loading app context:', error);
@@ -37,6 +39,18 @@ export default function DuplicatesPage() {
       </div>
     );
   }
+
+  const handleScanForDuplicates = async () => {
+    setIsScanning(true);
+    try {
+      await detectDuplicates();
+    } catch (error) {
+      console.error('Error scanning for duplicates:', error);
+      alert('Failed to scan for duplicates. Please try again.');
+    } finally {
+      setIsScanning(false);
+    }
+  };
 
   const handleDismiss = async (duplicateId: string) => {
     if (window.confirm('Are you sure you want to dismiss this potential duplicate? This action cannot be undone.')) {
@@ -76,6 +90,30 @@ export default function DuplicatesPage() {
           >
             ← Back
           </button>
+
+          <button
+            onClick={handleScanForDuplicates}
+            disabled={isScanning}
+            className="px-6 py-3 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{
+              backgroundColor: '#973b00',
+              borderRadius: '8px'
+            }}
+            onMouseEnter={(e) => !isScanning && (e.currentTarget.style.backgroundColor = '#7a2f00')}
+            onMouseLeave={(e) => !isScanning && (e.currentTarget.style.backgroundColor = '#973b00')}
+          >
+            {isScanning ? (
+              <span className="flex items-center gap-2">
+                <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Scanning...
+              </span>
+            ) : (
+              '🔍 Scan for Duplicates'
+            )}
+          </button>
         </div>
 
         <div className="text-center mb-8">
@@ -91,9 +129,20 @@ export default function DuplicatesPage() {
           {state.potentialDuplicates.length === 0 ? (
             <div className="text-center py-12">
               <h2 className="text-lg font-medium text-gray-900 mb-2">No Duplicate Clients Found</h2>
-              <p className="text-gray-600">
-                Your client database appears to be clean with no potential duplicates detected.
+              <p className="text-gray-600 mb-6">
+                {isScanning
+                  ? 'Scanning your client database for potential duplicates...'
+                  : 'Click the button above to scan your client database for potential duplicates.'
+                }
               </p>
+              {isScanning && (
+                <div className="flex justify-center">
+                  <svg className="animate-spin h-8 w-8 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                </div>
+              )}
             </div>
           ) : (
             <div className="space-y-6">
