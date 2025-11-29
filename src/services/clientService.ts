@@ -148,20 +148,56 @@ export const clientService = {
     return data ? dbRowToClient(data) : null
   },
 
-  // Search clients by name, dog name, or email
+  // Search clients by name, dog name, email, or email aliases
   async search(query: string): Promise<Client[]> {
-    const { data, error } = await supabase
+    // First, search for clients matching the query directly
+    const { data: directMatches, error: directError } = await supabase
       .from('clients')
       .select('*')
       .or(`first_name.ilike.%${query}%,last_name.ilike.%${query}%,dog_name.ilike.%${query}%,email.ilike.%${query}%`)
       .order('created_at', { ascending: false })
 
-    if (error) {
-      console.error('Error searching clients:', error)
-      throw error
+    if (directError) {
+      console.error('Error searching clients:', directError)
+      throw directError
     }
 
-    return data?.map(dbRowToClient) || []
+    // Then, search for clients via email aliases
+    const { data: aliasMatches, error: aliasError } = await supabase
+      .from('client_email_aliases')
+      .select('client_id')
+      .ilike('email', `%${query}%`)
+
+    if (aliasError) {
+      console.error('Error searching email aliases:', aliasError)
+      throw aliasError
+    }
+
+    // Get unique client IDs from alias matches
+    const aliasClientIds = [...new Set(aliasMatches?.map(a => a.client_id) || [])];
+
+    // Fetch full client records for alias matches
+    let aliasClients: Client[] = [];
+    if (aliasClientIds.length > 0) {
+      const { data: aliasClientData, error: aliasClientError } = await supabase
+        .from('clients')
+        .select('*')
+        .in('id', aliasClientIds)
+
+      if (aliasClientError) {
+        console.error('Error fetching clients from aliases:', aliasClientError)
+      } else {
+        aliasClients = aliasClientData?.map(dbRowToClient) || [];
+      }
+    }
+
+    // Combine and deduplicate results
+    const allClients = [...(directMatches?.map(dbRowToClient) || []), ...aliasClients];
+    const uniqueClients = Array.from(
+      new Map(allClients.map(client => [client.id, client])).values()
+    );
+
+    return uniqueClients;
   },
 
   // Populate blank address from questionnaire (for ongoing cases)

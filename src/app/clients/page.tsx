@@ -201,12 +201,20 @@ function ClientsPageContent() {
 
   const filteredClients = state.clients.filter(client => {
     const searchTerm = searchQuery.toLowerCase();
+
+    // Check if any email aliases match the search term
+    const clientAliases = state.clientEmailAliases[client.id] || [];
+    const matchesEmailAlias = clientAliases.some(alias =>
+      alias.email.toLowerCase().includes(searchTerm)
+    );
+
     const matchesSearch = (
       client.firstName?.toLowerCase().includes(searchTerm) ||
       client.lastName?.toLowerCase().includes(searchTerm) ||
       client.dogName?.toLowerCase().includes(searchTerm) ||
       client.otherDogs?.some(dog => dog.toLowerCase().includes(searchTerm)) ||
-      client.email?.toLowerCase().includes(searchTerm)
+      client.email?.toLowerCase().includes(searchTerm) ||
+      matchesEmailAlias
     );
 
     // Apply filters - if both are off, show all; if both are on, show clients that match both
