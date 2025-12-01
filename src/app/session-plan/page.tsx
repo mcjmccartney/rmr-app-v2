@@ -1183,6 +1183,8 @@ function SessionPlanContent() {
                                     onChange={(value) => updateEditableActionPoint(actionPointId, 'details', value)}
                                     placeholder="Action point details"
                                     className="w-full text-sm"
+                                    maxLength={2150}
+                                    showCharCount={true}
                                   />
                                 </div>
                               </div>

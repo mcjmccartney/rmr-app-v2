@@ -9,6 +9,8 @@ interface RichTextEditorProps {
   placeholder?: string;
   className?: string;
   disabled?: boolean;
+  maxLength?: number;
+  showCharCount?: boolean;
 }
 
 export default function RichTextEditor({
@@ -16,7 +18,9 @@ export default function RichTextEditor({
   onChange,
   placeholder = 'Enter text...',
   className = '',
-  disabled = false
+  disabled = false,
+  maxLength,
+  showCharCount = false
 }: RichTextEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null);
   const [isFocused, setIsFocused] = useState(false);
@@ -30,6 +34,15 @@ export default function RichTextEditor({
   const [linkUrl, setLinkUrl] = useState('');
   const [linkText, setLinkText] = useState('');
   const savedSelectionRef = useRef<Range | null>(null);
+
+  // Get text length (strip HTML tags)
+  const getTextLength = (html: string): number => {
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = html;
+    return tempDiv.textContent?.length || 0;
+  };
+
+  const currentLength = getTextLength(value);
 
   // Update selection state when selection changes
   const updateSelectionState = () => {
@@ -105,6 +118,17 @@ export default function RichTextEditor({
   const handleInput = () => {
     if (editorRef.current) {
       const content = editorRef.current.innerHTML;
+
+      // Check maxLength if specified
+      if (maxLength) {
+        const textLength = getTextLength(content);
+        if (textLength > maxLength) {
+          // Revert to previous value
+          editorRef.current.innerHTML = value;
+          return;
+        }
+      }
+
       onChange(content);
       // Update selection state after content changes
       updateSelectionState();
@@ -363,6 +387,21 @@ export default function RichTextEditor({
         suppressContentEditableWarning={true}
         data-placeholder={placeholder}
       />
+
+        {/* Character Count */}
+        {(showCharCount || maxLength) && (
+          <div className="px-3 py-2 border-t border-gray-200 bg-gray-50 text-right">
+            <span className={`text-xs ${
+              maxLength && currentLength > maxLength * 0.9
+                ? currentLength >= maxLength
+                  ? 'text-red-500 font-semibold'
+                  : 'text-amber-600'
+                : 'text-gray-500'
+            }`}>
+              {currentLength}{maxLength ? `/${maxLength}` : ''}
+            </span>
+          </div>
+        )}
 
         {/* Placeholder styling */}
         <style jsx>{`
