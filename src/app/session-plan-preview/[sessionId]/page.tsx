@@ -479,6 +479,11 @@ export default function SessionPlanPreviewPage() {
           position: relative;
         }
 
+        .action-point {
+          page-break-inside: avoid;
+          break-inside: avoid;
+        }
+
         @media print {
           .pdf-viewer {
             background: #eaeade;
@@ -487,6 +492,17 @@ export default function SessionPlanPreviewPage() {
           .page {
             margin: 0;
             box-shadow: none;
+            page-break-inside: avoid;
+            page-break-after: always;
+            height: 297mm;
+            overflow: hidden;
+          }
+          .page:last-child {
+            page-break-after: auto;
+          }
+          .action-point {
+            page-break-inside: avoid;
+            break-inside: avoid;
           }
         }
       `}</style>
