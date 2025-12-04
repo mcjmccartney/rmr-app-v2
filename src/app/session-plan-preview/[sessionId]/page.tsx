@@ -188,10 +188,7 @@ function DynamicActionPointPages({ title, editableActionPoints }: DynamicActionP
               {showReminderOnThisPage && (
                 <div
                   style={{
-                    position: 'absolute',
-                    bottom: '80px',
-                    left: '3.4rem',
-                    right: '3.4rem',
+                    marginTop: '10px',
                     fontSize: '16px',
                     fontFamily: 'Arial, sans-serif'
                   }}
@@ -233,10 +230,6 @@ function DynamicActionPointPages({ title, editableActionPoints }: DynamicActionP
           <div className="page-content">
             <div
               style={{
-                position: 'absolute',
-                bottom: '80px',
-                left: '3.4rem',
-                right: '3.4rem',
                 fontSize: '16px',
                 fontFamily: 'Arial, sans-serif'
               }}
