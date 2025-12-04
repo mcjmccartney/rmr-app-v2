@@ -59,7 +59,9 @@ function DynamicActionPointPages({ title, editableActionPoints }: DynamicActionP
       </p>
     `;
     tempWrapper.appendChild(reminderBlock);
-    const REMINDER_HEIGHT = reminderBlock.offsetHeight + 10; // 10px minimum spacing between last action point and reminder
+    // Reminder is positioned absolutely at bottom: 80px, so we only need to reserve its actual height
+    // The 80px positioning is handled by the absolute positioning, not by content flow
+    const REMINDER_HEIGHT = reminderBlock.offsetHeight;
     tempWrapper.innerHTML = '';
 
     const builtPages: EditableActionPoint[][] = [];
@@ -188,7 +190,10 @@ function DynamicActionPointPages({ title, editableActionPoints }: DynamicActionP
               {showReminderOnThisPage && (
                 <div
                   style={{
-                    marginTop: '10px',
+                    position: 'absolute',
+                    bottom: '80px',
+                    left: '3.4rem',
+                    right: '3.4rem',
                     fontSize: '16px',
                     fontFamily: 'Arial, sans-serif'
                   }}
@@ -230,6 +235,10 @@ function DynamicActionPointPages({ title, editableActionPoints }: DynamicActionP
           <div className="page-content">
             <div
               style={{
+                position: 'absolute',
+                bottom: '80px',
+                left: '3.4rem',
+                right: '3.4rem',
                 fontSize: '16px',
                 fontFamily: 'Arial, sans-serif'
               }}
