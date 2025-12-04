@@ -9,6 +9,7 @@ import CustomDatePicker from '@/components/ui/CustomDatePicker';
 import SearchableDropdown from '@/components/ui/SearchableDropdown';
 import { generateHourOptions, generateMinuteOptions, sessionTypeOptions } from '@/utils/timeOptions';
 import { formatClientWithAllDogs, formatClientWithSelectedDog } from '@/utils/dateFormatting';
+import { calculateQuote } from '@/utils/pricing';
 
 
 interface EditSessionModalProps {
@@ -31,6 +32,7 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
   });
 
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [applyFollowupRate, setApplyFollowupRate] = useState(false);
 
   // Helper function to check if session is in the past
   const isSessionInPast = (date: string, time: string) => {
@@ -40,6 +42,37 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
     const now = new Date();
 
     return sessionDateTime < now;
+  };
+
+  // Helper function to check if this is the client's first Online or In-Person session
+  const isFirstSession = (clientId: string, sessionType: Session['sessionType'], currentSessionId?: string): boolean => {
+    if (sessionType !== 'Online' && sessionType !== 'In-Person') {
+      return false; // Only apply first session pricing to Online and In-Person
+    }
+
+    const clientSessions = state.sessions.filter(
+      s => s.clientId === clientId &&
+           (s.sessionType === 'Online' || s.sessionType === 'In-Person') &&
+           s.id !== currentSessionId // Exclude the current session being edited
+    );
+
+    return clientSessions.length === 0; // True if no existing Online/In-Person sessions
+  };
+
+  const handleFollowupRateToggle = (checked: boolean) => {
+    setApplyFollowupRate(checked);
+
+    // Recalculate quote with new rate
+    if (selectedClient && session) {
+      const isFirst = isFirstSession(selectedClient.id, formData.sessionType as Session['sessionType'], session.id);
+      // If checkbox is checked, always use follow-up rate (isFirst = false)
+      const useFirstSessionRate = checked ? false : isFirst;
+
+      setFormData({
+        ...formData,
+        quote: calculateQuote(formData.sessionType as Session['sessionType'], selectedClient.membership, useFirstSessionRate).toString()
+      });
+    }
   };
 
   // Generate time options
@@ -320,9 +353,42 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
             step="0.01"
             required
           />
+          {selectedClient && session && (
+            <p className="text-sm text-gray-500 mt-1">
+              Auto-calculated: £{calculateQuote(
+                formData.sessionType as Session['sessionType'],
+                selectedClient.membership,
+                applyFollowupRate ? false : isFirstSession(selectedClient.id, formData.sessionType as Session['sessionType'], session.id)
+              )}
+              {selectedClient.membership ? ' (Member)' : ' (Non-member)'}
+              {(formData.sessionType === 'Online' || formData.sessionType === 'In-Person') && (
+                applyFollowupRate
+                  ? ' - Follow-up Rate'
+                  : isFirstSession(selectedClient.id, formData.sessionType as Session['sessionType'], session.id)
+                    ? ' - First Session'
+                    : ' - Follow-up Session'
+              )}
+            </p>
+          )}
         </div>
 
-
+        {/* Apply Follow-up Rate Checkbox - Only show for Online/In-Person first sessions */}
+        {selectedClient && session &&
+         (formData.sessionType === 'Online' || formData.sessionType === 'In-Person') &&
+         isFirstSession(selectedClient.id, formData.sessionType as Session['sessionType'], session.id) && (
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              id="applyFollowupRateEdit"
+              checked={applyFollowupRate}
+              onChange={(e) => handleFollowupRateToggle(e.target.checked)}
+              className="w-4 h-4 text-amber-800 border-gray-300 rounded focus:ring-amber-500"
+            />
+            <label htmlFor="applyFollowupRateEdit" className="ml-2 text-sm text-gray-700">
+              Apply Follow-up Rate
+            </label>
+          </div>
+        )}
 
         <div>
           <label className="block text-gray-700 text-sm font-medium mb-2">

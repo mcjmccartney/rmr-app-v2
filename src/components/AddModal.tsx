@@ -462,7 +462,7 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
             className="w-4 h-4 text-amber-800 border-gray-300 rounded focus:ring-amber-500"
           />
           <label htmlFor="applyFollowupRate" className="ml-2 text-sm text-gray-700">
-            Apply Follow-up Rate (Session will still be numbered as Session 1)
+            Apply Follow-up Rate
           </label>
         </div>
       )}
