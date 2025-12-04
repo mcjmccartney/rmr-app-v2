@@ -107,11 +107,11 @@ function DynamicActionPointPages({ title, editableActionPoints }: DynamicActionP
     if (currentPage.length > 0) builtPages.push(currentPage);
 
     // Check if there's enough space for the reminder on the last page
-    // Reminder needs at least 215px of space from the last action point to bottom: 0 of .page
-    // Footer is 113px, so we need 215 - 113 = 102px remaining in .page-content
+    // Reminder needs at least 150px of space from the last action point to bottom: 0 of .page
+    // Footer is 113px, so we need 150 - 113 = 37px remaining in .page-content
     const lastPageHeight = currentHeight;
     const remainingSpace = CONTENT_MAX - lastPageHeight;
-    const needsNewPage = remainingSpace < 102; // 215px from page bottom - 113px footer = 102px
+    const needsNewPage = remainingSpace < 37; // 150px from page bottom - 113px footer = 37px
     setNeedsSeparateReminderPage(needsNewPage);
 
     document.body.removeChild(tempWrapper);
