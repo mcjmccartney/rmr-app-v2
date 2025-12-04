@@ -138,6 +138,7 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
     notes: '',
     quote: ''
   });
+  const [applyFollowupRate, setApplyFollowupRate] = useState(false);
 
   // Generate time options
   const hourOptions = generateHourOptions();
@@ -205,23 +206,43 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
     const defaultDogName = client?.dogName || '';
 
     const isFirst = isFirstSession(clientId, formData.sessionType);
+    // If "Apply Follow-up Rate" is checked, always use follow-up rate (isFirst = false)
+    const useFirstSessionRate = applyFollowupRate ? false : isFirst;
 
     setFormData({
       ...formData,
       clientId,
       dogName: defaultDogName,
-      quote: calculateQuote(formData.sessionType, client?.membership || false, isFirst).toString()
+      quote: calculateQuote(formData.sessionType, client?.membership || false, useFirstSessionRate).toString()
     });
   };
 
   const handleSessionTypeChange = (sessionType: Session['sessionType']) => {
     const isFirst = selectedClient ? isFirstSession(selectedClient.id, sessionType) : false;
+    // If "Apply Follow-up Rate" is checked, always use follow-up rate (isFirst = false)
+    const useFirstSessionRate = applyFollowupRate ? false : isFirst;
 
     setFormData({
       ...formData,
       sessionType,
-      quote: calculateQuote(sessionType, selectedClient?.membership || false, isFirst).toString()
+      quote: calculateQuote(sessionType, selectedClient?.membership || false, useFirstSessionRate).toString()
     });
+  };
+
+  const handleFollowupRateToggle = (checked: boolean) => {
+    setApplyFollowupRate(checked);
+
+    // Recalculate quote with new rate
+    if (selectedClient) {
+      const isFirst = isFirstSession(selectedClient.id, formData.sessionType);
+      // If checkbox is checked, always use follow-up rate (isFirst = false)
+      const useFirstSessionRate = checked ? false : isFirst;
+
+      setFormData({
+        ...formData,
+        quote: calculateQuote(formData.sessionType, selectedClient.membership, useFirstSessionRate).toString()
+      });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -415,13 +436,36 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
         />
         {selectedClient && (
           <p className="text-sm text-gray-500 mt-1">
-            Auto-calculated: £{calculateQuote(formData.sessionType, selectedClient.membership, isFirstSession(selectedClient.id, formData.sessionType))}
+            Auto-calculated: £{calculateQuote(formData.sessionType, selectedClient.membership, applyFollowupRate ? false : isFirstSession(selectedClient.id, formData.sessionType))}
             {selectedClient.membership ? ' (Member)' : ' (Non-member)'}
-            {(formData.sessionType === 'Online' || formData.sessionType === 'In-Person') &&
-              isFirstSession(selectedClient.id, formData.sessionType) && ' - First Session'}
+            {(formData.sessionType === 'Online' || formData.sessionType === 'In-Person') && (
+              applyFollowupRate
+                ? ' - Follow-up Rate'
+                : isFirstSession(selectedClient.id, formData.sessionType)
+                  ? ' - First Session'
+                  : ' - Follow-up Session'
+            )}
           </p>
         )}
       </div>
+
+      {/* Apply Follow-up Rate Checkbox - Only show for Online/In-Person first sessions */}
+      {selectedClient &&
+       (formData.sessionType === 'Online' || formData.sessionType === 'In-Person') &&
+       isFirstSession(selectedClient.id, formData.sessionType) && (
+        <div className="flex items-center">
+          <input
+            type="checkbox"
+            id="applyFollowupRate"
+            checked={applyFollowupRate}
+            onChange={(e) => handleFollowupRateToggle(e.target.checked)}
+            className="w-4 h-4 text-amber-800 border-gray-300 rounded focus:ring-amber-500"
+          />
+          <label htmlFor="applyFollowupRate" className="ml-2 text-sm text-gray-700">
+            Apply Follow-up Rate (Session will still be numbered as Session 1)
+          </label>
+        </div>
+      )}
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
