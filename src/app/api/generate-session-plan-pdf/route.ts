@@ -33,16 +33,29 @@ export async function GET(req: Request) {
     console.log("[PDF-GEN] Launching Chromium...");
 
     // For Vercel/AWS Lambda, use @sparticuz/chromium
-    // For local development, use local Chrome
-    const isProduction = !!process.env.AWS_REGION || !!process.env.VERCEL;
+    // For local development, use local Chromium/Chrome
+    const isProduction = !!process.env.VERCEL_ENV && process.env.VERCEL_ENV === 'production';
 
-    browser = await puppeteer.launch({
-      args: isProduction ? chromium.args : ['--no-sandbox'],
-      executablePath: isProduction
-        ? await chromium.executablePath('/tmp/chromium')
-        : '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
-      headless: true,
-    });
+    if (isProduction) {
+      const executablePath = await chromium.executablePath();
+
+      console.log("[PDF-GEN] Production mode - using @sparticuz/chromium");
+      console.log("[PDF-GEN] Executable path:", executablePath);
+
+      browser = await puppeteer.launch({
+        args: chromium.args,
+        executablePath,
+        headless: true,
+      });
+    } else {
+      // Local development - use regular puppeteer with system Chrome
+      console.log("[PDF-GEN] Development mode - using local Chromium");
+
+      const puppeteerFull = await import('puppeteer');
+      browser = await puppeteerFull.default.launch({
+        headless: true,
+      });
+    }
 
     console.log("[PDF-GEN] Browser launched successfully");
 
