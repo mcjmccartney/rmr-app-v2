@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import puppeteer from "puppeteer-core";
-import chromium from "@sparticuz/chromium";
+import chromium from "@sparticuz/chromium-min";
 
 export const maxDuration = 300; // allow long Vercel runtimes
 
@@ -32,14 +32,18 @@ export async function GET(req: Request) {
 
     console.log("[PDF-GEN] Launching Chromium...");
 
-    // For Vercel/AWS Lambda, use @sparticuz/chromium
+    // For Vercel/AWS Lambda, use @sparticuz/chromium-min with hosted .tar file
     // For local development, use local Chromium/Chrome
     const isProduction = !!process.env.VERCEL_ENV && process.env.VERCEL_ENV === 'production';
 
     if (isProduction) {
-      const executablePath = await chromium.executablePath();
+      // Use the hosted chromium .tar file from GitHub releases
+      // This avoids the "bin does not exist" error in Vercel deployments
+      const chromiumPackUrl = 'https://github.com/Sparticuz/chromium/releases/download/v143.0.0/chromium-v143.0.0-pack.x64.tar';
+      const executablePath = await chromium.executablePath(chromiumPackUrl);
 
-      console.log("[PDF-GEN] Production mode - using @sparticuz/chromium");
+      console.log("[PDF-GEN] Production mode - using @sparticuz/chromium-min");
+      console.log("[PDF-GEN] Chromium pack URL:", chromiumPackUrl);
       console.log("[PDF-GEN] Executable path:", executablePath);
 
       browser = await puppeteer.launch({
