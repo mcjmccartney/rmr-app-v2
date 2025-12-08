@@ -32,10 +32,14 @@ export async function GET(req: Request) {
 
     console.log("[PDF-GEN] Launching Chromium...");
 
-    const executablePath = await chromium.executablePath();
+    // Configure chromium for Vercel serverless environment
+    // Use custom path if provided, otherwise use default
+    const executablePath = process.env.CHROMIUM_PATH || await chromium.executablePath();
+
+    console.log("[PDF-GEN] Chromium executable path:", executablePath);
 
     browser = await playwright.chromium.launch({
-      args: chromium.args,
+      args: [...chromium.args, '--disable-dev-shm-usage', '--no-sandbox'],
       executablePath,
       headless: true,
     });
