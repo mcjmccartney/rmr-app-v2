@@ -12,7 +12,10 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  turbopack: {}, // Empty turbopack config to silence Next.js 16 warning about webpack config from next-pwa
+  // Externalize chromium and puppeteer to avoid bundling issues
+  serverExternalPackages: ['@sparticuz/chromium-min', 'puppeteer-core'],
+  // Empty turbopack config to silence Next.js 16 warning about webpack config from next-pwa
+  turbopack: {},
 };
 
 export default withPWA({

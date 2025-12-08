@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import chromium from "@sparticuz/chromium";
-import playwright from "playwright-core";
+import chromium from "@sparticuz/chromium-min";
+import puppeteer from "puppeteer-core";
 
 export const maxDuration = 300; // allow long Vercel runtimes
 
@@ -33,13 +33,12 @@ export async function GET(req: Request) {
     console.log("[PDF-GEN] Launching Chromium...");
 
     // Configure chromium for Vercel serverless environment
-    // Use custom path if provided, otherwise use default
-    const executablePath = process.env.CHROMIUM_PATH || await chromium.executablePath();
+    const executablePath = await chromium.executablePath();
 
     console.log("[PDF-GEN] Chromium executable path:", executablePath);
 
-    browser = await playwright.chromium.launch({
-      args: [...chromium.args, '--disable-dev-shm-usage', '--no-sandbox'],
+    browser = await puppeteer.launch({
+      args: chromium.args,
       executablePath,
       headless: true,
     });
@@ -66,7 +65,7 @@ export async function GET(req: Request) {
 
     // --- Load the session plan preview ---
     await page.goto(previewUrl, {
-      waitUntil: "networkidle",
+      waitUntil: "networkidle0",
       timeout: 120_000,
     });
 
@@ -94,9 +93,9 @@ export async function GET(req: Request) {
     console.log("[PDF-GEN] Loaded fonts:", loadedFonts);
 
     // Add extra delay to ensure fonts are fully rendered
-    await page.waitForTimeout(3000);
+    await new Promise(resolve => setTimeout(resolve, 3000));
 
-    console.log("[PDF-GEN] Fonts loaded — generating PDF with Playwright...");
+    console.log("[PDF-GEN] Fonts loaded — generating PDF with Puppeteer...");
 
     const pdfBuffer = await page.pdf({
       format: "A4",
