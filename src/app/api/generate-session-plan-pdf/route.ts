@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import chromium from "chrome-aws-lambda";
 import puppeteer from "puppeteer-core";
+import chromium from "@sparticuz/chromium";
 
 export const maxDuration = 300; // allow long Vercel runtimes
 
@@ -32,16 +32,16 @@ export async function GET(req: Request) {
 
     console.log("[PDF-GEN] Launching Chromium...");
 
-    // Configure chromium for Vercel serverless environment
-    const executablePath = await chromium.executablePath;
-
-    console.log("[PDF-GEN] Chromium executable path:", executablePath);
+    // For Vercel/AWS Lambda, use @sparticuz/chromium
+    // For local development, use local Chrome
+    const isProduction = !!process.env.AWS_REGION || !!process.env.VERCEL;
 
     browser = await puppeteer.launch({
-      args: chromium.args,
-      defaultViewport: chromium.defaultViewport,
-      executablePath,
-      headless: chromium.headless,
+      args: isProduction ? chromium.args : ['--no-sandbox'],
+      executablePath: isProduction
+        ? await chromium.executablePath('/tmp/chromium')
+        : '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+      headless: true,
     });
 
     console.log("[PDF-GEN] Browser launched successfully");

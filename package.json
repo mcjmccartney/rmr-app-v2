@@ -9,13 +9,13 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@sparticuz/chromium": "^143.0.0",
     "@supabase/auth-ui-react": "^0.4.7",
     "@supabase/auth-ui-shared": "^0.1.8",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.50.0",
     "@types/mapbox-gl": "^3.4.1",
     "chart.js": "^4.4.9",
-    "chrome-aws-lambda": "^10.1.0",
     "date-fns": "^4.1.0",
     "dompurify": "^3.3.0",
     "formdata-node": "^6.0.3",
