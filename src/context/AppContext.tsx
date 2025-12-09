@@ -11,11 +11,13 @@ import { bookingTermsService } from '@/services/bookingTermsService';
 import { sessionPlanService } from '@/services/sessionPlanService';
 import { supabase } from '@/lib/supabase';
 import { DuplicateDetectionService } from '@/services/duplicateDetectionService';
+import { auditService } from '@/services/auditService';
 import { dismissedDuplicatesService } from '@/services/dismissedDuplicatesService';
 import { membershipExpirationService } from '@/services/membershipExpirationService';
 import { ClientEmailAliasService, ClientEmailAlias } from '@/services/clientEmailAliasService';
 import { sessionParticipantService } from '@/services/sessionParticipantService';
 import { membershipPairingService } from '@/services/membershipPairingService';
+import { useAuth } from '@/context/AuthContext';
 
 // Helper function for comprehensive questionnaire matching
 const findQuestionnaireForClient = (client: any, dogName: string, questionnaires: any[]) => {
@@ -338,6 +340,7 @@ const AppContext = createContext<{
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(appReducer, initialState);
+  const { user } = useAuth();
 
   // Performance optimization: Track subscription status to prevent duplicate subscriptions
   const subscriptionsRef = useRef<{ [key: string]: any }>({});
@@ -894,6 +897,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     try {
       const client = await clientService.create(clientData);
       dispatch({ type: 'ADD_CLIENT', payload: client });
+
+      // Log audit trail
+      await auditService.logClientCreate(client, user?.email);
+
       return client;
     } catch (error) {
       console.error('Failed to create client:', error);
@@ -904,8 +911,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Update client in Supabase
   const updateClient = async (id: string, updates: Partial<Client>): Promise<Client> => {
     try {
+      // Get the original client data for audit trail
+      const originalClient = state.clients.find(c => c.id === id);
+
       const client = await clientService.update(id, updates);
       dispatch({ type: 'UPDATE_CLIENT', payload: client });
+
+      // Log audit trail
+      if (originalClient) {
+        await auditService.logClientUpdate(originalClient, client, user?.email);
+      }
+
       return client;
     } catch (error) {
       console.error('Failed to update client:', error);
@@ -916,8 +932,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Delete client from Supabase
   const deleteClient = async (id: string): Promise<void> => {
     try {
+      // Get the client data before deletion for audit trail
+      const client = state.clients.find(c => c.id === id);
+
       await clientService.delete(id);
       dispatch({ type: 'DELETE_CLIENT', payload: id });
+
+      // Log audit trail
+      if (client) {
+        await auditService.logClientDelete(client, user?.email);
+      }
     } catch (error) {
       console.error('Failed to delete client:', error);
       throw error;
@@ -1038,6 +1062,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         bookingTime: session.bookingTime.substring(0, 5), // Ensure HH:mm format (remove seconds)
         quote: session.quote,
         notes: session.notes || '',
+        travelExpense: session.travelExpense || null,
         membershipStatus: client.membership,
         createdAt: new Date().toISOString(),
         // Form completion status
@@ -1129,6 +1154,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const session = await sessionService.create(sessionData);
       dispatch({ type: 'ADD_SESSION', payload: session });
 
+      // Log audit trail
+      await auditService.logSessionCreate(session, user?.email);
+
       // Trigger the booking terms email webhook (which should also create calendar event)
       await triggerSessionWebhook(session);
 
@@ -1184,6 +1212,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         bookingTime: session.bookingTime.substring(0, 5), // Ensure HH:mm format (remove seconds)
         quote: session.quote,
         notes: session.notes || '',
+        travelExpense: session.travelExpense || null,
         membershipStatus: client.membership,
         createdAt: new Date().toISOString(),
         // Form completion status
@@ -1309,6 +1338,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         bookingTime: session.bookingTime.substring(0, 5), // Ensure HH:mm format (remove seconds)
         quote: session.quote,
         notes: session.notes || '',
+        travelExpense: session.travelExpense || null,
         membershipStatus: client.membership,
         createdAt: new Date().toISOString(),
         // Form completion status
@@ -1398,6 +1428,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       // Update only this specific session in the state
       dispatch({ type: 'UPDATE_SESSION', payload: session });
       console.log(`[UPDATE_SESSION] State updated for session ${id} ONLY`);
+
+      // Log audit trail
+      await auditService.logSessionUpdate(originalSession, session, user?.email);
 
       // Check if Date, Time, or Session Type changed
       const dateChanged = updates.bookingDate !== undefined && originalSession.bookingDate !== updates.bookingDate;
@@ -1855,6 +1888,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
 
       console.log('Deleting session from database...');
+
+      // Log audit trail before deletion (while we still have the session data)
+      if (sessionFromDb) {
+        await auditService.logSessionDelete(sessionFromDb, user?.email);
+      }
+
       await sessionService.delete(id);
       dispatch({ type: 'DELETE_SESSION', payload: id });
       console.log('Session deleted successfully');

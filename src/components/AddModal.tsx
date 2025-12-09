@@ -136,7 +136,8 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
     date: '',
     time: '',
     notes: '',
-    quote: ''
+    quote: '',
+    travelExpense: '' as 'Zone 1' | 'Zone 2' | 'Zone 3' | ''
   });
   const [applyFollowupRate, setApplyFollowupRate] = useState(false);
 
@@ -304,6 +305,7 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
         sessionNumber: sessionNumber,
         quote: parseFloat(formData.quote) || 0,
         notes: formData.notes || undefined,
+        travelExpense: formData.travelExpense || null,
       });
 
       onSubmit();
@@ -466,6 +468,23 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
           </label>
         </div>
       )}
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Travel Expense (Optional)
+        </label>
+        <CustomDropdown
+          value={formData.travelExpense}
+          onChange={(value) => setFormData({ ...formData, travelExpense: value as 'Zone 1' | 'Zone 2' | 'Zone 3' | '' })}
+          options={[
+            { value: '', label: 'No travel expense' },
+            { value: 'Zone 1', label: 'Zone 1 - £10' },
+            { value: 'Zone 2', label: 'Zone 2 - £15' },
+            { value: 'Zone 3', label: 'Zone 3 - £20' }
+          ]}
+          placeholder="Select travel zone"
+        />
+      </div>
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">

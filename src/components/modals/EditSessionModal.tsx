@@ -28,7 +28,8 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
     date: '',
     time: '',
     quote: '',
-    notes: ''
+    notes: '',
+    travelExpense: '' as 'Zone 1' | 'Zone 2' | 'Zone 3' | ''
   });
 
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
@@ -145,7 +146,8 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
         date: session.bookingDate, // Already in YYYY-MM-DD format
         time: session.bookingTime.substring(0, 5), // Ensure HH:mm format (remove seconds)
         quote: session.quote.toString(),
-        notes: session.notes || ''
+        notes: session.notes || '',
+        travelExpense: session.travelExpense || ''
       });
     }
   }, [session, state.clients]);
@@ -183,7 +185,8 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
       bookingDate: formData.date, // YYYY-MM-DD format
       bookingTime: formData.time, // HH:mm format
       quote: parseFloat(formData.quote),
-      notes: formData.notes || undefined
+      notes: formData.notes || undefined,
+      travelExpense: formData.travelExpense || null
     };
 
     try {
@@ -389,6 +392,24 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
             </label>
           </div>
         )}
+
+        <div>
+          <label className="block text-gray-700 text-sm font-medium mb-2">
+            Travel Expense (Optional)
+          </label>
+          <CustomDropdown
+            value={formData.travelExpense}
+            onChange={(value) => setFormData({ ...formData, travelExpense: value as 'Zone 1' | 'Zone 2' | 'Zone 3' | '' })}
+            options={[
+              { value: '', label: 'No travel expense' },
+              { value: 'Zone 1', label: 'Zone 1 - £10' },
+              { value: 'Zone 2', label: 'Zone 2 - £15' },
+              { value: 'Zone 3', label: 'Zone 3 - £20' }
+            ]}
+            placeholder="Select travel zone"
+            className="w-full"
+          />
+        </div>
 
         <div>
           <label className="block text-gray-700 text-sm font-medium mb-2">

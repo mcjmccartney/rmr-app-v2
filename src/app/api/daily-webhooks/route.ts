@@ -82,6 +82,7 @@ export async function POST(request: NextRequest) {
             bookingTime: session.booking_time,
             dogName: session.dog_name || client.dog_name,
             quote: session.quote,
+            travelExpense: session.travel_expense || null,
             membershipStatus: client.membership,
             ...(targetDays === 4 && { sendSessionEmail: true, createCalendarEvent: false })
           };

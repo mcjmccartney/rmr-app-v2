@@ -71,6 +71,7 @@ async function processWebhooks(sessions: any[], clients: any[], targetDays: numb
         bookingTime: session.booking_time,
         dogName: session.dog_name,
         quote: session.quote,
+        travelExpense: session.travel_expense || null,
         membershipStatus: client.membership,
         ...(targetDays === 4 && { sendSessionEmail: true, createCalendarEvent: false })
       };
