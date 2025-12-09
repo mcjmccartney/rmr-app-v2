@@ -8,6 +8,9 @@ The travel expense feature allows you to track travel costs for sessions by sele
 
 - ✅ **Zone Selection**: Choose from Zone 1 (£10), Zone 2 (£15), or Zone 3 (£20)
 - ✅ **Optional Field**: Travel expense is optional - sessions can have no travel expense
+- ✅ **In-Person Only**: Travel expense dropdown only appears for In-Person sessions
+- ✅ **Auto-Clear**: Travel expense is automatically cleared when changing session type away from In-Person
+- ✅ **Auto-Calculate Quote**: Travel expense cost is automatically added to the session quote
 - ✅ **Create & Edit**: Available in both session creation and editing forms
 - ✅ **Webhook Integration**: Travel expense data is automatically sent to Make.com
 - ✅ **Database Storage**: Stored in sessions table with validation
@@ -42,22 +45,40 @@ WHERE table_name = 'sessions' AND column_name = 'travel_expense';
 ### Creating a Session with Travel Expense
 
 1. Click the "+" button to create a new session
-2. Fill in the required fields (Client, Session Type, Date, Time, Quote)
-3. Scroll to the "Travel Expense (Optional)" dropdown
-4. Select the appropriate zone:
+2. Fill in the required fields (Client, Date, Time)
+3. **Select "In-Person" as the Session Type** (travel expense is only available for In-Person sessions)
+4. The "Travel Expense (Optional)" dropdown will appear
+5. Select the appropriate zone:
    - **Zone 1 - £10**: For nearby locations
    - **Zone 2 - £15**: For medium distance locations
    - **Zone 3 - £20**: For far locations
    - **No travel expense**: Leave blank or select "No travel expense"
-5. Click "Create Session"
+6. **The quote will automatically update** to include the base session cost + travel expense cost
+7. Click "Create Session"
+
+**Example:**
+- In-Person session (member, follow-up): £75
+- Zone 2 travel expense: £15
+- **Total quote: £90** (automatically calculated)
+
+**Note:** If you change the session type from "In-Person" to any other type, the travel expense will be automatically cleared and the quote will be recalculated.
 
 ### Editing a Session's Travel Expense
 
 1. Click on any session to open the session details
 2. Click "Edit Session"
-3. Scroll to the "Travel Expense (Optional)" dropdown
-4. Change the zone or remove the travel expense
-5. Click "Save Changes"
+3. **Ensure the Session Type is "In-Person"** (travel expense is only available for In-Person sessions)
+4. The "Travel Expense (Optional)" dropdown will appear
+5. Change the zone or remove the travel expense
+6. **The quote will automatically update** to reflect the new travel expense
+7. Click "Save Changes"
+
+**Example:**
+- Original: In-Person session (£75) + Zone 1 (£10) = £85
+- Change to Zone 3: In-Person session (£75) + Zone 3 (£20) = £95
+- **Quote automatically updates to £95**
+
+**Note:** If you change the session type from "In-Person" to any other type, the travel expense will be automatically cleared and the quote will be recalculated without the travel cost.
 
 ## Travel Expense Zones
 

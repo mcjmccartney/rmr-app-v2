@@ -9,7 +9,7 @@ import CustomDatePicker from '@/components/ui/CustomDatePicker';
 import SearchableDropdown from '@/components/ui/SearchableDropdown';
 import { generateHourOptions, generateMinuteOptions, sessionTypeOptions } from '@/utils/timeOptions';
 import { formatClientWithAllDogs, formatClientWithSelectedDog } from '@/utils/dateFormatting';
-import { calculateQuote } from '@/utils/pricing';
+import { calculateQuote, getTravelExpenseCost } from '@/utils/pricing';
 
 
 interface EditSessionModalProps {
@@ -69,9 +69,38 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
       // If checkbox is checked, always use follow-up rate (isFirst = false)
       const useFirstSessionRate = checked ? false : isFirst;
 
+      const baseQuote = calculateQuote(formData.sessionType as Session['sessionType'], selectedClient.membership, useFirstSessionRate);
+      const travelCost = getTravelExpenseCost(formData.travelExpense as 'Zone 1' | 'Zone 2' | 'Zone 3' | null);
+
       setFormData({
         ...formData,
-        quote: calculateQuote(formData.sessionType as Session['sessionType'], selectedClient.membership, useFirstSessionRate).toString()
+        quote: (baseQuote + travelCost).toString()
+      });
+    }
+  };
+
+  const handleTravelExpenseChange = (value: string) => {
+    const travelExpense = value as 'Zone 1' | 'Zone 2' | 'Zone 3' | '';
+
+    // Calculate base quote
+    if (selectedClient && session) {
+      const isFirst = isFirstSession(selectedClient.id, formData.sessionType as Session['sessionType'], session.id);
+      const useFirstSessionRate = applyFollowupRate ? false : isFirst;
+      const baseQuote = calculateQuote(formData.sessionType as Session['sessionType'], selectedClient.membership, useFirstSessionRate);
+
+      // Add travel expense cost
+      const travelCost = getTravelExpenseCost(travelExpense || null);
+      const newQuote = baseQuote + travelCost;
+
+      setFormData({
+        ...formData,
+        travelExpense,
+        quote: newQuote.toString()
+      });
+    } else {
+      setFormData({
+        ...formData,
+        travelExpense
       });
     }
   };
@@ -295,7 +324,31 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
           </label>
           <CustomDropdown
             value={formData.sessionType}
-            onChange={(value) => setFormData({ ...formData, sessionType: value })}
+            onChange={(value) => {
+              // Clear travel expense if changing away from In-Person
+              const newTravelExpense = value === 'In-Person' ? formData.travelExpense : '';
+
+              // Recalculate quote with new session type and travel expense
+              if (selectedClient && session) {
+                const isFirst = isFirstSession(selectedClient.id, value as Session['sessionType'], session.id);
+                const useFirstSessionRate = applyFollowupRate ? false : isFirst;
+                const baseQuote = calculateQuote(value as Session['sessionType'], selectedClient.membership, useFirstSessionRate);
+                const travelCost = getTravelExpenseCost(newTravelExpense as 'Zone 1' | 'Zone 2' | 'Zone 3' | null);
+
+                setFormData({
+                  ...formData,
+                  sessionType: value,
+                  travelExpense: newTravelExpense,
+                  quote: (baseQuote + travelCost).toString()
+                });
+              } else {
+                setFormData({
+                  ...formData,
+                  sessionType: value,
+                  travelExpense: newTravelExpense
+                });
+              }
+            }}
             options={sessionTypeOptions}
             className="w-full"
           />
@@ -393,23 +446,25 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
           </div>
         )}
 
-        <div>
-          <label className="block text-gray-700 text-sm font-medium mb-2">
-            Travel Expense (Optional)
-          </label>
-          <CustomDropdown
-            value={formData.travelExpense}
-            onChange={(value) => setFormData({ ...formData, travelExpense: value as 'Zone 1' | 'Zone 2' | 'Zone 3' | '' })}
-            options={[
-              { value: '', label: 'No travel expense' },
-              { value: 'Zone 1', label: 'Zone 1 - £10' },
-              { value: 'Zone 2', label: 'Zone 2 - £15' },
-              { value: 'Zone 3', label: 'Zone 3 - £20' }
-            ]}
-            placeholder="Select travel zone"
-            className="w-full"
-          />
-        </div>
+        {formData.sessionType === 'In-Person' && (
+          <div>
+            <label className="block text-gray-700 text-sm font-medium mb-2">
+              Travel Expense (Optional)
+            </label>
+            <CustomDropdown
+              value={formData.travelExpense}
+              onChange={handleTravelExpenseChange}
+              options={[
+                { value: '', label: 'No travel expense' },
+                { value: 'Zone 1', label: 'Zone 1 - £10' },
+                { value: 'Zone 2', label: 'Zone 2 - £15' },
+                { value: 'Zone 3', label: 'Zone 3 - £20' }
+              ]}
+              placeholder="Select travel zone"
+              className="w-full"
+            />
+          </div>
+        )}
 
         <div>
           <label className="block text-gray-700 text-sm font-medium mb-2">

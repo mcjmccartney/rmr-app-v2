@@ -1,5 +1,20 @@
 import { Session } from '@/types';
 
+export const getTravelExpenseCost = (travelExpense?: 'Zone 1' | 'Zone 2' | 'Zone 3' | null): number => {
+  if (!travelExpense) return 0;
+
+  switch (travelExpense) {
+    case 'Zone 1':
+      return 10;
+    case 'Zone 2':
+      return 15;
+    case 'Zone 3':
+      return 20;
+    default:
+      return 0;
+  }
+};
+
 export const calculateQuote = (
   sessionType: Session['sessionType'],
   isMember: boolean,

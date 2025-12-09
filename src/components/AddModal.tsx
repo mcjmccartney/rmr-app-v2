@@ -5,7 +5,7 @@ import { X } from 'lucide-react';
 import { useModal } from '@/context/ModalContext';
 import { useApp } from '@/context/AppContext';
 import { Session, Client } from '@/types';
-import { calculateQuote } from '@/utils/pricing';
+import { calculateQuote, getTravelExpenseCost } from '@/utils/pricing';
 import CustomDropdown from '@/components/ui/CustomDropdown';
 import CustomDatePicker from '@/components/ui/CustomDatePicker';
 import SearchableDropdown from '@/components/ui/SearchableDropdown';
@@ -210,11 +210,15 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
     // If "Apply Follow-up Rate" is checked, always use follow-up rate (isFirst = false)
     const useFirstSessionRate = applyFollowupRate ? false : isFirst;
 
+    // Calculate quote with travel expense
+    const baseQuote = calculateQuote(formData.sessionType, client?.membership || false, useFirstSessionRate);
+    const travelCost = getTravelExpenseCost(formData.travelExpense as 'Zone 1' | 'Zone 2' | 'Zone 3' | null);
+
     setFormData({
       ...formData,
       clientId,
       dogName: defaultDogName,
-      quote: calculateQuote(formData.sessionType, client?.membership || false, useFirstSessionRate).toString()
+      quote: (baseQuote + travelCost).toString()
     });
   };
 
@@ -223,10 +227,18 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
     // If "Apply Follow-up Rate" is checked, always use follow-up rate (isFirst = false)
     const useFirstSessionRate = applyFollowupRate ? false : isFirst;
 
+    // Clear travel expense if changing away from In-Person
+    const newTravelExpense = sessionType === 'In-Person' ? formData.travelExpense : '';
+
+    // Calculate quote with travel expense
+    const baseQuote = calculateQuote(sessionType, selectedClient?.membership || false, useFirstSessionRate);
+    const travelCost = getTravelExpenseCost(newTravelExpense as 'Zone 1' | 'Zone 2' | 'Zone 3' | null);
+
     setFormData({
       ...formData,
       sessionType,
-      quote: calculateQuote(sessionType, selectedClient?.membership || false, useFirstSessionRate).toString()
+      quote: (baseQuote + travelCost).toString(),
+      travelExpense: newTravelExpense
     });
   };
 
@@ -239,11 +251,33 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
       // If checkbox is checked, always use follow-up rate (isFirst = false)
       const useFirstSessionRate = checked ? false : isFirst;
 
+      const baseQuote = calculateQuote(formData.sessionType, selectedClient.membership, useFirstSessionRate);
+      const travelCost = getTravelExpenseCost(formData.travelExpense as 'Zone 1' | 'Zone 2' | 'Zone 3' | null);
+
       setFormData({
         ...formData,
-        quote: calculateQuote(formData.sessionType, selectedClient.membership, useFirstSessionRate).toString()
+        quote: (baseQuote + travelCost).toString()
       });
     }
+  };
+
+  const handleTravelExpenseChange = (value: string) => {
+    const travelExpense = value as 'Zone 1' | 'Zone 2' | 'Zone 3' | '';
+
+    // Calculate base quote
+    const isFirst = selectedClient ? isFirstSession(selectedClient.id, formData.sessionType) : false;
+    const useFirstSessionRate = applyFollowupRate ? false : isFirst;
+    const baseQuote = calculateQuote(formData.sessionType, selectedClient?.membership || false, useFirstSessionRate);
+
+    // Add travel expense cost
+    const travelCost = getTravelExpenseCost(travelExpense || null);
+    const newQuote = baseQuote + travelCost;
+
+    setFormData({
+      ...formData,
+      travelExpense,
+      quote: newQuote.toString()
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -469,22 +503,24 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
         </div>
       )}
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Travel Expense (Optional)
-        </label>
-        <CustomDropdown
-          value={formData.travelExpense}
-          onChange={(value) => setFormData({ ...formData, travelExpense: value as 'Zone 1' | 'Zone 2' | 'Zone 3' | '' })}
-          options={[
-            { value: '', label: 'No travel expense' },
-            { value: 'Zone 1', label: 'Zone 1 - £10' },
-            { value: 'Zone 2', label: 'Zone 2 - £15' },
-            { value: 'Zone 3', label: 'Zone 3 - £20' }
-          ]}
-          placeholder="Select travel zone"
-        />
-      </div>
+      {formData.sessionType === 'In-Person' && (
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Travel Expense (Optional)
+          </label>
+          <CustomDropdown
+            value={formData.travelExpense}
+            onChange={handleTravelExpenseChange}
+            options={[
+              { value: '', label: 'No travel expense' },
+              { value: 'Zone 1', label: 'Zone 1 - £10' },
+              { value: 'Zone 2', label: 'Zone 2 - £15' },
+              { value: 'Zone 3', label: 'Zone 3 - £20' }
+            ]}
+            placeholder="Select travel zone"
+          />
+        </div>
+      )}
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">

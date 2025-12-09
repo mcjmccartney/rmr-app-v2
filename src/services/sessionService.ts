@@ -36,6 +36,7 @@ function dbRowToSession(row: Record<string, any>): Session {
     specialMarking: row.special_marking || false,
     eventId: row.event_id,
     googleMeetLink: row.google_meet_link,
+    travelExpense: row.travel_expense || undefined,
   }
 }
 
@@ -65,6 +66,11 @@ function sessionToDbRow(session: Partial<Session>) {
   // Only include session_number if it's provided (for backward compatibility)
   if (session.sessionNumber !== undefined) {
     dbRow.session_number = session.sessionNumber;
+  }
+
+  // Only include travel_expense if it's provided (for backward compatibility)
+  if (session.travelExpense !== undefined) {
+    dbRow.travel_expense = session.travelExpense || null;
   }
 
   // Handle both old and new database formats
