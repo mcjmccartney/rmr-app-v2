@@ -67,12 +67,28 @@ function DynamicActionPointPages({ title, editableActionPoints }: DynamicActionP
     const builtPages: EditableActionPoint[][] = [];
     let currentPage: EditableActionPoint[] = [];
     let currentHeight = 0;
+    let pageIndex = 0;
 
-    editableActionPoints.forEach((ap) => {
+    editableActionPoints.forEach((ap, apIndex) => {
       const block = document.createElement('div');
       block.style.border = '5px solid #4e6749';
       block.style.padding = '1.5rem 1rem 1rem 1rem';
-      block.style.marginBottom = '2rem';
+
+      // Match the actual rendering logic from lines 158-160
+      // First action point on page 0: no top margin
+      // First action point on continuation pages: 2rem top margin
+      // Other action points: 2rem bottom margin
+      const isFirstOnPage = currentPage.length === 0;
+      const isFirstOverall = apIndex === 0;
+
+      if (isFirstOnPage && !isFirstOverall) {
+        // First action point on continuation page (pageIndex > 0)
+        block.style.marginTop = '2rem';
+      } else if (!isFirstOnPage) {
+        // Not the first on page - previous action point needs bottom margin
+        block.style.marginBottom = '2rem';
+      }
+
       block.innerHTML = `
         <h3 style="font-size:1.875rem;font-style:italic;margin-bottom:1rem;">
           ${ap.header}
@@ -97,10 +113,33 @@ function DynamicActionPointPages({ title, editableActionPoints }: DynamicActionP
         builtPages.push(currentPage);
         currentPage = [];
         currentHeight = 0;
-      }
+        pageIndex++;
 
-      currentPage.push(ap);
-      currentHeight += blockHeight;
+        // Re-measure with correct margin for first item on new page
+        block.style.marginTop = '2rem';
+        block.style.marginBottom = '0';
+        block.innerHTML = `
+          <h3 style="font-size:1.875rem;font-style:italic;margin-bottom:1rem;">
+            ${ap.header}
+          </h3>
+          <div class="action-point-content">
+            ${ap.details}
+          </div>
+        `;
+        const paragraphs2 = block.querySelectorAll('p');
+        paragraphs2.forEach((p, index) => {
+          (p as HTMLElement).style.marginBottom = index === paragraphs2.length - 1 ? '0' : '1rem';
+        });
+        tempWrapper.appendChild(block);
+        const newBlockHeight = block.offsetHeight;
+        tempWrapper.innerHTML = '';
+
+        currentPage.push(ap);
+        currentHeight = newBlockHeight;
+      } else {
+        currentPage.push(ap);
+        currentHeight += blockHeight;
+      }
     });
 
     // Push last page
