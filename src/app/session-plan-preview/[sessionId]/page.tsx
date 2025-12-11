@@ -74,11 +74,12 @@ function DynamicActionPointPages({ title, editableActionPoints }: DynamicActionP
       const wrapper = document.createElement('div');
       const isFirstOnPage = currentPage.length === 0;
       const isFirstOverall = apIndex === 0;
+      const isLastOverall = apIndex === editableActionPoints.length - 1;
 
-      // Match the actual rendering logic from line 199-200
-      // marginBottom: '2rem' on ALL action points
+      // Match the actual rendering logic
+      // marginBottom: '2rem' on all action points EXCEPT the last one overall
       // marginTop: conditional based on position
-      wrapper.style.marginBottom = '2rem';
+      wrapper.style.marginBottom = isLastOverall ? '0' : '2rem';
       wrapper.style.marginTop = (pageIndex === 0 && isFirstOverall) ? '0' : (isFirstOnPage) ? '2rem' : '0';
       wrapper.style.position = 'relative';
 
@@ -115,7 +116,7 @@ function DynamicActionPointPages({ title, editableActionPoints }: DynamicActionP
         pageIndex++;
 
         // Re-measure with correct margin for first item on new page
-        wrapper.style.marginBottom = '2rem';
+        wrapper.style.marginBottom = isLastOverall ? '0' : '2rem';
         wrapper.style.marginTop = '2rem'; // First on continuation page
         wrapper.style.position = 'relative';
 
@@ -193,43 +194,46 @@ function DynamicActionPointPages({ title, editableActionPoints }: DynamicActionP
                 </h1>
               )}
 
-              {page.map((ap, i) => (
-                <div
-                  key={i}
-                  className="action-point"
-                  style={{
-                    marginBottom: '2rem',
-                    marginTop: (pageIndex === 0 && i === 0) ? '0' : (i === 0) ? '2rem' : '0',
-                    position: 'relative'
-                  }}
-                >
-                  <h3
-                    style={{
-                      fontSize: '1.875rem',
-                      fontStyle: 'italic',
-                      position: 'absolute',
-                      top: '-1rem',
-                      left: '1.5rem',
-                      background: '#eaeade',
-                      padding: '0 0.5rem',
-                      zIndex: 1
-                    }}
-                  >
-                    <SafeHtmlRenderer html={ap.header} />
-                  </h3>
-
+              {page.map((ap, i) => {
+                const isLastActionPoint = pageIndex === pages.length - 1 && i === page.length - 1;
+                return (
                   <div
+                    key={i}
+                    className="action-point"
                     style={{
-                      border: '5px solid #4e6749',
-                      borderRadius: '0.5rem',
-                      padding: '1.5rem 1rem 1rem 1rem',
-                      fontFamily: 'Arial, sans-serif'
+                      marginBottom: isLastActionPoint ? '0' : '2rem',
+                      marginTop: (pageIndex === 0 && i === 0) ? '0' : (i === 0) ? '2rem' : '0',
+                      position: 'relative'
                     }}
                   >
-                    <SafeHtmlRenderer html={ap.details} />
+                    <h3
+                      style={{
+                        fontSize: '1.875rem',
+                        fontStyle: 'italic',
+                        position: 'absolute',
+                        top: '-1rem',
+                        left: '1.5rem',
+                        background: '#eaeade',
+                        padding: '0 0.5rem',
+                        zIndex: 1
+                      }}
+                    >
+                      <SafeHtmlRenderer html={ap.header} />
+                    </h3>
+
+                    <div
+                      style={{
+                        border: '5px solid #4e6749',
+                        borderRadius: '0.5rem',
+                        padding: '1.5rem 1rem 1rem 1rem',
+                        fontFamily: 'Arial, sans-serif'
+                      }}
+                    >
+                      <SafeHtmlRenderer html={ap.details} />
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
 
               {/* REMINDER - show on last action point page if there's room */}
               {showReminderOnThisPage && (
