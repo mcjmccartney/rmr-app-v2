@@ -70,24 +70,22 @@ function DynamicActionPointPages({ title, editableActionPoints }: DynamicActionP
     let pageIndex = 0;
 
     editableActionPoints.forEach((ap, apIndex) => {
-      const block = document.createElement('div');
-      block.style.border = '5px solid #4e6749';
-      block.style.padding = '1.5rem 1rem 1rem 1rem';
-
-      // Match the actual rendering logic from lines 158-160
-      // First action point on page 0: no top margin
-      // First action point on continuation pages: 2rem top margin
-      // Other action points: 2rem bottom margin
+      // Create wrapper to match actual rendering structure
+      const wrapper = document.createElement('div');
       const isFirstOnPage = currentPage.length === 0;
       const isFirstOverall = apIndex === 0;
 
-      if (isFirstOnPage && !isFirstOverall) {
-        // First action point on continuation page (pageIndex > 0)
-        block.style.marginTop = '2rem';
-      } else if (!isFirstOnPage) {
-        // Not the first on page - previous action point needs bottom margin
-        block.style.marginBottom = '2rem';
-      }
+      // Match the actual rendering logic from line 199-200
+      // marginBottom: '2rem' on ALL action points
+      // marginTop: conditional based on position
+      wrapper.style.marginBottom = '2rem';
+      wrapper.style.marginTop = (pageIndex === 0 && isFirstOverall) ? '0' : (isFirstOnPage) ? '2rem' : '0';
+      wrapper.style.position = 'relative';
+
+      const block = document.createElement('div');
+      block.style.border = '5px solid #4e6749';
+      block.style.borderRadius = '0.5rem';
+      block.style.padding = '1.5rem 1rem 1rem 1rem';
 
       block.innerHTML = `
         <h3 style="font-size:1.875rem;font-style:italic;margin-bottom:1rem;">
@@ -98,15 +96,16 @@ function DynamicActionPointPages({ title, editableActionPoints }: DynamicActionP
         </div>
       `;
 
-      // Apply paragraph spacing styles to match rendered output (normal spacing like Explanation of Behaviour)
+      // Apply paragraph spacing styles to match rendered output
       const paragraphs = block.querySelectorAll('p');
       paragraphs.forEach((p, index) => {
         (p as HTMLElement).style.marginBottom = index === paragraphs.length - 1 ? '0' : '1rem';
       });
 
-      tempWrapper.appendChild(block);
+      wrapper.appendChild(block);
+      tempWrapper.appendChild(wrapper);
 
-      const blockHeight = block.offsetHeight;
+      const blockHeight = wrapper.offsetHeight;
       tempWrapper.innerHTML = ''; // clean for next measure
 
       if (currentHeight + blockHeight > CONTENT_MAX) {
@@ -116,8 +115,10 @@ function DynamicActionPointPages({ title, editableActionPoints }: DynamicActionP
         pageIndex++;
 
         // Re-measure with correct margin for first item on new page
-        block.style.marginTop = '2rem';
-        block.style.marginBottom = '0';
+        wrapper.style.marginBottom = '2rem';
+        wrapper.style.marginTop = '2rem'; // First on continuation page
+        wrapper.style.position = 'relative';
+
         block.innerHTML = `
           <h3 style="font-size:1.875rem;font-style:italic;margin-bottom:1rem;">
             ${ap.header}
@@ -130,8 +131,9 @@ function DynamicActionPointPages({ title, editableActionPoints }: DynamicActionP
         paragraphs2.forEach((p, index) => {
           (p as HTMLElement).style.marginBottom = index === paragraphs2.length - 1 ? '0' : '1rem';
         });
-        tempWrapper.appendChild(block);
-        const newBlockHeight = block.offsetHeight;
+        wrapper.appendChild(block);
+        tempWrapper.appendChild(wrapper);
+        const newBlockHeight = wrapper.offsetHeight;
         tempWrapper.innerHTML = '';
 
         currentPage.push(ap);
