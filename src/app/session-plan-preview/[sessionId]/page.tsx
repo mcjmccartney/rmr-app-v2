@@ -73,6 +73,17 @@ function DynamicActionPointPages({ title, editableActionPoints }: DynamicActionP
           const CONTENT_MAX_MIDDLE = PAGE_HEIGHT - HEADER_HEIGHT - MIDDLE_FOOTER_HEIGHT;
           const CONTENT_MAX_FINAL = PAGE_HEIGHT - HEADER_HEIGHT - FINAL_FOOTER_HEIGHT;
 
+          // Measure the title height (appears on first action points page)
+          const titleBlock = document.createElement('h1');
+          titleBlock.style.fontSize = '2.25rem';
+          titleBlock.style.marginBottom = '2.5rem';
+          titleBlock.style.fontWeight = 'bold';
+          titleBlock.style.fontFamily = 'Arial, sans-serif';
+          titleBlock.textContent = 'Session 1 - Dog Name'; // Sample text for measurement
+          tempWrapper.appendChild(titleBlock);
+          const TITLE_HEIGHT = titleBlock.offsetHeight;
+          tempWrapper.innerHTML = '';
+
           // Measure the actual reminder height
           const reminderBlock = document.createElement('div');
           reminderBlock.style.fontSize = '16px';
@@ -101,6 +112,11 @@ function DynamicActionPointPages({ title, editableActionPoints }: DynamicActionP
           let currentPage: EditableActionPoint[] = [];
           let currentHeight = 0;
           let pageIndex = 0;
+
+          // Account for title on first page
+          if (pageIndex === 0) {
+            currentHeight = TITLE_HEIGHT;
+          }
 
           editableActionPoints.forEach((ap, apIndex) => {
             // Create wrapper to match actual rendering structure
@@ -188,11 +204,11 @@ function DynamicActionPointPages({ title, editableActionPoints }: DynamicActionP
           // Check if there's enough space for the reminder on the last page
           // Reminder is positioned absolutely at bottom: 80px with height REMINDER_HEIGHT
           // So the Reminder occupies the space from (CONTENT_MAX_FINAL - 80 - REMINDER_HEIGHT) to (CONTENT_MAX_FINAL - 80)
-          // Action points end at currentHeight
-          // We need a safety margin between action points and reminder
+          // currentHeight includes action points (and title if on page 0)
+          // We need a small safety margin between action points and reminder
           const lastPageHeight = currentHeight;
           const reminderStartsAt = CONTENT_MAX_FINAL - 80 - REMINDER_HEIGHT;
-          const safetyMargin = 20;
+          const safetyMargin = 10; // Reduced from 20px to be less conservative
           const needsNewPage = lastPageHeight + safetyMargin > reminderStartsAt;
           setNeedsSeparateReminderPage(needsNewPage);
 
