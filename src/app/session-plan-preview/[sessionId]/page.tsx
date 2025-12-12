@@ -28,9 +28,10 @@ function DynamicActionPointPages({ title, editableActionPoints }: DynamicActionP
 
     // Approx A4 height in px (297mm * 3.78)
     const PAGE_HEIGHT = 297 * 3.78; // ~1122px
-    // Header (113px) + margin (20px) + Footer (113px) = 246px
-    const CONTENT_MAX = PAGE_HEIGHT - 246;
-    // 246px reserved for header/footer based on actual measurements
+    // Header (113px) + margin (20px) + Middle Footer (113px) = 246px
+    const CONTENT_MAX_MIDDLE = PAGE_HEIGHT - 246;
+    // Header (113px) + margin (20px) + Final Footer (~93px) = ~226px
+    const CONTENT_MAX_FINAL = PAGE_HEIGHT - 226;
 
     const tempWrapper = document.createElement('div');
     tempWrapper.style.position = 'absolute';
@@ -109,7 +110,11 @@ function DynamicActionPointPages({ title, editableActionPoints }: DynamicActionP
       const blockHeight = wrapper.offsetHeight;
       tempWrapper.innerHTML = ''; // clean for next measure
 
-      if (currentHeight + blockHeight > CONTENT_MAX) {
+      // Use CONTENT_MAX_FINAL for the last action point (it will use the smaller final footer)
+      // Use CONTENT_MAX_MIDDLE for all other action points
+      const contentMax = isLastOverall ? CONTENT_MAX_FINAL : CONTENT_MAX_MIDDLE;
+
+      if (currentHeight + blockHeight > contentMax) {
         builtPages.push(currentPage);
         currentPage = [];
         currentHeight = 0;
@@ -153,7 +158,7 @@ function DynamicActionPointPages({ title, editableActionPoints }: DynamicActionP
     // We need to ensure there's enough space in page-content for the reminder to not overlap with action points
     // Total space needed = REMINDER_HEIGHT + 80px (bottom positioning) + 20px (safety margin)
     const lastPageHeight = currentHeight;
-    const remainingSpace = CONTENT_MAX - lastPageHeight;
+    const remainingSpace = CONTENT_MAX_FINAL - lastPageHeight;
     const spaceNeededForReminder = REMINDER_HEIGHT + 80 + 20; // reminder height + bottom position + margin
     const needsNewPage = remainingSpace < spaceNeededForReminder;
     setNeedsSeparateReminderPage(needsNewPage);
