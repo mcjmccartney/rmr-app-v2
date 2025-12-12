@@ -1287,55 +1287,6 @@ function SessionPlanContent() {
                   >
                     Preview & Generate PDF
                   </button>
-
-                  {!generatedDocUrl ? (
-                    <button
-                      onClick={async () => {
-                        if (!currentSession || !currentClient) return;
-                        setIsGeneratingDoc(true);
-                        try {
-                          await saveSessionPlan();
-                        } catch (error) {
-                          // Continue with document generation even if save fails
-                        }
-                        await generateDocument();
-                      }}
-                      disabled={isGeneratingDoc || isPollingForUrl}
-                      className="w-full bg-gray-100 text-gray-700 py-3 px-4 rounded-lg font-medium border border-gray-300 hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isGeneratingDoc
-                        ? 'Generating Document...'
-                        : isPollingForUrl
-                        ? 'Waiting for Document...'
-                        : 'Generate Google Doc (Legacy)'}
-                    </button>
-                  ) : (
-                    <div className="space-y-2">
-                      <button
-                        onClick={handleEditGoogleDoc}
-                        className="w-full text-white py-3 px-4 rounded-lg font-medium transition-colors"
-                        style={{ backgroundColor: '#4f6749' }}
-                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3d5037'}
-                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#4f6749'}
-                      >
-                        Edit Google Doc
-                      </button>
-                      <button
-                        onClick={handleReGenerate}
-                        disabled={isGeneratingDoc || isPollingForUrl}
-                        className="w-full text-white py-3 px-4 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        style={{ backgroundColor: '#973b00' }}
-                        onMouseEnter={(e) => !e.currentTarget.disabled && (e.currentTarget.style.backgroundColor = '#7a2f00')}
-                        onMouseLeave={(e) => !e.currentTarget.disabled && (e.currentTarget.style.backgroundColor = '#973b00')}
-                      >
-                        {isGeneratingDoc
-                          ? 'Re-Generating Document...'
-                          : isPollingForUrl
-                          ? 'Waiting for Document...'
-                          : 'Re-Generate Google Doc'}
-                      </button>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>

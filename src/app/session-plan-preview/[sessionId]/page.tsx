@@ -28,6 +28,9 @@ function DynamicActionPointPages({ title, editableActionPoints }: DynamicActionP
 
     // Approx A4 height in px (297mm * 3.78)
     const PAGE_HEIGHT = 297 * 3.78; // ~1122px
+    // Header (113px) + margin (20px) + Footer (113px) = 246px
+    const CONTENT_MAX = PAGE_HEIGHT - 246;
+    // 246px reserved for header/footer based on actual measurements
 
     const tempWrapper = document.createElement('div');
     tempWrapper.style.position = 'absolute';
@@ -37,186 +40,126 @@ function DynamicActionPointPages({ title, editableActionPoints }: DynamicActionP
     tempWrapper.style.fontFamily = 'Arial, sans-serif';
     document.body.appendChild(tempWrapper);
 
-    // Measure the actual header height
-    const headerImg = document.createElement('img');
-    headerImg.src = "https://i.ibb.co/qYk7fyKf/Header-Banner.png";
-    headerImg.style.width = '100%';
-    headerImg.style.marginBottom = '20px';
-    tempWrapper.appendChild(headerImg);
+    // Measure the actual reminder height
+    const reminderBlock = document.createElement('div');
+    reminderBlock.style.fontSize = '16px';
+    reminderBlock.style.fontFamily = 'Arial, sans-serif';
+    reminderBlock.innerHTML = `
+      <p style="margin: 0;">
+        <strong>Reminder:</strong><br />
+        I'm here to support you and your dog from a behavioural perspective.
+        Sometimes, behavioural challenges can be linked to pain, diet, or
+        physical discomfort, so I may highlight these areas if they seem
+        relevant based on behavioural symptoms you've shared with me or that
+        I've observed. Any thoughts I share within this report or any other
+        communication with you around health, food, or physical wellbeing are
+        intended to guide your conversations with your vet, physiotherapist,
+        or nutritionist. I'm not a vet and don't offer medical advice or
+        diagnosis.
+      </p>
+    `;
+    tempWrapper.appendChild(reminderBlock);
+    // Reminder is positioned absolutely at bottom: 80px, so we only need to reserve its actual height
+    // The 80px positioning is handled by the absolute positioning, not by content flow
+    const REMINDER_HEIGHT = reminderBlock.offsetHeight;
+    tempWrapper.innerHTML = '';
 
-    // Wait for header to load
-    headerImg.onload = () => {
-      const HEADER_HEIGHT = headerImg.offsetHeight + 20; // +20 for margin-bottom
-      tempWrapper.innerHTML = '';
+    const builtPages: EditableActionPoint[][] = [];
+    let currentPage: EditableActionPoint[] = [];
+    let currentHeight = 0;
+    let pageIndex = 0;
 
-      // Measure the middle footer (with "More on the next page")
-      const middleFooterImg = document.createElement('img');
-      middleFooterImg.src = "https://i.ibb.co/Z6yY6r7M/Copy-of-Raising-My-Rescue-2.png";
-      middleFooterImg.style.width = '100%';
-      tempWrapper.appendChild(middleFooterImg);
+    editableActionPoints.forEach((ap, apIndex) => {
+      // Create wrapper to match actual rendering structure
+      const wrapper = document.createElement('div');
+      const isFirstOnPage = currentPage.length === 0;
+      const isFirstOverall = apIndex === 0;
+      const isLastOverall = apIndex === editableActionPoints.length - 1;
 
-      middleFooterImg.onload = () => {
-        const MIDDLE_FOOTER_HEIGHT = middleFooterImg.offsetHeight;
+      // Match the actual rendering logic
+      // marginBottom: '2rem' on all action points EXCEPT the last one overall
+      // marginTop: conditional based on position
+      wrapper.style.marginBottom = isLastOverall ? '0' : '2rem';
+      wrapper.style.marginTop = (pageIndex === 0 && isFirstOverall) ? '0' : (isFirstOnPage) ? '2rem' : '0';
+      wrapper.style.position = 'relative';
+
+      const block = document.createElement('div');
+      block.style.border = '5px solid #4e6749';
+      block.style.borderRadius = '0.5rem';
+      block.style.padding = '1.5rem 1rem 1rem 1rem';
+
+      block.innerHTML = `
+        <h3 style="font-size:1.875rem;font-style:italic;margin-bottom:1rem;">
+          ${ap.header}
+        </h3>
+        <div class="action-point-content">
+          ${ap.details}
+        </div>
+      `;
+
+      // Apply paragraph spacing styles to match rendered output
+      const paragraphs = block.querySelectorAll('p');
+      paragraphs.forEach((p, index) => {
+        (p as HTMLElement).style.marginBottom = index === paragraphs.length - 1 ? '0' : '1rem';
+      });
+
+      wrapper.appendChild(block);
+      tempWrapper.appendChild(wrapper);
+
+      const blockHeight = wrapper.offsetHeight;
+      tempWrapper.innerHTML = ''; // clean for next measure
+
+      if (currentHeight + blockHeight > CONTENT_MAX) {
+        builtPages.push(currentPage);
+        currentPage = [];
+        currentHeight = 0;
+        pageIndex++;
+
+        // Re-measure with correct margin for first item on new page
+        wrapper.style.marginBottom = isLastOverall ? '0' : '2rem';
+        wrapper.style.marginTop = '2rem'; // First on continuation page
+        wrapper.style.position = 'relative';
+
+        block.innerHTML = `
+          <h3 style="font-size:1.875rem;font-style:italic;margin-bottom:1rem;">
+            ${ap.header}
+          </h3>
+          <div class="action-point-content">
+            ${ap.details}
+          </div>
+        `;
+        const paragraphs2 = block.querySelectorAll('p');
+        paragraphs2.forEach((p, index) => {
+          (p as HTMLElement).style.marginBottom = index === paragraphs2.length - 1 ? '0' : '1rem';
+        });
+        wrapper.appendChild(block);
+        tempWrapper.appendChild(wrapper);
+        const newBlockHeight = wrapper.offsetHeight;
         tempWrapper.innerHTML = '';
 
-        // Measure the final footer (without "More on the next page")
-        const finalFooterImg = document.createElement('img');
-        finalFooterImg.src = "https://i.ibb.co/qZMcS8m/Copy-of-Raising-My-Rescue.png";
-        finalFooterImg.style.width = '100%';
-        tempWrapper.appendChild(finalFooterImg);
+        currentPage.push(ap);
+        currentHeight = newBlockHeight;
+      } else {
+        currentPage.push(ap);
+        currentHeight += blockHeight;
+      }
+    });
 
-        finalFooterImg.onload = () => {
-          const FINAL_FOOTER_HEIGHT = finalFooterImg.offsetHeight;
-          tempWrapper.innerHTML = '';
+    // Push last page
+    if (currentPage.length > 0) builtPages.push(currentPage);
 
-          // Calculate content max for middle pages and final page
-          const CONTENT_MAX_MIDDLE = PAGE_HEIGHT - HEADER_HEIGHT - MIDDLE_FOOTER_HEIGHT;
-          const CONTENT_MAX_FINAL = PAGE_HEIGHT - HEADER_HEIGHT - FINAL_FOOTER_HEIGHT;
+    // Check if there's enough space for the reminder on the last page
+    // Reminder is positioned at bottom: 80px and has its own height (~REMINDER_HEIGHT)
+    // We need to ensure there's enough space in page-content for the reminder to not overlap with action points
+    // Total space needed = REMINDER_HEIGHT + 80px (bottom positioning) + 20px (safety margin)
+    const lastPageHeight = currentHeight;
+    const remainingSpace = CONTENT_MAX - lastPageHeight;
+    const spaceNeededForReminder = REMINDER_HEIGHT + 80 + 20; // reminder height + bottom position + margin
+    const needsNewPage = remainingSpace < spaceNeededForReminder;
+    setNeedsSeparateReminderPage(needsNewPage);
 
-          // Measure the title height (appears on first action points page)
-          const titleBlock = document.createElement('h1');
-          titleBlock.style.fontSize = '2.25rem';
-          titleBlock.style.marginBottom = '2.5rem';
-          titleBlock.style.fontWeight = 'bold';
-          titleBlock.style.fontFamily = 'Arial, sans-serif';
-          titleBlock.textContent = 'Session 1 - Dog Name'; // Sample text for measurement
-          tempWrapper.appendChild(titleBlock);
-          const TITLE_HEIGHT = titleBlock.offsetHeight;
-          tempWrapper.innerHTML = '';
-
-          // Measure the actual reminder height
-          const reminderBlock = document.createElement('div');
-          reminderBlock.style.fontSize = '16px';
-          reminderBlock.style.fontFamily = 'Arial, sans-serif';
-          reminderBlock.innerHTML = `
-            <p style="margin: 0;">
-              <strong>Reminder:</strong><br />
-              I'm here to support you and your dog from a behavioural perspective.
-              Sometimes, behavioural challenges can be linked to pain, diet, or
-              physical discomfort, so I may highlight these areas if they seem
-              relevant based on behavioural symptoms you've shared with me or that
-              I've observed. Any thoughts I share within this report or any other
-              communication with you around health, food, or physical wellbeing are
-              intended to guide your conversations with your vet, physiotherapist,
-              or nutritionist. I'm not a vet and don't offer medical advice or
-              diagnosis.
-            </p>
-          `;
-          tempWrapper.appendChild(reminderBlock);
-          // Reminder is positioned absolutely at bottom: 80px, so we only need to reserve its actual height
-          // The 80px positioning is handled by the absolute positioning, not by content flow
-          const REMINDER_HEIGHT = reminderBlock.offsetHeight;
-          tempWrapper.innerHTML = '';
-
-          const builtPages: EditableActionPoint[][] = [];
-          let currentPage: EditableActionPoint[] = [];
-          let currentHeight = 0;
-          let pageIndex = 0;
-
-          // Account for title on first page
-          if (pageIndex === 0) {
-            currentHeight = TITLE_HEIGHT;
-          }
-
-          editableActionPoints.forEach((ap, apIndex) => {
-            // Create wrapper to match actual rendering structure
-            const wrapper = document.createElement('div');
-            const isFirstOnPage = currentPage.length === 0;
-            const isFirstOverall = apIndex === 0;
-            const isLastOverall = apIndex === editableActionPoints.length - 1;
-
-            // Match the actual rendering logic
-            // marginBottom: '2rem' on all action points EXCEPT the last one overall
-            // marginTop: conditional based on position
-            wrapper.style.marginBottom = isLastOverall ? '0' : '2rem';
-            wrapper.style.marginTop = (pageIndex === 0 && isFirstOverall) ? '0' : (isFirstOnPage) ? '2rem' : '0';
-            wrapper.style.position = 'relative';
-
-            const block = document.createElement('div');
-            block.style.border = '5px solid #4e6749';
-            block.style.borderRadius = '0.5rem';
-            block.style.padding = '1.5rem 1rem 1rem 1rem';
-
-            block.innerHTML = `
-              <h3 style="font-size:1.875rem;font-style:italic;margin-bottom:1rem;">
-                ${ap.header}
-              </h3>
-              <div class="action-point-content">
-                ${ap.details}
-              </div>
-            `;
-
-            // Apply paragraph spacing styles to match rendered output
-            const paragraphs = block.querySelectorAll('p');
-            paragraphs.forEach((p, index) => {
-              (p as HTMLElement).style.marginBottom = index === paragraphs.length - 1 ? '0' : '1rem';
-            });
-
-            wrapper.appendChild(block);
-            tempWrapper.appendChild(wrapper);
-
-            const blockHeight = wrapper.offsetHeight;
-            tempWrapper.innerHTML = ''; // clean for next measure
-
-            // Use CONTENT_MAX_FINAL if this is the last action point (since if it fits, it will be on the final page)
-            // Use CONTENT_MAX_MIDDLE for all other action points
-            const contentMax = isLastOverall ? CONTENT_MAX_FINAL : CONTENT_MAX_MIDDLE;
-
-            if (currentHeight + blockHeight > contentMax) {
-              builtPages.push(currentPage);
-              currentPage = [];
-              currentHeight = 0;
-              pageIndex++;
-
-              // Re-measure with correct margin for first item on new page
-              wrapper.style.marginBottom = isLastOverall ? '0' : '2rem';
-              wrapper.style.marginTop = '2rem'; // First on continuation page
-              wrapper.style.position = 'relative';
-
-              block.innerHTML = `
-                <h3 style="font-size:1.875rem;font-style:italic;margin-bottom:1rem;">
-                  ${ap.header}
-                </h3>
-                <div class="action-point-content">
-                  ${ap.details}
-                </div>
-              `;
-              const paragraphs2 = block.querySelectorAll('p');
-              paragraphs2.forEach((p, index) => {
-                (p as HTMLElement).style.marginBottom = index === paragraphs2.length - 1 ? '0' : '1rem';
-              });
-              wrapper.appendChild(block);
-              tempWrapper.appendChild(wrapper);
-              const newBlockHeight = wrapper.offsetHeight;
-              tempWrapper.innerHTML = '';
-
-              currentPage.push(ap);
-              currentHeight = newBlockHeight;
-            } else {
-              currentPage.push(ap);
-              currentHeight += blockHeight;
-            }
-          });
-
-          // Push last page
-          if (currentPage.length > 0) builtPages.push(currentPage);
-
-          // Check if there's enough space for the reminder on the last page
-          // Reminder is positioned absolutely at bottom: 80px with height REMINDER_HEIGHT
-          // So the Reminder occupies the space from (CONTENT_MAX_FINAL - 80 - REMINDER_HEIGHT) to (CONTENT_MAX_FINAL - 80)
-          // currentHeight includes action points (and title if on page 0)
-          // We need a small safety margin between action points and reminder
-          const lastPageHeight = currentHeight;
-          const reminderStartsAt = CONTENT_MAX_FINAL - 80 - REMINDER_HEIGHT;
-          const safetyMargin = 10; // Reduced from 20px to be less conservative
-          const needsNewPage = lastPageHeight + safetyMargin > reminderStartsAt;
-          setNeedsSeparateReminderPage(needsNewPage);
-
-          document.body.removeChild(tempWrapper);
-          setPages(builtPages);
-        };
-      };
-    };
+    document.body.removeChild(tempWrapper);
+    setPages(builtPages);
   }, [editableActionPoints]);
 
   return (
