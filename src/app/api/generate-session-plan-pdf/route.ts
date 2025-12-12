@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import puppeteer from "puppeteer-core";
 import chromium from "@sparticuz/chromium-min";
 import { createClient } from '@supabase/supabase-js';
-import { DOG_CLUB_GUIDES } from '@/components/modals/DogClubGuidesModal';
+import { DOG_CLUB_GUIDES } from '@/data/dogClubGuides';
 
 export const maxDuration = 300; // allow long Vercel runtimes
 

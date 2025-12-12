@@ -13,7 +13,8 @@ import type { SessionPlan, Client, Session } from '@/types';
 import SafeHtmlRenderer from '@/components/SafeHtmlRenderer';
 import RichTextEditor from '@/components/RichTextEditor';
 import ActionPointLibraryModal from '@/components/modals/ActionPointLibraryModal';
-import DogClubGuidesModal, { DOG_CLUB_GUIDES } from '@/components/modals/DogClubGuidesModal';
+import DogClubGuidesModal from '@/components/modals/DogClubGuidesModal';
+import { DOG_CLUB_GUIDES } from '@/data/dogClubGuides';
 // import SessionPlanPreviewModal from '@/components/modals/SessionPlanPreviewModal';
 
 function SessionPlanContent() {
