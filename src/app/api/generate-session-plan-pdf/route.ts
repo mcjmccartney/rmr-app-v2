@@ -179,14 +179,15 @@ export async function GET(req: Request) {
     if (dogClubGuides.length > 0) {
       const selectedGuides = dogClubGuides
         .map(guideId => DOG_CLUB_GUIDES.find(g => g.id === guideId))
-        .filter(Boolean)
-        .map(guide => ({
-          title: guide!.title,
-          url: guide!.url
-        }));
+        .filter(Boolean);
 
-      formData.append('dogClubGuides', JSON.stringify(selectedGuides));
-      console.log("[PDF-GEN] Added Dog Club Guides to formData:", selectedGuides);
+      // Create formatted text for email
+      const guidesText = selectedGuides
+        .map(guide => `${guide!.title} - ${guide!.url}`)
+        .join('\n');
+
+      formData.append('dogClubGuides', guidesText);
+      console.log("[PDF-GEN] Added Dog Club Guides to formData:", guidesText);
     }
 
     console.log("[PDF-GEN] Sending multipart/form-data to Make.com...");
