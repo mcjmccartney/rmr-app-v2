@@ -181,13 +181,13 @@ export async function GET(req: Request) {
         .map(guideId => DOG_CLUB_GUIDES.find(g => g.id === guideId))
         .filter(Boolean);
 
-      // Create formatted text for email
-      const guidesText = selectedGuides
-        .map(guide => `${guide!.title} - ${guide!.url}`)
-        .join('\n');
+      // Create formatted HTML links for email
+      const guidesHtml = selectedGuides
+        .map(guide => `<a href="${guide!.url}">${guide!.title}</a>`)
+        .join('<br>\n');
 
-      formData.append('dogClubGuides', guidesText);
-      console.log("[PDF-GEN] Added Dog Club Guides to formData:", guidesText);
+      formData.append('dogClubGuides', guidesHtml);
+      console.log("[PDF-GEN] Added Dog Club Guides to formData:", guidesHtml);
     }
 
     console.log("[PDF-GEN] Sending multipart/form-data to Make.com...");
