@@ -15,6 +15,7 @@ export interface AutoSaveState {
 export interface ChangeState {
   hasTextChanges: boolean;
   hasActionPointChanges: boolean;
+  hasDogClubGuidesChanges: boolean;
   criticalChanges: boolean;
 }
 
@@ -47,6 +48,7 @@ export function useRobustAutoSave({
   const [changeState, setChangeState] = useState<ChangeState>({
     hasTextChanges: false,
     hasActionPointChanges: false,
+    hasDogClubGuidesChanges: false,
     criticalChanges: false,
   });
 
@@ -80,6 +82,7 @@ export function useRobustAutoSave({
       setChangeState({
         hasTextChanges: false,
         hasActionPointChanges: false,
+        hasDogClubGuidesChanges: false,
         criticalChanges: false,
       });
 
@@ -261,6 +264,7 @@ export function useRobustAutoSave({
       setChangeState({
         hasTextChanges: false,
         hasActionPointChanges: false,
+        hasDogClubGuidesChanges: false,
         criticalChanges: false,
       });
     },
