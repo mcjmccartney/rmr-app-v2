@@ -13,7 +13,7 @@ import type { SessionPlan, Client, Session } from '@/types';
 import SafeHtmlRenderer from '@/components/SafeHtmlRenderer';
 import RichTextEditor from '@/components/RichTextEditor';
 import ActionPointLibraryModal from '@/components/modals/ActionPointLibraryModal';
-import DogClubGuidesModal from '@/components/modals/DogClubGuidesModal';
+import DogClubGuidesModal, { DOG_CLUB_GUIDES } from '@/components/modals/DogClubGuidesModal';
 // import SessionPlanPreviewModal from '@/components/modals/SessionPlanPreviewModal';
 
 function SessionPlanContent() {
@@ -1211,6 +1211,46 @@ function SessionPlanContent() {
                       })
                     ) : null}
                   </div>
+
+                  {/* Dog Club Guides Section */}
+                  {selectedDogClubGuides.length > 0 && (
+                    <div className="mt-6">
+                      <h3 className="text-sm font-medium text-gray-700 mb-3">
+                        Selected Dog Club Guides ({selectedDogClubGuides.length})
+                      </h3>
+                      <div className="space-y-2">
+                        {selectedDogClubGuides.map((guideId) => {
+                          const guide = DOG_CLUB_GUIDES.find(g => g.id === guideId);
+                          if (!guide) return null;
+
+                          return (
+                            <div
+                              key={guideId}
+                              className="border border-gray-200 rounded-md p-3 bg-gray-50"
+                            >
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1 min-w-0">
+                                  <h4 className="text-sm font-medium text-gray-900">
+                                    {guide.title}
+                                  </h4>
+                                  <p className="text-xs text-gray-500 mt-1 truncate">
+                                    {guide.url}
+                                  </p>
+                                </div>
+                                <button
+                                  onClick={() => handleDogClubGuideToggle(guideId)}
+                                  className="ml-3 text-red-600 hover:text-red-800 p-1 rounded hover:bg-red-50 flex-shrink-0"
+                                  title="Remove guide"
+                                >
+                                  <X size={14} />
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Action Point Buttons - Below the list */}
                   <div className="mt-4 space-y-3">
