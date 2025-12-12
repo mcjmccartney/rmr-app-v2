@@ -13,6 +13,7 @@ import type { SessionPlan, Client, Session } from '@/types';
 import SafeHtmlRenderer from '@/components/SafeHtmlRenderer';
 import RichTextEditor from '@/components/RichTextEditor';
 import ActionPointLibraryModal from '@/components/modals/ActionPointLibraryModal';
+import DogClubGuidesModal from '@/components/modals/DogClubGuidesModal';
 // import SessionPlanPreviewModal from '@/components/modals/SessionPlanPreviewModal';
 
 function SessionPlanContent() {
@@ -46,6 +47,8 @@ function SessionPlanContent() {
 
   const [selectedActionPoints, setSelectedActionPoints] = useState<string[]>([]);
   const [showActionPointsModal, setShowActionPointsModal] = useState(false);
+  const [selectedDogClubGuides, setSelectedDogClubGuides] = useState<string[]>([]);
+  const [showDogClubGuidesModal, setShowDogClubGuidesModal] = useState(false);
   const [showMainGoals, setShowMainGoals] = useState(false);
   const [hasMainGoals, setHasMainGoals] = useState(false); // Default to false (removed state)
   const [editableActionPoints, setEditableActionPoints] = useState<{[key: string]: {header: string, details: string}}>({});
@@ -81,6 +84,7 @@ function SessionPlanContent() {
       explanationOfBehaviour: formData.explanationOfBehaviour,
       actionPoints: selectedActionPoints,
       editedActionPoints: editableActionPoints,
+      dogClubGuides: selectedDogClubGuides,
       sessionNumber: sessionNumber,
       noFirstPage: !hasMainGoals // Set to true when Remove button is clicked
     };
@@ -94,7 +98,7 @@ function SessionPlanContent() {
     }
 
     return savedPlan;
-  }, [currentSession, currentClient, formData, selectedActionPoints, editableActionPoints, sessionNumber, existingSessionPlan, hasMainGoals]);
+  }, [currentSession, currentClient, formData, selectedActionPoints, editableActionPoints, selectedDogClubGuides, sessionNumber, existingSessionPlan, hasMainGoals]);
 
   // Initialize robust auto-save
   const { autoSaveState, changeState, trackChange, forceSave, clearUnsavedChanges } = useRobustAutoSave({
@@ -157,6 +161,7 @@ function SessionPlanContent() {
             explanationOfBehaviour: replaceDogNames(existingPlan.explanationOfBehaviour || ''),
           });
           setSelectedActionPoints(existingPlan.actionPoints || []);
+          setSelectedDogClubGuides(existingPlan.dogClubGuides || []);
           // Use existing session number if plan already exists
           setSessionNumber(existingPlan.sessionNumber);
 
@@ -522,6 +527,18 @@ function SessionPlanContent() {
 
     // Track action point selection change
     trackChange('hasActionPointChanges', false);
+  }, [trackChange]);
+
+  const handleDogClubGuideToggle = useCallback((guideId: string) => {
+    setSelectedDogClubGuides(prev => {
+      const newSelected = prev.includes(guideId)
+        ? prev.filter(id => id !== guideId)
+        : [...prev, guideId];
+      return newSelected;
+    });
+
+    setLegacyHasUnsavedChanges(true);
+    trackChange('hasDogClubGuidesChanges', false);
   }, [trackChange]);
 
   // Initialize editable action point with personalized content
@@ -1201,7 +1218,13 @@ function SessionPlanContent() {
                       onClick={() => setShowActionPointsModal(true)}
                       className="w-full bg-gray-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-gray-700 transition-colors"
                     >
-                      Show Library
+                      Show Action Point Library
+                    </button>
+                    <button
+                      onClick={() => setShowDogClubGuidesModal(true)}
+                      className="w-full bg-gray-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-gray-700 transition-colors"
+                    >
+                      Add Dog Club Guides
                     </button>
                     <button
                       onClick={addBlankActionPoint}
@@ -1294,6 +1317,14 @@ function SessionPlanContent() {
         personalizeActionPoint={personalizeActionPoint}
         getSessionDogName={getSessionDogName}
         getDogGender={getDogGender}
+      />
+
+      {/* Dog Club Guides Modal */}
+      <DogClubGuidesModal
+        isOpen={showDogClubGuidesModal}
+        onClose={() => setShowDogClubGuidesModal(false)}
+        selectedGuides={selectedDogClubGuides}
+        onGuideToggle={handleDogClubGuideToggle}
       />
     </div>
   );

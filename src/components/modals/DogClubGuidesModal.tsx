@@ -1,37 +1,76 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, ArrowLeft } from 'lucide-react';
-import SafeHtmlRenderer from '../SafeHtmlRenderer';
+import { X, ArrowLeft, ExternalLink } from 'lucide-react';
 
-interface ActionPoint {
+interface DogClubGuide {
   id: string;
-  header: string;
-  details: string;
+  title: string;
+  url: string;
 }
 
-interface ActionPointLibraryModalProps {
+interface DogClubGuidesModalProps {
   isOpen: boolean;
   onClose: () => void;
-  actionPoints: ActionPoint[];
-  selectedActionPoints: string[];
-  onActionPointToggle: (actionPointId: string) => void;
-  personalizeActionPoint: (actionPoint: ActionPoint, dogName: string, dogGender: 'Male' | 'Female') => ActionPoint;
-  getSessionDogName: () => string;
-  getDogGender: () => 'Male' | 'Female';
+  selectedGuides: string[];
+  onGuideToggle: (guideId: string) => void;
 }
 
-export default function ActionPointLibraryModal({
+const DOG_CLUB_GUIDES: DogClubGuide[] = [
+  {
+    id: 'member-perks',
+    title: 'Member Perks',
+    url: 'https://www.raisingmyrescue.co.uk/member-perks'
+  },
+  {
+    id: 'communicating-with-your-dog',
+    title: 'Communicating with your Dog',
+    url: 'https://www.raisingmyrescue.co.uk/communicate-with-your-dog'
+  },
+  {
+    id: 'telling-tails',
+    title: 'Telling Tails',
+    url: 'https://www.raisingmyrescue.co.uk/communicate-with-your-dog/telling-tails'
+  },
+  {
+    id: 'talk-dog',
+    title: 'Talk Dog',
+    url: 'https://www.raisingmyrescue.co.uk/communicate-with-your-dog/talk-dog'
+  },
+  {
+    id: 'read-signals-of-discomfort',
+    title: 'Read Signals of Discomfort',
+    url: 'https://www.raisingmyrescue.co.uk/communicate-with-your-dog/ladder-of-aggression'
+  },
+  {
+    id: 'dog-to-dog-interactions',
+    title: 'Dog-to-Dog Interactions',
+    url: 'https://www.raisingmyrescue.co.uk/communicate-with-your-dog/dog-to-dog-interactions'
+  },
+  {
+    id: 'build-your-bond',
+    title: 'Build Your Bond',
+    url: 'https://www.raisingmyrescue.co.uk/build-your-bond'
+  },
+  {
+    id: 'trigger-stacking-guides',
+    title: 'Trigger Stacking Guides',
+    url: 'https://www.raisingmyrescue.co.uk/support-emotional-wellbeing'
+  },
+  {
+    id: 'major-event-guides',
+    title: 'Major Event Guides (scroll down)',
+    url: 'https://www.raisingmyrescue.co.uk/support-emotional-wellbeing'
+  }
+];
+
+export default function DogClubGuidesModal({
   isOpen,
   onClose,
-  actionPoints,
-  selectedActionPoints,
-  onActionPointToggle,
-  personalizeActionPoint,
-  getSessionDogName,
-  getDogGender
-}: ActionPointLibraryModalProps) {
-  const [actionPointSearch, setActionPointSearch] = useState('');
+  selectedGuides,
+  onGuideToggle
+}: DogClubGuidesModalProps) {
+  const [guideSearch, setGuideSearch] = useState('');
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -60,11 +99,11 @@ export default function ActionPointLibraryModal({
 
   if (!isOpen) return null;
 
-  const filteredActionPoints = actionPoints.filter(actionPoint => {
-    if (!actionPointSearch) return true;
-    const searchLower = actionPointSearch.toLowerCase();
-    return actionPoint.header.toLowerCase().includes(searchLower) ||
-           actionPoint.details.toLowerCase().includes(searchLower);
+  const filteredGuides = DOG_CLUB_GUIDES.filter(guide => {
+    if (!guideSearch) return true;
+    const searchLower = guideSearch.toLowerCase();
+    return guide.title.toLowerCase().includes(searchLower) ||
+           guide.url.toLowerCase().includes(searchLower);
   });
 
   // Mobile: Full screen modal
@@ -81,7 +120,7 @@ export default function ActionPointLibraryModal({
               <ArrowLeft size={20} className="mr-2" />
               Back
             </button>
-            <h2 className="text-lg font-semibold text-gray-900">Action Point Library</h2>
+            <h2 className="text-lg font-semibold text-gray-900">Dog Club Guides</h2>
             <div className="w-16"></div>
           </div>
         </div>
@@ -92,53 +131,45 @@ export default function ActionPointLibraryModal({
           <div className="mb-4">
             <input
               type="text"
-              placeholder="Search action points..."
-              value={actionPointSearch}
-              onChange={(e) => setActionPointSearch(e.target.value)}
+              placeholder="Search guides..."
+              value={guideSearch}
+              onChange={(e) => setGuideSearch(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-amber-500 focus:border-transparent text-sm"
             />
           </div>
 
-          {/* Action Points List */}
+          {/* Guides List */}
           <div className="space-y-3">
-            {filteredActionPoints.map(actionPoint => {
-              const isSelected = selectedActionPoints.includes(actionPoint.id);
-              const personalizedActionPoint = personalizeActionPoint(
-                actionPoint,
-                getSessionDogName(),
-                getDogGender()
-              );
+            {filteredGuides.map(guide => {
+              const isSelected = selectedGuides.includes(guide.id);
 
               return (
                 <div
-                  key={actionPoint.id}
+                  key={guide.id}
                   className={`p-4 border rounded-md cursor-pointer transition-colors ${
                     isSelected
                       ? 'border-amber-800 bg-amber-800/10'
                       : 'border-gray-300 hover:border-gray-400'
                   }`}
-                  onClick={() => onActionPointToggle(actionPoint.id)}
+                  onClick={() => onGuideToggle(guide.id)}
                 >
-                  <div className="flex-1">
-                    <SafeHtmlRenderer
-                      html={personalizedActionPoint.header}
-                      className="font-medium text-gray-900 text-sm"
-                      fallback={personalizedActionPoint.header}
-                    />
-                    <SafeHtmlRenderer
-                      html={personalizedActionPoint.details}
-                      className="text-sm text-gray-600 mt-2"
-                      fallback={personalizedActionPoint.details}
-                    />
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <h3 className="font-medium text-gray-900 text-sm">{guide.title}</h3>
+                      <div className="flex items-center mt-1 text-xs text-gray-500">
+                        <ExternalLink size={12} className="mr-1" />
+                        <span className="truncate">{guide.url}</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               );
             })}
           </div>
 
-          {filteredActionPoints.length === 0 && (
+          {filteredGuides.length === 0 && (
             <div className="text-center py-8 text-gray-500">
-              <p>No action points found matching your search.</p>
+              <p>No guides found matching your search.</p>
             </div>
           )}
         </div>
@@ -150,7 +181,7 @@ export default function ActionPointLibraryModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Background overlay */}
-      <div 
+      <div
         className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
         onClick={onClose}
       ></div>
@@ -160,7 +191,7 @@ export default function ActionPointLibraryModal({
         {/* Header */}
         <div className="bg-white px-6 py-4 border-b border-gray-200 rounded-t-lg flex-shrink-0">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900">Action Point Library</h3>
+            <h3 className="text-lg font-semibold text-gray-900">Dog Club Guides</h3>
             <button
               onClick={onClose}
               className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -176,54 +207,46 @@ export default function ActionPointLibraryModal({
           <div className="mb-4 flex-shrink-0">
             <input
               type="text"
-              placeholder="Search action points..."
-              value={actionPointSearch}
-              onChange={(e) => setActionPointSearch(e.target.value)}
+              placeholder="Search guides..."
+              value={guideSearch}
+              onChange={(e) => setGuideSearch(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-amber-500 focus:border-transparent text-sm"
             />
           </div>
 
-          {/* Action Points List - Scrollable */}
+          {/* Guides List - Scrollable */}
           <div className="flex-1 overflow-y-auto">
             <div className="space-y-2">
-              {filteredActionPoints.map(actionPoint => {
-                const isSelected = selectedActionPoints.includes(actionPoint.id);
-                const personalizedActionPoint = personalizeActionPoint(
-                  actionPoint,
-                  getSessionDogName(),
-                  getDogGender()
-                );
+              {filteredGuides.map(guide => {
+                const isSelected = selectedGuides.includes(guide.id);
 
                 return (
                   <div
-                    key={actionPoint.id}
+                    key={guide.id}
                     className={`p-3 border rounded-md cursor-pointer transition-colors ${
                       isSelected
                         ? 'border-amber-800 bg-amber-800/10'
                         : 'border-gray-300 hover:border-gray-400'
                     }`}
-                    onClick={() => onActionPointToggle(actionPoint.id)}
+                    onClick={() => onGuideToggle(guide.id)}
                   >
-                    <div className="flex-1">
-                      <SafeHtmlRenderer
-                        html={personalizedActionPoint.header}
-                        className="font-medium text-gray-900"
-                        fallback={personalizedActionPoint.header}
-                      />
-                      <SafeHtmlRenderer
-                        html={personalizedActionPoint.details}
-                        className="text-sm text-gray-600 mt-1"
-                        fallback={personalizedActionPoint.details}
-                      />
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <h3 className="font-medium text-gray-900">{guide.title}</h3>
+                        <div className="flex items-center mt-1 text-sm text-gray-500">
+                          <ExternalLink size={14} className="mr-1" />
+                          <span className="truncate">{guide.url}</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 );
               })}
             </div>
 
-            {filteredActionPoints.length === 0 && (
+            {filteredGuides.length === 0 && (
               <div className="text-center py-8 text-gray-500">
-                <p>No action points found matching your search.</p>
+                <p>No guides found matching your search.</p>
               </div>
             )}
           </div>
@@ -232,3 +255,7 @@ export default function ActionPointLibraryModal({
     </div>
   );
 }
+
+export { DOG_CLUB_GUIDES };
+export type { DogClubGuide };
+

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import puppeteer from "puppeteer-core";
 import chromium from "@sparticuz/chromium-min";
+import { createClient } from '@supabase/supabase-js';
+import { DOG_CLUB_GUIDES } from '@/components/modals/DogClubGuidesModal';
 
 export const maxDuration = 300; // allow long Vercel runtimes
 
@@ -29,6 +31,25 @@ export async function GET(req: Request) {
 
     console.log(`[PDF-GEN] Starting PDF generation for session ${sessionId}`);
     console.log(`[PDF-GEN] Client: ${clientFirstName} ${clientLastName}, Dog: ${dogName}`);
+
+    // Fetch session plan to get Dog Club Guides
+    console.log("[PDF-GEN] Fetching session plan data...");
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
+    const { data: sessionPlanData, error: sessionPlanError } = await supabase
+      .from('session_plans')
+      .select('dog_club_guides')
+      .eq('session_id', sessionId)
+      .single();
+
+    let dogClubGuides: string[] = [];
+    if (!sessionPlanError && sessionPlanData?.dog_club_guides) {
+      dogClubGuides = sessionPlanData.dog_club_guides;
+      console.log("[PDF-GEN] Found Dog Club Guides:", dogClubGuides);
+    }
 
     console.log("[PDF-GEN] Launching Chromium...");
 
@@ -153,6 +174,20 @@ export async function GET(req: Request) {
     formData.append('bookingTime', bookingTime);
     formData.append('emailSubject', `Session ${sessionNumber} Plan - ${dogName}`);
     formData.append('timestamp', new Date().toISOString());
+
+    // Add Dog Club Guides if any are selected
+    if (dogClubGuides.length > 0) {
+      const selectedGuides = dogClubGuides
+        .map(guideId => DOG_CLUB_GUIDES.find(g => g.id === guideId))
+        .filter(Boolean)
+        .map(guide => ({
+          title: guide!.title,
+          url: guide!.url
+        }));
+
+      formData.append('dogClubGuides', JSON.stringify(selectedGuides));
+      console.log("[PDF-GEN] Added Dog Club Guides to formData:", selectedGuides);
+    }
 
     console.log("[PDF-GEN] Sending multipart/form-data to Make.com...");
     console.log("[PDF-GEN] PDF filename:", pdfFileName);

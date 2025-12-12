@@ -55,6 +55,7 @@ export interface SessionPlan {
   explanationOfBehaviour?: string;
   actionPoints: string[]; // Array of ActionPoint IDs
   editedActionPoints?: { [actionPointId: string]: EditableActionPoint }; // Custom edited action point content
+  dogClubGuides?: string[]; // Array of Dog Club Guide IDs
   documentEditUrl?: string; // Google Doc edit URL from Make.com
   noFirstPage?: boolean; // When true, hides the first page (Main Goals & Explanation) in PDF preview
   createdAt: Date;
