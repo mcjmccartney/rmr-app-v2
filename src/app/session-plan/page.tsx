@@ -1228,15 +1228,10 @@ function SessionPlanContent() {
                               key={guideId}
                               className="border border-gray-200 rounded-md p-3 bg-gray-50"
                             >
-                              <div className="flex items-start justify-between">
-                                <div className="flex-1 min-w-0">
-                                  <h4 className="text-sm font-medium text-gray-900">
-                                    {guide.title}
-                                  </h4>
-                                  <p className="text-xs text-gray-500 mt-1 truncate">
-                                    {guide.url}
-                                  </p>
-                                </div>
+                              <div className="flex items-center justify-between">
+                                <h4 className="text-sm font-medium text-gray-900">
+                                  {guide.title}
+                                </h4>
                                 <button
                                   onClick={() => handleDogClubGuideToggle(guideId)}
                                   className="ml-3 text-red-600 hover:text-red-800 p-1 rounded hover:bg-red-50 flex-shrink-0"
