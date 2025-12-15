@@ -1124,7 +1124,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const webhookDataWithFlags = {
         ...webhookData,
         sendSessionEmail: daysUntilSession <= 4, // Only send email if ≤4 days away
-        createCalendarEvent: false // Don't create calendar events for new sessions
+        createCalendarEvent: true // Create calendar events for new sessions via direct API
       };
 
       webhookPromises.push(
@@ -1157,11 +1157,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
       // Log audit trail
       await auditService.logSessionCreate(session, user?.email);
 
-      // Trigger the booking terms email webhook (which should also create calendar event)
+      // Trigger the booking terms email webhook
       await triggerSessionWebhook(session);
 
-      // Calendar events are no longer created automatically for new sessions
-      // They will only be created when the user updates Date, Time, or Session Type
+      // Create calendar event directly for new sessions
+      try {
+        console.log(`[CREATE_SESSION] Creating calendar event for new session ${session.id}`);
+        const eventId = await createCalendarEvent(session);
+
+        if (eventId) {
+          console.log(`[CREATE_SESSION] Calendar event created successfully: ${eventId}`);
+          // Update session with eventId (using internal update to avoid triggering webhooks)
+          await updateSessionInternal(session.id, { eventId });
+          session.eventId = eventId;
+        }
+      } catch (calendarError) {
+        console.error(`[CREATE_SESSION] Calendar creation failed:`, calendarError);
+        // Don't throw the error - calendar failure shouldn't prevent session creation
+      }
 
       return session;
     } catch (error) {
@@ -1463,8 +1476,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
             await updateCalendarEvent(session);
             console.log(`[UPDATE_SESSION] Calendar event updated successfully`);
           } else {
-            // No eventId found - Make.com webhook should handle calendar creation for new sessions
-            console.log(`[UPDATE_SESSION] No eventId found, skipping calendar creation (Make.com handles new events)`);
+            // No eventId found - create new calendar event
+            console.log(`[UPDATE_SESSION] No eventId found, creating new calendar event`);
+            const eventId = await createCalendarEvent(session);
+
+            if (eventId) {
+              console.log(`[UPDATE_SESSION] Calendar event created successfully: ${eventId}`);
+              // Update session with eventId (using internal update to avoid triggering webhooks)
+              await updateSessionInternal(session.id, { eventId });
+              session.eventId = eventId;
+            }
           }
         } catch (calendarError) {
           console.error(`[UPDATE_SESSION] Calendar update failed:`, calendarError);
