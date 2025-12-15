@@ -1535,22 +1535,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Create calendar event directly (MANUAL FALLBACK ONLY - not called automatically)
-  // This function is now only available for manual use if Make.com webhook fails
-  // It is no longer called automatically during session updates to prevent duplicates
-  const createCalendarEvent = async (session: Session) => {
+  // Create calendar event directly
+  // Returns the eventId if successful, null otherwise
+  const createCalendarEvent = async (session: Session): Promise<string | null> => {
     try {
       const client = session.clientId ? state.clients.find(c => c.id === session.clientId) : null;
 
       // Skip calendar creation for Group/RMR Live sessions without clients
       if (!session.clientId && (session.sessionType === 'Group' || session.sessionType === 'RMR Live')) {
         console.log('Group/RMR Live session without client, skipping calendar creation');
-        return;
+        return null;
       }
 
       if (!client) {
         console.log('No client found for session, skipping calendar creation');
-        return;
+        return null;
       }
 
       console.log('Creating Google Calendar event for session:', {
@@ -1561,7 +1560,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       });
 
       // Create Google Calendar event with retry logic
-      const createCalendarWithRetry = async (retryCount = 0) => {
+      const createCalendarWithRetry = async (retryCount = 0): Promise<string | null> => {
         const maxRetries = 2;
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
@@ -1593,18 +1592,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
           if (calendarResponse.ok) {
             const result = await calendarResponse.json();
             console.log('[CALENDAR_CREATE] Successfully created calendar event:', result.eventId);
-
-            // Update the session with the new eventId using internal update (no webhooks)
-            if (result.eventId) {
-              await updateSessionInternal(session.id, { eventId: result.eventId });
-              console.log('[CALENDAR_CREATE] Updated session with eventId (internal):', result.eventId);
-            }
-            return true;
+            return result.eventId || null;
           } else {
             console.error('[CALENDAR_CREATE] Failed to create calendar event via API:', calendarResponse.status);
             const errorText = await calendarResponse.text();
             console.error('[CALENDAR_CREATE] Error response:', errorText);
-            return false;
+            return null;
           }
         } catch (fetchError) {
           clearTimeout(timeoutId);
@@ -1622,15 +1615,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
             return createCalendarWithRetry(retryCount + 1);
           }
 
-          return false;
+          return null;
         }
       };
 
-      await createCalendarWithRetry();
+      return await createCalendarWithRetry();
 
     } catch (error) {
       console.error('Error creating Google Calendar event:', error);
       // Don't throw error - calendar failure shouldn't prevent session creation
+      return null;
     }
   };
 
