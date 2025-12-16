@@ -173,9 +173,7 @@ export default function SessionModal({ session, isOpen, onClose, onEditSession, 
         sessionPaid: true,
         paymentConfirmedAt: updatedSession.paymentConfirmedAt
       });
-      onClose(); // Close the modal
-      // Refresh the page to show updated payment status
-      window.location.reload();
+      onClose(); // Close the modal - UI updates automatically via AppContext
     } catch (error) {
       console.error('Error marking session as paid:', error);
       alert('Failed to mark session as paid. Please try again.');
@@ -187,9 +185,7 @@ export default function SessionModal({ session, isOpen, onClose, onEditSession, 
       await updateSession(session.id, {
         specialMarking: !session.specialMarking // Toggle special marking
       });
-      onClose(); // Close the modal
-      // Refresh the page to show updated special marking status
-      window.location.reload();
+      onClose(); // Close the modal - UI updates automatically via AppContext
     } catch (error) {
       console.error('Error toggling special marking:', error);
       alert('Failed to toggle special marking. Please try again.');
@@ -203,9 +199,7 @@ export default function SessionModal({ session, isOpen, onClose, onEditSession, 
         paymentConfirmedAt: undefined
         // Keep specialMarking unchanged - it's independent of payment status
       });
-      onClose(); // Close the modal
-      // Refresh the page to show updated payment status
-      window.location.reload();
+      onClose(); // Close the modal - UI updates automatically via AppContext
     } catch (error) {
       console.error('Error marking session as unpaid:', error);
       alert('Failed to mark session as unpaid. Please try again.');
@@ -217,9 +211,7 @@ export default function SessionModal({ session, isOpen, onClose, onEditSession, 
       await updateSession(session.id, {
         sessionPlanSent: true
       });
-      onClose(); // Close the modal
-      // Refresh the page to show updated session plan status
-      window.location.reload();
+      onClose(); // Close the modal - UI updates automatically via AppContext
     } catch (error) {
       console.error('Error marking session plan as sent:', error);
       alert('Failed to mark session plan as sent. Please try again.');
@@ -231,9 +223,7 @@ export default function SessionModal({ session, isOpen, onClose, onEditSession, 
       await updateSession(session.id, {
         sessionPlanSent: false
       });
-      onClose(); // Close the modal
-      // Refresh the page to show updated session plan status
-      window.location.reload();
+      onClose(); // Close the modal - UI updates automatically via AppContext
     } catch (error) {
       console.error('Error marking session plan as unsent:', error);
       alert('Failed to mark session plan as unsent. Please try again.');
@@ -245,9 +235,7 @@ export default function SessionModal({ session, isOpen, onClose, onEditSession, 
       await updateSession(session.id, {
         questionnaireBypass: true
       });
-      onClose(); // Close the modal
-      // Refresh the page to show updated questionnaire status
-      window.location.reload();
+      onClose(); // Close the modal - UI updates automatically via AppContext
     } catch (error) {
       console.error('Error setting questionnaire bypass:', error);
       alert('Failed to set questionnaire bypass. Please try again.');
@@ -259,9 +247,7 @@ export default function SessionModal({ session, isOpen, onClose, onEditSession, 
       await updateSession(session.id, {
         questionnaireBypass: false
       });
-      onClose(); // Close the modal
-      // Refresh the page to show updated questionnaire status
-      window.location.reload();
+      onClose(); // Close the modal - UI updates automatically via AppContext
     } catch (error) {
       console.error('Error removing questionnaire bypass:', error);
       alert('Failed to remove questionnaire bypass. Please try again.');
