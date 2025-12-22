@@ -117,9 +117,13 @@ export default function ActionPointLibraryModal({
                       ? 'border-amber-800 bg-amber-800/10'
                       : 'border-gray-300 hover:border-gray-400'
                   }`}
-                  onClick={() => onActionPointToggle(actionPoint.id)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onActionPointToggle(actionPoint.id);
+                  }}
                 >
-                  <div className="flex-1">
+                  <div className="flex-1 pointer-events-none">
                     <SafeHtmlRenderer
                       html={personalizedActionPoint.header}
                       className="font-medium text-gray-900 text-sm"
@@ -202,9 +206,13 @@ export default function ActionPointLibraryModal({
                         ? 'border-amber-800 bg-amber-800/10'
                         : 'border-gray-300 hover:border-gray-400'
                     }`}
-                    onClick={() => onActionPointToggle(actionPoint.id)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onActionPointToggle(actionPoint.id);
+                    }}
                   >
-                    <div className="flex-1">
+                    <div className="flex-1 pointer-events-none">
                       <SafeHtmlRenderer
                         html={personalizedActionPoint.header}
                         className="font-medium text-gray-900"
