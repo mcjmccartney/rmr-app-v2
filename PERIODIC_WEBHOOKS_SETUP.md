@@ -1,0 +1,239 @@
+# Periodic Webhooks Setup Guide
+
+This guide will help you set up the 4-day periodic reminder webhooks using Supabase cron jobs.
+
+## ✅ What's Been Done
+
+The periodic webhook endpoints have been **re-enabled** and are ready to use:
+
+- ✅ `/api/daily-webhooks` - Processes 4-day reminders
+- ✅ `/api/scheduled-webhooks-combined` - Alternative endpoint (same functionality)
+- ✅ Payment links automatically generated for each session
+- ✅ Complete webhook data structure (client info, session details, payment link)
+
+## 🎯 How It Works
+
+### Automatic Filtering
+When the cron job runs daily at 8:00 AM UTC:
+
+1. Fetches all sessions from Supabase
+2. Fetches all clients from Supabase
+3. **Filters sessions that are exactly 4 days away**
+4. For each matching session:
+   - Generates payment link based on session type, membership, travel zone
+   - Builds complete webhook data
+   - Sends to Make.com webhook URL
+5. Returns summary of processed sessions
+
+### Example
+If cron runs on **January 2nd at 8:00 AM**:
+- ✅ Session on **January 6th** → 4 days away → **WEBHOOK SENT**
+- ❌ Session on **January 5th** → 3 days away → **SKIPPED**
+- ❌ Session on **January 7th** → 5 days away → **SKIPPED**
+
+## 🔧 Setup Instructions
+
+### Step 1: Get Your WEBHOOK_API_KEY
+
+1. Go to Vercel Dashboard → Your Project → Settings → Environment Variables
+2. Find `WEBHOOK_API_KEY` and copy its value
+3. Keep this handy for the next step
+
+### Step 2: Enable pg_cron in Supabase
+
+Go to Supabase Dashboard → SQL Editor and run:
+
+```sql
+-- Enable the pg_cron extension
+CREATE EXTENSION IF NOT EXISTS pg_cron;
+```
+
+### Step 3: Create the Cron Job
+
+In the same SQL Editor, run this (replace `YOUR_WEBHOOK_API_KEY_HERE` with your actual key):
+
+```sql
+-- Schedule daily webhook trigger at 8:00 AM UTC
+SELECT cron.schedule(
+  'daily-session-webhooks',           -- Job name
+  '0 8 * * *',                        -- Cron schedule (8:00 AM UTC daily)
+  $$
+  SELECT
+    net.http_post(
+      url := 'https://rmrcms.vercel.app/api/daily-webhooks',
+      headers := jsonb_build_object(
+        'Content-Type', 'application/json',
+        'x-api-key', 'YOUR_WEBHOOK_API_KEY_HERE'
+      ),
+      body := '{}'::jsonb
+    ) AS request_id;
+  $$
+);
+```
+
+### Step 4: Verify the Cron Job
+
+Check that it was created successfully:
+
+```sql
+-- List all cron jobs
+SELECT * FROM cron.job;
+```
+
+You should see `daily-session-webhooks` in the list.
+
+### Step 5: Update Your Make.com Scenario
+
+**IMPORTANT:** Your Make.com scenario needs to use the webhook data directly!
+
+#### Current (Wrong) Setup:
+```
+Webhook Trigger → Search Sessions → Search Clients → Send Email
+```
+
+#### Correct Setup:
+```
+Webhook Trigger → Send Email (using trigger data)
+```
+
+#### In Your Email Template, Use:
+- `{{trigger.paymentLink}}` - Payment link
+- `{{trigger.clientFirstName}}` - Client first name
+- `{{trigger.clientLastName}}` - Client last name
+- `{{trigger.clientEmail}}` - Client email
+- `{{trigger.sessionType}}` - Session type
+- `{{trigger.bookingDate}}` - Booking date
+- `{{trigger.bookingTime}}` - Booking time
+- `{{trigger.quote}}` - Quote amount
+- `{{trigger.dogName}}` - Dog name
+- `{{trigger.address}}` - Client address
+- `{{trigger.bookingTermsUrl}}` - Booking terms URL (email prefilled)
+- `{{trigger.questionnaireUrl}}` - Questionnaire URL (email prefilled)
+
+**All the data is in the webhook - no need to search Supabase!**
+
+## 🧪 Testing
+
+### Test the Endpoint Manually
+
+You can test the webhook endpoint manually to see what sessions would be processed:
+
+```bash
+# Test the endpoint (replace with your actual WEBHOOK_API_KEY)
+curl -X POST https://rmrcms.vercel.app/api/daily-webhooks \
+  -H "Content-Type: application/json" \
+  -H "x-api-key: YOUR_WEBHOOK_API_KEY_HERE"
+```
+
+### Preview Sessions Without Sending Webhooks
+
+Use the GET endpoint to see which sessions would be processed:
+
+```bash
+curl https://rmrcms.vercel.app/api/daily-webhooks
+```
+
+This shows you which sessions are 4 days away without actually sending webhooks.
+
+### Test the Cron Job Immediately
+
+To test the cron job right now (instead of waiting until 8 AM):
+
+```sql
+-- Create a temporary test job that runs every minute
+SELECT cron.schedule(
+  'test-webhook-now',
+  '* * * * *',  -- Run every minute
+  $$
+  SELECT
+    net.http_post(
+      url := 'https://rmrcms.vercel.app/api/daily-webhooks',
+      headers := jsonb_build_object(
+        'Content-Type', 'application/json',
+        'x-api-key', 'YOUR_WEBHOOK_API_KEY_HERE'
+      ),
+      body := '{}'::jsonb
+    ) AS request_id;
+  $$
+);
+```
+
+**Wait 1-2 minutes**, then check your Make.com scenario to see if webhooks were received.
+
+**Delete the test job after testing:**
+
+```sql
+SELECT cron.unschedule('test-webhook-now');
+```
+
+## 📊 Monitoring
+
+### Check Cron Job History
+
+```sql
+-- View recent cron job executions
+SELECT * FROM cron.job_run_details 
+WHERE jobid = (SELECT jobid FROM cron.job WHERE jobname = 'daily-session-webhooks')
+ORDER BY start_time DESC
+LIMIT 10;
+```
+
+### Check Application Logs
+
+In Vercel Dashboard → Your Project → Logs, search for:
+- `[DAILY-WEBHOOKS]` - Daily webhook processing logs
+- `[WEBHOOK-PROCESSING]` - Session filtering logs
+- `[CLIENT-VALIDATION]` - Client validation logs
+
+## 🎉 What You'll Get
+
+Every day at 8:00 AM UTC, for each session exactly 4 days away, Make.com will receive:
+
+```json
+{
+  "sessionId": "...",
+  "clientId": "...",
+  "clientName": "John Smith",
+  "clientFirstName": "John",
+  "clientLastName": "Smith",
+  "clientEmail": "john@example.com",
+  "address": "123 Main St",
+  "dogName": "Buddy",
+  "sessionType": "In-Person",
+  "bookingDate": "2025-01-06",
+  "bookingTime": "10:00",
+  "quote": 105,
+  "notes": "",
+  "travelExpense": "Zone 1",
+  "membershipStatus": true,
+  "createdAt": "2025-01-02T08:00:00.000Z",
+  "bookingTermsUrl": "https://rmrcms.vercel.app/booking-terms?email=john@example.com",
+  "questionnaireUrl": "https://rmrcms.vercel.app/behaviour-questionnaire?email=john@example.com",
+  "paymentLink": "https://monzo.com/pay/r/raising-my-rescue_xxxxx?description=RMR-In-Person-abc123&redirect_url=https://rmrcms.vercel.app/pay-confirm?id=abc123",
+  "sendSessionEmail": true,
+  "createCalendarEvent": false
+}
+```
+
+## 🔒 Security
+
+The webhook endpoints are protected with API key authentication. Only requests with the correct `x-api-key` header will be processed.
+
+## ❓ Troubleshooting
+
+**Webhooks not being sent?**
+- Check that the cron job is running: `SELECT * FROM cron.job_run_details`
+- Verify your WEBHOOK_API_KEY is correct
+- Check Vercel logs for errors
+
+**Make.com not receiving payment links?**
+- Make sure you're using `{{trigger.paymentLink}}` not searching Supabase
+- Remove the Supabase search modules from your scenario
+- Use the webhook trigger data directly
+
+**Sessions being skipped?**
+- Check that sessions have a valid `client_id`
+- Ensure clients have email addresses
+- Verify session type is not "Group" or "RMR Live"
+- Check that the session is exactly 4 days away (not 3 or 5)
+
