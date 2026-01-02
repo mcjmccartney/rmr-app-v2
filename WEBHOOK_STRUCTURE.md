@@ -21,15 +21,16 @@ All webhooks now send **identical data structure** with the following fields:
 - **URL:** `https://hook.eu1.make.com/yaoalfe77uqtw4xv9fbh5atf4okq14wm`
 - **Flags:** `isUpdate: true`
 
-### 4. 4-Day Periodic Reminder Webhook
+### 4. 4-Day Periodic Reminder Webhook ✅ ENABLED
 - **Trigger:** Daily cron job for sessions exactly 4 days away
 - **URL:** `https://hook.eu1.make.com/lipggo8kcd8kwq2vp6j6mr3gnxbx12h7`
 - **Flags:** `sendSessionEmail: true`, `createCalendarEvent: false`
+- **Status:** ✅ **ACTIVE** - Runs daily at 8:00 AM UTC via Supabase cron job
 
 ### 5. 12-Day Periodic Reminder Webhook (Currently Disabled)
 - **Trigger:** Daily cron job for sessions exactly 12 days away
 - **URL:** Would use the same webhook URL
-- **Status:** Currently disabled in the codebase
+- **Status:** ❌ Currently disabled in the codebase
 
 ## Complete Webhook Data Structure
 

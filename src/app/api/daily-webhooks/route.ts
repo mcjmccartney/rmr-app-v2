@@ -185,11 +185,16 @@ export async function POST(request: NextRequest) {
       return results;
     };
 
-    // 4-day webhooks are now disabled - webhook only triggers on new session creation
-    console.log('[DAILY-WEBHOOKS] 4-day webhooks disabled - webhook only triggers on new session creation');
-    const fourDayResult: any[] = [];
+    // Process 4-day webhooks (sessions exactly 4 days away)
+    console.log('[DAILY-WEBHOOKS] Processing 4-day webhooks...');
+    const fourDayResult = await processWebhooks(
+      sessions,
+      clients,
+      4, // targetDays = 4
+      'https://hook.eu1.make.com/lipggo8kcd8kwq2vp6j6mr3gnxbx12h7'
+    );
 
-    // 12-day webhooks are now disabled
+    // 12-day webhooks are disabled
     console.log('[DAILY-WEBHOOKS] 12-day webhooks disabled');
     const twelveDayResult: any[] = [];
 

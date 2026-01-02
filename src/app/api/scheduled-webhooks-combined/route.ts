@@ -246,15 +246,16 @@ export async function POST(request: NextRequest) {
     const sessions = sessionsData || [];
     const clients = clientsData || [];
 
-    // 4-day webhooks are now disabled - webhook only triggers on new session creation
-    console.log('[COMBINED WEBHOOKS] 4-day webhooks disabled - webhook only triggers on new session creation');
-    const fourDayResult = {
-      results: [],
-      successCount: 0,
-      failureCount: 0
-    };
+    // Process 4-day webhooks (sessions exactly 4 days away)
+    console.log('[COMBINED WEBHOOKS] Processing 4-day webhooks...');
+    const fourDayResult = await processWebhooks(
+      sessions,
+      clients,
+      4, // targetDays = 4
+      'https://hook.eu1.make.com/lipggo8kcd8kwq2vp6j6mr3gnxbx12h7'
+    );
 
-    // 12-day webhooks are now disabled
+    // 12-day webhooks are disabled
     console.log('[COMBINED WEBHOOKS] 12-day webhooks disabled');
     const twelveDayResult = {
       results: [],
@@ -262,9 +263,12 @@ export async function POST(request: NextRequest) {
       failureCount: 0
     };
 
-    const totalProcessed = fourDayResult.results.length + twelveDayResult.results.length;
-    const totalSuccess = fourDayResult.successCount + twelveDayResult.successCount;
-    const totalFailure = fourDayResult.failureCount + twelveDayResult.failureCount;
+    const fourDaySuccess = fourDayResult.filter((r: any) => r.status === 'success').length;
+    const fourDayFailure = fourDayResult.filter((r: any) => r.status === 'failed' || r.status === 'error').length;
+
+    const totalProcessed = fourDayResult.length + twelveDayResult.results.length;
+    const totalSuccess = fourDaySuccess + twelveDayResult.successCount;
+    const totalFailure = fourDayFailure + twelveDayResult.failureCount;
 
     console.log(`[COMBINED WEBHOOKS] Completed: ${totalProcessed} total, ${totalSuccess} success, ${totalFailure} failed`);
 
@@ -272,13 +276,13 @@ export async function POST(request: NextRequest) {
       success: true,
       message: `Combined webhooks processed: ${totalProcessed} sessions`,
       executionTime,
-      fourDaySessionsProcessed: fourDayResult.results.length,
+      fourDaySessionsProcessed: fourDayResult.length,
       twelveDaySessionsProcessed: twelveDayResult.results.length,
       totalProcessed,
       successCount: totalSuccess,
       failureCount: totalFailure,
       results: {
-        fourDayWebhooks: fourDayResult.results,
+        fourDayWebhooks: fourDayResult,
         twelveDayWebhooks: twelveDayResult.results
       }
     });
