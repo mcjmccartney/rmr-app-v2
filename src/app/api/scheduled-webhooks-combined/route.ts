@@ -263,12 +263,9 @@ export async function POST(request: NextRequest) {
       failureCount: 0
     };
 
-    const fourDaySuccess = fourDayResult.filter((r: any) => r.status === 'success').length;
-    const fourDayFailure = fourDayResult.filter((r: any) => r.status === 'failed' || r.status === 'error').length;
-
-    const totalProcessed = fourDayResult.length + twelveDayResult.results.length;
-    const totalSuccess = fourDaySuccess + twelveDayResult.successCount;
-    const totalFailure = fourDayFailure + twelveDayResult.failureCount;
+    const totalProcessed = fourDayResult.results.length + twelveDayResult.results.length;
+    const totalSuccess = fourDayResult.successCount + twelveDayResult.successCount;
+    const totalFailure = fourDayResult.failureCount + twelveDayResult.failureCount;
 
     console.log(`[COMBINED WEBHOOKS] Completed: ${totalProcessed} total, ${totalSuccess} success, ${totalFailure} failed`);
 
@@ -276,13 +273,13 @@ export async function POST(request: NextRequest) {
       success: true,
       message: `Combined webhooks processed: ${totalProcessed} sessions`,
       executionTime,
-      fourDaySessionsProcessed: fourDayResult.length,
+      fourDaySessionsProcessed: fourDayResult.results.length,
       twelveDaySessionsProcessed: twelveDayResult.results.length,
       totalProcessed,
       successCount: totalSuccess,
       failureCount: totalFailure,
       results: {
-        fourDayWebhooks: fourDayResult,
+        fourDayWebhooks: fourDayResult.results,
         twelveDayWebhooks: twelveDayResult.results
       }
     });
