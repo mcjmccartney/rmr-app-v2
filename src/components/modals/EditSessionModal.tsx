@@ -456,9 +456,10 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
               onChange={handleTravelExpenseChange}
               options={[
                 { value: '', label: 'No travel expense' },
-                { value: 'Zone 1', label: 'Zone 1 - £10' },
-                { value: 'Zone 2', label: 'Zone 2 - £15' },
-                { value: 'Zone 3', label: 'Zone 3 - £20' }
+                { value: 'Zone 1', label: 'Zone 1 - £5' },
+                { value: 'Zone 2', label: 'Zone 2 - £10' },
+                { value: 'Zone 3', label: 'Zone 3 - £15' },
+                { value: 'Zone 4', label: 'Zone 4 - £20' }
               ]}
               placeholder="Select travel zone"
               className="w-full"

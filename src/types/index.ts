@@ -30,7 +30,7 @@ export interface Session {
   participants?: SessionParticipant[]; // For Group and RMR Live sessions
   individualQuote?: number; // Per-participant quote for Group/RMR Live sessions
   // Travel expense
-  travelExpense?: 'Zone 1' | 'Zone 2' | 'Zone 3' | null; // Travel expense zone
+  travelExpense?: 'Zone 1' | 'Zone 2' | 'Zone 3' | 'Zone 4' | null; // Travel expense zone
 }
 
 export interface ActionPoint {

@@ -9,6 +9,7 @@ import { behaviouralBriefService } from '@/services/behaviouralBriefService';
 import { behaviourQuestionnaireService } from '@/services/behaviourQuestionnaireService';
 import { bookingTermsService } from '@/services/bookingTermsService';
 import { sessionPlanService } from '@/services/sessionPlanService';
+import { paymentService } from '@/services/paymentService';
 import { supabase } from '@/lib/supabase';
 import { DuplicateDetectionService } from '@/services/duplicateDetectionService';
 import { auditService } from '@/services/auditService';
@@ -1047,6 +1048,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         ? findQuestionnaireForClient(client, sessionDogName, state.behaviourQuestionnaires)
         : false;
 
+      // Generate payment link for this session
+      const paymentLink = paymentService.generatePaymentLink(session, client);
+
       // Prepare session data for Make.com
       const webhookData = {
         sessionId: session.id,
@@ -1072,7 +1076,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         bookingTermsUrl: `${window.location.origin}/booking-terms?email=${encodeURIComponent(client.email)}`,
         questionnaireUrl: `${window.location.origin}/behaviour-questionnaire?email=${encodeURIComponent(client.email)}`,
         // Callback URL for Event ID
-        eventIdCallbackUrl: `${window.location.origin}/api/session/event-id`
+        eventIdCallbackUrl: `${window.location.origin}/api/session/event-id`,
+        // Payment link - dynamically generated based on session type, membership, session number, and travel zone
+        paymentLink: paymentLink
       };
 
       // Comprehensive validation to prevent blank/empty webhook data
@@ -1210,6 +1216,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         (q.dogName?.toLowerCase() === sessionDogName?.toLowerCase() || sessionDogName === '')
       );
 
+      // Generate payment link for this session
+      const paymentLink = paymentService.generatePaymentLink(session, client);
+
       // Prepare webhook data (same structure as new session webhook)
       const webhookData = {
         sessionId: session.id,
@@ -1234,6 +1243,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         // Form URLs with email prefilled
         bookingTermsUrl: `https://rmrcms.vercel.app/booking-terms?email=${encodeURIComponent(client.email)}`,
         questionnaireUrl: `https://rmrcms.vercel.app/behaviour-questionnaire?email=${encodeURIComponent(client.email)}`,
+        // Payment link - dynamically generated based on session type, membership, session number, and travel zone
+        paymentLink: paymentLink,
         isUpdate: true // Flag to indicate this is an update webhook
       };
 
@@ -1336,6 +1347,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const timeDiff = sessionDate.getTime() - now.getTime();
       const daysUntilSession = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
 
+      // Generate payment link for this session
+      const paymentLink = paymentService.generatePaymentLink(session, client);
+
       // Prepare webhook data with session flags
       const webhookData = {
         sessionId: session.id,
@@ -1360,6 +1374,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         // Form URLs with email prefilled
         bookingTermsUrl: `https://rmrcms.vercel.app/booking-terms?email=${encodeURIComponent(client.email)}`,
         questionnaireUrl: `https://rmrcms.vercel.app/behaviour-questionnaire?email=${encodeURIComponent(client.email)}`,
+        // Payment link - dynamically generated based on session type, membership, session number, and travel zone
+        paymentLink: paymentLink,
         // Session webhook specific flags
         sendSessionEmail: daysUntilSession <= 4, // Only send email if ≤4 days away
         createCalendarEvent: false, // Don't create calendar events for updates
