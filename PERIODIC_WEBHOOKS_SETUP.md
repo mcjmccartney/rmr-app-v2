@@ -37,20 +37,44 @@ If cron runs on **January 2nd at 8:00 AM**:
 
 1. Go to Vercel Dashboard → Your Project → Settings → Environment Variables
 2. Find `WEBHOOK_API_KEY` and copy its value
-3. Keep this handy for the next step
+3. Keep this handy for the next steps
 
-### Step 2: Enable pg_cron in Supabase
+### Step 2: Enable Required Extensions in Supabase
 
-Go to Supabase Dashboard → SQL Editor and run:
+#### Enable pg_net (for HTTP requests)
+
+1. Go to Supabase Dashboard → **Database** → **Extensions**
+2. Search for **"pg_net"** or **"http"**
+3. Click **Enable** on the pg_net extension
+4. Wait for it to activate (should take a few seconds)
+
+#### Enable pg_cron (for scheduled jobs)
+
+In Supabase Dashboard → SQL Editor, run:
 
 ```sql
 -- Enable the pg_cron extension
 CREATE EXTENSION IF NOT EXISTS pg_cron;
+
+-- Enable the pg_net extension (if not done via UI)
+CREATE EXTENSION IF NOT EXISTS pg_net;
+
+-- Grant permissions
+GRANT USAGE ON SCHEMA net TO postgres;
+GRANT ALL ON ALL TABLES IN SCHEMA net TO postgres;
 ```
 
-### Step 3: Create the Cron Job
+### Step 3: Run the Setup Migration
 
-In the same SQL Editor, run this (replace `YOUR_WEBHOOK_API_KEY_HERE` with your actual key):
+In Supabase SQL Editor, you can either:
+
+**Option A: Run the migration file**
+1. Open `migrations/20250102_setup_periodic_webhooks_cron.sql`
+2. Replace `YOUR_WEBHOOK_API_KEY_HERE` with your actual key
+3. Copy and paste the entire file into Supabase SQL Editor
+4. Run it
+
+**Option B: Run this command directly** (replace `YOUR_WEBHOOK_API_KEY_HERE` with your actual key):
 
 ```sql
 -- Schedule daily webhook trigger at 8:00 AM UTC
