@@ -86,22 +86,39 @@ This will:
 
 ### Payment Link in Webhook Data
 
-The app now includes a `paymentLink` field in all session webhooks sent to Make.com:
+The app now includes a `paymentLink` field in **all** session webhooks sent to Make.com:
+
+- ✅ **New session creation** - Includes payment link
+- ✅ **Session updates** - Includes payment link
+- ✅ **Booking terms webhook** - Includes payment link
+- ✅ **4-day periodic reminder** - Includes payment link
+- ✅ **12-day periodic reminder** - Includes payment link (if enabled)
+
+All webhooks now have identical structure with the payment link included:
 
 ```json
 {
   "sessionId": "...",
-  "clientFirstName": "...",
-  "clientLastName": "...",
-  "clientEmail": "...",
+  "clientId": "...",
+  "clientName": "John Smith",
+  "clientFirstName": "John",
+  "clientLastName": "Smith",
+  "clientEmail": "john@example.com",
+  "address": "123 Main St",
+  "dogName": "Buddy",
   "sessionType": "In-Person",
   "bookingDate": "2025-01-15",
   "bookingTime": "10:00",
   "quote": 105,
+  "notes": "",
   "travelExpense": "Zone 1",
   "membershipStatus": true,
+  "createdAt": "2025-01-02T12:00:00.000Z",
+  "bookingTermsUrl": "https://rmrcms.vercel.app/booking-terms?email=john@example.com",
+  "questionnaireUrl": "https://rmrcms.vercel.app/behaviour-questionnaire?email=john@example.com",
   "paymentLink": "https://monzo.com/pay/r/raising-my-rescue_f24YjGV924ameM?description=RMR-In-Person-abc123&redirect_url=https://rmrcms.vercel.app/pay-confirm?id=abc123",
-  ...
+  "sendSessionEmail": true,
+  "createCalendarEvent": false
 }
 ```
 
