@@ -29,7 +29,7 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
     time: '',
     quote: '',
     notes: '',
-    travelExpense: '' as 'Zone 1' | 'Zone 2' | 'Zone 3' | ''
+    travelExpense: '' as 'Zone 1' | 'Zone 2' | 'Zone 3' | 'Zone 4' | ''
   });
 
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);

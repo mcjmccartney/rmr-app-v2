@@ -137,7 +137,7 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
     time: '',
     notes: '',
     quote: '',
-    travelExpense: '' as 'Zone 1' | 'Zone 2' | 'Zone 3' | ''
+    travelExpense: '' as 'Zone 1' | 'Zone 2' | 'Zone 3' | 'Zone 4' | ''
   });
   const [applyFollowupRate, setApplyFollowupRate] = useState(false);
 
@@ -212,7 +212,7 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
 
     // Calculate quote with travel expense
     const baseQuote = calculateQuote(formData.sessionType, client?.membership || false, useFirstSessionRate);
-    const travelCost = getTravelExpenseCost(formData.travelExpense as 'Zone 1' | 'Zone 2' | 'Zone 3' | null);
+    const travelCost = getTravelExpenseCost(formData.travelExpense as 'Zone 1' | 'Zone 2' | 'Zone 3' | 'Zone 4' | null);
 
     setFormData({
       ...formData,
@@ -232,7 +232,7 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
 
     // Calculate quote with travel expense
     const baseQuote = calculateQuote(sessionType, selectedClient?.membership || false, useFirstSessionRate);
-    const travelCost = getTravelExpenseCost(newTravelExpense as 'Zone 1' | 'Zone 2' | 'Zone 3' | null);
+    const travelCost = getTravelExpenseCost(newTravelExpense as 'Zone 1' | 'Zone 2' | 'Zone 3' | 'Zone 4' | null);
 
     setFormData({
       ...formData,
@@ -252,7 +252,7 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
       const useFirstSessionRate = checked ? false : isFirst;
 
       const baseQuote = calculateQuote(formData.sessionType, selectedClient.membership, useFirstSessionRate);
-      const travelCost = getTravelExpenseCost(formData.travelExpense as 'Zone 1' | 'Zone 2' | 'Zone 3' | null);
+      const travelCost = getTravelExpenseCost(formData.travelExpense as 'Zone 1' | 'Zone 2' | 'Zone 3' | 'Zone 4' | null);
 
       setFormData({
         ...formData,
@@ -262,7 +262,7 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
   };
 
   const handleTravelExpenseChange = (value: string) => {
-    const travelExpense = value as 'Zone 1' | 'Zone 2' | 'Zone 3' | '';
+    const travelExpense = value as 'Zone 1' | 'Zone 2' | 'Zone 3' | 'Zone 4' | '';
 
     // Calculate base quote
     const isFirst = selectedClient ? isFirstSession(selectedClient.id, formData.sessionType) : false;
