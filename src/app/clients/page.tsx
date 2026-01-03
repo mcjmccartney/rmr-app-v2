@@ -11,9 +11,10 @@ import BehaviouralBriefModal from '@/components/modals/BehaviouralBriefModal';
 import BehaviourQuestionnaireModal from '@/components/modals/BehaviourQuestionnaireModal';
 import RMRLogo from '@/components/RMRLogo';
 import { Client, Session, BehaviouralBrief, BehaviourQuestionnaire, Membership } from '@/types';
-import { Calendar, UserPlus, Users, UserCheck, ClipboardList, FileQuestion, Star, Edit3, Download } from 'lucide-react';
+import { Calendar, UserPlus, Users, UserCheck, ClipboardList, FileQuestion, Star, Edit3, Download, FileSpreadsheet } from 'lucide-react';
 import { groupCoachingResetService } from '@/services/groupCoachingResetService';
 import { formatClientWithAllDogs, getClientDogsPart } from '@/utils/dateFormatting';
+import * as XLSX from 'xlsx';
 
 function ClientsPageContent() {
   const router = useRouter();
@@ -357,6 +358,56 @@ function ClientsPageContent() {
     }
   };
 
+  const handleExportToExcel = () => {
+    // Prepare data for export
+    const exportData = filteredClients.map(client => ({
+      'First Name': client.firstName || '',
+      'Last Name': client.lastName || '',
+      'Partner Name': client.partnerName || '',
+      'Dog Name': client.dogName || '',
+      'Other Dogs': client.otherDogs?.join(', ') || '',
+      'Email': client.email || '',
+      'Phone': client.phone || '',
+      'Address': client.address || '',
+      'Member': client.membership ? 'Yes' : 'No',
+      'Active': client.active ? 'Yes' : 'No',
+      'Booking Terms Signed': client.booking_terms_signed ? 'Yes' : 'No',
+      'Booking Terms Date': client.booking_terms_signed_date || '',
+    }));
+
+    // Create worksheet
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+
+    // Set column widths
+    const columnWidths = [
+      { wch: 15 }, // First Name
+      { wch: 15 }, // Last Name
+      { wch: 15 }, // Partner Name
+      { wch: 15 }, // Dog Name
+      { wch: 20 }, // Other Dogs
+      { wch: 30 }, // Email
+      { wch: 15 }, // Phone
+      { wch: 40 }, // Address
+      { wch: 8 },  // Member
+      { wch: 8 },  // Active
+      { wch: 20 }, // Booking Terms Signed
+      { wch: 18 }, // Booking Terms Date
+    ];
+    worksheet['!cols'] = columnWidths;
+
+    // Create workbook
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Clients');
+
+    // Generate filename with current date
+    const today = new Date();
+    const dateStr = today.toISOString().split('T')[0]; // YYYY-MM-DD
+    const filename = `RMR_Clients_${dateStr}.xlsx`;
+
+    // Download file
+    XLSX.writeFile(workbook, filename);
+  };
+
   return (
     <div className="min-h-screen bg-white flex flex-col">
       <div className="bg-amber-800">
@@ -370,6 +421,13 @@ function ClientsPageContent() {
               isActive: false,
               iconOnly: true
             }] : []),
+            {
+              icon: FileSpreadsheet,
+              onClick: handleExportToExcel,
+              title: 'Export to Excel',
+              isActive: false,
+              iconOnly: true
+            },
             {
               icon: Star,
               onClick: () => {
