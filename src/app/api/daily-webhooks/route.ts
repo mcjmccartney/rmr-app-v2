@@ -46,17 +46,21 @@ export async function POST(request: NextRequest) {
     // Process webhooks function
     const processWebhooks = async (sessions: any[], clients: any[], targetDays: number, webhookUrl: string) => {
       const now = new Date();
+      now.setHours(0, 0, 0, 0); // Reset to midnight for accurate calendar day comparison
       const results: any[] = [];
 
       const targetSessions = sessions.filter(session => {
         if (!session.client_id || session.session_type === 'Group' || session.session_type === 'RMR Live') {
           return false;
         }
-        
+
         const sessionDate = new Date(session.booking_date);
+        sessionDate.setHours(0, 0, 0, 0); // Reset to midnight for accurate calendar day comparison
         const timeDiff = sessionDate.getTime() - now.getTime();
         const daysUntilSession = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
-        
+
+        console.log(`[DAILY-WEBHOOKS] Session ${session.id} on ${session.booking_date}: ${daysUntilSession} days away (target: ${targetDays})`);
+
         return daysUntilSession === targetDays;
       });
 
@@ -251,6 +255,7 @@ export async function GET() {
     const sessions = sessionsData || [];
     const clients = clientsData || [];
     const now = new Date();
+    now.setHours(0, 0, 0, 0); // Reset to midnight for accurate calendar day comparison
 
     // Find sessions 4 days away
     const fourDaySessions = sessions.filter(session => {
@@ -258,15 +263,21 @@ export async function GET() {
         return false;
       }
       const sessionDate = new Date(session.booking_date);
+      sessionDate.setHours(0, 0, 0, 0); // Reset to midnight for accurate calendar day comparison
       const daysUntilSession = Math.ceil((sessionDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
       return daysUntilSession === 4;
     }).map(session => {
       const client = clients.find(c => c.id === session.client_id);
+      const sessionDate = new Date(session.booking_date);
+      sessionDate.setHours(0, 0, 0, 0);
+      const daysUntilSession = Math.ceil((sessionDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
       return {
         sessionId: session.id,
         clientName: client ? `${client.first_name} ${client.last_name}` : 'Unknown',
         sessionDate: session.booking_date,
-        sessionType: session.session_type
+        sessionType: session.session_type,
+        daysUntilSession: daysUntilSession
       };
     });
 

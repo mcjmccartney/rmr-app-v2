@@ -6,6 +6,7 @@ import { Session, Client } from '@/types';
 
 async function processWebhooks(sessions: any[], clients: any[], targetDays: number, webhookUrl: string) {
   const now = new Date();
+  now.setHours(0, 0, 0, 0); // Reset to midnight for accurate calendar day comparison
   const results: any[] = [];
   let successCount = 0;
   let failureCount = 0;
@@ -25,6 +26,7 @@ async function processWebhooks(sessions: any[], clients: any[], targetDays: numb
 
     // Check if session is exactly targetDays away
     const sessionDate = new Date(session.booking_date);
+    sessionDate.setHours(0, 0, 0, 0); // Reset to midnight for accurate calendar day comparison
     const timeDiff = sessionDate.getTime() - now.getTime();
     const daysUntilSession = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
 
@@ -314,6 +316,7 @@ export async function GET() {
     const sessions = sessionsData || [];
     const clients = clientsData || [];
     const now = new Date();
+    now.setHours(0, 0, 0, 0); // Reset to midnight for accurate calendar day comparison
 
     const upcomingSessions = sessions
       .filter(session => {
@@ -322,6 +325,7 @@ export async function GET() {
         }
 
         const sessionDate = new Date(session.booking_date);
+        sessionDate.setHours(0, 0, 0, 0); // Reset to midnight for accurate calendar day comparison
         const timeDiff = sessionDate.getTime() - now.getTime();
         const daysUntilSession = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
 
@@ -330,6 +334,7 @@ export async function GET() {
       .map(session => {
         const client = clients.find((c: any) => c.id === session.client_id);
         const sessionDate = new Date(session.booking_date);
+        sessionDate.setHours(0, 0, 0, 0); // Reset to midnight for accurate calendar day comparison
         const timeDiff = sessionDate.getTime() - now.getTime();
         const daysUntilSession = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
 

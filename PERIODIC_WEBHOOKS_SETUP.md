@@ -10,6 +10,7 @@ The periodic webhook endpoints have been **re-enabled** and are ready to use:
 - ✅ `/api/scheduled-webhooks-combined` - Alternative endpoint (same functionality)
 - ✅ Payment links automatically generated for each session
 - ✅ Complete webhook data structure (client info, session details, payment link)
+- ✅ **Fixed date calculation** - Now uses calendar days (midnight-to-midnight) for accurate matching
 
 ## 🎯 How It Works
 
@@ -18,7 +19,7 @@ When the cron job runs daily at 8:00 AM UTC:
 
 1. Fetches all sessions from Supabase
 2. Fetches all clients from Supabase
-3. **Filters sessions that are exactly 4 days away**
+3. **Filters sessions that are exactly 4 calendar days away**
 4. For each matching session:
    - Generates payment link based on session type, membership, travel zone
    - Builds complete webhook data
@@ -26,29 +27,65 @@ When the cron job runs daily at 8:00 AM UTC:
 5. Returns summary of processed sessions
 
 ### Example
-If cron runs on **January 2nd at 8:00 AM**:
-- ✅ Session on **January 6th** → 4 days away → **WEBHOOK SENT**
-- ❌ Session on **January 5th** → 3 days away → **SKIPPED**
-- ❌ Session on **January 7th** → 5 days away → **SKIPPED**
+If cron runs on **January 5th** (any time during the day):
+- ✅ **All sessions on January 9th** → 4 days away → **WEBHOOKS SENT**
+- ❌ Sessions on January 8th → 3 days away → **SKIPPED**
+- ❌ Sessions on January 10th → 5 days away → **SKIPPED**
+
+**Note:** The system now uses calendar days (midnight-to-midnight), so all sessions scheduled for the target date will be triggered regardless of what time the cron runs.
 
 ## 🔧 Setup Instructions
 
-### Step 1: Get Your WEBHOOK_API_KEY
+### Option A: HTTP Request (Recommended - Easiest)
+
+This is the **simplest method** and doesn't require any database extensions.
+
+#### Step 1: Get Your WEBHOOK_API_KEY
+
+1. Go to Vercel Dashboard → Your Project → Settings → Environment Variables
+2. Find `WEBHOOK_API_KEY` and copy its value
+3. Keep this handy for the next step
+
+#### Step 2: Create Supabase Cron Job with HTTP Request
+
+1. Go to Supabase Dashboard → **Database** → **Cron Jobs**
+2. Click **"Create a new cron job"** or edit existing `daily-session-webhooks`
+3. Configure the cron job:
+   - **Name:** `daily-session-webhooks`
+   - **Schedule:** `0 8 * * *` (runs at 8:00 AM UTC daily)
+   - **Type:** Select **"HTTP Request"**
+   - **Method:** `POST`
+   - **URL:** `https://rmrcms.vercel.app/api/daily-webhooks`
+   - **Headers:** Click "Add header" twice and add:
+     - Header 1: `Content-Type` = `application/json`
+     - Header 2: `x-api-key` = `YOUR_WEBHOOK_API_KEY_HERE` (paste the key from Step 1)
+   - **Body:** `{}` (empty JSON object)
+4. Click **"Save cron job"**
+
+✅ **Done!** The cron will now run daily at 8:00 AM UTC and trigger webhooks for all sessions exactly 4 days away.
+
+---
+
+### Option B: Database Function with pg_net (Advanced)
+
+Only use this if the HTTP Request option is not available in your Supabase plan.
+
+#### Step 1: Get Your WEBHOOK_API_KEY
 
 1. Go to Vercel Dashboard → Your Project → Settings → Environment Variables
 2. Find `WEBHOOK_API_KEY` and copy its value
 3. Keep this handy for the next steps
 
-### Step 2: Enable Required Extensions in Supabase
+#### Step 2: Enable Required Extensions in Supabase
 
-#### Enable pg_net (for HTTP requests)
+##### Enable pg_net (for HTTP requests)
 
 1. Go to Supabase Dashboard → **Database** → **Extensions**
 2. Search for **"pg_net"** or **"http"**
 3. Click **Enable** on the pg_net extension
 4. Wait for it to activate (should take a few seconds)
 
-#### Enable pg_cron (for scheduled jobs)
+##### Enable pg_cron (for scheduled jobs)
 
 In Supabase Dashboard → SQL Editor, run:
 
@@ -64,7 +101,7 @@ GRANT USAGE ON SCHEMA net TO postgres;
 GRANT ALL ON ALL TABLES IN SCHEMA net TO postgres;
 ```
 
-### Step 3: Run the Setup Migration
+#### Step 3: Run the Setup Migration
 
 In Supabase SQL Editor, you can either:
 
@@ -95,7 +132,7 @@ SELECT cron.schedule(
 );
 ```
 
-### Step 4: Verify the Cron Job
+#### Step 4: Verify the Cron Job
 
 Check that it was created successfully:
 
@@ -106,7 +143,11 @@ SELECT * FROM cron.job;
 
 You should see `daily-session-webhooks` in the list.
 
-### Step 5: Update Your Make.com Scenario
+---
+
+## 📧 Make.com Scenario Setup
+
+**IMPORTANT:** Your Make.com scenario needs to use the webhook data directly!
 
 **IMPORTANT:** Your Make.com scenario needs to use the webhook data directly!
 

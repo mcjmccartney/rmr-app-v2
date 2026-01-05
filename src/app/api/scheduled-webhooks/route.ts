@@ -60,8 +60,9 @@ export async function POST() {
     
     // Get current date and time
     const now = new Date();
+    now.setHours(0, 0, 0, 0); // Reset to midnight for accurate calendar day comparison
     const currentDate = now.toISOString().split('T')[0]; // YYYY-MM-DD
-    
+
     // Find sessions that are exactly 4 days away to trigger both webhooks
     // These are sessions that were >4 days away when created (so no webhooks were triggered)
     // and now need both booking terms and session webhooks triggered
@@ -73,6 +74,7 @@ export async function POST() {
 
       // Calculate days until session
       const sessionDate = new Date(session.bookingDate);
+      sessionDate.setHours(0, 0, 0, 0); // Reset to midnight for accurate calendar day comparison
       const timeDiff = sessionDate.getTime() - now.getTime();
       const daysUntilSession = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
 
