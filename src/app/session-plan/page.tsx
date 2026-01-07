@@ -1028,21 +1028,16 @@ function SessionPlanContent() {
                           <label className="block text-sm font-medium text-gray-700">
                             Explanation of Behaviour
                           </label>
-                          <span className={`text-xs ${
-                            formData.explanationOfBehaviour.length > 1600 ? 'text-red-500' : 'text-gray-500'
-                          }`}>
-                            {formData.explanationOfBehaviour.length}/1600
-                          </span>
                         </div>
                         <RichTextEditor
                           value={formData.explanationOfBehaviour}
                           onChange={(value) => {
-                            if (value.length <= 1600) {
-                              handleInputChange('explanationOfBehaviour', value);
-                            }
+                            handleInputChange('explanationOfBehaviour', value);
                           }}
                           placeholder="Describe the behaviour patterns, triggers, and context..."
                           className="w-full"
+                          maxLength={1600}
+                          showCharCount={true}
                         />
                       </div>
                     </div>
