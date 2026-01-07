@@ -1034,17 +1034,15 @@ function SessionPlanContent() {
                             {formData.explanationOfBehaviour.length}/1600
                           </span>
                         </div>
-                        <textarea
+                        <RichTextEditor
                           value={formData.explanationOfBehaviour}
-                          onChange={(e) => {
-                            if (e.target.value.length <= 1600) {
-                              handleInputChange('explanationOfBehaviour', e.target.value);
+                          onChange={(value) => {
+                            if (value.length <= 1600) {
+                              handleInputChange('explanationOfBehaviour', value);
                             }
                           }}
-                          className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-800 focus:border-amber-800 resize-none"
-                          rows={8}
-                          maxLength={1600}
                           placeholder="Describe the behaviour patterns, triggers, and context..."
+                          className="w-full"
                         />
                       </div>
                     </div>
