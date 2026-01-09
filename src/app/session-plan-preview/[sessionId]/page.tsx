@@ -17,9 +17,11 @@ interface EditableActionPoint {
 interface DynamicActionPointPagesProps {
   title: string;
   editableActionPoints: EditableActionPoint[];
+  isPlaywrightMode?: boolean;
+  noFirstPage?: boolean;
 }
 
-function DynamicActionPointPages({ title, editableActionPoints }: DynamicActionPointPagesProps) {
+function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode = false, noFirstPage = true }: DynamicActionPointPagesProps) {
   const [pages, setPages] = useState<EditableActionPoint[][]>([]);
   const [needsSeparateReminderPage, setNeedsSeparateReminderPage] = useState(false);
 
@@ -188,7 +190,7 @@ function DynamicActionPointPages({ title, editableActionPoints }: DynamicActionP
             />
 
             <div className="page-content">
-              {pageIndex === 0 && (
+              {pageIndex === 0 && (isPlaywrightMode || noFirstPage) && (
                 <h1 style={{
                   fontSize: '2.25rem',
                   marginBottom: '2.5rem',
@@ -688,6 +690,8 @@ export default function SessionPlanPreviewPage() {
         <DynamicActionPointPages
           title={title}
           editableActionPoints={editableActionPoints}
+          isPlaywrightMode={isPlaywrightMode}
+          noFirstPage={sessionPlan?.noFirstPage ?? true}
         />
 
       </div>
