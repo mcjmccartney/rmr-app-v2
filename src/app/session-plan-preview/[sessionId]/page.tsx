@@ -195,7 +195,9 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
                   fontSize: '2.25rem',
                   marginBottom: '2.5rem',
                   fontWeight: 'bold',
-                  fontFamily: 'Arial, sans-serif'
+                  fontFamily: 'Arial, sans-serif',
+                  paddingLeft: '0.8rem',
+                  paddingRight: '0.8rem'
                 }}>
                   {title}
                 </h1>
@@ -605,7 +607,9 @@ export default function SessionPlanPreviewPage() {
                 fontSize: '2.25rem',
                 marginBottom: '2.5rem',
                 fontWeight: 'bold',
-                fontFamily: 'Arial, sans-serif'
+                fontFamily: 'Arial, sans-serif',
+                paddingLeft: '0.8rem',
+                paddingRight: '0.8rem'
               }}>
                 {title}
               </h1>
