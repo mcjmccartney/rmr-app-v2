@@ -39,7 +39,7 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
     tempWrapper.style.position = 'absolute';
     tempWrapper.style.visibility = 'hidden';
     tempWrapper.style.width = '210mm';
-    tempWrapper.style.padding = '0 3.4rem';
+    tempWrapper.style.padding = '0 1.7rem';
     tempWrapper.style.fontFamily = 'Arial, sans-serif';
     document.body.appendChild(tempWrapper);
 
@@ -533,7 +533,7 @@ export default function SessionPlanPreviewPage() {
         }
 
         .page-content {
-          padding: 0 3.4rem;
+          padding: 0 1.7rem;
           flex: 1;
           position: relative;
         }
