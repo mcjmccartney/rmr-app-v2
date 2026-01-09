@@ -607,9 +607,7 @@ export default function SessionPlanPreviewPage() {
                 fontSize: '2.25rem',
                 marginBottom: '2.5rem',
                 fontWeight: 'bold',
-                fontFamily: 'Arial, sans-serif',
-                paddingLeft: '0.8rem',
-                paddingRight: '0.8rem'
+                fontFamily: 'Arial, sans-serif'
               }}>
                 {title}
               </h1>
