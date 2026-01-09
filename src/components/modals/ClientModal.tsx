@@ -73,10 +73,10 @@ export default function ClientModal({ client, isOpen, onClose, onEditClient, onV
 
       setIsLoadingData(true);
       try {
-        // Load sessions for this client
+        // Load sessions for this client (including sessions where they're a participant)
         console.log('Loading sessions for client:', currentClient.id);
-        const sessions = await sessionService.getByClientId(currentClient.id);
-        console.log('Found sessions:', sessions.length);
+        const sessions = await sessionService.getAllSessionsForClient(currentClient.id);
+        console.log('Found sessions (including participant sessions):', sessions.length);
         setClientSessions(sessions || []);
 
         // Load memberships for this client including email aliases

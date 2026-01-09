@@ -1557,22 +1557,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
     try {
       const client = session.clientId ? state.clients.find(c => c.id === session.clientId) : null;
 
-      // Skip calendar creation for Group/RMR Live sessions without clients
-      if (!session.clientId && (session.sessionType === 'Group' || session.sessionType === 'RMR Live')) {
-        console.log('Group/RMR Live session without client, skipping calendar creation');
-        return null;
-      }
-
-      if (!client) {
-        console.log('No client found for session, skipping calendar creation');
-        return null;
-      }
+      // For Group/RMR Live sessions without a main client, use session type as the title
+      const isGroupOrRMRLive = session.sessionType === 'Group' || session.sessionType === 'RMR Live';
 
       console.log('Creating Google Calendar event for session:', {
         sessionId: session.id,
-        clientName: `${client.firstName} ${client.lastName}`.trim(),
+        clientName: client ? `${client.firstName} ${client.lastName}`.trim() : session.sessionType,
         bookingDate: session.bookingDate,
-        bookingTime: session.bookingTime
+        bookingTime: session.bookingTime,
+        isGroupOrRMRLive
       });
 
       // Create Google Calendar event with retry logic
@@ -1590,10 +1583,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              clientName: `${client.firstName} ${client.lastName}`.trim(),
-              clientEmail: client.email || '',
-              clientAddress: client.address || '',
-              dogName: session.dogName || client.dogName || '',
+              clientName: client ? `${client.firstName} ${client.lastName}`.trim() : session.sessionType,
+              clientEmail: client?.email || '',
+              clientAddress: client?.address || '',
+              dogName: session.dogName || client?.dogName || '',
               sessionType: session.sessionType,
               bookingDate: session.bookingDate,
               bookingTime: session.bookingTime,

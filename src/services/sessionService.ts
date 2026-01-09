@@ -137,6 +137,65 @@ export const sessionService = {
     return data?.map(dbRowToSession) || []
   },
 
+  // Get all sessions for a client (including sessions where they're a participant)
+  async getAllSessionsForClient(clientId: string): Promise<Session[]> {
+    try {
+      // Get sessions where client is the main client
+      const directSessions = await this.getByClientId(clientId)
+
+      // Get sessions where client is a participant (Group/RMR Live sessions)
+      const { data: participantData, error: participantError } = await supabase
+        .from('session_participants')
+        .select('session_id')
+        .eq('client_id', clientId)
+
+      if (participantError) {
+        console.error('Error fetching participant sessions:', participantError)
+        // Return direct sessions even if participant query fails
+        return directSessions
+      }
+
+      if (!participantData || participantData.length === 0) {
+        return directSessions
+      }
+
+      // Get the actual session data for participant sessions
+      const sessionIds = participantData.map(p => p.session_id)
+      const { data: participantSessions, error: sessionsError } = await supabase
+        .from('sessions')
+        .select('*')
+        .in('id', sessionIds)
+
+      if (sessionsError) {
+        console.error('Error fetching participant session details:', sessionsError)
+        return directSessions
+      }
+
+      // Combine and deduplicate sessions
+      const allSessions = [...directSessions]
+      const existingIds = new Set(directSessions.map(s => s.id))
+
+      participantSessions?.forEach(session => {
+        if (!existingIds.has(session.id)) {
+          allSessions.push(dbRowToSession(session))
+        }
+      })
+
+      // Sort by date (most recent first)
+      allSessions.sort((a, b) => {
+        const dateCompare = b.bookingDate.localeCompare(a.bookingDate)
+        if (dateCompare !== 0) return dateCompare
+        return b.bookingTime.localeCompare(a.bookingTime)
+      })
+
+      return allSessions
+    } catch (error) {
+      console.error('Error in getAllSessionsForClient:', error)
+      // Fallback to direct sessions only
+      return this.getByClientId(clientId)
+    }
+  },
+
   // Get sessions for a specific date range
   async getByDateRange(startDate: Date, endDate: Date): Promise<Session[]> {
     const startDateStr = startDate.toISOString().split('T')[0] // YYYY-MM-DD
