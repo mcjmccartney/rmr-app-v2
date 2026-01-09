@@ -193,7 +193,7 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
               {pageIndex === 0 && (isPlaywrightMode || noFirstPage) && (
                 <h1 style={{
                   fontSize: '2.25rem',
-                  marginBottom: '2.5rem',
+                  marginBottom: '2rem',
                   fontWeight: 'bold',
                   fontFamily: 'Arial, sans-serif',
                   paddingLeft: '0.8rem',
