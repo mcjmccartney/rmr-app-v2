@@ -130,11 +130,26 @@ export const useSessionColors = (data: SessionColorData) => {
                      client.lastName?.toLowerCase().includes('proctor') ||
                      client.lastName?.toLowerCase().includes('parry'))) {
         const sessionDogName = session.dogName || client.dogName;
+
+        // Get ALL questionnaires that might be related (by any email in the system)
+        const allQuestionnairesWithSimilarNames = data.behaviourQuestionnaires?.filter(q =>
+          q.email?.toLowerCase().includes(client.lastName?.toLowerCase() || 'xxxxx') ||
+          q.email?.toLowerCase().includes(client.firstName?.toLowerCase() || 'xxxxx') ||
+          q.dogName?.toLowerCase().includes(sessionDogName?.toLowerCase() || 'xxxxx') ||
+          sessionDogName?.toLowerCase().includes(q.dogName?.toLowerCase() || 'xxxxx')
+        ).map(q => ({
+          dogName: q.dogName,
+          email: q.email,
+          matchesEmail: clientEmails.includes(q.email?.toLowerCase() || ''),
+          matchesDogName: q.dogName?.toLowerCase() === sessionDogName?.toLowerCase()
+        }));
+
         console.log(`[SESSION COLOR DEBUG] ${client.firstName} ${client.lastName}:`, {
           sessionId: session.id,
           sessionDogName,
           clientDogName: client.dogName,
           clientEmails,
+          clientOtherDogs: client.otherDogs,
           hasSignedBookingTerms,
           hasFilledQuestionnaire,
           isPaid,
@@ -144,6 +159,7 @@ export const useSessionColors = (data: SessionColorData) => {
           allQuestionnairesForClient: data.behaviourQuestionnaires?.filter(q =>
             clientEmails.includes(q.email?.toLowerCase() || '')
           ).map(q => ({ dogName: q.dogName, email: q.email })),
+          possibleRelatedQuestionnaires: allQuestionnairesWithSimilarNames,
           matchingQuestionnaire: data.behaviourQuestionnaires?.filter(q =>
             clientEmails.includes(q.email?.toLowerCase() || '') &&
             (q.dogName?.toLowerCase() === sessionDogName?.toLowerCase())
