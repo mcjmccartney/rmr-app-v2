@@ -41,11 +41,11 @@ const hasQuestionnaireForDog = (
 
   // Use getClientEmails to include both primary email and all aliases
   const clientEmails = getClientEmails(client, aliases);
-  const dogName = session.dogName || client.dogName;
+  const dogName = (session.dogName || client.dogName)?.trim();
 
   return questionnaires.some(q =>
     clientEmails.includes(q.email?.toLowerCase() || '') &&
-    q.dogName?.toLowerCase() === dogName?.toLowerCase()
+    q.dogName?.trim().toLowerCase() === dogName?.toLowerCase()
   );
 };
 
@@ -147,6 +147,7 @@ export const useSessionColors = (data: SessionColorData) => {
         console.log(`[SESSION COLOR DEBUG] ${client.firstName} ${client.lastName}:`, {
           sessionId: session.id,
           sessionDogName,
+          sessionDogNameTrimmed: sessionDogName?.trim(),
           clientDogName: client.dogName,
           clientEmails,
           clientOtherDogs: client.otherDogs,
@@ -158,11 +159,16 @@ export const useSessionColors = (data: SessionColorData) => {
           bookingTermsInDB: data.bookingTerms?.filter(bt => clientEmails.includes(bt.email?.toLowerCase() || '')),
           allQuestionnairesForClient: data.behaviourQuestionnaires?.filter(q =>
             clientEmails.includes(q.email?.toLowerCase() || '')
-          ).map(q => ({ dogName: q.dogName, email: q.email })),
+          ).map(q => ({
+            dogName: q.dogName,
+            dogNameTrimmed: q.dogName?.trim(),
+            email: q.email,
+            matchesAfterTrim: q.dogName?.trim().toLowerCase() === sessionDogName?.trim().toLowerCase()
+          })),
           possibleRelatedQuestionnaires: allQuestionnairesWithSimilarNames,
           matchingQuestionnaire: data.behaviourQuestionnaires?.filter(q =>
             clientEmails.includes(q.email?.toLowerCase() || '') &&
-            (q.dogName?.toLowerCase() === sessionDogName?.toLowerCase())
+            (q.dogName?.trim().toLowerCase() === sessionDogName?.trim().toLowerCase())
           )
         });
       }
