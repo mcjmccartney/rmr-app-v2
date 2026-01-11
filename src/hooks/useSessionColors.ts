@@ -124,6 +124,24 @@ export const useSessionColors = (data: SessionColorData) => {
       const isFullyCompleted = hasSignedBookingTerms && (hasFilledQuestionnaire || !!session.questionnaireBypass);
       const isAllComplete = isPaid && hasSignedBookingTerms && isSessionPlanSent;
 
+      // Debug logging for specific clients
+      if (client && (client.firstName === 'Aimee' || client.firstName === 'Linda')) {
+        console.log(`[SESSION COLOR DEBUG] ${client.firstName} ${client.lastName}:`, {
+          sessionId: session.id,
+          clientEmails,
+          hasSignedBookingTerms,
+          hasFilledQuestionnaire,
+          isPaid,
+          isFullyCompleted,
+          questionnaireBypass: session.questionnaireBypass,
+          bookingTermsInDB: data.bookingTerms?.filter(bt => clientEmails.includes(bt.email?.toLowerCase() || '')),
+          questionnairesInDB: data.behaviourQuestionnaires?.filter(q =>
+            clientEmails.includes(q.email?.toLowerCase() || '') &&
+            (q.dogName?.toLowerCase() === (session.dogName || client.dogName)?.toLowerCase())
+          )
+        });
+      }
+
       let backgroundColor: string;
       let className: string;
       let mobileClassName: string;
