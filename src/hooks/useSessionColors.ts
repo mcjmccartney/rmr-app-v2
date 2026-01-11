@@ -125,9 +125,15 @@ export const useSessionColors = (data: SessionColorData) => {
       const isAllComplete = isPaid && hasSignedBookingTerms && isSessionPlanSent;
 
       // Debug logging for specific clients
-      if (client && (client.firstName === 'Aimee' || client.firstName === 'Linda')) {
+      if (client && (client.firstName?.toLowerCase().includes('aimee') ||
+                     client.firstName?.toLowerCase().includes('aim') ||
+                     client.lastName?.toLowerCase().includes('proctor') ||
+                     client.lastName?.toLowerCase().includes('parry'))) {
+        const sessionDogName = session.dogName || client.dogName;
         console.log(`[SESSION COLOR DEBUG] ${client.firstName} ${client.lastName}:`, {
           sessionId: session.id,
+          sessionDogName,
+          clientDogName: client.dogName,
           clientEmails,
           hasSignedBookingTerms,
           hasFilledQuestionnaire,
@@ -135,9 +141,12 @@ export const useSessionColors = (data: SessionColorData) => {
           isFullyCompleted,
           questionnaireBypass: session.questionnaireBypass,
           bookingTermsInDB: data.bookingTerms?.filter(bt => clientEmails.includes(bt.email?.toLowerCase() || '')),
-          questionnairesInDB: data.behaviourQuestionnaires?.filter(q =>
+          allQuestionnairesForClient: data.behaviourQuestionnaires?.filter(q =>
+            clientEmails.includes(q.email?.toLowerCase() || '')
+          ).map(q => ({ dogName: q.dogName, email: q.email })),
+          matchingQuestionnaire: data.behaviourQuestionnaires?.filter(q =>
             clientEmails.includes(q.email?.toLowerCase() || '') &&
-            (q.dogName?.toLowerCase() === (session.dogName || client.dogName)?.toLowerCase())
+            (q.dogName?.toLowerCase() === sessionDogName?.toLowerCase())
           )
         });
       }
