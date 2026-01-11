@@ -32,17 +32,19 @@ const getClientEmails = (client: Client | undefined, aliases: { [clientId: strin
 
 // Helper function to check if client has questionnaire for specific dog
 const hasQuestionnaireForDog = (
-  client: Client | undefined, 
-  session: Session, 
-  questionnaires: BehaviourQuestionnaire[]
+  client: Client | undefined,
+  session: Session,
+  questionnaires: BehaviourQuestionnaire[],
+  aliases: { [clientId: string]: ClientEmailAlias[] }
 ): boolean => {
   if (!client) return false;
-  
-  const clientEmails = [client.email?.toLowerCase()].filter(Boolean);
+
+  // Use getClientEmails to include both primary email and all aliases
+  const clientEmails = getClientEmails(client, aliases);
   const dogName = session.dogName || client.dogName;
-  
-  return questionnaires.some(q => 
-    clientEmails.includes(q.email?.toLowerCase() || '') && 
+
+  return questionnaires.some(q =>
+    clientEmails.includes(q.email?.toLowerCase() || '') &&
     q.dogName?.toLowerCase() === dogName?.toLowerCase()
   );
 };
@@ -115,7 +117,7 @@ export const useSessionColors = (data: SessionColorData) => {
       // Check session status
       const hasSignedBookingTerms = clientEmails.length > 0 && data.bookingTerms ?
         data.bookingTerms.some(bt => clientEmails.includes(bt.email?.toLowerCase() || '')) : false;
-      const hasFilledQuestionnaire = hasQuestionnaireForDog(client, session, data.behaviourQuestionnaires || []);
+      const hasFilledQuestionnaire = hasQuestionnaireForDog(client, session, data.behaviourQuestionnaires || [], data.clientEmailAliases || {});
       const isPaid = !!session.sessionPaid;
       const isSessionPlanSent = !!session.sessionPlanSent;
 
