@@ -129,6 +129,7 @@ export default function AddModal({ isOpen, onClose, type }: AddModalProps) {
 
 function SessionForm({ onSubmit }: { onSubmit: () => void }) {
   const { state, createSession } = useApp();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     clientId: '',
     dogName: '',
@@ -283,6 +284,8 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (isSubmitting) return; // Prevent double submission
+
     // Validate required fields
     // Client is only required for non-Group and non-RMR Live sessions
     const isGroupOrRMRLive = formData.sessionType === 'Group' || formData.sessionType === 'RMR Live';
@@ -310,6 +313,8 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
       quote: formData.quote,
       notes: formData.notes
     });
+
+    setIsSubmitting(true);
 
     try {
       // Calculate session number for Online and In-Person sessions
@@ -346,6 +351,8 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
     } catch (error) {
       console.error('Error creating session:', error);
       alert('Failed to create session. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -538,9 +545,14 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
 
       <button
         type="submit"
-        className="w-full bg-amber-800 text-white py-3 px-6 rounded-lg font-medium hover:bg-amber-700 transition-colors"
+        disabled={isSubmitting}
+        className={`w-full py-3 px-6 rounded-lg font-medium transition-colors ${
+          isSubmitting
+            ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
+            : 'bg-amber-800 text-white hover:bg-amber-700'
+        }`}
       >
-        Create Session
+        {isSubmitting ? 'Creating...' : 'Create Session'}
       </button>
     </form>
   );
