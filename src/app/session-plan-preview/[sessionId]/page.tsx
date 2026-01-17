@@ -190,7 +190,7 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
             />
 
             <div className="page-content">
-              {pageIndex === 0 && (isPlaywrightMode || noFirstPage) && (
+              {pageIndex === 0 && (
                 <h1 style={{
                   fontSize: '2.25rem',
                   marginBottom: '2.5rem',
