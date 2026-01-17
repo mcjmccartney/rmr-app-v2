@@ -134,11 +134,11 @@ export async function POST(request: NextRequest) {
           };
 
           // Validate essential data
-          const hasValidData = webhookData.clientFirstName && 
-                             webhookData.clientLastName && 
-                             webhookData.clientEmail && 
-                             webhookData.sessionType && 
-                             webhookData.bookingDate && 
+          const hasValidData = webhookData.clientFirstName &&
+                             webhookData.clientLastName &&
+                             webhookData.clientEmail &&
+                             webhookData.sessionType &&
+                             webhookData.bookingDate &&
                              webhookData.bookingTime &&
                              (webhookData.quote !== null && webhookData.quote !== undefined);
 
@@ -152,8 +152,39 @@ export async function POST(request: NextRequest) {
             continue;
           }
 
+          // For Online sessions with 7-day emails, delete the existing calendar event
+          // Make.com will create a new one with Google Meet link
+          if (targetDays === 7 && session.session_type === 'Online' && session.event_id) {
+            console.log(`[DAILY-WEBHOOKS] Deleting calendar event for Online session ${session.id} (Make will create new one with Meet link)`);
+
+            try {
+              const deleteResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'https://rmrcms.vercel.app'}/api/calendar/delete`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ eventId: session.event_id })
+              });
+
+              if (deleteResponse.ok) {
+                console.log(`[DAILY-WEBHOOKS] Calendar event deleted successfully for session ${session.id}`);
+
+                // Clear the eventId from the session in the database
+                await supabase
+                  .from('sessions')
+                  .update({ event_id: null })
+                  .eq('id', session.id);
+
+                console.log(`[DAILY-WEBHOOKS] Cleared eventId from session ${session.id}`);
+              } else {
+                console.error(`[DAILY-WEBHOOKS] Failed to delete calendar event for session ${session.id}:`, deleteResponse.status);
+              }
+            } catch (deleteError) {
+              console.error(`[DAILY-WEBHOOKS] Error deleting calendar event for session ${session.id}:`, deleteError);
+              // Continue with webhook even if delete fails
+            }
+          }
+
           console.log(`[DAILY-WEBHOOKS] Sending ${targetDays}-day webhook for ${client.first_name} ${client.last_name}`);
-          
+
           const response = await fetch(webhookUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

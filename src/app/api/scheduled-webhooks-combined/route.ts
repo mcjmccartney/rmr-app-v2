@@ -4,7 +4,7 @@ import { verifyWebhookApiKey } from '@/lib/webhookAuth';
 import { paymentService } from '@/services/paymentService';
 import { Session, Client } from '@/types';
 
-async function processWebhooks(sessions: any[], clients: any[], targetDays: number, webhookUrl: string) {
+async function processWebhooks(sessions: any[], clients: any[], targetDays: number, webhookUrl: string, supabase: any) {
   const now = new Date();
   now.setHours(0, 0, 0, 0); // Reset to midnight for accurate calendar day comparison
   const results: any[] = [];
@@ -173,6 +173,37 @@ async function processWebhooks(sessions: any[], clients: any[], targetDays: numb
         continue;
       }
 
+      // For Online sessions with 7-day emails, delete the existing calendar event
+      // Make.com will create a new one with Google Meet link
+      if (targetDays === 7 && session.session_type === 'Online' && session.event_id) {
+        console.log(`[COMBINED-WEBHOOKS] Deleting calendar event for Online session ${session.id} (Make will create new one with Meet link)`);
+
+        try {
+          const deleteResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'https://rmrcms.vercel.app'}/api/calendar/delete`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ eventId: session.event_id })
+          });
+
+          if (deleteResponse.ok) {
+            console.log(`[COMBINED-WEBHOOKS] Calendar event deleted successfully for session ${session.id}`);
+
+            // Clear the eventId from the session in the database
+            await supabase
+              .from('sessions')
+              .update({ event_id: null })
+              .eq('id', session.id);
+
+            console.log(`[COMBINED-WEBHOOKS] Cleared eventId from session ${session.id}`);
+          } else {
+            console.error(`[COMBINED-WEBHOOKS] Failed to delete calendar event for session ${session.id}:`, deleteResponse.status);
+          }
+        } catch (deleteError) {
+          console.error(`[COMBINED-WEBHOOKS] Error deleting calendar event for session ${session.id}:`, deleteError);
+          // Continue with webhook even if delete fails
+        }
+      }
+
       const response = await fetch(webhookUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -248,13 +279,14 @@ export async function POST(request: NextRequest) {
     const sessions = sessionsData || [];
     const clients = clientsData || [];
 
-    // Process 4-day webhooks (sessions exactly 4 days away)
-    console.log('[COMBINED WEBHOOKS] Processing 4-day webhooks...');
-    const fourDayResult = await processWebhooks(
+    // Process 7-day webhooks (sessions exactly 7 days away)
+    console.log('[COMBINED WEBHOOKS] Processing 7-day webhooks...');
+    const sevenDayResult = await processWebhooks(
       sessions,
       clients,
-      4, // targetDays = 4
-      'https://hook.eu1.make.com/lipggo8kcd8kwq2vp6j6mr3gnxbx12h7'
+      7, // targetDays = 7
+      'https://hook.eu1.make.com/lipggo8kcd8kwq2vp6j6mr3gnxbx12h7',
+      supabase
     );
 
     // 12-day webhooks are disabled
@@ -265,9 +297,9 @@ export async function POST(request: NextRequest) {
       failureCount: 0
     };
 
-    const totalProcessed = fourDayResult.results.length + twelveDayResult.results.length;
-    const totalSuccess = fourDayResult.successCount + twelveDayResult.successCount;
-    const totalFailure = fourDayResult.failureCount + twelveDayResult.failureCount;
+    const totalProcessed = sevenDayResult.results.length + twelveDayResult.results.length;
+    const totalSuccess = sevenDayResult.successCount + twelveDayResult.successCount;
+    const totalFailure = sevenDayResult.failureCount + twelveDayResult.failureCount;
 
     console.log(`[COMBINED WEBHOOKS] Completed: ${totalProcessed} total, ${totalSuccess} success, ${totalFailure} failed`);
 
@@ -275,13 +307,13 @@ export async function POST(request: NextRequest) {
       success: true,
       message: `Combined webhooks processed: ${totalProcessed} sessions`,
       executionTime,
-      fourDaySessionsProcessed: fourDayResult.results.length,
+      sevenDaySessionsProcessed: sevenDayResult.results.length,
       twelveDaySessionsProcessed: twelveDayResult.results.length,
       totalProcessed,
       successCount: totalSuccess,
       failureCount: totalFailure,
       results: {
-        fourDayWebhooks: fourDayResult.results,
+        sevenDayWebhooks: sevenDayResult.results,
         twelveDayWebhooks: twelveDayResult.results
       }
     });

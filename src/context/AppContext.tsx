@@ -1166,20 +1166,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
       // Trigger the booking terms email webhook
       await triggerSessionWebhook(session);
 
-      // Create calendar event directly for new sessions
-      try {
-        console.log(`[CREATE_SESSION] Creating calendar event for new session ${session.id}`);
-        const eventId = await createCalendarEvent(session);
+      // Create calendar event directly for new sessions (except Online sessions)
+      // Online sessions will get calendar events with Google Meet links from Make.com
+      if (session.sessionType !== 'Online') {
+        try {
+          console.log(`[CREATE_SESSION] Creating calendar event for new session ${session.id}`);
+          const eventId = await createCalendarEvent(session);
 
-        if (eventId) {
-          console.log(`[CREATE_SESSION] Calendar event created successfully: ${eventId}`);
-          // Update session with eventId (using internal update to avoid triggering webhooks)
-          await updateSessionInternal(session.id, { eventId });
-          session.eventId = eventId;
+          if (eventId) {
+            console.log(`[CREATE_SESSION] Calendar event created successfully: ${eventId}`);
+            // Update session with eventId (using internal update to avoid triggering webhooks)
+            await updateSessionInternal(session.id, { eventId });
+            session.eventId = eventId;
+          }
+        } catch (calendarError) {
+          console.error(`[CREATE_SESSION] Calendar creation failed:`, calendarError);
+          // Don't throw the error - calendar failure shouldn't prevent session creation
         }
-      } catch (calendarError) {
-        console.error(`[CREATE_SESSION] Calendar creation failed:`, calendarError);
-        // Don't throw the error - calendar failure shouldn't prevent session creation
+      } else {
+        console.log(`[CREATE_SESSION] Skipping calendar creation for Online session ${session.id} - Make.com will create it with Meet link`);
       }
 
       return session;
@@ -1465,12 +1470,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const dateChanged = updates.bookingDate !== undefined && originalSession.bookingDate !== updates.bookingDate;
       const timeChanged = updates.bookingTime !== undefined && originalSession.bookingTime !== updates.bookingTime;
       const sessionTypeChanged = updates.sessionType !== undefined && originalSession.sessionType !== updates.sessionType;
+      const changedToOnline = sessionTypeChanged && updates.sessionType === 'Online';
       const calendarRelevantChange = dateChanged || timeChanged || sessionTypeChanged;
 
       console.log(`[UPDATE_SESSION] Calendar relevant changes:`, {
         dateChanged,
         timeChanged,
         sessionTypeChanged,
+        changedToOnline,
         calendarRelevantChange,
         originalDate: originalSession.bookingDate,
         newDate: updates.bookingDate,
@@ -1486,21 +1493,49 @@ export function AppProvider({ children }: { children: ReactNode }) {
         console.log(`[UPDATE_SESSION] Calendar relevant change detected, handling calendar update`);
 
         try {
-          if (session.eventId) {
-            // Update existing calendar event
+          // Special handling: If changing TO "Online", delete the calendar event
+          // Make.com will create a new one with Google Meet link
+          if (changedToOnline && session.eventId) {
+            console.log(`[UPDATE_SESSION] Session changed to Online - deleting calendar event (Make will create new one with Meet link)`);
+
+            // Delete the calendar event
+            const deleteResponse = await fetch('/api/calendar/delete', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                eventId: session.eventId
+              })
+            });
+
+            if (deleteResponse.ok) {
+              console.log(`[UPDATE_SESSION] Calendar event deleted successfully`);
+              // Clear the eventId from the session
+              await updateSessionInternal(session.id, { eventId: undefined });
+              session.eventId = undefined;
+            } else {
+              console.error(`[UPDATE_SESSION] Failed to delete calendar event:`, deleteResponse.status);
+            }
+          } else if (session.eventId) {
+            // Update existing calendar event (for non-Online sessions)
             console.log(`[UPDATE_SESSION] Updating existing calendar event: ${session.eventId}`);
             await updateCalendarEvent(session);
             console.log(`[UPDATE_SESSION] Calendar event updated successfully`);
           } else {
-            // No eventId found - create new calendar event
-            console.log(`[UPDATE_SESSION] No eventId found, creating new calendar event`);
-            const eventId = await createCalendarEvent(session);
+            // No eventId found - create new calendar event (only for non-Online sessions)
+            if (session.sessionType !== 'Online') {
+              console.log(`[UPDATE_SESSION] No eventId found, creating new calendar event`);
+              const eventId = await createCalendarEvent(session);
 
-            if (eventId) {
-              console.log(`[UPDATE_SESSION] Calendar event created successfully: ${eventId}`);
-              // Update session with eventId (using internal update to avoid triggering webhooks)
-              await updateSessionInternal(session.id, { eventId });
-              session.eventId = eventId;
+              if (eventId) {
+                console.log(`[UPDATE_SESSION] Calendar event created successfully: ${eventId}`);
+                // Update session with eventId (using internal update to avoid triggering webhooks)
+                await updateSessionInternal(session.id, { eventId });
+                session.eventId = eventId;
+              }
+            } else {
+              console.log(`[UPDATE_SESSION] Session is Online - skipping calendar creation (Make will handle it)`);
             }
           }
         } catch (calendarError) {
