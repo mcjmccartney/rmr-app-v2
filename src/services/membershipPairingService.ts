@@ -72,13 +72,13 @@ export const membershipPairingService = {
             clientEmails.includes(membership.email.toLowerCase())
           )
 
-          // Check if client has any recent memberships (within last 2 months)
-          const twoMonthsAgo = new Date()
-          twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2)
+          // Check if client has any recent memberships (within last 1 month)
+          const oneMonthAgo = new Date()
+          oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1)
 
           const recentMemberships = clientMemberships.filter(membership => {
             const membershipDate = new Date(membership.date)
-            return membershipDate >= twoMonthsAgo
+            return membershipDate >= oneMonthAgo
           })
 
           const shouldBeMember = recentMemberships.length > 0
@@ -146,15 +146,15 @@ export const membershipPairingService = {
         return false
       }
 
-      // Check for recent memberships (within last 2 months)
-      const twoMonthsAgo = new Date()
-      twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2)
+      // Check for recent memberships (within last 1 month)
+      const oneMonthAgo = new Date()
+      oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1)
 
       const { data: recentMemberships, error } = await supabase
         .from('memberships')
         .select('*')
         .in('email', emails)
-        .gte('date', twoMonthsAgo.toISOString())
+        .gte('date', oneMonthAgo.toISOString())
 
       if (error) {
         console.error('Error checking client membership status:', error)
@@ -237,12 +237,12 @@ export const membershipPairingService = {
       }))
 
       // Check if member based on recent memberships
-      const twoMonthsAgo = new Date()
-      twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2)
+      const oneMonthAgo = new Date()
+      oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1)
 
       const recentMemberships = membershipRecords.filter(membership => {
         const membershipDate = new Date(membership.date)
-        return membershipDate >= twoMonthsAgo
+        return membershipDate >= oneMonthAgo
       })
 
       return {

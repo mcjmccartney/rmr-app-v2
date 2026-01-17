@@ -10,7 +10,7 @@ The Members Map feature consists of several interconnected components that work 
 **Purpose**: Main modal container that orchestrates the mapping functionality
 
 **Key Features**:
-- Filters active members based on recent membership payments (last 2 months)
+- Filters active members based on recent membership payments (last 1 month)
 - Prioritizes address data from multiple sources
 - Manages geocoding state and progress
 - Displays statistics dashboard
@@ -59,13 +59,13 @@ Supabase Data → Active Member Filter → Address Extraction → Geocoding → 
 ```typescript
 // Members are considered active if:
 // 1. They have membership = true in client record
-// 2. They have a membership payment within last 2 months
-const twoMonthsAgo = new Date();
-twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
+// 2. They have a membership payment within last 1 month
+const oneMonthAgo = new Date();
+oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
 
 const activeMembers = clients.filter(client => {
-  return client.membership && 
-         client.email && 
+  return client.membership &&
+         client.email &&
          recentMemberEmails.has(client.email);
 });
 ```
