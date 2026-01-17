@@ -40,10 +40,16 @@ async function updateMembershipStatuses() {
     // Get all memberships
     const { data: memberships, error: membershipsError } = await supabase
       .from('memberships')
-      .select('*');
+      .select('*')
+      .order('date', { ascending: false });
 
     if (membershipsError) {
       throw new Error(`Failed to fetch memberships: ${membershipsError.message}`);
+    }
+
+    console.log(`📊 Fetched ${memberships?.length || 0} membership records`);
+    if (memberships && memberships.length > 0) {
+      console.log(`📅 Date range: ${memberships[memberships.length - 1].date} to ${memberships[0].date}\n`);
     }
 
     // Get all client email aliases
@@ -57,6 +63,7 @@ async function updateMembershipStatuses() {
 
     let updated = 0;
     let unchanged = 0;
+    let foundMemberships = 0;
     const total = clients?.length || 0;
 
     console.log(`📊 Processing ${total} clients...\n`);
@@ -65,20 +72,43 @@ async function updateMembershipStatuses() {
     for (const client of clients || []) {
       try {
         // Get memberships for this client (including email aliases)
-        const clientEmails = [client.email].filter(Boolean);
+        const clientEmails: string[] = [];
+
+        if (client.email) {
+          clientEmails.push(client.email.toLowerCase().trim());
+        }
 
         // Add alias emails
         const clientAliases = aliases?.filter(alias => alias.client_id === client.id) || [];
         clientAliases.forEach(alias => {
-          if (alias.email && !clientEmails.includes(alias.email)) {
-            clientEmails.push(alias.email);
+          const aliasEmail = alias.email?.toLowerCase().trim();
+          if (aliasEmail && !clientEmails.includes(aliasEmail)) {
+            clientEmails.push(aliasEmail);
           }
         });
 
+        // Debug first client with email
+        if (foundMemberships === 0 && clientEmails.length > 0 && client.first_name === 'Shweta') {
+          console.log(`\n🔍 DEBUG - ${client.first_name} ${client.last_name}:`);
+          console.log(`   Client emails: ${clientEmails.join(', ')}`);
+          console.log(`   Total memberships in DB: ${memberships?.length || 0}`);
+        }
+
         // Get all memberships for client emails (case-insensitive)
-        const clientMemberships = memberships?.filter(membership =>
-          clientEmails.some(email => email?.toLowerCase() === membership.email?.toLowerCase())
-        ) || [];
+        const clientMemberships = memberships?.filter(membership => {
+          const membershipEmail = membership.email?.toLowerCase().trim();
+          const matches = clientEmails.includes(membershipEmail);
+
+          if (foundMemberships === 0 && clientEmails.length > 0 && client.first_name === 'Shweta' && matches) {
+            console.log(`   ✅ Found membership: ${membership.email} on ${membership.date}`);
+          }
+
+          return matches;
+        }) || [];
+
+        if (foundMemberships === 0 && clientEmails.length > 0 && client.first_name === 'Shweta') {
+          console.log(`   Total memberships for client: ${clientMemberships.length}\n`);
+        }
 
         if (clientMemberships.length === 0) {
           // No memberships found - set to false if currently true
@@ -110,6 +140,10 @@ async function updateMembershipStatuses() {
         const shouldBeMember = recentMemberships.length > 0;
         const currentMembershipStatus = client.membership;
 
+        if (shouldBeMember) {
+          foundMemberships++;
+        }
+
         // Update client membership status if it has changed
         if (shouldBeMember !== currentMembershipStatus) {
           const { error: updateError } = await supabase
@@ -138,10 +172,16 @@ async function updateMembershipStatuses() {
       }
     }
 
+    // Show date range for debugging
+    const oneMonthAgo = new Date();
+    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
     console.log('\n' + '='.repeat(60));
     console.log('✅ Membership status update completed!');
     console.log('='.repeat(60));
+    console.log(`📅 Today: ${new Date().toISOString().split('T')[0]}`);
+    console.log(`📅 One month ago: ${oneMonthAgo.toISOString().split('T')[0]}`);
     console.log(`📊 Total clients: ${total}`);
+    console.log(`👥 Clients with recent memberships: ${foundMemberships}`);
     console.log(`✏️  Updated: ${updated}`);
     console.log(`➖ Unchanged: ${unchanged}`);
     console.log('='.repeat(60) + '\n');
