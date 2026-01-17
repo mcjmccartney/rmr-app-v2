@@ -18,10 +18,11 @@ export async function POST(request: NextRequest) {
       throw new Error(`Failed to fetch clients: ${clientsError.message}`);
     }
 
-    // Get all memberships
+    // Get all memberships (ordered to ensure all records are fetched)
     const { data: memberships, error: membershipsError } = await supabase
       .from('memberships')
-      .select('*');
+      .select('*')
+      .order('date', { ascending: false });
 
     if (membershipsError) {
       throw new Error(`Failed to fetch memberships: ${membershipsError.message}`);
@@ -43,20 +44,26 @@ export async function POST(request: NextRequest) {
     for (const client of clients || []) {
       try {
         // Get memberships for this client (including email aliases)
-        const clientEmails = [client.email];
+        const clientEmails: string[] = [];
+
+        if (client.email) {
+          clientEmails.push(client.email.toLowerCase().trim());
+        }
 
         // Add alias emails
         const clientAliases = aliases?.filter(alias => alias.client_id === client.id) || [];
         clientAliases.forEach(alias => {
-          if (alias.alias_email && !clientEmails.includes(alias.alias_email)) {
-            clientEmails.push(alias.alias_email);
+          const aliasEmail = alias.email?.toLowerCase().trim();
+          if (aliasEmail && !clientEmails.includes(aliasEmail)) {
+            clientEmails.push(aliasEmail);
           }
         });
 
-        // Get all memberships for client emails
-        const clientMemberships = memberships?.filter(membership =>
-          clientEmails.includes(membership.email)
-        ) || [];
+        // Get all memberships for client emails (case-insensitive)
+        const clientMemberships = memberships?.filter(membership => {
+          const membershipEmail = membership.email?.toLowerCase().trim();
+          return clientEmails.includes(membershipEmail);
+        }) || [];
 
         if (clientMemberships.length === 0) {
           // No memberships found - set to false if currently true

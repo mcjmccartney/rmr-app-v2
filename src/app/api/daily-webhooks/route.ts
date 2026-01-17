@@ -241,15 +241,124 @@ export async function POST(request: NextRequest) {
 
     console.log(`[DAILY-WEBHOOKS] Completed: ${totalProcessed} sessions processed, ${totalSuccess} successful, ${totalFailure} failed`);
 
+    // Update membership statuses
+    console.log('[DAILY-WEBHOOKS] Starting membership status update...');
+    let membershipUpdated = 0;
+
+    try {
+      // Get all memberships (ordered to ensure all records are fetched)
+      const { data: memberships, error: membershipsError } = await supabase
+        .from('memberships')
+        .select('*')
+        .order('date', { ascending: false });
+
+      if (membershipsError) {
+        console.error('[DAILY-WEBHOOKS] Failed to fetch memberships:', membershipsError.message);
+      } else {
+        // Get all client email aliases
+        const { data: aliases, error: aliasesError } = await supabase
+          .from('client_email_aliases')
+          .select('*');
+
+        if (aliasesError) {
+          console.warn('[DAILY-WEBHOOKS] Could not fetch email aliases:', aliasesError.message);
+        }
+
+        // Process each client
+        for (const client of clients || []) {
+          try {
+            // Get memberships for this client (including email aliases)
+            const clientEmails: string[] = [];
+
+            if (client.email) {
+              clientEmails.push(client.email.toLowerCase().trim());
+            }
+
+            // Add alias emails
+            const clientAliases = aliases?.filter(alias => alias.client_id === client.id) || [];
+            clientAliases.forEach(alias => {
+              const aliasEmail = alias.email?.toLowerCase().trim();
+              if (aliasEmail && !clientEmails.includes(aliasEmail)) {
+                clientEmails.push(aliasEmail);
+              }
+            });
+
+            // Get all memberships for client emails (case-insensitive)
+            const clientMemberships = memberships?.filter(membership => {
+              const membershipEmail = membership.email?.toLowerCase().trim();
+              return clientEmails.includes(membershipEmail);
+            }) || [];
+
+            if (clientMemberships.length === 0) {
+              // No memberships found - set to false if currently true
+              if (client.membership) {
+                const { error: updateError } = await supabase
+                  .from('clients')
+                  .update({ membership: false })
+                  .eq('id', client.id);
+
+                if (!updateError) {
+                  membershipUpdated++;
+                  console.log(`[DAILY-WEBHOOKS] ${client.first_name} ${client.last_name}: Member → Non-Member (no payments)`);
+                }
+              }
+              continue;
+            }
+
+            // Check if client has any recent memberships (within last 1 month)
+            const oneMonthAgo = new Date();
+            oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+
+            const recentMemberships = clientMemberships.filter(membership => {
+              const membershipDate = new Date(membership.date);
+              return membershipDate >= oneMonthAgo;
+            });
+
+            const shouldBeMember = recentMemberships.length > 0;
+            const currentMembershipStatus = client.membership;
+
+            // Update client membership status if it has changed
+            if (shouldBeMember !== currentMembershipStatus) {
+              const { error: updateError } = await supabase
+                .from('clients')
+                .update({ membership: shouldBeMember })
+                .eq('id', client.id);
+
+              if (!updateError) {
+                membershipUpdated++;
+                const latestPayment = clientMemberships.sort((a, b) =>
+                  new Date(b.date).getTime() - new Date(a.date).getTime()
+                )[0];
+
+                if (shouldBeMember) {
+                  console.log(`[DAILY-WEBHOOKS] ${client.first_name} ${client.last_name}: Non-Member → Member (payment: ${latestPayment.date})`);
+                } else {
+                  console.log(`[DAILY-WEBHOOKS] ${client.first_name} ${client.last_name}: Member → Non-Member (payment: ${latestPayment.date})`);
+                }
+              }
+            }
+          } catch (clientError) {
+            console.error(`[DAILY-WEBHOOKS] Error processing client ${client.id}:`, clientError);
+          }
+        }
+
+        console.log(`[DAILY-WEBHOOKS] Membership update completed: ${membershipUpdated} clients updated`);
+      }
+    } catch (membershipError) {
+      console.error('[DAILY-WEBHOOKS] Membership update failed:', membershipError);
+      // Continue with webhook response even if membership update fails
+    }
+
     return NextResponse.json({
       success: true,
-      message: `Daily webhooks completed: ${totalProcessed} sessions processed`,
+      message: `Daily webhooks completed: ${totalProcessed} sessions processed, ${membershipUpdated} memberships updated`,
       summary: {
         sevenDaySessionsProcessed: sevenDayResult.length,
         twelveDaySessionsProcessed: 0, // Disabled
         totalProcessed,
         successCount: totalSuccess,
-        failureCount: totalFailure
+        failureCount: totalFailure,
+        membershipUpdated
       },
       results: {
         sevenDayWebhooks: sevenDayResult,
