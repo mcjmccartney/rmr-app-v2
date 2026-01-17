@@ -78,7 +78,8 @@ export async function POST(request: NextRequest) {
       bookingDate,
       bookingTime,
       notes,
-      quote
+      quote,
+      includeMeetLink = true // Optional parameter to control Google Meet link creation
     } = body;
 
     // Validate required fields
@@ -112,8 +113,8 @@ export async function POST(request: NextRequest) {
       // Removed attendees field - service accounts can't invite attendees without Domain-Wide Delegation
     };
 
-    // Add Google Meet conference data for Online sessions
-    if (sessionType === 'Online') {
+    // Add Google Meet conference data for Online sessions (only if includeMeetLink is true)
+    if (sessionType === 'Online' && includeMeetLink) {
       event.conferenceData = {
         createRequest: {
           requestId: requestId,
@@ -127,7 +128,7 @@ export async function POST(request: NextRequest) {
     const response = await calendar.events.insert({
       calendarId: CALENDAR_ID,
       requestBody: event,
-      conferenceDataVersion: sessionType === 'Online' ? 1 : 0
+      conferenceDataVersion: (sessionType === 'Online' && includeMeetLink) ? 1 : 0
     });
 
     const eventId = response.data.id;

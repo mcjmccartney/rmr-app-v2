@@ -1177,18 +1177,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const daysUntilSession = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
 
       // Create calendar event logic:
-      // - For Online sessions: Always create with Google Meet link (app generates Meet link)
-      // - For all other session types: Always create
-      // Note: Online sessions >7 days will be deleted and recreated on day 7 by scheduled webhook
+      // - For Online sessions >7 days: Create WITHOUT Google Meet link (will be recreated at 7 days)
+      // - For Online sessions ≤7 days: Create WITH Google Meet link
+      // - For all other session types: Always create (no Meet link needed)
       const shouldCreateCalendar = true; // Always create calendar for all sessions
 
       if (shouldCreateCalendar) {
         try {
-          console.log(`[CREATE_SESSION] Creating calendar event for new session ${session.id} (${session.sessionType}, ${daysUntilSession} days away)`);
-          const calendarResult = await createCalendarEvent(session);
+          // For Online sessions, only include Meet link if ≤7 days away
+          const includeMeetLink = session.sessionType !== 'Online' || daysUntilSession <= 7;
+
+          console.log(`[CREATE_SESSION] Creating calendar event for new session ${session.id} (${session.sessionType}, ${daysUntilSession} days away, includeMeetLink: ${includeMeetLink})`);
+          const calendarResult = await createCalendarEvent(session, includeMeetLink);
 
           if (calendarResult) {
-            console.log(`[CREATE_SESSION] Calendar event created successfully: ${calendarResult.eventId}`, calendarResult.meetLink ? `with Meet link: ${calendarResult.meetLink}` : '');
+            console.log(`[CREATE_SESSION] Calendar event created successfully: ${calendarResult.eventId}`, calendarResult.meetLink ? `with Meet link: ${calendarResult.meetLink}` : 'without Meet link');
             // Update session with eventId and meetLink (using internal update to avoid triggering webhooks)
             const updates: Partial<Session> = { eventId: calendarResult.eventId };
             if (calendarResult.meetLink) {
@@ -1564,29 +1567,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
             console.log(`[UPDATE_SESSION] Calendar event updated successfully`);
           } else {
             // No eventId found - create new calendar event
-            // For Online sessions: only create if >7 days away
-            // For other sessions: always create
-            const shouldCreateCalendar = session.sessionType !== 'Online' || daysUntilSession > 7;
+            // Always create calendar events for all sessions
+            console.log(`[UPDATE_SESSION] No eventId found, creating new calendar event (${session.sessionType}, ${daysUntilSession} days away)`);
 
-            if (shouldCreateCalendar) {
-              console.log(`[UPDATE_SESSION] No eventId found, creating new calendar event (${session.sessionType}, ${daysUntilSession} days away)`);
-              const calendarResult = await createCalendarEvent(session);
+            // For Online sessions, only include Meet link if ≤7 days away
+            const includeMeetLink = session.sessionType !== 'Online' || daysUntilSession <= 7;
+            const calendarResult = await createCalendarEvent(session, includeMeetLink);
 
-              if (calendarResult) {
-                console.log(`[UPDATE_SESSION] Calendar event created successfully: ${calendarResult.eventId}`, calendarResult.meetLink ? `with Meet link: ${calendarResult.meetLink}` : '');
-                // Update session with eventId and meetLink (using internal update to avoid triggering webhooks)
-                const updates: Partial<Session> = { eventId: calendarResult.eventId };
-                if (calendarResult.meetLink) {
-                  updates.googleMeetLink = calendarResult.meetLink;
-                }
-                await updateSessionInternal(session.id, updates);
-                session.eventId = calendarResult.eventId;
-                if (calendarResult.meetLink) {
-                  session.googleMeetLink = calendarResult.meetLink;
-                }
+            if (calendarResult) {
+              console.log(`[UPDATE_SESSION] Calendar event created successfully: ${calendarResult.eventId}`, calendarResult.meetLink ? `with Meet link: ${calendarResult.meetLink}` : 'without Meet link');
+              // Update session with eventId and meetLink (using internal update to avoid triggering webhooks)
+              const updates: Partial<Session> = { eventId: calendarResult.eventId };
+              if (calendarResult.meetLink) {
+                updates.googleMeetLink = calendarResult.meetLink;
               }
-            } else {
-              console.log(`[UPDATE_SESSION] Session is Online and ≤7 days away - skipping calendar creation (Make will handle it)`);
+              await updateSessionInternal(session.id, updates);
+              session.eventId = calendarResult.eventId;
+              if (calendarResult.meetLink) {
+                session.googleMeetLink = calendarResult.meetLink;
+              }
             }
           }
         } catch (calendarError) {
@@ -1639,7 +1638,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // Create calendar event directly
   // Returns object with eventId and meetLink if successful, null otherwise
-  const createCalendarEvent = async (session: Session): Promise<{ eventId: string; meetLink?: string } | null> => {
+  // includeMeetLink: controls whether to create Google Meet link for Online sessions
+  const createCalendarEvent = async (session: Session, includeMeetLink: boolean = true): Promise<{ eventId: string; meetLink?: string } | null> => {
     try {
       const client = session.clientId ? state.clients.find(c => c.id === session.clientId) : null;
 
@@ -1652,7 +1652,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         bookingDate: session.bookingDate,
         bookingTime: session.bookingTime,
         sessionType: session.sessionType,
-        isGroupOrRMRLive
+        isGroupOrRMRLive,
+        includeMeetLink
       });
 
       // Create Google Calendar event with retry logic
@@ -1678,7 +1679,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
               bookingDate: session.bookingDate,
               bookingTime: session.bookingTime,
               notes: session.notes,
-              quote: session.quote
+              quote: session.quote,
+              includeMeetLink: includeMeetLink // Pass the parameter to control Google Meet link
             }),
             signal: controller.signal
           });
