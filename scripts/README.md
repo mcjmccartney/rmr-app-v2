@@ -8,12 +8,19 @@ This directory contains utility scripts for managing the Raising My Rescue appli
 
 **Purpose:** Updates all client membership statuses based on the 1-month membership window.
 
-### When to Use
+### ✅ Automated Daily
 
-Run this script when:
+**This script now runs automatically every day at 8:00 AM UTC** as part of the `/api/daily-webhooks` cron job.
+
+See `AUTOMATED_MEMBERSHIP_UPDATES.md` for details.
+
+### When to Use Manually
+
+Run this script manually when:
 - You've changed the membership window logic
-- You need to sync membership statuses with payment records
+- You need to sync membership statuses with payment records immediately
 - You suspect membership statuses are out of sync
+- You want to test the membership logic before the daily cron runs
 
 ### How It Works
 

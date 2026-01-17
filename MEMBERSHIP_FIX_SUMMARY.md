@@ -27,12 +27,26 @@ Added `.order('date', { ascending: false })` to the membership query to ensure a
 - ✅ 44 clients already had correct status
 - ✅ All membership statuses now accurate as of 2026-01-17
 
-## How to Run
+## Automation
+
+✅ **Membership updates now run automatically!**
+
+- **Schedule:** Every day at 8:00 AM UTC
+- **Method:** Integrated into existing `/api/daily-webhooks` cron job
+- **No manual intervention required**
+
+See `AUTOMATED_MEMBERSHIP_UPDATES.md` for full details.
+
+## Manual Run (Optional)
+
+You can still run the script manually if needed:
+
 ```bash
 npx tsx scripts/update-membership-status.ts
 ```
 
 ## Verification
+
 Run the diagnostic scripts to verify pairing:
 ```bash
 npx tsx scripts/check-memberships.ts
