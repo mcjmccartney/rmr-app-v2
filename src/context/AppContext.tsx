@@ -1395,8 +1395,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         paymentLink: paymentLink,
         // Session webhook specific flags
         sendSessionEmail: daysUntilSession <= 7, // Only send email if ≤7 days away
-        createCalendarEvent: false, // Don't create calendar events for updates
-        isUpdate: true // Flag to indicate this is an update webhook
+        createCalendarEvent: false, // Don't create calendar events for updates - app handles calendar updates directly
+        isUpdate: true, // Flag to indicate this is an update webhook
+        eventId: session.eventId || null // Include eventId so Make.com knows if calendar exists
       };
 
       // Validate webhook data before sending
@@ -1513,7 +1514,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         const daysUntilSession = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
 
         try {
-          // Special handling: If changing TO "Online"
+          // Special handling: If changing TO "Online" from another type
           if (changedToOnline && session.eventId) {
             // Only delete calendar if session is ≤7 days away
             // If >7 days away, keep the calendar (it will be deleted/replaced on day 7)
@@ -1545,8 +1546,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
               await updateCalendarEvent(session);
             }
           } else if (session.eventId) {
-            // Update existing calendar event (for non-Online sessions or date/time changes)
-            console.log(`[UPDATE_SESSION] Updating existing calendar event: ${session.eventId}`);
+            // Update existing calendar event for:
+            // - Non-Online sessions with any changes
+            // - Online sessions that are already Online (just date/time changes)
+            // - Any session with an eventId that needs updating
+            console.log(`[UPDATE_SESSION] Updating existing calendar event: ${session.eventId} (${session.sessionType}, ${daysUntilSession} days away)`);
             await updateCalendarEvent(session);
             console.log(`[UPDATE_SESSION] Calendar event updated successfully`);
           } else {
