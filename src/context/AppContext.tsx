@@ -1132,7 +1132,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const webhookDataWithFlags = {
         ...webhookData,
         sendSessionEmail: daysUntilSession <= 7, // Only send email if ≤7 days away
-        createCalendarEvent: true // Create calendar events for new sessions via direct API
+        createCalendarEvent: false // App always creates calendar events directly (Make.com should NOT create)
       };
 
       webhookPromises.push(
@@ -1177,10 +1177,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const daysUntilSession = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
 
       // Create calendar event logic:
-      // - For Online sessions ≤7 days away: Skip (Make.com will create with Meet link immediately)
-      // - For Online sessions >7 days away: Create now (will be deleted/replaced on day 7)
+      // - For Online sessions: Always create with Google Meet link (app generates Meet link)
       // - For all other session types: Always create
-      const shouldCreateCalendar = session.sessionType !== 'Online' || daysUntilSession > 7;
+      // Note: Online sessions >7 days will be deleted and recreated on day 7 by scheduled webhook
+      const shouldCreateCalendar = true; // Always create calendar for all sessions
 
       if (shouldCreateCalendar) {
         try {
@@ -1204,8 +1204,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
           console.error(`[CREATE_SESSION] Calendar creation failed:`, calendarError);
           // Don't throw the error - calendar failure shouldn't prevent session creation
         }
-      } else {
-        console.log(`[CREATE_SESSION] Skipping calendar creation for Online session ${session.id} (${daysUntilSession} days away) - Make.com will create it with Meet link`);
       }
 
       return session;

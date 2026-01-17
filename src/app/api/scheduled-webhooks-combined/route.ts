@@ -175,35 +175,11 @@ async function processWebhooks(sessions: any[], clients: any[], targetDays: numb
         continue;
       }
 
-      // For Online sessions with 7-day emails, delete the existing calendar event
-      // Make.com will create a new one with Google Meet link
+      // For Online sessions with 7-day emails, keep the existing calendar event
+      // The app already created it with a Google Meet link, so just send the webhook
+      // Make.com will use the googleMeetLink from the webhook data
       if (targetDays === 7 && session.session_type === 'Online' && session.event_id) {
-        console.log(`[COMBINED-WEBHOOKS] Deleting calendar event for Online session ${session.id} (Make will create new one with Meet link)`);
-
-        try {
-          const deleteResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'https://rmrcms.vercel.app'}/api/calendar/delete`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ eventId: session.event_id })
-          });
-
-          if (deleteResponse.ok) {
-            console.log(`[COMBINED-WEBHOOKS] Calendar event deleted successfully for session ${session.id}`);
-
-            // Clear the eventId from the session in the database
-            await supabase
-              .from('sessions')
-              .update({ event_id: null })
-              .eq('id', session.id);
-
-            console.log(`[COMBINED-WEBHOOKS] Cleared eventId from session ${session.id}`);
-          } else {
-            console.error(`[COMBINED-WEBHOOKS] Failed to delete calendar event for session ${session.id}:`, deleteResponse.status);
-          }
-        } catch (deleteError) {
-          console.error(`[COMBINED-WEBHOOKS] Error deleting calendar event for session ${session.id}:`, deleteError);
-          // Continue with webhook even if delete fails
-        }
+        console.log(`[COMBINED-WEBHOOKS] Keeping existing calendar event for Online session ${session.id} (has Meet link: ${session.google_meet_link || 'none'})`);
       }
 
       const response = await fetch(webhookUrl, {
