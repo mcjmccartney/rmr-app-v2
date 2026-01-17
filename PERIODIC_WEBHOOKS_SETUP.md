@@ -1,12 +1,12 @@
 # Periodic Webhooks Setup Guide
 
-This guide will help you set up the 4-day periodic reminder webhooks using Supabase cron jobs.
+This guide will help you set up the 7-day periodic reminder webhooks using Supabase cron jobs.
 
 ## ✅ What's Been Done
 
 The periodic webhook endpoints have been **re-enabled** and are ready to use:
 
-- ✅ `/api/daily-webhooks` - Processes 4-day reminders
+- ✅ `/api/daily-webhooks` - Processes 7-day reminders
 - ✅ `/api/scheduled-webhooks-combined` - Alternative endpoint (same functionality)
 - ✅ Payment links automatically generated for each session
 - ✅ Complete webhook data structure (client info, session details, payment link)
@@ -28,9 +28,9 @@ When the cron job runs daily at 8:00 AM UTC:
 
 ### Example
 If cron runs on **January 5th** (any time during the day):
-- ✅ **All sessions on January 9th** → 4 days away → **WEBHOOKS SENT**
-- ❌ Sessions on January 8th → 3 days away → **SKIPPED**
-- ❌ Sessions on January 10th → 5 days away → **SKIPPED**
+- ✅ **All sessions on January 12th** → 7 days away → **WEBHOOKS SENT**
+- ❌ Sessions on January 11th → 6 days away → **SKIPPED**
+- ❌ Sessions on January 13th → 8 days away → **SKIPPED**
 
 **Note:** The system now uses calendar days (midnight-to-midnight), so all sessions scheduled for the target date will be triggered regardless of what time the cron runs.
 
@@ -62,7 +62,7 @@ This is the **simplest method** and doesn't require any database extensions.
    - **Body:** `{}` (empty JSON object)
 4. Click **"Save cron job"**
 
-✅ **Done!** The cron will now run daily at 8:00 AM UTC and trigger webhooks for all sessions exactly 4 days away.
+✅ **Done!** The cron will now run daily at 8:00 AM UTC and trigger webhooks for all sessions exactly 7 days away.
 
 ---
 
@@ -198,7 +198,7 @@ Use the GET endpoint to see which sessions would be processed:
 curl https://rmrcms.vercel.app/api/daily-webhooks
 ```
 
-This shows you which sessions are 4 days away without actually sending webhooks.
+This shows you which sessions are 7 days away without actually sending webhooks.
 
 ### Test the Cron Job Immediately
 
@@ -252,7 +252,7 @@ In Vercel Dashboard → Your Project → Logs, search for:
 
 ## 🎉 What You'll Get
 
-Every day at 8:00 AM UTC, for each session exactly 4 days away, Make.com will receive:
+Every day at 8:00 AM UTC, for each session exactly 7 days away, Make.com will receive:
 
 ```json
 {
@@ -300,5 +300,5 @@ The webhook endpoints are protected with API key authentication. Only requests w
 - Check that sessions have a valid `client_id`
 - Ensure clients have email addresses
 - Verify session type is not "Group" or "RMR Live"
-- Check that the session is exactly 4 days away (not 3 or 5)
+- Check that the session is exactly 7 days away (not 6 or 8)
 

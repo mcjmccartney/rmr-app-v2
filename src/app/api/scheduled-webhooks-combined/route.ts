@@ -117,7 +117,7 @@ async function processWebhooks(sessions: any[], clients: any[], targetDays: numb
         questionnaireUrl: `https://rmrcms.vercel.app/behaviour-questionnaire?email=${encodeURIComponent(client.email)}`,
         // Payment link - dynamically generated based on session type, membership, session number, and travel zone
         paymentLink: paymentLink,
-        ...(targetDays === 4 && { sendSessionEmail: true, createCalendarEvent: false })
+        ...(targetDays === 7 && { sendSessionEmail: true, createCalendarEvent: false })
       };
 
       // Enhanced validation - check for both null/undefined AND empty strings
@@ -345,7 +345,7 @@ export async function GET() {
           bookingDate: session.booking_date,
           bookingTime: session.booking_time,
           daysUntilSession,
-          isExactly4Days: daysUntilSession === 4,
+          isExactly7Days: daysUntilSession === 7,
           isExactly12Days: daysUntilSession === 12
         };
       })

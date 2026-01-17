@@ -1129,7 +1129,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       // Always trigger session webhook for all new sessions
       const webhookDataWithFlags = {
         ...webhookData,
-        sendSessionEmail: daysUntilSession <= 4, // Only send email if ≤4 days away
+        sendSessionEmail: daysUntilSession <= 7, // Only send email if ≤7 days away
         createCalendarEvent: true // Create calendar events for new sessions via direct API
       };
 
@@ -1377,7 +1377,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         // Payment link - dynamically generated based on session type, membership, session number, and travel zone
         paymentLink: paymentLink,
         // Session webhook specific flags
-        sendSessionEmail: daysUntilSession <= 4, // Only send email if ≤4 days away
+        sendSessionEmail: daysUntilSession <= 7, // Only send email if ≤7 days away
         createCalendarEvent: false, // Don't create calendar events for updates
         isUpdate: true // Flag to indicate this is an update webhook
       };

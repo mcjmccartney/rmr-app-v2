@@ -130,7 +130,7 @@ export async function POST(request: NextRequest) {
             questionnaireUrl: `https://rmrcms.vercel.app/behaviour-questionnaire?email=${encodeURIComponent(client.email)}`,
             // Payment link - dynamically generated based on session type, membership, session number, and travel zone
             paymentLink: paymentLink,
-            ...(targetDays === 4 && { sendSessionEmail: true, createCalendarEvent: false })
+            ...(targetDays === 7 && { sendSessionEmail: true, createCalendarEvent: false })
           };
 
           // Validate essential data
@@ -189,12 +189,12 @@ export async function POST(request: NextRequest) {
       return results;
     };
 
-    // Process 4-day webhooks (sessions exactly 4 days away)
-    console.log('[DAILY-WEBHOOKS] Processing 4-day webhooks...');
-    const fourDayResult = await processWebhooks(
+    // Process 7-day webhooks (sessions exactly 7 days away)
+    console.log('[DAILY-WEBHOOKS] Processing 7-day webhooks...');
+    const sevenDayResult = await processWebhooks(
       sessions,
       clients,
-      4, // targetDays = 4
+      7, // targetDays = 7
       'https://hook.eu1.make.com/lipggo8kcd8kwq2vp6j6mr3gnxbx12h7'
     );
 
@@ -202,9 +202,9 @@ export async function POST(request: NextRequest) {
     console.log('[DAILY-WEBHOOKS] 12-day webhooks disabled');
     const twelveDayResult: any[] = [];
 
-    const totalProcessed = fourDayResult.length + twelveDayResult.length;
-    const totalSuccess = fourDayResult.filter(r => r.status === 'success').length;
-    const totalFailure = fourDayResult.filter(r => r.status === 'failed' || r.status === 'error').length;
+    const totalProcessed = sevenDayResult.length + twelveDayResult.length;
+    const totalSuccess = sevenDayResult.filter(r => r.status === 'success').length;
+    const totalFailure = sevenDayResult.filter(r => r.status === 'failed' || r.status === 'error').length;
 
     console.log(`[DAILY-WEBHOOKS] Completed: ${totalProcessed} sessions processed, ${totalSuccess} successful, ${totalFailure} failed`);
 
@@ -212,14 +212,14 @@ export async function POST(request: NextRequest) {
       success: true,
       message: `Daily webhooks completed: ${totalProcessed} sessions processed`,
       summary: {
-        fourDaySessionsProcessed: fourDayResult.length,
+        sevenDaySessionsProcessed: sevenDayResult.length,
         twelveDaySessionsProcessed: 0, // Disabled
         totalProcessed,
         successCount: totalSuccess,
         failureCount: totalFailure
       },
       results: {
-        fourDayWebhooks: fourDayResult,
+        sevenDayWebhooks: sevenDayResult,
         twelveDayWebhooks: [] // Disabled
       },
       timestamp: new Date().toISOString()
@@ -257,15 +257,15 @@ export async function GET() {
     const now = new Date();
     now.setHours(0, 0, 0, 0); // Reset to midnight for accurate calendar day comparison
 
-    // Find sessions 4 days away
-    const fourDaySessions = sessions.filter(session => {
+    // Find sessions 7 days away
+    const sevenDaySessions = sessions.filter(session => {
       if (!session.client_id || session.session_type === 'Group' || session.session_type === 'RMR Live') {
         return false;
       }
       const sessionDate = new Date(session.booking_date);
       sessionDate.setHours(0, 0, 0, 0); // Reset to midnight for accurate calendar day comparison
       const daysUntilSession = Math.ceil((sessionDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-      return daysUntilSession === 4;
+      return daysUntilSession === 7;
     }).map(session => {
       const client = clients.find(c => c.id === session.client_id);
       const sessionDate = new Date(session.booking_date);
@@ -289,9 +289,9 @@ export async function GET() {
       message: 'Daily webhook preview',
       currentTime: now.toISOString(),
       sessionsToProcess: {
-        fourDaySessions: fourDaySessions,
+        sevenDaySessions: sevenDaySessions,
         twelveDaySessions: [], // Disabled
-        totalSessions: fourDaySessions.length
+        totalSessions: sevenDaySessions.length
       },
       instructions: 'Call POST /api/daily-webhooks to process these sessions',
       webhooks: {

@@ -1,5 +1,5 @@
 -- Setup Periodic Webhooks Cron Job
--- This migration sets up the daily cron job for 4-day session reminders
+-- This migration sets up the daily cron job for 7-day session reminders
 -- Run this in your Supabase SQL Editor
 
 -- Step 1: Enable required extensions

@@ -63,8 +63,8 @@ export async function POST() {
     now.setHours(0, 0, 0, 0); // Reset to midnight for accurate calendar day comparison
     const currentDate = now.toISOString().split('T')[0]; // YYYY-MM-DD
 
-    // Find sessions that are exactly 4 days away to trigger both webhooks
-    // These are sessions that were >4 days away when created (so no webhooks were triggered)
+    // Find sessions that are exactly 7 days away to trigger both webhooks
+    // These are sessions that were >7 days away when created (so no webhooks were triggered)
     // and now need both booking terms and session webhooks triggered
     const sessionsToTrigger = sessions.filter(session => {
       // Skip sessions without clients or Group/RMR Live sessions
@@ -78,8 +78,8 @@ export async function POST() {
       const timeDiff = sessionDate.getTime() - now.getTime();
       const daysUntilSession = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
 
-      // We want sessions that are exactly 4 days away to trigger both webhooks
-      return daysUntilSession === 4;
+      // We want sessions that are exactly 7 days away to trigger both webhooks
+      return daysUntilSession === 7;
     });
 
     if (sessionsToTrigger.length === 0) {
@@ -267,7 +267,7 @@ export async function GET() {
           bookingDate: session.bookingDate,
           bookingTime: session.bookingTime,
           daysUntilSession,
-          isExactly4Days: daysUntilSession === 4
+          isExactly7Days: daysUntilSession === 7
         };
       })
       .sort((a, b) => a.daysUntilSession - b.daysUntilSession);
@@ -281,7 +281,7 @@ export async function GET() {
       currentDate,
       totalSessions: sessions.length,
       eligibleSessions: sessionDebugInfo.length,
-      sessionsExactly4DaysAway: sessionDebugInfo.filter(s => s.isExactly4Days).length,
+      sessionsExactly7DaysAway: sessionDebugInfo.filter(s => s.isExactly7Days).length,
       upcomingSessions: sessionDebugInfo.filter(s => s.daysUntilSession > 0 && s.daysUntilSession <= 10), // Show sessions 1-10 days away
       webhookResult: webhookData
     });
