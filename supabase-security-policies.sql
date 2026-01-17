@@ -1,5 +1,15 @@
--- Secure RLS Policies for Production
--- Run this SQL in your Supabase SQL Editor to implement secure Row Level Security
+-- =====================================================
+-- SECURE RLS POLICIES FOR PRODUCTION
+-- =====================================================
+-- Run this SQL in your Supabase SQL Editor to implement
+-- secure Row Level Security policies
+--
+-- IMPORTANT:
+-- 1. Test in development first
+-- 2. Ensure authentication is working
+-- 3. Backup your database before applying
+-- 4. Apply during low-traffic period
+-- =====================================================
 
 -- WARNING: This will replace existing permissive policies with secure ones
 -- Make sure your application authentication is working before applying
@@ -124,8 +134,45 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Note: After applying these policies, make sure:
--- 1. Your application properly authenticates users
--- 2. Public forms (behavioural briefs, questionnaires, booking terms) still work
--- 3. Webhook endpoints can still insert data (you may need service role for webhooks)
--- 4. Test all functionality thoroughly before deploying to production
+-- =====================================================
+-- ADDITIONAL SECURITY MEASURES
+-- =====================================================
+
+-- Add booking_terms_versions RLS if not already present
+ALTER TABLE booking_terms_versions ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Authenticated users can manage booking terms versions" ON booking_terms_versions;
+CREATE POLICY "Authenticated users can manage booking terms versions" ON booking_terms_versions
+    FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+
+-- Public can read active version
+DROP POLICY IF EXISTS "Public can read active booking terms version" ON booking_terms_versions;
+CREATE POLICY "Public can read active booking terms version" ON booking_terms_versions
+    FOR SELECT USING (is_active = true);
+
+-- =====================================================
+-- VERIFICATION QUERIES
+-- =====================================================
+-- Run these to verify RLS is enabled:
+-- SELECT tablename, rowsecurity FROM pg_tables WHERE schemaname = 'public';
+--
+-- Run this to see all policies:
+-- SELECT schemaname, tablename, policyname FROM pg_policies WHERE schemaname = 'public';
+
+-- =====================================================
+-- POST-DEPLOYMENT CHECKLIST
+-- =====================================================
+-- After applying these policies, verify:
+-- ✅ 1. Your application properly authenticates users
+-- ✅ 2. Public forms (behavioural briefs, questionnaires, booking terms) still work
+-- ✅ 3. Webhook endpoints can still insert data (using service role key)
+-- ✅ 4. Calendar page loads correctly
+-- ✅ 5. Client management works
+-- ✅ 6. Session creation/editing works
+-- ✅ 7. Test all functionality thoroughly before deploying to production
+--
+-- If anything breaks:
+-- 1. Check Supabase logs for RLS policy violations
+-- 2. Ensure your app is using authenticated Supabase client
+-- 3. Verify webhook endpoints use SUPABASE_SERVICE_ROLE_KEY
+-- 4. Check that public forms use service role client for inserts

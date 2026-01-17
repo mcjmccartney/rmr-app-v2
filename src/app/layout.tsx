@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { QueryProvider } from "@/context/QueryProvider";
 import { AppProvider } from "@/context/AppContext";
 import { ModalProvider } from "@/context/ModalContext";
 import { AuthProvider } from "@/context/AuthContext";
@@ -96,14 +97,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
 
       <body className={`${inter.className} antialiased`}>
-        <AuthProvider>
-          <AppProvider>
-            <ModalProvider>
-              <Layout>{children}</Layout>
-              <ServiceWorkerRegistration />
-            </ModalProvider>
-          </AppProvider>
-        </AuthProvider>
+        <QueryProvider>
+          <AuthProvider>
+            <AppProvider>
+              <ModalProvider>
+                <Layout>{children}</Layout>
+                <ServiceWorkerRegistration />
+              </ModalProvider>
+            </AppProvider>
+          </AuthProvider>
+        </QueryProvider>
       </body>
     </html>
   );

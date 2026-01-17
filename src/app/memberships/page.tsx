@@ -1,13 +1,26 @@
 'use client';
 
 import { useState } from 'react';
+import dynamic from 'next/dynamic';
 import { useApp } from '@/context/AppContext';
 import Header from '@/components/layout/Header';
 import { Membership } from '@/types';
 import { ChevronDown, ChevronRight, CreditCard, TrendingUp, TrendingDown, Plus, MapPin } from 'lucide-react';
 import AddMembershipSidepane from '@/components/sidepanes/AddMembershipSidepane';
-import MembersMapModal from '@/components/modals/MembersMapModal';
 import { formatClientWithAllDogs, getClientDogsPart } from '@/utils/dateFormatting';
+
+// Dynamic import for heavy map component (includes Mapbox GL JS)
+const MembersMapModal = dynamic(() => import('@/components/modals/MembersMapModal'), {
+  ssr: false,
+  loading: () => (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-8">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 mx-auto"></div>
+        <p className="mt-4 text-gray-600">Loading map...</p>
+      </div>
+    </div>
+  ),
+});
 
 export default function MembershipsPage() {
   const { state } = useApp();

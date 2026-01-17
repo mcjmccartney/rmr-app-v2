@@ -1,10 +1,23 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { supabase } from '@/lib/supabase';
 import Header from '@/components/layout/Header';
-import MonthlyBreakdownModal from '@/components/MonthlyBreakdownModal';
 import { ChevronDown, ChevronRight, Calendar, Star, PoundSterling, Target, TrendingUp, TrendingDown } from 'lucide-react';
+
+// Dynamic import for chart component (includes Chart.js)
+const MonthlyBreakdownModal = dynamic(() => import('@/components/MonthlyBreakdownModal'), {
+  ssr: false,
+  loading: () => (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-8">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 mx-auto"></div>
+        <p className="mt-4 text-gray-600">Loading breakdown...</p>
+      </div>
+    </div>
+  ),
+});
 
 interface Finance {
   id: string;

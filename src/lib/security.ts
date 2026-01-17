@@ -79,11 +79,32 @@ export function addSecurityHeaders(response: NextResponse, allowEmbedding: boole
   }
 
   response.headers.set('X-XSS-Protection', '1; mode=block');
+
+  // Referrer Policy - only send origin on cross-origin requests
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-  response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+
+  // Permissions Policy - restrict access to sensitive browser features
+  // Deny camera, microphone, geolocation, payment, usb, etc.
+  const permissionsPolicy = [
+    'camera=()',
+    'microphone=()',
+    'geolocation=()',
+    'payment=()',
+    'usb=()',
+    'magnetometer=()',
+    'gyroscope=()',
+    'accelerometer=()',
+    'ambient-light-sensor=()',
+    'autoplay=()',
+    'encrypted-media=()',
+    'picture-in-picture=()',
+  ].join(', ');
+  response.headers.set('Permissions-Policy', permissionsPolicy);
 
   // Anti-indexing headers to prevent search engine crawling
   response.headers.set('X-Robots-Tag', 'noindex, nofollow, nosnippet, noarchive, noimageindex');
+
+  // Cache control for sensitive data
   response.headers.set('Cache-Control', 'private, no-cache, no-store, must-revalidate');
   response.headers.set('Pragma', 'no-cache');
   response.headers.set('Expires', '0');
