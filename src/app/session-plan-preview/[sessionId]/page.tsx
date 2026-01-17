@@ -39,7 +39,7 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
     tempWrapper.style.position = 'absolute';
     tempWrapper.style.visibility = 'hidden';
     tempWrapper.style.width = '210mm';
-    tempWrapper.style.padding = '0 1.7rem';
+    tempWrapper.style.padding = '0 3.4rem';
     tempWrapper.style.fontFamily = 'Arial, sans-serif';
     document.body.appendChild(tempWrapper);
 
@@ -193,7 +193,7 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
               {pageIndex === 0 && (isPlaywrightMode || noFirstPage) && (
                 <h1 style={{
                   fontSize: '2.25rem',
-                  marginBottom: '2rem',
+                  marginBottom: '2.5rem',
                   fontWeight: 'bold',
                   fontFamily: 'Arial, sans-serif'
                 }}>
@@ -248,8 +248,8 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
                   style={{
                     position: 'absolute',
                     bottom: '80px',
-                    left: '2.5rem',
-                    right: '2.5rem',
+                    left: '3.4rem',
+                    right: '3.4rem',
                     fontSize: '16px',
                     fontFamily: 'Arial, sans-serif'
                   }}
@@ -293,8 +293,8 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
               style={{
                 position: 'absolute',
                 bottom: '80px',
-                left: '2.5rem',
-                right: '2.5rem',
+                left: '3.4rem',
+                right: '3.4rem',
                 fontSize: '16px',
                 fontFamily: 'Arial, sans-serif'
               }}
@@ -533,7 +533,7 @@ export default function SessionPlanPreviewPage() {
         }
 
         .page-content {
-          padding: 0 1.7rem;
+          padding: 0 3.4rem;
           flex: 1;
           position: relative;
         }
