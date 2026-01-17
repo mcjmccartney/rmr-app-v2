@@ -1078,7 +1078,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         // Callback URL for Event ID
         eventIdCallbackUrl: `${window.location.origin}/api/session/event-id`,
         // Payment link - dynamically generated based on session type, membership, session number, and travel zone
-        paymentLink: paymentLink
+        paymentLink: paymentLink,
+        // Google Meet link for Online sessions
+        googleMeetLink: session.googleMeetLink || null
       };
 
       // Comprehensive validation to prevent blank/empty webhook data
@@ -1183,13 +1185,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (shouldCreateCalendar) {
         try {
           console.log(`[CREATE_SESSION] Creating calendar event for new session ${session.id} (${session.sessionType}, ${daysUntilSession} days away)`);
-          const eventId = await createCalendarEvent(session);
+          const calendarResult = await createCalendarEvent(session);
 
-          if (eventId) {
-            console.log(`[CREATE_SESSION] Calendar event created successfully: ${eventId}`);
-            // Update session with eventId (using internal update to avoid triggering webhooks)
-            await updateSessionInternal(session.id, { eventId });
-            session.eventId = eventId;
+          if (calendarResult) {
+            console.log(`[CREATE_SESSION] Calendar event created successfully: ${calendarResult.eventId}`, calendarResult.meetLink ? `with Meet link: ${calendarResult.meetLink}` : '');
+            // Update session with eventId and meetLink (using internal update to avoid triggering webhooks)
+            const updates: Partial<Session> = { eventId: calendarResult.eventId };
+            if (calendarResult.meetLink) {
+              updates.googleMeetLink = calendarResult.meetLink;
+            }
+            await updateSessionInternal(session.id, updates);
+            session.eventId = calendarResult.eventId;
+            if (calendarResult.meetLink) {
+              session.googleMeetLink = calendarResult.meetLink;
+            }
           }
         } catch (calendarError) {
           console.error(`[CREATE_SESSION] Calendar creation failed:`, calendarError);
@@ -1393,6 +1402,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         questionnaireUrl: `https://rmrcms.vercel.app/behaviour-questionnaire?email=${encodeURIComponent(client.email)}`,
         // Payment link - dynamically generated based on session type, membership, session number, and travel zone
         paymentLink: paymentLink,
+        // Google Meet link for Online sessions
+        googleMeetLink: session.googleMeetLink || null,
         // Session webhook specific flags
         sendSessionEmail: daysUntilSession <= 7, // Only send email if ≤7 days away
         createCalendarEvent: false, // Don't create calendar events for updates - app handles calendar updates directly
@@ -1561,13 +1572,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
             if (shouldCreateCalendar) {
               console.log(`[UPDATE_SESSION] No eventId found, creating new calendar event (${session.sessionType}, ${daysUntilSession} days away)`);
-              const eventId = await createCalendarEvent(session);
+              const calendarResult = await createCalendarEvent(session);
 
-              if (eventId) {
-                console.log(`[UPDATE_SESSION] Calendar event created successfully: ${eventId}`);
-                // Update session with eventId (using internal update to avoid triggering webhooks)
-                await updateSessionInternal(session.id, { eventId });
-                session.eventId = eventId;
+              if (calendarResult) {
+                console.log(`[UPDATE_SESSION] Calendar event created successfully: ${calendarResult.eventId}`, calendarResult.meetLink ? `with Meet link: ${calendarResult.meetLink}` : '');
+                // Update session with eventId and meetLink (using internal update to avoid triggering webhooks)
+                const updates: Partial<Session> = { eventId: calendarResult.eventId };
+                if (calendarResult.meetLink) {
+                  updates.googleMeetLink = calendarResult.meetLink;
+                }
+                await updateSessionInternal(session.id, updates);
+                session.eventId = calendarResult.eventId;
+                if (calendarResult.meetLink) {
+                  session.googleMeetLink = calendarResult.meetLink;
+                }
               }
             } else {
               console.log(`[UPDATE_SESSION] Session is Online and ≤7 days away - skipping calendar creation (Make will handle it)`);
@@ -1622,8 +1640,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   // Create calendar event directly
-  // Returns the eventId if successful, null otherwise
-  const createCalendarEvent = async (session: Session): Promise<string | null> => {
+  // Returns object with eventId and meetLink if successful, null otherwise
+  const createCalendarEvent = async (session: Session): Promise<{ eventId: string; meetLink?: string } | null> => {
     try {
       const client = session.clientId ? state.clients.find(c => c.id === session.clientId) : null;
 
@@ -1635,11 +1653,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
         clientName: client ? `${client.firstName} ${client.lastName}`.trim() : session.sessionType,
         bookingDate: session.bookingDate,
         bookingTime: session.bookingTime,
+        sessionType: session.sessionType,
         isGroupOrRMRLive
       });
 
       // Create Google Calendar event with retry logic
-      const createCalendarWithRetry = async (retryCount = 0): Promise<string | null> => {
+      const createCalendarWithRetry = async (retryCount = 0): Promise<{ eventId: string; meetLink?: string } | null> => {
         const maxRetries = 2;
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
@@ -1670,8 +1689,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
           if (calendarResponse.ok) {
             const result = await calendarResponse.json();
-            console.log('[CALENDAR_CREATE] Successfully created calendar event:', result.eventId);
-            return result.eventId || null;
+            console.log('[CALENDAR_CREATE] Successfully created calendar event:', result.eventId, result.meetLink ? `with Meet link: ${result.meetLink}` : '');
+            return {
+              eventId: result.eventId || null,
+              meetLink: result.meetLink || undefined
+            };
           } else {
             console.error('[CALENDAR_CREATE] Failed to create calendar event via API:', calendarResponse.status);
             const errorText = await calendarResponse.text();
@@ -1826,12 +1848,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
           if (createResponse.ok) {
             const result = await createResponse.json();
-            console.log('[CALENDAR_CREATE] Successfully created new calendar event:', result.eventId);
+            console.log('[CALENDAR_CREATE] Successfully created new calendar event:', result.eventId, result.meetLink ? `with Meet link: ${result.meetLink}` : '');
 
-            // Update the session with the new eventId using internal update (no webhooks)
+            // Update the session with the new eventId and meetLink using internal update (no webhooks)
             if (result.eventId) {
-              await updateSessionInternal(session.id, { eventId: result.eventId });
-              console.log('[CALENDAR_CREATE] Updated session with new eventId (internal):', result.eventId);
+              const updates: Partial<Session> = { eventId: result.eventId };
+              if (result.meetLink) {
+                updates.googleMeetLink = result.meetLink;
+              }
+              await updateSessionInternal(session.id, updates);
+              console.log('[CALENDAR_CREATE] Updated session with new eventId (internal):', result.eventId, result.meetLink ? `and Meet link` : '');
             }
             return true;
           } else {

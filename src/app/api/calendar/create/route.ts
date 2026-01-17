@@ -94,7 +94,10 @@ export async function POST(request: NextRequest) {
     const startDateTime = `${bookingDate}T${bookingTime}:00`;
     const endDateTime = calculateEndTime(bookingDate, bookingTime, sessionType);
 
-    const event = {
+    // Generate unique request ID for Google Meet conference
+    const requestId = `session-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+
+    const event: any = {
       summary: formatSessionTitle(clientName, dogName),
       description: formatSessionDescription(sessionType),
       location: clientAddress || '',
@@ -109,22 +112,40 @@ export async function POST(request: NextRequest) {
       // Removed attendees field - service accounts can't invite attendees without Domain-Wide Delegation
     };
 
+    // Add Google Meet conference data for Online sessions
+    if (sessionType === 'Online') {
+      event.conferenceData = {
+        createRequest: {
+          requestId: requestId,
+          conferenceSolutionKey: {
+            type: 'hangoutsMeet'
+          }
+        }
+      };
+    }
+
     const response = await calendar.events.insert({
       calendarId: CALENDAR_ID,
       requestBody: event,
+      conferenceDataVersion: sessionType === 'Online' ? 1 : 0
     });
 
     const eventId = response.data.id;
+    const meetLink = response.data.conferenceData?.entryPoints?.find(
+      (entry: any) => entry.entryPointType === 'video'
+    )?.uri;
 
     return NextResponse.json({
       success: true,
       message: 'Calendar event created successfully',
-      eventId: eventId
+      eventId: eventId,
+      meetLink: meetLink || null
     });
 
   } catch (error) {
+    console.error('Calendar create error:', error);
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to create calendar event',
         message: error instanceof Error ? error.message : 'Unknown error'
       },

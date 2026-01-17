@@ -130,6 +130,8 @@ export async function POST(request: NextRequest) {
             questionnaireUrl: `https://rmrcms.vercel.app/behaviour-questionnaire?email=${encodeURIComponent(client.email)}`,
             // Payment link - dynamically generated based on session type, membership, session number, and travel zone
             paymentLink: paymentLink,
+            // Google Meet link for Online sessions
+            googleMeetLink: session.google_meet_link || null,
             ...(targetDays === 7 && { sendSessionEmail: true, createCalendarEvent: false })
           };
 
