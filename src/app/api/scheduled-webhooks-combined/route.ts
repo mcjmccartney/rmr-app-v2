@@ -356,7 +356,7 @@ export async function GET() {
       currentDate: now.toISOString().split('T')[0],
       totalSessions: sessions.length,
       upcomingSessions1to15Days: upcomingSessions,
-      sessionsExactly4DaysAway: upcomingSessions.filter(s => s.isExactly4Days),
+      sessionsExactly7DaysAway: upcomingSessions.filter(s => s.isExactly7Days),
       sessionsExactly12DaysAway: [] // Disabled
     });
 
