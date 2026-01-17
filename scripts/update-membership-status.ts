@@ -87,28 +87,11 @@ async function updateMembershipStatuses() {
           }
         });
 
-        // Debug first client with email
-        if (foundMemberships === 0 && clientEmails.length > 0 && client.first_name === 'Shweta') {
-          console.log(`\n🔍 DEBUG - ${client.first_name} ${client.last_name}:`);
-          console.log(`   Client emails: ${clientEmails.join(', ')}`);
-          console.log(`   Total memberships in DB: ${memberships?.length || 0}`);
-        }
-
         // Get all memberships for client emails (case-insensitive)
         const clientMemberships = memberships?.filter(membership => {
           const membershipEmail = membership.email?.toLowerCase().trim();
-          const matches = clientEmails.includes(membershipEmail);
-
-          if (foundMemberships === 0 && clientEmails.length > 0 && client.first_name === 'Shweta' && matches) {
-            console.log(`   ✅ Found membership: ${membership.email} on ${membership.date}`);
-          }
-
-          return matches;
+          return clientEmails.includes(membershipEmail);
         }) || [];
-
-        if (foundMemberships === 0 && clientEmails.length > 0 && client.first_name === 'Shweta') {
-          console.log(`   Total memberships for client: ${clientMemberships.length}\n`);
-        }
 
         if (clientMemberships.length === 0) {
           // No memberships found - set to false if currently true
