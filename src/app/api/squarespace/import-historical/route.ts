@@ -6,14 +6,21 @@ import { verifyWebhookApiKey } from '@/lib/webhookAuth';
 
 /**
  * Squarespace Historical Order Import
- * 
- * Fetches all past orders from Squarespace and creates:
- * - Client records for customers who don't have profiles yet
- * - Membership records for all past payments
- * 
+ *
+ * Fetches all past orders from Squarespace and creates client records
+ * for customers who don't exist yet. Memberships already exist in the
+ * database (created by n8n) and are linked to clients by email matching.
+ *
+ * Process:
+ * 1. Fetch all Squarespace orders
+ * 2. For each order email, check if client exists (via email or alias)
+ * 3. If no client exists, create one with real name from Squarespace
+ * 4. Add email to client_email_aliases table
+ * 5. Existing memberships automatically link via email matching
+ *
  * Usage: POST /api/squarespace/import-historical
  * Headers: x-api-key: YOUR_WEBHOOK_API_KEY
- * 
+ *
  * Optional query params:
  * - dryRun=true : Preview what would be imported without making changes
  * - limit=50 : Limit number of orders to process (default: all)
@@ -100,26 +107,19 @@ export async function POST(request: NextRequest) {
       .from('clients')
       .select('email, id');
 
-    // Get unlinked memberships (those without a client_id)
-    const { data: unlinkedMemberships } = await supabase
-      .from('memberships')
-      .select('email, date, id')
-      .is('client_id', null);
-
-    console.log(`[SQUARESPACE-IMPORT] Found ${unlinkedMemberships?.length || 0} unlinked memberships`);
+    console.log(`[SQUARESPACE-IMPORT] Found ${existingClients?.length || 0} existing clients`);
 
     // Process orders
     const stats = {
       totalOrders: allOrders.length,
       clientsToCreate: 0,
       clientsAlreadyExist: 0,
-      membershipsLinked: 0,
       emailAliasesCreated: 0,
       errors: 0
     };
 
     const clientsToCreate: any[] = [];
-    const clientsCreatedMap = new Map<string, string>(); // email -> clientId
+    const emailsToCreate = new Set<string>(); // Track emails we're creating to avoid duplicates
     const errors: any[] = [];
 
     for (const order of allOrders) {
@@ -146,7 +146,7 @@ export async function POST(request: NextRequest) {
           existingClientId = clientByEmail?.id || null;
         }
 
-        if (!existingClientId && !clientsCreatedMap.has(emailLower)) {
+        if (!existingClientId && !emailsToCreate.has(emailLower)) {
           // Client doesn't exist - add to creation list
           stats.clientsToCreate++;
           clientsToCreate.push({
@@ -157,7 +157,7 @@ export async function POST(request: NextRequest) {
             active: true,
             membership: true
           });
-          // We'll populate clientsCreatedMap after creating clients
+          emailsToCreate.add(emailLower); // Prevent duplicates in this batch
         } else {
           stats.clientsAlreadyExist++;
         }
@@ -180,15 +180,16 @@ export async function POST(request: NextRequest) {
         dryRun: true,
         stats,
         preview: {
-          clientsToCreate: clientsToCreate.slice(0, 5),
-          unlinkedMembershipsCount: unlinkedMemberships?.length || 0
+          clientsToCreate: clientsToCreate.slice(0, 10)
         },
         errors: errors.slice(0, 10)
       }));
     }
 
-    // Create clients in batches
+    // Create clients and email aliases in batches
     let clientsCreated = 0;
+    let aliasesCreated = 0;
+
     if (clientsToCreate.length > 0) {
       console.log(`[SQUARESPACE-IMPORT] Creating ${clientsToCreate.length} clients...`);
 
@@ -205,71 +206,37 @@ export async function POST(request: NextRequest) {
           console.error('[SQUARESPACE-IMPORT] Error creating clients batch:', error);
         } else {
           clientsCreated += data?.length || 0;
-          // Map email to client ID for linking memberships
-          data?.forEach(client => {
-            if (client.email) {
-              clientsCreatedMap.set(client.email.toLowerCase(), client.id);
-            }
-          });
-        }
-      }
-      console.log(`[SQUARESPACE-IMPORT] Created ${clientsCreated} clients`);
-    }
 
-    // Link existing memberships to newly created clients
-    let membershipsLinked = 0;
-    let aliasesCreated = 0;
-
-    if (clientsCreatedMap.size > 0 && unlinkedMemberships && unlinkedMemberships.length > 0) {
-      console.log(`[SQUARESPACE-IMPORT] Linking ${unlinkedMemberships.length} unlinked memberships...`);
-
-      for (const membership of unlinkedMemberships) {
-        const membershipEmail = membership.email?.toLowerCase();
-        if (!membershipEmail) continue;
-
-        const clientId = clientsCreatedMap.get(membershipEmail);
-        if (clientId) {
-          // Update membership to link it to the client
-          const { error } = await supabase
-            .from('memberships')
-            .update({ client_id: clientId })
-            .eq('id', membership.id);
-
-          if (error) {
-            console.error('[SQUARESPACE-IMPORT] Error linking membership:', error);
-          } else {
-            membershipsLinked++;
-
-            // Create email alias if it doesn't already exist
-            try {
-              const existingAlias = await clientEmailAliasService.findClientByEmail(membershipEmail);
-              if (!existingAlias) {
-                await clientEmailAliasService.addAlias(clientId, membershipEmail, true);
-                aliasesCreated++;
+          // Create email aliases for each new client
+          if (data) {
+            for (const client of data) {
+              if (client.email) {
+                try {
+                  // Add email as primary alias
+                  await clientEmailAliasService.addAlias(client.id, client.email, true);
+                  aliasesCreated++;
+                } catch (aliasError) {
+                  console.error('[SQUARESPACE-IMPORT] Error creating email alias:', aliasError);
+                }
               }
-            } catch (aliasError) {
-              console.error('[SQUARESPACE-IMPORT] Error creating email alias:', aliasError);
             }
           }
         }
       }
-
-      console.log(`[SQUARESPACE-IMPORT] Linked ${membershipsLinked} memberships`);
+      console.log(`[SQUARESPACE-IMPORT] Created ${clientsCreated} clients`);
       console.log(`[SQUARESPACE-IMPORT] Created ${aliasesCreated} email aliases`);
     }
 
     // Update final stats
-    stats.membershipsLinked = membershipsLinked;
     stats.emailAliasesCreated = aliasesCreated;
 
     // Return results
     return addSecurityHeaders(NextResponse.json({
       success: true,
-      message: 'Historical import completed',
+      message: 'Historical import completed - clients created and linked to existing memberships by email',
       stats: {
         ...stats,
         clientsActuallyCreated: clientsCreated,
-        membershipsActuallyLinked: membershipsLinked,
         emailAliasesActuallyCreated: aliasesCreated
       },
       errors: errors.length > 0 ? errors.slice(0, 10) : undefined
