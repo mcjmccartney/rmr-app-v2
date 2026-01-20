@@ -13,10 +13,13 @@ import { verifyWebhookApiKey } from '@/lib/webhookAuth';
  *
  * Process:
  * 1. Fetch all Squarespace orders
- * 2. For each order email, check if client exists (via email or alias)
- * 3. If no client exists, create one with real name from Squarespace
- * 4. Add email to client_email_aliases table
- * 5. Existing memberships automatically link via email matching
+ * 2. For each order email, check if client exists (via clients.email or client_email_aliases)
+ * 3. If no client exists, create one with real name and email from Squarespace
+ * 4. Existing memberships automatically link via email matching (no aliases needed)
+ *
+ * Note: Email aliases are NOT created during import since the client's email
+ * already matches the membership email. Aliases are only needed when a client
+ * has multiple different email addresses.
  *
  * Usage: POST /api/squarespace/import-historical
  * Headers: x-api-key: YOUR_WEBHOOK_API_KEY
@@ -114,7 +117,6 @@ export async function POST(request: NextRequest) {
       totalOrders: allOrders.length,
       clientsToCreate: 0,
       clientsAlreadyExist: 0,
-      emailAliasesCreated: 0,
       errors: 0
     };
 
@@ -186,9 +188,8 @@ export async function POST(request: NextRequest) {
       }));
     }
 
-    // Create clients and email aliases in batches
+    // Create clients in batches
     let clientsCreated = 0;
-    let aliasesCreated = 0;
 
     if (clientsToCreate.length > 0) {
       console.log(`[SQUARESPACE-IMPORT] Creating ${clientsToCreate.length} clients...`);
@@ -206,29 +207,10 @@ export async function POST(request: NextRequest) {
           console.error('[SQUARESPACE-IMPORT] Error creating clients batch:', error);
         } else {
           clientsCreated += data?.length || 0;
-
-          // Create email aliases for each new client
-          if (data) {
-            for (const client of data) {
-              if (client.email) {
-                try {
-                  // Add email as primary alias
-                  await clientEmailAliasService.addAlias(client.id, client.email, true);
-                  aliasesCreated++;
-                } catch (aliasError) {
-                  console.error('[SQUARESPACE-IMPORT] Error creating email alias:', aliasError);
-                }
-              }
-            }
-          }
         }
       }
       console.log(`[SQUARESPACE-IMPORT] Created ${clientsCreated} clients`);
-      console.log(`[SQUARESPACE-IMPORT] Created ${aliasesCreated} email aliases`);
     }
-
-    // Update final stats
-    stats.emailAliasesCreated = aliasesCreated;
 
     // Return results
     return addSecurityHeaders(NextResponse.json({
@@ -236,8 +218,7 @@ export async function POST(request: NextRequest) {
       message: 'Historical import completed - clients created and linked to existing memberships by email',
       stats: {
         ...stats,
-        clientsActuallyCreated: clientsCreated,
-        emailAliasesActuallyCreated: aliasesCreated
+        clientsActuallyCreated: clientsCreated
       },
       errors: errors.length > 0 ? errors.slice(0, 10) : undefined
     }));
