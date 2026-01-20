@@ -95,34 +95,31 @@ export async function POST(request: NextRequest) {
 
     console.log(`[SQUARESPACE-IMPORT] Total orders fetched: ${allOrders.length}`);
 
-    // Get existing clients and memberships
+    // Get existing clients (we'll check aliases separately for each email)
     const { data: existingClients } = await supabase
       .from('clients')
       .select('email, id');
 
-    const { data: existingMemberships } = await supabase
+    // Get unlinked memberships (those without a client_id)
+    const { data: unlinkedMemberships } = await supabase
       .from('memberships')
-      .select('email, date');
+      .select('email, date, id')
+      .is('client_id', null);
 
-    const existingClientEmails = new Set(
-      existingClients?.filter(c => c.email).map(c => c.email.toLowerCase()) || []
-    );
-    const existingMembershipKeys = new Set(
-      existingMemberships?.filter(m => m.email && m.date).map(m => `${m.email.toLowerCase()}:${m.date}`) || []
-    );
+    console.log(`[SQUARESPACE-IMPORT] Found ${unlinkedMemberships?.length || 0} unlinked memberships`);
 
     // Process orders
     const stats = {
       totalOrders: allOrders.length,
       clientsToCreate: 0,
       clientsAlreadyExist: 0,
-      membershipsToCreate: 0,
-      membershipsAlreadyExist: 0,
+      membershipsLinked: 0,
+      emailAliasesCreated: 0,
       errors: 0
     };
 
     const clientsToCreate: any[] = [];
-    const membershipsToCreate: any[] = [];
+    const clientsCreatedMap = new Map<string, string>(); // email -> clientId
     const errors: any[] = [];
 
     for (const order of allOrders) {
@@ -131,18 +128,26 @@ export async function POST(request: NextRequest) {
         const firstName = sanitizeString(order.billingAddress?.firstName || '');
         const lastName = sanitizeString(order.billingAddress?.lastName || '');
         const postcode = sanitizeString(order.billingAddress?.postalCode || '');
-        const amount = parseFloat(order.grandTotal?.value || '0');
-        const date = new Date(order.createdOn);
 
         // Skip invalid orders
-        if (!email || !firstName || !lastName || isNaN(amount) || amount <= 0) {
+        if (!email || !firstName || !lastName) {
           console.warn('[SQUARESPACE-IMPORT] Skipping invalid order:', order.orderNumber);
           continue;
         }
 
-        // Check if client exists
         const emailLower = email.toLowerCase();
-        if (!existingClientEmails.has(emailLower)) {
+
+        // Check if client exists (check both clients table and email aliases)
+        let existingClientId = await clientEmailAliasService.findClientByEmail(emailLower);
+
+        // If not found in aliases, check clients.email directly
+        if (!existingClientId) {
+          const clientByEmail = existingClients?.find(c => c.email?.toLowerCase() === emailLower);
+          existingClientId = clientByEmail?.id || null;
+        }
+
+        if (!existingClientId && !clientsCreatedMap.has(emailLower)) {
+          // Client doesn't exist - add to creation list
           stats.clientsToCreate++;
           clientsToCreate.push({
             first_name: firstName,
@@ -152,23 +157,9 @@ export async function POST(request: NextRequest) {
             active: true,
             membership: true
           });
-          existingClientEmails.add(emailLower); // Prevent duplicates in this batch
+          // We'll populate clientsCreatedMap after creating clients
         } else {
           stats.clientsAlreadyExist++;
-        }
-
-        // Check if membership exists
-        const membershipKey = `${emailLower}:${date.toISOString().split('T')[0]}`;
-        if (!existingMembershipKeys.has(membershipKey)) {
-          stats.membershipsToCreate++;
-          membershipsToCreate.push({
-            email: email,
-            date: date.toISOString().split('T')[0],
-            amount: amount
-          });
-          existingMembershipKeys.add(membershipKey); // Prevent duplicates in this batch
-        } else {
-          stats.membershipsAlreadyExist++;
         }
 
       } catch (error) {
@@ -190,7 +181,7 @@ export async function POST(request: NextRequest) {
         stats,
         preview: {
           clientsToCreate: clientsToCreate.slice(0, 5),
-          membershipsToCreate: membershipsToCreate.slice(0, 5)
+          unlinkedMembershipsCount: unlinkedMemberships?.length || 0
         },
         errors: errors.slice(0, 10)
       }));
@@ -208,38 +199,68 @@ export async function POST(request: NextRequest) {
         const { data, error } = await supabase
           .from('clients')
           .insert(batch)
-          .select();
+          .select('id, email');
 
         if (error) {
           console.error('[SQUARESPACE-IMPORT] Error creating clients batch:', error);
         } else {
           clientsCreated += data?.length || 0;
+          // Map email to client ID for linking memberships
+          data?.forEach(client => {
+            if (client.email) {
+              clientsCreatedMap.set(client.email.toLowerCase(), client.id);
+            }
+          });
         }
       }
       console.log(`[SQUARESPACE-IMPORT] Created ${clientsCreated} clients`);
     }
 
-    // Create memberships in batches
-    let membershipsCreated = 0;
-    if (membershipsToCreate.length > 0) {
-      console.log(`[SQUARESPACE-IMPORT] Creating ${membershipsToCreate.length} memberships...`);
+    // Link existing memberships to newly created clients
+    let membershipsLinked = 0;
+    let aliasesCreated = 0;
 
-      const batchSize = 100;
-      for (let i = 0; i < membershipsToCreate.length; i += batchSize) {
-        const batch = membershipsToCreate.slice(i, i + batchSize);
-        const { data, error } = await supabase
-          .from('memberships')
-          .insert(batch)
-          .select();
+    if (clientsCreatedMap.size > 0 && unlinkedMemberships && unlinkedMemberships.length > 0) {
+      console.log(`[SQUARESPACE-IMPORT] Linking ${unlinkedMemberships.length} unlinked memberships...`);
 
-        if (error) {
-          console.error('[SQUARESPACE-IMPORT] Error creating memberships batch:', error);
-        } else {
-          membershipsCreated += data?.length || 0;
+      for (const membership of unlinkedMemberships) {
+        const membershipEmail = membership.email?.toLowerCase();
+        if (!membershipEmail) continue;
+
+        const clientId = clientsCreatedMap.get(membershipEmail);
+        if (clientId) {
+          // Update membership to link it to the client
+          const { error } = await supabase
+            .from('memberships')
+            .update({ client_id: clientId })
+            .eq('id', membership.id);
+
+          if (error) {
+            console.error('[SQUARESPACE-IMPORT] Error linking membership:', error);
+          } else {
+            membershipsLinked++;
+
+            // Create email alias if it doesn't already exist
+            try {
+              const existingAlias = await clientEmailAliasService.findClientByEmail(membershipEmail);
+              if (!existingAlias) {
+                await clientEmailAliasService.addAlias(clientId, membershipEmail, true);
+                aliasesCreated++;
+              }
+            } catch (aliasError) {
+              console.error('[SQUARESPACE-IMPORT] Error creating email alias:', aliasError);
+            }
+          }
         }
       }
-      console.log(`[SQUARESPACE-IMPORT] Created ${membershipsCreated} memberships`);
+
+      console.log(`[SQUARESPACE-IMPORT] Linked ${membershipsLinked} memberships`);
+      console.log(`[SQUARESPACE-IMPORT] Created ${aliasesCreated} email aliases`);
     }
+
+    // Update final stats
+    stats.membershipsLinked = membershipsLinked;
+    stats.emailAliasesCreated = aliasesCreated;
 
     // Return results
     return addSecurityHeaders(NextResponse.json({
@@ -248,7 +269,8 @@ export async function POST(request: NextRequest) {
       stats: {
         ...stats,
         clientsActuallyCreated: clientsCreated,
-        membershipsActuallyCreated: membershipsCreated
+        membershipsActuallyLinked: membershipsLinked,
+        emailAliasesActuallyCreated: aliasesCreated
       },
       errors: errors.length > 0 ? errors.slice(0, 10) : undefined
     }));
