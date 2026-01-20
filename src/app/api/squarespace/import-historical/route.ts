@@ -205,8 +205,17 @@ export async function POST(request: NextRequest) {
 
         if (error) {
           console.error('[SQUARESPACE-IMPORT] Error creating clients batch:', error);
+          console.error('[SQUARESPACE-IMPORT] Error details:', JSON.stringify(error, null, 2));
+          console.error('[SQUARESPACE-IMPORT] Failed batch sample:', JSON.stringify(batch.slice(0, 2), null, 2));
+          stats.errors++;
+          errors.push({
+            type: 'client_creation',
+            error: error.message,
+            details: error.details || error.hint || 'No additional details'
+          });
         } else {
           clientsCreated += data?.length || 0;
+          console.log(`[SQUARESPACE-IMPORT] Successfully created ${data?.length || 0} clients in this batch`);
         }
       }
       console.log(`[SQUARESPACE-IMPORT] Created ${clientsCreated} clients`);
