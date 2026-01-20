@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
     let hasMore = true;
 
     while (hasMore) {
-      const url = cursor 
+      const url: string = cursor
         ? `https://api.squarespace.com/1.0/commerce/orders?cursor=${cursor}`
         : 'https://api.squarespace.com/1.0/commerce/orders';
 
