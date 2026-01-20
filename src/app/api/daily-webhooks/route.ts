@@ -305,9 +305,11 @@ export async function POST(request: NextRequest) {
               continue;
             }
 
-            // Check if client has any recent memberships (within last 1 month)
+            // Check if client has any recent memberships (within last 1 month + 1 day)
+            // Payment on Dec 20 → Valid until Jan 20 (expires Jan 21)
             const oneMonthAgo = new Date();
             oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+            oneMonthAgo.setDate(oneMonthAgo.getDate() - 1); // Subtract 1 day to give members an extra day
 
             const recentMemberships = clientMemberships.filter(membership => {
               const membershipDate = new Date(membership.date);
