@@ -214,8 +214,10 @@ export default function MembershipsPage() {
                   {isExpanded && (
                     <div className="border-t border-gray-100">
                       {monthMemberships.map((membership) => {
-                        // Find client by email (including aliases)
-                        let client = state.clients.find(c => c.email === membership.email);
+                        // Find client by email (including aliases) - case insensitive
+                        let client = state.clients.find(c =>
+                          c.email?.toLowerCase() === membership.email?.toLowerCase()
+                        );
 
                         // If not found by primary email, check email aliases
                         if (!client) {
