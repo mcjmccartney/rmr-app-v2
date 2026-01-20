@@ -354,7 +354,7 @@ function ClientsPageContent() {
     } else if (showActiveOnly) {
       return `${filteredClients.length} Active`;
     } else {
-      return `${filteredClients.length} Total`;
+      return `${filteredClients.length} Total | Members: ${membersCount}`;
     }
   };
 
