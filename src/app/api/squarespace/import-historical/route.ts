@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
       }
 
       const data = await response.json();
-      allOrders = allOrders.concat(data.orders || []);
+      allOrders = allOrders.concat(data.result || []);
       
       cursor = data.pagination?.nextPageCursor || null;
       hasMore = !!cursor;
