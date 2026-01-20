@@ -104,9 +104,11 @@ export async function POST(request: NextRequest) {
       .from('memberships')
       .select('email, date');
 
-    const existingClientEmails = new Set(existingClients?.map(c => c.email.toLowerCase()) || []);
+    const existingClientEmails = new Set(
+      existingClients?.filter(c => c.email).map(c => c.email.toLowerCase()) || []
+    );
     const existingMembershipKeys = new Set(
-      existingMemberships?.map(m => `${m.email.toLowerCase()}:${m.date}`) || []
+      existingMemberships?.filter(m => m.email && m.date).map(m => `${m.email.toLowerCase()}:${m.date}`) || []
     );
 
     // Process orders
