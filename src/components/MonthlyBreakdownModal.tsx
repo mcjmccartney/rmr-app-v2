@@ -421,7 +421,7 @@ export default function MonthlyBreakdownModal({ finance, allFinancesForMonth, is
                 {chartData.map((item, index) => {
                   const percentage = ((item.value / breakdownData.totalActual) * 100).toFixed(1);
                   const sessionTypeData = breakdownData.sessionTypes[item.label];
-                  const hasTravelExpense = sessionTypeData && sessionTypeData.travelTotal && sessionTypeData.travelTotal > 0;
+                  const hasTravelExpense = sessionTypeData?.travelTotal ? sessionTypeData.travelTotal > 0 : false;
 
                   return (
                     <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
