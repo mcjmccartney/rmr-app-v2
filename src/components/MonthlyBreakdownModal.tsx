@@ -75,7 +75,7 @@ export default function MonthlyBreakdownModal({ finance, allFinancesForMonth, is
       // Get sessions for this month/year
       const { data: sessions, error: sessionsError } = await supabase
         .from('sessions')
-        .select('session_type, quote, booking_date')
+        .select('session_type, quote, booking_date, travel_expense')
         .gte('booking_date', `${finance.year}-${getMonthNumber(finance.month).toString().padStart(2, '0')}-01`)
         .lt('booking_date', getNextMonthDate(finance.month, finance.year));
 
