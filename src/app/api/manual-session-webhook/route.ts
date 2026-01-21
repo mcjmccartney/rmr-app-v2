@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { verifyWebhookApiKey } from '@/lib/webhookAuth';
+import { paymentService } from '@/services/paymentService';
+import { Session, Client } from '@/types';
 
 // Manual webhook trigger for specific sessions or dates
 export async function POST(request: NextRequest) {
@@ -107,22 +109,67 @@ export async function POST(request: NextRequest) {
           continue;
         }
 
-        // Prepare webhook data
+        // Convert database row to Session type for payment link generation
+        const sessionForPayment: Session = {
+          id: session.id,
+          clientId: session.client_id,
+          sessionType: session.session_type,
+          bookingDate: session.booking_date,
+          bookingTime: session.booking_time,
+          dogName: session.dog_name || client.dog_name || '',
+          notes: session.notes || '',
+          quote: session.quote,
+          eventId: session.event_id || null,
+          googleMeetLink: session.google_meet_link || null,
+          travelExpense: session.travel_expense || null,
+          sessionNumber: session.session_number || 1,
+          sessionPaid: session.session_paid || false,
+          createdAt: session.created_at
+        } as Session;
+
+        const clientForPayment: Client = {
+          id: client.id,
+          firstName: client.first_name,
+          lastName: client.last_name,
+          email: client.email,
+          phone: client.phone || '',
+          address: client.address || '',
+          dogName: client.dog_name || '',
+          membership: client.membership || false,
+          active: client.active !== false
+        } as Client;
+
+        // Generate payment link
+        const paymentLink = paymentService.generatePaymentLink(sessionForPayment, clientForPayment);
+
+        // Prepare webhook data (matching the 7-day webhook structure)
         const webhookData = {
           sessionId: session.id,
           clientId: client.id,
-          clientName: `${client.first_name} ${client.last_name}`,
+          clientName: `${client.first_name} ${client.last_name}`.trim(),
           clientFirstName: client.first_name,
+          clientLastName: client.last_name,
           clientEmail: client.email,
-          dogName: session.dog_name || client.dog_name || 'Unknown Dog',
+          address: client.address || '',
+          dogName: session.dog_name || client.dog_name || '',
           sessionType: session.session_type,
           bookingDate: session.booking_date,
-          bookingTime: session.booking_time?.substring(0, 5) || '',
-          notes: session.notes || '',
+          bookingTime: session.booking_time?.substring(0, 5) || session.booking_time,
           quote: session.quote,
-          isMember: client.membership,
-          sendSessionEmail: true, // Force email sending
-          createCalendarEvent: false, // Don't recreate calendar events
+          notes: session.notes || '',
+          travelExpense: session.travel_expense || null,
+          membershipStatus: client.membership,
+          createdAt: new Date().toISOString(),
+          // Form URLs with email prefilled
+          bookingTermsUrl: `https://rmrcms.vercel.app/booking-terms?email=${encodeURIComponent(client.email)}`,
+          questionnaireUrl: `https://rmrcms.vercel.app/behaviour-questionnaire?email=${encodeURIComponent(client.email)}`,
+          // Payment link - dynamically generated based on session type, membership, session number, and travel zone
+          paymentLink: paymentLink,
+          // Google Meet link for Online sessions
+          googleMeetLink: session.google_meet_link || null,
+          // Webhook control flags
+          sendSessionEmail: true,
+          createCalendarEvent: false,
           isManualTrigger: true
         };
 
