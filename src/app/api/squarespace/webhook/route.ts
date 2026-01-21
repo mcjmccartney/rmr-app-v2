@@ -114,16 +114,43 @@ export async function POST(request: NextRequest) {
     });
 
     // Find or create client
-    let clientData = null;
-    let clientError = null;
     let foundClientId = null;
+    let clientWasCreated = false;
 
     try {
-      // First, try to find client by email alias
+      // Step 1: Try to find existing client by email alias
       foundClientId = await clientEmailAliasService.findClientByEmail(email);
 
+      // Step 2: If not found via alias, try direct email match
+      if (!foundClientId) {
+        const { data: directMatch, error: directError } = await supabase
+          .from('clients')
+          .select('id, address')
+          .eq('email', email)
+          .single();
+
+        if (directMatch && !directError) {
+          foundClientId = directMatch.id;
+          console.log('[SQUARESPACE] Found existing client via direct email match:', email);
+
+          // Set up email alias for future payments
+          try {
+            await clientEmailAliasService.setupAliasesAfterMerge(
+              directMatch.id,
+              email,
+              email
+            );
+            console.log('[SQUARESPACE] Email alias set up for future payments');
+          } catch (aliasError) {
+            console.error('[SQUARESPACE] Failed to set up email alias:', aliasError);
+          }
+        }
+      } else {
+        console.log('[SQUARESPACE] Found existing client via email alias:', email);
+      }
+
+      // Step 3: If client exists, update their membership status
       if (foundClientId) {
-        // Client exists - update membership status and address if needed
         const { data: currentClient } = await supabase
           .from('clients')
           .select('address')
@@ -140,96 +167,52 @@ export async function POST(request: NextRequest) {
           updateData.address = postcode;
         }
 
-        const { data: updatedClient, error: updateError } = await supabase
+        const { error: updateError } = await supabase
           .from('clients')
           .update(updateData)
-          .eq('id', foundClientId)
-          .select();
+          .eq('id', foundClientId);
 
-        clientData = updatedClient;
-        clientError = updateError;
-
-        if (updatedClient && updatedClient.length > 0) {
-          console.log('[SQUARESPACE] Updated existing client:', {
+        if (updateError) {
+          console.error('[SQUARESPACE] Error updating client:', updateError);
+        } else {
+          console.log('[SQUARESPACE] Updated existing client membership status:', {
             clientId: foundClientId,
-            email: updatedClient[0].email
+            email: email
           });
         }
       } else {
-        // Try direct email match
-        const { data: currentClient } = await supabase
+        // Step 4: No existing client - create new one
+        console.log('[SQUARESPACE] Creating new client for:', email);
+
+        const { data: newClient, error: createError } = await supabase
           .from('clients')
-          .select('address')
-          .eq('email', email)
-          .single();
-
-        const updateData: { membership: boolean; active: boolean; address?: string } = {
-          membership: true,
-          active: true
-        };
-
-        if ((!currentClient?.address || currentClient.address.trim() === '') && postcode) {
-          updateData.address = postcode;
-        }
-
-        const { data: directMatch, error: directError } = await supabase
-          .from('clients')
-          .update(updateData)
-          .eq('email', email)
+          .insert({
+            first_name: firstName,
+            last_name: lastName,
+            email: email,
+            address: postcode || '',
+            active: true,
+            membership: true
+          })
           .select();
 
-        clientData = directMatch;
-        clientError = directError;
-
-        if (directMatch && directMatch.length > 0) {
-          foundClientId = directMatch[0].id;
-          console.log('[SQUARESPACE] Updated client via direct email match:', email);
-
-          // Set up email alias for future payments
-          try {
-            await clientEmailAliasService.setupAliasesAfterMerge(
-              directMatch[0].id,
-              directMatch[0].email,
-              email
-            );
-            console.log('[SQUARESPACE] Email alias set up for future payments');
-          } catch (aliasError) {
-            console.error('[SQUARESPACE] Failed to set up email alias:', aliasError);
-          }
-        } else {
-          // No existing client - create new one
-          console.log('[SQUARESPACE] Creating new client for:', email);
-
-          const { data: newClient, error: createError } = await supabase
-            .from('clients')
-            .insert({
-              first_name: firstName,
-              last_name: lastName,
-              email: email,
-              address: postcode || '',
-              active: true,
-              membership: true
-            })
-            .select();
-
-          if (createError) {
-            console.error('[SQUARESPACE] Error creating new client:', createError);
-            clientError = createError;
-          } else {
-            clientData = newClient;
-            foundClientId = newClient[0]?.id;
-            console.log('[SQUARESPACE] Successfully created new client:', {
-              email: email,
-              firstName: firstName,
-              lastName: lastName,
-              clientId: newClient[0]?.id
-            });
-          }
+        if (createError) {
+          console.error('[SQUARESPACE] Error creating new client:', createError);
+          // Don't throw - we'll still create the membership record
+        } else if (newClient && newClient.length > 0) {
+          foundClientId = newClient[0].id;
+          clientWasCreated = true;
+          console.log('[SQUARESPACE] Successfully created new client:', {
+            email: email,
+            firstName: firstName,
+            lastName: lastName,
+            clientId: newClient[0].id
+          });
         }
       }
     } catch (error) {
-      console.error('[SQUARESPACE] Error finding/updating client:', error);
-      clientError = error;
+      console.error('[SQUARESPACE] Error finding/creating client:', error);
+      // Don't throw - we'll still create the membership record
     }
 
     // Create membership record
@@ -264,7 +247,7 @@ export async function POST(request: NextRequest) {
       message: 'Order processed successfully',
       data: {
         clientId: foundClientId,
-        clientCreated: !foundClientId && clientData && clientData.length > 0,
+        clientCreated: clientWasCreated,
         membershipCreated: true,
         orderNumber: order.orderNumber
       }
