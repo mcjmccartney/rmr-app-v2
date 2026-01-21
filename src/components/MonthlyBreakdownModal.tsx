@@ -26,7 +26,7 @@ interface Finance {
 
 
 interface BreakdownData {
-  sessionTypes: Record<string, { count: number; total: number }>;
+  sessionTypes: Record<string, { count: number; total: number; travelTotal?: number }>;
   memberships: { count: number; total: number };
   totalActual: number;
 }
@@ -100,15 +100,32 @@ export default function MonthlyBreakdownModal({ finance, allFinancesForMonth, is
         membershipsSample: memberships?.slice(0, 2)
       });
 
-      // Process session data
-      const sessionTypes: Record<string, { count: number; total: number }> = {};
+      // Process session data with travel expense tracking
+      const sessionTypes: Record<string, { count: number; total: number; travelTotal?: number }> = {};
+      const getTravelCost = (travelExpense: string | null): number => {
+        if (!travelExpense) return 0;
+        switch (travelExpense) {
+          case 'Zone 1': return 5;
+          case 'Zone 2': return 10;
+          case 'Zone 3': return 15;
+          case 'Zone 4': return 20;
+          default: return 0;
+        }
+      };
+
       (sessions || []).forEach((session: any) => {
         const type = session.session_type || 'Unknown';
         if (!sessionTypes[type]) {
-          sessionTypes[type] = { count: 0, total: 0 };
+          sessionTypes[type] = { count: 0, total: 0, travelTotal: 0 };
         }
         sessionTypes[type].count += 1;
         sessionTypes[type].total += session.quote || 0;
+
+        // Track travel expenses separately for In-Person sessions
+        if (type === 'In-Person' && session.travel_expense) {
+          const travelCost = getTravelCost(session.travel_expense);
+          sessionTypes[type].travelTotal = (sessionTypes[type].travelTotal || 0) + travelCost;
+        }
       });
 
       // Process membership data
@@ -403,6 +420,9 @@ export default function MonthlyBreakdownModal({ finance, allFinancesForMonth, is
               <div className="space-y-3">
                 {chartData.map((item, index) => {
                   const percentage = ((item.value / breakdownData.totalActual) * 100).toFixed(1);
+                  const sessionTypeData = breakdownData.sessionTypes[item.label];
+                  const hasTravelExpense = sessionTypeData && sessionTypeData.travelTotal && sessionTypeData.travelTotal > 0;
+
                   return (
                     <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                       <div className="flex items-center flex-1">
@@ -412,7 +432,14 @@ export default function MonthlyBreakdownModal({ finance, allFinancesForMonth, is
                         ></div>
                         <div className="flex-1">
                           <div className="text-sm font-medium text-gray-900">{item.label}</div>
-                          <div className="text-xs text-gray-500">{item.count} entries • {percentage}%</div>
+                          <div className="text-xs text-gray-500">
+                            {item.count} entries • {percentage}%
+                            {hasTravelExpense && (
+                              <span className="ml-1 text-gray-400">
+                                (inc. £{sessionTypeData.travelTotal} travel)
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
                       <div className="text-sm font-medium text-gray-900">
