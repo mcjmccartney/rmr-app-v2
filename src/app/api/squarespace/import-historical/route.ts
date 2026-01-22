@@ -198,6 +198,12 @@ export async function POST(request: NextRequest) {
           m => m.email?.toLowerCase() === emailLower && m.date === orderDateStr
         );
 
+        console.log(`[SQUARESPACE-IMPORT] Checking membership for ${email} on ${orderDateStr}:`, {
+          membershipKey,
+          existingMembership: existingMembership ? `Found ID ${existingMembership.id}` : 'Not found',
+          inCurrentBatch: membershipKeys.has(membershipKey)
+        });
+
         if (!existingMembership && !membershipKeys.has(membershipKey)) {
           // Membership doesn't exist - add to creation list
           stats.membershipsToCreate++;
@@ -207,8 +213,10 @@ export async function POST(request: NextRequest) {
             amount: amount
           });
           membershipKeys.add(membershipKey); // Prevent duplicates in this batch
+          console.log(`[SQUARESPACE-IMPORT] Will create membership for ${email} on ${orderDateStr}`);
         } else {
           stats.membershipsAlreadyExist++;
+          console.log(`[SQUARESPACE-IMPORT] Skipping duplicate membership for ${email} on ${orderDateStr}`);
         }
 
       } catch (error) {
