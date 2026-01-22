@@ -120,11 +120,22 @@ export async function POST(request: NextRequest) {
     console.log(`[SQUARESPACE-IMPORT] Found ${existingClients?.length || 0} existing clients`);
 
     // Get existing memberships to check for duplicates
-    const { data: existingMemberships } = await supabase
+    const { data: existingMemberships, error: membershipsError } = await supabase
       .from('memberships')
       .select('email, date, id');
 
+    if (membershipsError) {
+      console.error('[SQUARESPACE-IMPORT] Error fetching existing memberships:', membershipsError);
+      return addSecurityHeaders(NextResponse.json(
+        { error: 'Failed to fetch existing memberships', details: membershipsError.message },
+        { status: 500 }
+      ));
+    }
+
     console.log(`[SQUARESPACE-IMPORT] Found ${existingMemberships?.length || 0} existing memberships`);
+    if (existingMemberships && existingMemberships.length > 0) {
+      console.log('[SQUARESPACE-IMPORT] Sample existing memberships:', existingMemberships.slice(0, 3).map(m => `${m.email}|${m.date}`));
+    }
 
     // Process orders
     const stats = {
