@@ -37,20 +37,20 @@ export const membershipExpirationService = {
       
       const mostRecentMembership = sortedMemberships[0];
       const lastPaymentDate = new Date(mostRecentMembership.date);
-      
-      // Calculate expiration date: midnight of the following day of the next month
-      // For example: payment on 2024-01-15 expires at midnight on 2024-02-16
+
+      // Calculate expiration date: 8:00 AM on the following day of the next month
+      // For example: payment on Dec 22 expires at 8:00 AM on Jan 23
       const expirationDate = new Date(lastPaymentDate);
-      expirationDate.setMonth(expirationDate.getMonth() + 1); // Next month
+      expirationDate.setMonth(expirationDate.getMonth() + 1); // Next month (same day)
       expirationDate.setDate(expirationDate.getDate() + 1); // Following day
-      expirationDate.setHours(0, 0, 0, 0); // Midnight
+      expirationDate.setHours(8, 0, 0, 0); // 8:00 AM (when cron runs)
 
       const expirationEndOfDay = new Date(expirationDate);
       expirationEndOfDay.setHours(23, 59, 59, 999); // End of expiration day for comparison
 
       const now = new Date();
       const daysUntilExpiration = Math.ceil((expirationEndOfDay.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-      const isExpired = now > expirationEndOfDay;
+      const isExpired = now >= expirationDate; // Changed from > to >= to match the 8 AM check
       const isActive = !isExpired;
 
       return {

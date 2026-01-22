@@ -89,11 +89,12 @@ export async function POST(request: NextRequest) {
         const mostRecentMembership = sortedMemberships[0];
         const lastPaymentDate = new Date(mostRecentMembership.date);
 
-        // Calculate expiration date: midnight of the following day of the next month
+        // Calculate expiration date: 8:00 AM on the following day of the next month
+        // Example: Payment on Dec 22 expires at 8:00 AM on Jan 23
         const expirationDate = new Date(lastPaymentDate);
-        expirationDate.setMonth(expirationDate.getMonth() + 1); // Next month
+        expirationDate.setMonth(expirationDate.getMonth() + 1); // Next month (same day)
         expirationDate.setDate(expirationDate.getDate() + 1); // Following day
-        expirationDate.setHours(0, 0, 0, 0); // Midnight
+        expirationDate.setHours(8, 0, 0, 0); // 8:00 AM (when cron runs)
 
         const now = new Date();
         const isExpired = now >= expirationDate;
