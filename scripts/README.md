@@ -2,6 +2,52 @@
 
 This directory contains utility scripts for managing the Raising My Rescue application.
 
+---
+
+## Squarespace Integration Scripts
+
+### Setup Squarespace Webhook
+
+**File:** `setup-squarespace-webhook.sh`
+
+**Purpose:** Automates the creation of Squarespace webhook subscription for order.create events.
+
+**Usage:**
+```bash
+./scripts/setup-squarespace-webhook.sh
+```
+
+This script will:
+1. Check existing webhook subscriptions
+2. Create a new webhook for order.create events
+3. Provide you with the webhook secret to save
+
+**See:** [SQUARESPACE_QUICK_START.md](../SQUARESPACE_QUICK_START.md) for full setup guide.
+
+---
+
+### Test Squarespace Historical Import
+
+**File:** `test-squarespace-import.sh`
+
+**Purpose:** Import historical orders from Squarespace to create missing client records.
+
+**Usage:**
+```bash
+./scripts/test-squarespace-import.sh
+```
+
+**Options:**
+1. **Dry run** - Preview what would be imported (no changes)
+2. **Import first 50** - Test with limited orders
+3. **Import ALL** - Full historical import
+
+**Requirements:**
+- `WEBHOOK_API_KEY` in `.env.local`
+- `SQUARESPACE_API_KEY` in `.env.local`
+
+---
+
 ## Update Membership Status
 
 **File:** `update-membership-status.ts`

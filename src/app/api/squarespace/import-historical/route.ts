@@ -7,19 +7,16 @@ import { verifyWebhookApiKey } from '@/lib/webhookAuth';
 /**
  * Squarespace Historical Order Import
  *
- * Fetches all past orders from Squarespace and creates client records
- * for customers who don't exist yet. Memberships already exist in the
- * database (created by n8n) and are linked to clients by email matching.
+ * Fetches orders from Squarespace and creates client and membership records.
+ * Can be used for historical imports or automated polling for new orders.
  *
  * Process:
- * 1. Fetch all Squarespace orders
+ * 1. Fetch Squarespace orders (all or filtered by date)
  * 2. For each order email, check if client exists (via clients.email or client_email_aliases)
  * 3. If no client exists, create one with real name and email from Squarespace
- * 4. Existing memberships automatically link via email matching (no aliases needed)
- *
- * Note: Email aliases are NOT created during import since the client's email
- * already matches the membership email. Aliases are only needed when a client
- * has multiple different email addresses.
+ * 4. Check if membership record exists for this order
+ * 5. If no membership exists, create one
+ * 6. Update client membership status
  *
  * Usage: POST /api/squarespace/import-historical
  * Headers: x-api-key: YOUR_WEBHOOK_API_KEY
@@ -27,6 +24,7 @@ import { verifyWebhookApiKey } from '@/lib/webhookAuth';
  * Optional query params:
  * - dryRun=true : Preview what would be imported without making changes
  * - limit=50 : Limit number of orders to process (default: all)
+ * - modifiedAfter=2026-01-20T00:00:00Z : Only fetch orders modified after this date (ISO 8601 format)
  */
 
 export async function POST(request: NextRequest) {
@@ -42,8 +40,9 @@ export async function POST(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const dryRun = searchParams.get('dryRun') === 'true';
     const limit = parseInt(searchParams.get('limit') || '0') || undefined;
+    const modifiedAfter = searchParams.get('modifiedAfter') || undefined;
 
-    console.log('[SQUARESPACE-IMPORT] Starting historical import...', { dryRun, limit });
+    console.log('[SQUARESPACE-IMPORT] Starting historical import...', { dryRun, limit, modifiedAfter });
 
     // Check for required environment variables
     const squarespaceApiKey = process.env.SQUARESPACE_API_KEY;
@@ -68,9 +67,15 @@ export async function POST(request: NextRequest) {
     let hasMore = true;
 
     while (hasMore) {
-      const url: string = cursor
-        ? `https://api.squarespace.com/1.0/commerce/orders?cursor=${cursor}`
-        : 'https://api.squarespace.com/1.0/commerce/orders';
+      // Build URL with optional date filter
+      let url: string;
+      if (cursor) {
+        url = `https://api.squarespace.com/1.0/commerce/orders?cursor=${cursor}`;
+      } else if (modifiedAfter) {
+        url = `https://api.squarespace.com/1.0/commerce/orders?modifiedAfter=${modifiedAfter}`;
+      } else {
+        url = 'https://api.squarespace.com/1.0/commerce/orders';
+      }
 
       const response = await fetch(url, {
         headers: {
@@ -112,16 +117,27 @@ export async function POST(request: NextRequest) {
 
     console.log(`[SQUARESPACE-IMPORT] Found ${existingClients?.length || 0} existing clients`);
 
+    // Get existing memberships to check for duplicates
+    const { data: existingMemberships } = await supabase
+      .from('memberships')
+      .select('email, date, id');
+
+    console.log(`[SQUARESPACE-IMPORT] Found ${existingMemberships?.length || 0} existing memberships`);
+
     // Process orders
     const stats = {
       totalOrders: allOrders.length,
       clientsToCreate: 0,
       clientsAlreadyExist: 0,
+      membershipsToCreate: 0,
+      membershipsAlreadyExist: 0,
       errors: 0
     };
 
     const clientsToCreate: any[] = [];
+    const membershipsToCreate: any[] = [];
     const emailsToCreate = new Set<string>(); // Track emails we're creating to avoid duplicates
+    const membershipKeys = new Set<string>(); // Track membership email+date combos to avoid duplicates
     const errors: any[] = [];
 
     for (const order of allOrders) {
@@ -130,6 +146,8 @@ export async function POST(request: NextRequest) {
         const firstName = sanitizeString(order.billingAddress?.firstName || '');
         const lastName = sanitizeString(order.billingAddress?.lastName || '');
         const postcode = sanitizeString(order.billingAddress?.postalCode || '');
+        const amount = parseFloat(order.grandTotal?.value || '0');
+        const orderDate = new Date(order.createdOn || new Date());
 
         // Skip invalid orders
         if (!email || !firstName || !lastName) {
@@ -137,7 +155,14 @@ export async function POST(request: NextRequest) {
           continue;
         }
 
+        // Skip orders with invalid amounts
+        if (isNaN(amount) || amount <= 0) {
+          console.warn('[SQUARESPACE-IMPORT] Skipping order with invalid amount:', order.orderNumber);
+          continue;
+        }
+
         const emailLower = email.toLowerCase();
+        const orderDateStr = orderDate.toISOString().split('T')[0]; // YYYY-MM-DD
 
         // Check if client exists (check both clients table and email aliases)
         let existingClientId = await clientEmailAliasService.findClientByEmail(emailLower);
@@ -154,6 +179,7 @@ export async function POST(request: NextRequest) {
           clientsToCreate.push({
             first_name: firstName,
             last_name: lastName,
+            dog_name: '', // Placeholder - will be updated when client adds their dog
             email: email,
             address: postcode || '',
             active: true,
@@ -162,6 +188,25 @@ export async function POST(request: NextRequest) {
           emailsToCreate.add(emailLower); // Prevent duplicates in this batch
         } else {
           stats.clientsAlreadyExist++;
+        }
+
+        // Check if membership record exists for this email + date combination
+        const membershipKey = `${emailLower}|${orderDateStr}`;
+        const existingMembership = existingMemberships?.find(
+          m => m.email?.toLowerCase() === emailLower && m.date === orderDateStr
+        );
+
+        if (!existingMembership && !membershipKeys.has(membershipKey)) {
+          // Membership doesn't exist - add to creation list
+          stats.membershipsToCreate++;
+          membershipsToCreate.push({
+            email: email,
+            date: orderDateStr,
+            amount: amount
+          });
+          membershipKeys.add(membershipKey); // Prevent duplicates in this batch
+        } else {
+          stats.membershipsAlreadyExist++;
         }
 
       } catch (error) {
@@ -182,7 +227,8 @@ export async function POST(request: NextRequest) {
         dryRun: true,
         stats,
         preview: {
-          clientsToCreate: clientsToCreate.slice(0, 10)
+          clientsToCreate: clientsToCreate.slice(0, 10),
+          membershipsToCreate: membershipsToCreate.slice(0, 10)
         },
         errors: errors.slice(0, 10)
       }));
@@ -221,13 +267,73 @@ export async function POST(request: NextRequest) {
       console.log(`[SQUARESPACE-IMPORT] Created ${clientsCreated} clients`);
     }
 
+    // Create memberships in batches
+    let membershipsCreated = 0;
+
+    if (membershipsToCreate.length > 0) {
+      console.log(`[SQUARESPACE-IMPORT] Creating ${membershipsToCreate.length} memberships...`);
+
+      // Batch insert (Supabase handles up to 1000 rows per insert)
+      const batchSize = 100;
+      for (let i = 0; i < membershipsToCreate.length; i += batchSize) {
+        const batch = membershipsToCreate.slice(i, i + batchSize);
+        const { data, error } = await supabase
+          .from('memberships')
+          .insert(batch)
+          .select('id, email, date');
+
+        if (error) {
+          console.error('[SQUARESPACE-IMPORT] Error creating memberships batch:', error);
+          console.error('[SQUARESPACE-IMPORT] Error details:', JSON.stringify(error, null, 2));
+          console.error('[SQUARESPACE-IMPORT] Failed batch sample:', JSON.stringify(batch.slice(0, 2), null, 2));
+          stats.errors++;
+          errors.push({
+            type: 'membership_creation',
+            error: error.message,
+            details: error.details || error.hint || 'No additional details'
+          });
+        } else {
+          membershipsCreated += data?.length || 0;
+          console.log(`[SQUARESPACE-IMPORT] Successfully created ${data?.length || 0} memberships in this batch`);
+        }
+      }
+      console.log(`[SQUARESPACE-IMPORT] Created ${membershipsCreated} memberships`);
+    }
+
+    // Update client membership statuses based on new memberships
+    if (membershipsCreated > 0) {
+      console.log('[SQUARESPACE-IMPORT] Updating client membership statuses...');
+
+      // Get unique emails from created memberships
+      const uniqueEmails = [...new Set(membershipsToCreate.map(m => m.email.toLowerCase()))];
+
+      for (const email of uniqueEmails) {
+        try {
+          // Update client to membership: true
+          const { error: updateError } = await supabase
+            .from('clients')
+            .update({ membership: true })
+            .eq('email', email);
+
+          if (updateError) {
+            console.error(`[SQUARESPACE-IMPORT] Error updating membership status for ${email}:`, updateError);
+          }
+        } catch (updateErr) {
+          console.error(`[SQUARESPACE-IMPORT] Error updating client ${email}:`, updateErr);
+        }
+      }
+
+      console.log(`[SQUARESPACE-IMPORT] Updated membership status for ${uniqueEmails.length} clients`);
+    }
+
     // Return results
     return addSecurityHeaders(NextResponse.json({
       success: true,
-      message: 'Historical import completed - clients created and linked to existing memberships by email',
+      message: 'Import completed - clients and memberships created',
       stats: {
         ...stats,
-        clientsActuallyCreated: clientsCreated
+        clientsActuallyCreated: clientsCreated,
+        membershipsActuallyCreated: membershipsCreated
       },
       errors: errors.length > 0 ? errors.slice(0, 10) : undefined
     }));
@@ -247,7 +353,7 @@ export async function POST(request: NextRequest) {
 // GET endpoint for status/help
 export async function GET() {
   return addSecurityHeaders(NextResponse.json({
-    message: 'Squarespace Historical Import Endpoint',
+    message: 'Squarespace Order Import Endpoint',
     usage: {
       method: 'POST',
       headers: {
@@ -255,14 +361,17 @@ export async function GET() {
       },
       queryParams: {
         dryRun: 'true/false - Preview without making changes (default: false)',
-        limit: 'number - Limit orders to process (default: all)'
+        limit: 'number - Limit orders to process (default: all)',
+        modifiedAfter: 'ISO 8601 date - Only fetch orders modified after this date (e.g., 2026-01-20T00:00:00Z)'
       }
     },
     examples: {
       dryRun: '/api/squarespace/import-historical?dryRun=true',
       limited: '/api/squarespace/import-historical?limit=50',
+      recent: '/api/squarespace/import-historical?modifiedAfter=2026-01-20T00:00:00Z',
       full: '/api/squarespace/import-historical'
-    }
+    },
+    description: 'Fetches orders from Squarespace and creates client and membership records. Use modifiedAfter for automated polling of recent orders.'
   }));
 }
 

@@ -1,11 +1,13 @@
 import { NextResponse } from 'next/server';
 
 export async function GET() {
-  // Test data that matches your Make.com format
+  // Test data that matches your Make.com format (with enhanced name fields)
   const testData = {
     email: "test@example.com",
     date: new Date().toISOString(),
-    amount: 25.00
+    amount: 25.00,
+    name: "Test User", // Full name from Stripe
+    postcode: "SW1A 1AA"
   };
 
   try {

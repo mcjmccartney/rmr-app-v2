@@ -29,6 +29,11 @@ export async function POST(request: NextRequest) {
     const amountStr = sanitizeString(body.amount || '');
     const postcode = sanitizeString(body.postcode || '');
 
+    // Optional: Extract name fields if provided by Make.com
+    const firstName = sanitizeString(body.firstName || body.first_name || '');
+    const lastName = sanitizeString(body.lastName || body.last_name || '');
+    const fullName = sanitizeString(body.name || ''); // Stripe often provides full name
+
     // Validate required fields
     if (!email || !dateStr || !amountStr) {
       return addSecurityHeaders(NextResponse.json(
@@ -157,18 +162,37 @@ export async function POST(request: NextRequest) {
 
           // Create a basic client profile for the new member
           try {
-            // Extract first name, last name from email if possible, or use defaults
-            const emailParts = email.split('@')[0];
-            const nameParts = emailParts.split(/[._-]/);
+            // Determine first name and last name
+            let clientFirstName = '';
+            let clientLastName = '';
 
-            const firstName = nameParts[0] ? nameParts[0].charAt(0).toUpperCase() + nameParts[0].slice(1) : 'New';
-            const lastName = nameParts[1] ? nameParts[1].charAt(0).toUpperCase() + nameParts[1].slice(1) : 'Member';
+            // Priority 1: Use firstName and lastName if provided by Make.com
+            if (firstName && lastName) {
+              clientFirstName = firstName;
+              clientLastName = lastName;
+              console.log('Using provided first and last name from webhook');
+            }
+            // Priority 2: Parse fullName if provided (e.g., "Tracey Heyworth")
+            else if (fullName) {
+              const nameParts = fullName.trim().split(/\s+/);
+              clientFirstName = nameParts[0] || 'New';
+              clientLastName = nameParts.slice(1).join(' ') || 'Member';
+              console.log('Parsed full name from webhook:', fullName);
+            }
+            // Priority 3: Extract from email as fallback
+            else {
+              const emailParts = email.split('@')[0];
+              const nameParts = emailParts.split(/[._-]/);
+              clientFirstName = nameParts[0] ? nameParts[0].charAt(0).toUpperCase() + nameParts[0].slice(1) : 'New';
+              clientLastName = nameParts[1] ? nameParts[1].charAt(0).toUpperCase() + nameParts[1].slice(1) : 'Member';
+              console.log('Extracted name from email as fallback');
+            }
 
             const { data: newClient, error: createError } = await supabase
               .from('clients')
               .insert({
-                first_name: firstName,
-                last_name: lastName,
+                first_name: clientFirstName,
+                last_name: clientLastName,
                 email: email,
                 address: postcode || '', // Use address field instead of non-existent postcode field
                 active: true,
@@ -184,9 +208,10 @@ export async function POST(request: NextRequest) {
               foundClientId = newClient[0]?.id;
               console.log('Successfully created new client for member:', {
                 email: email,
-                firstName,
-                lastName,
-                clientId: newClient[0]?.id
+                firstName: clientFirstName,
+                lastName: clientLastName,
+                clientId: newClient[0]?.id,
+                nameSource: firstName && lastName ? 'webhook-split' : fullName ? 'webhook-full' : 'email-parsed'
               });
             }
           } catch (createClientError) {

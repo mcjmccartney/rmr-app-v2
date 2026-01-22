@@ -350,6 +350,41 @@ export async function POST(request: NextRequest) {
       // Continue with webhook response even if membership update fails
     }
 
+    // Sync Squarespace orders (fetch new orders from last 48 hours)
+    console.log('[DAILY-WEBHOOKS] Starting Squarespace order sync...');
+    let squarespaceResult = null;
+
+    try {
+      const webhookApiKey = process.env.WEBHOOK_API_KEY;
+      if (webhookApiKey) {
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://rmrcms.vercel.app';
+        const syncUrl = `${baseUrl}/api/squarespace-sync`;
+
+        const syncResponse = await fetch(syncUrl, {
+          method: 'POST',
+          headers: {
+            'x-api-key': webhookApiKey,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (syncResponse.ok) {
+          squarespaceResult = await syncResponse.json();
+          console.log('[DAILY-WEBHOOKS] Squarespace sync completed:', {
+            membershipsCreated: squarespaceResult.result?.membershipsCreated || 0,
+            clientsCreated: squarespaceResult.result?.clientsCreated || 0
+          });
+        } else {
+          console.error('[DAILY-WEBHOOKS] Squarespace sync failed:', syncResponse.status);
+        }
+      } else {
+        console.warn('[DAILY-WEBHOOKS] WEBHOOK_API_KEY not configured - skipping Squarespace sync');
+      }
+    } catch (squarespaceError) {
+      console.error('[DAILY-WEBHOOKS] Squarespace sync error:', squarespaceError);
+      // Continue even if Squarespace sync fails
+    }
+
     return NextResponse.json({
       success: true,
       message: `Daily webhooks completed: ${totalProcessed} sessions processed, ${membershipUpdated} memberships updated`,
@@ -359,7 +394,12 @@ export async function POST(request: NextRequest) {
         totalProcessed,
         successCount: totalSuccess,
         failureCount: totalFailure,
-        membershipUpdated
+        membershipUpdated,
+        squarespaceSync: squarespaceResult ? {
+          membershipsCreated: squarespaceResult.result?.membershipsCreated || 0,
+          clientsCreated: squarespaceResult.result?.clientsCreated || 0,
+          totalOrders: squarespaceResult.result?.totalOrders || 0
+        } : null
       },
       results: {
         sevenDayWebhooks: sevenDayResult,
