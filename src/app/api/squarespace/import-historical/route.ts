@@ -120,9 +120,11 @@ export async function POST(request: NextRequest) {
     console.log(`[SQUARESPACE-IMPORT] Found ${existingClients?.length || 0} existing clients`);
 
     // Get existing memberships to check for duplicates
+    // Note: Supabase has a default limit, so we need to explicitly request all records
     const { data: existingMemberships, error: membershipsError } = await supabase
       .from('memberships')
-      .select('email, date, id');
+      .select('email, date, id')
+      .limit(100000); // Get all memberships (no pagination)
 
     if (membershipsError) {
       console.error('[SQUARESPACE-IMPORT] Error fetching existing memberships:', membershipsError);
