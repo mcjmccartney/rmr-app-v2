@@ -72,7 +72,9 @@ export async function POST(request: NextRequest) {
       if (cursor) {
         url = `https://api.squarespace.com/1.0/commerce/orders?cursor=${cursor}`;
       } else if (modifiedAfter) {
-        url = `https://api.squarespace.com/1.0/commerce/orders?modifiedAfter=${modifiedAfter}`;
+        // Squarespace requires both modifiedAfter and modifiedBefore
+        const modifiedBefore = new Date().toISOString();
+        url = `https://api.squarespace.com/1.0/commerce/orders?modifiedAfter=${modifiedAfter}&modifiedBefore=${modifiedBefore}`;
       } else {
         url = 'https://api.squarespace.com/1.0/commerce/orders';
       }
