@@ -15,6 +15,7 @@ import RichTextEditor from '@/components/RichTextEditor';
 import ActionPointLibraryModal from '@/components/modals/ActionPointLibraryModal';
 import DogClubGuidesModal from '@/components/modals/DogClubGuidesModal';
 import { DOG_CLUB_GUIDES } from '@/data/dogClubGuides';
+import { getSessionDogName as getSessionDogNameUtil } from '@/utils/dogNameUtils';
 // import SessionPlanPreviewModal from '@/components/modals/SessionPlanPreviewModal';
 
 function SessionPlanContent() {
@@ -319,42 +320,7 @@ function SessionPlanContent() {
   // (currentSession and currentClient moved up for scope)
 
   const getSessionDogName = (): string => {
-    // If session has a dog name, check if it matches client's primary dog (case-insensitive)
-    // If it does, use the client's current dog name (to reflect any edits)
-    const sessionDogName = currentSession?.dogName;
-    if (sessionDogName && currentClient?.dogName) {
-      // Exact match (case-insensitive)
-      if (sessionDogName.toLowerCase() === currentClient.dogName.toLowerCase()) {
-        return currentClient.dogName; // Use client's current name (may have been edited)
-      }
-
-      // Check if the session dog name starts with the client's current dog name
-      // This handles cases like "Hetty Spaghetti" -> "Hetty"
-      if (sessionDogName.toLowerCase().startsWith(currentClient.dogName.toLowerCase() + ' ')) {
-        return currentClient.dogName; // Use the updated shorter name
-      }
-
-      // Check if session dog matches any of the other dogs
-      if (currentClient.otherDogs && Array.isArray(currentClient.otherDogs)) {
-        // Exact match
-        const matchingOtherDog = currentClient.otherDogs.find(
-          dog => dog.toLowerCase() === sessionDogName.toLowerCase()
-        );
-        if (matchingOtherDog) {
-          return matchingOtherDog; // Use the current name from otherDogs array
-        }
-
-        // Check if session dog name starts with any of the other dogs
-        const partialMatchOtherDog = currentClient.otherDogs.find(
-          dog => sessionDogName.toLowerCase().startsWith(dog.toLowerCase() + ' ')
-        );
-        if (partialMatchOtherDog) {
-          return partialMatchOtherDog; // Use the updated shorter name
-        }
-      }
-    }
-    // Fallback to session dog name, then client primary dog name
-    return sessionDogName || currentClient?.dogName || 'Unknown Dog';
+    return getSessionDogNameUtil(currentSession?.dogName, currentClient);
   };
 
   // Save function that navigates away (for the main Save button)

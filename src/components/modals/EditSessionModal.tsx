@@ -10,6 +10,7 @@ import SearchableDropdown from '@/components/ui/SearchableDropdown';
 import { generateHourOptions, generateMinuteOptions, sessionTypeOptions } from '@/utils/timeOptions';
 import { formatClientWithAllDogs, formatClientWithSelectedDog } from '@/utils/dateFormatting';
 import { calculateQuote, getTravelExpenseCost } from '@/utils/pricing';
+import { getSessionDogName } from '@/utils/dogNameUtils';
 
 
 interface EditSessionModalProps {
@@ -151,22 +152,7 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
       setSelectedClient(client || null);
 
       // Get the correct dog name (prioritize client's current name)
-      let dogName = session.dogName || '';
-      if (session.dogName && client) {
-        // Check if session dog matches client's primary dog (case-insensitive)
-        if (client.dogName && session.dogName.toLowerCase() === client.dogName.toLowerCase()) {
-          dogName = client.dogName; // Use client's current name (may have been edited)
-        }
-        // Check if session dog matches any of the other dogs
-        else if (client.otherDogs && Array.isArray(client.otherDogs)) {
-          const matchingOtherDog = client.otherDogs.find(
-            dog => dog.toLowerCase() === session.dogName!.toLowerCase()
-          );
-          if (matchingOtherDog) {
-            dogName = matchingOtherDog; // Use the current name from otherDogs array
-          }
-        }
-      }
+      const dogName = getSessionDogName(session.dogName, client);
 
       setFormData({
         clientId: session.clientId || '', // Handle optional clientId for Group/RMR Live sessions

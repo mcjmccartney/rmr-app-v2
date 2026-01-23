@@ -7,6 +7,7 @@ import { X, Download, Edit3 } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import SafeHtmlRenderer from '@/components/SafeHtmlRenderer';
 import RichTextEditor from '@/components/RichTextEditor';
+import { getSessionDogName } from '@/utils/dogNameUtils';
 
 interface SessionPlanPreviewProps {
   sessionPlan: SessionPlan;
@@ -41,8 +42,8 @@ export default function SessionPlanPreview({
   onSavePDF
 }: SessionPlanPreviewProps) {
   const { state } = useApp();
-  // Get session-specific dog name (session.dogName takes priority over client.dogName)
-  const dogName = session.dogName || client.dogName || 'Unknown Dog';
+  // Get session-specific dog name with smart matching for name changes
+  const dogName = getSessionDogName(session.dogName, client);
   const sessionNumber = sessionPlan.sessionNumber || 1;
   const ownerName = `${client.firstName} ${client.lastName}`;
 

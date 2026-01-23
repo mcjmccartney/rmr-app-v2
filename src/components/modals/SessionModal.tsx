@@ -8,6 +8,7 @@ import { formatDateTime, formatClientWithAllDogs } from '@/utils/dateFormatting'
 import { paymentService } from '@/services/paymentService';
 import { sessionService } from '@/services/sessionService';
 import { Circle, CircleSlash } from 'lucide-react';
+import { getSessionDogName as getSessionDogNameUtil } from '@/utils/dogNameUtils';
 
 interface SessionModalProps {
   session: Session | null;
@@ -54,34 +55,8 @@ export default function SessionModal({ session, isOpen, onClose, onEditSession, 
       (client.behaviouralBriefId ? state.behaviouralBriefs.find(b => b.id === client.behaviouralBriefId) : null)
     : null;
 
-  // Helper function to get the correct dog name (prioritizes client's current name over session's stored name)
-  const getSessionDogName = (): string => {
-    const sessionDogName = session.dogName;
-    if (!sessionDogName) {
-      return client?.dogName || '';
-    }
-    if (!client) {
-      return sessionDogName;
-    }
-    // Check if session dog matches client's primary dog (case-insensitive)
-    if (client.dogName && sessionDogName.toLowerCase() === client.dogName.toLowerCase()) {
-      return client.dogName; // Use client's current name (may have been edited)
-    }
-    // Check if session dog matches any of the other dogs
-    if (client.otherDogs && Array.isArray(client.otherDogs)) {
-      const matchingOtherDog = client.otherDogs.find(
-        dog => dog.toLowerCase() === sessionDogName.toLowerCase()
-      );
-      if (matchingOtherDog) {
-        return matchingOtherDog; // Use the current name from otherDogs array
-      }
-    }
-    // Fallback to session's dog name
-    return sessionDogName;
-  };
-
   // Get the specific dog name for this session
-  const sessionDogName = getSessionDogName();
+  const sessionDogName = getSessionDogNameUtil(session.dogName, client);
 
   // Comprehensive questionnaire matching function
   const findQuestionnaireForSession = (client: any, dogName: string, questionnaires: any[]) => {

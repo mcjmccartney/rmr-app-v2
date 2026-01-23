@@ -5,6 +5,7 @@ import { useParams, useSearchParams } from 'next/navigation';
 import { SessionPlan, Session, Client, ActionPoint } from '@/types';
 import SafeHtmlRenderer from '@/components/SafeHtmlRenderer';
 import { cooperLtBT } from '@/app/fonts';
+import { getSessionDogName } from '@/utils/dogNameUtils';
 
 interface EditableActionPoint {
   header: string;
@@ -464,7 +465,7 @@ export default function SessionPlanPreviewPage() {
         }
         setEditableActionPoints(aps);
 
-        const dogName = sess.dog_name || cli.dog_name || "Dog";
+        const dogName = getSessionDogName(sess.dog_name, cli);
         setTitle(`Session ${plan.session_number} - ${dogName}`);
 
         setLoading(false);
