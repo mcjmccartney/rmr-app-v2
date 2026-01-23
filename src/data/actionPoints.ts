@@ -90,7 +90,7 @@ export const predefinedActionPoints: ActionPoint[] = [
   {
     id: 'FSLTl8VETe-PuACfmZP3vg',
     header: 'Build Patience in Tiny Doses',
-    details: 'Patience is a wonderful skill to have. Build it up in small doses, being sure to get ahead of any discomfort. If Mila always expects to feel uncomfortable while waiting, [he] will anticipate it and become less patient.\n\nIf you know [his] limit is, say 30 seconds, make sure you go after 20 seconds. Then next time, try 25 (literally set a stopwatch, it really helps!) then gradually build it, always getting up/leaving BEFORE [he] gets frustrated.'
+    details: 'Patience is a wonderful skill to have. Build it up in small doses, being sure to get ahead of any discomfort. If [Dog Name] always expects to feel uncomfortable while waiting, [he/she] will anticipate it and become less patient.\n\nIf you know [his/her] limit is, say 30 seconds, make sure you go after 20 seconds. Then next time, try 25 (literally set a stopwatch, it really helps!) then gradually build it, always getting up/leaving BEFORE [he/she] gets frustrated.'
   }
 ];
 
