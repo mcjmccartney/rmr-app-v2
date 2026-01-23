@@ -1,12 +1,12 @@
 <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
   <!-- Green background -->
   <rect width="32" height="32" fill="#5a6f54" rx="4"/>
-
+  
   <!-- Simplified paw print in terracotta -->
   <g fill="#B85450">
     <!-- Main pad -->
     <ellipse cx="16" cy="20" rx="5" ry="6"/>
-
+    
     <!-- Three toes (simplified) -->
     <circle cx="10" cy="12" r="2.5"/>
     <circle cx="16" cy="10" r="2.5"/>
