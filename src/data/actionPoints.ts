@@ -9,7 +9,7 @@ export const predefinedActionPoints: ActionPoint[] = [
   },
   {
     id: 'eGARTzfTS9SXyAkSN2OTpg',
-    header: 'Help {{Dog}} Calm {{Self}} Down',
+    header: 'Help [Dog Name] Calm [him/her]self Down',
     details: 'Sniffing, licking and chewing all release soothing hormones in a dog\'s brain. Try and encourage [Dog Name] to do these activities when [he/she] is feeling overwhelmed.'
   },
   {
@@ -34,7 +34,7 @@ export const predefinedActionPoints: ActionPoint[] = [
   },
   {
     id: 'HnDvny7QTC6R2HUyitw6Tg',
-    header: 'Increase {{Dog}}\'s Exercise',
+    header: 'Increase [Dog Name]\'s Exercise',
     details: 'Exercise could mean actual walking time, sniffing time, or simply giving [him/her] new places to explore. Mental stimulation is just as tiring as physical exercise.'
   },
   {
@@ -44,12 +44,12 @@ export const predefinedActionPoints: ActionPoint[] = [
   },
   {
     id: 'CSozTocJTHOlQyk9wgMZBw',
-    header: 'Show {{Dog}} You Hear {{Him}}',
+    header: 'Show [Dog Name] You Hear [him/her]',
     details: 'By closely watching body language, you can show [Dog Name] that [he/she] doesn\'t need to escalate behaviours to get your attention.'
   },
   {
     id: 'ybEp-4HqSE2lBxFMnhYMLw',
-    header: 'Keep {{Dog}} Below Threshold',
+    header: 'Keep [Dog Name] Below Threshold',
     details: 'This is the most important thing - make sure there is no point during training in which [Dog Name] goes over threshold and becomes reactive.'
   },
   {
@@ -100,28 +100,23 @@ export function personalizeActionPoint(actionPoint: ActionPoint, dogName: string
     ? { he: 'he', him: 'him', his: 'his', self: 'himself' }
     : { he: 'she', him: 'her', his: 'her', self: 'herself' };
 
-  const personalizedHeader = actionPoint.header
-    .replace(/\{\{Dog\}\}/g, dogName)
-    .replace(/\{\{Self\}\}/g, pronouns.self)
-    .replace(/\{\{Him\}\}/g, pronouns.him)
-    // Handle simple bracket pronouns like [he], [his], [him]
-    .replace(/\[he\]/g, pronouns.he)
-    .replace(/\[his\]/g, pronouns.his)
-    .replace(/\[him\]/g, pronouns.him);
-
-  const personalizedDetails = actionPoint.details
-    .replace(/\[Dog Name\]/g, dogName)
-    .replace(/\[he\/she\]/g, pronouns.he)
-    .replace(/\[him\/her\]/g, pronouns.him)
-    .replace(/\[his\/her\]/g, pronouns.his)
-    // Handle simple bracket pronouns like [he], [his], [him]
-    .replace(/\[he\]/g, pronouns.he)
-    .replace(/\[his\]/g, pronouns.his)
-    .replace(/\[him\]/g, pronouns.him);
+  // Apply all replacements to both header and details
+  // Using bracket-style placeholders consistently (same as in details)
+  const replaceAll = (text: string): string => {
+    return text
+      .replace(/\[Dog Name\]/g, dogName)
+      .replace(/\[he\/she\]/g, pronouns.he)
+      .replace(/\[him\/her\]/g, pronouns.him)
+      .replace(/\[his\/her\]/g, pronouns.his)
+      // Handle simple bracket pronouns like [he], [his], [him]
+      .replace(/\[he\]/g, pronouns.he)
+      .replace(/\[his\]/g, pronouns.his)
+      .replace(/\[him\]/g, pronouns.him);
+  };
 
   return {
     ...actionPoint,
-    header: personalizedHeader,
-    details: personalizedDetails
+    header: replaceAll(actionPoint.header),
+    details: replaceAll(actionPoint.details)
   };
 }
