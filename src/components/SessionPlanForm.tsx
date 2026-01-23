@@ -134,7 +134,45 @@ export default function SessionPlanForm({ session, client, existingPlan, onClose
     }
   };
 
-  const dogName = client.dogName || 'Unknown Dog';
+  // Get the correct dog name, handling cases where the client's dog name has been updated
+  const getSessionDogName = (): string => {
+    const sessionDogName = session.dogName;
+    if (sessionDogName && client?.dogName) {
+      // Exact match (case-insensitive)
+      if (sessionDogName.toLowerCase() === client.dogName.toLowerCase()) {
+        return client.dogName; // Use client's current name (may have been edited)
+      }
+
+      // Check if the session dog name starts with the client's current dog name
+      // This handles cases like "Hetty Spaghetti" -> "Hetty"
+      if (sessionDogName.toLowerCase().startsWith(client.dogName.toLowerCase() + ' ')) {
+        return client.dogName; // Use the updated shorter name
+      }
+
+      // Check if session dog matches any of the other dogs
+      if (client.otherDogs && Array.isArray(client.otherDogs)) {
+        // Exact match
+        const matchingOtherDog = client.otherDogs.find(
+          dog => dog.toLowerCase() === sessionDogName.toLowerCase()
+        );
+        if (matchingOtherDog) {
+          return matchingOtherDog; // Use the current name from otherDogs array
+        }
+
+        // Check if session dog name starts with any of the other dogs
+        const partialMatchOtherDog = client.otherDogs.find(
+          dog => sessionDogName.toLowerCase().startsWith(dog.toLowerCase() + ' ')
+        );
+        if (partialMatchOtherDog) {
+          return partialMatchOtherDog; // Use the updated shorter name
+        }
+      }
+    }
+    // Fallback to session dog name, then client primary dog name
+    return sessionDogName || client?.dogName || 'Unknown Dog';
+  };
+
+  const dogName = getSessionDogName();
   const sessionNumber = sessionPlan.sessionNumber || 1;
 
   return (
