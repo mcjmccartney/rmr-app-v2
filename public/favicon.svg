@@ -1,31 +1,5 @@
-<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
-  <!-- Green background -->
-  <rect width="512" height="512" fill="#6B8E6B"/>
-  
-  <!-- Paw print -->
-  <g fill="#B85450">
-    <!-- Main pad -->
-    <ellipse cx="256" cy="320" rx="45" ry="55"/>
-    
-    <!-- Top left toe -->
-    <ellipse cx="180" cy="220" rx="25" ry="35" transform="rotate(-15 180 220)"/>
-    
-    <!-- Top center toe -->
-    <ellipse cx="256" cy="180" rx="28" ry="40"/>
-    
-    <!-- Top right toe -->
-    <ellipse cx="332" cy="220" rx="25" ry="35" transform="rotate(15 332 220)"/>
-  </g>
-  
-  <!-- RMR text -->
-  <g fill="white" font-family="serif" font-size="120" font-weight="bold" text-anchor="middle">
-    <!-- R -->
-    <text x="140" y="300" font-size="140">R</text>
-    
-    <!-- M -->
-    <text x="256" y="300" font-size="140">M</text>
-    
-    <!-- R -->
-    <text x="372" y="300" font-size="140">R</text>
-  </g>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#5a6f54"/>
+  <image href="/icons/icon-512x512.png" width="512" height="512"/>
 </svg>
+
