@@ -119,34 +119,48 @@ export async function POST(request: NextRequest) {
 
     try {
       // Step 1: Try to find existing client by email alias
+      console.log('[SQUARESPACE] Step 1: Checking email aliases for:', email);
       foundClientId = await clientEmailAliasService.findClientByEmail(email);
+
+      if (foundClientId) {
+        console.log('[SQUARESPACE] ✅ Found existing client via email alias:', {
+          email,
+          clientId: foundClientId
+        });
+      }
 
       // Step 2: If not found via alias, try direct email match
       if (!foundClientId) {
+        console.log('[SQUARESPACE] Step 2: Checking direct email match for:', email);
         const { data: directMatch, error: directError } = await supabase
           .from('clients')
-          .select('id, address')
+          .select('id, address, first_name, last_name')
           .eq('email', email)
           .single();
 
         if (directMatch && !directError) {
           foundClientId = directMatch.id;
-          console.log('[SQUARESPACE] Found existing client via direct email match:', email);
+          console.log('[SQUARESPACE] ✅ Found existing client via direct email match:', {
+            email,
+            clientId: foundClientId,
+            clientName: `${directMatch.first_name} ${directMatch.last_name}`
+          });
 
-          // Set up email alias for future payments
+          // Set up email alias for future payments to prevent duplicates
           try {
             await clientEmailAliasService.setupAliasesAfterMerge(
               directMatch.id,
               email,
               email
             );
-            console.log('[SQUARESPACE] Email alias set up for future payments');
+            console.log('[SQUARESPACE] ✅ Email alias set up for future payments');
           } catch (aliasError) {
-            console.error('[SQUARESPACE] Failed to set up email alias:', aliasError);
+            console.error('[SQUARESPACE] ⚠️  Failed to set up email alias:', aliasError);
+            // Continue anyway - client was found
           }
+        } else {
+          console.log('[SQUARESPACE] ℹ️  No existing client found for email:', email);
         }
-      } else {
-        console.log('[SQUARESPACE] Found existing client via email alias:', email);
       }
 
       // Step 3: If client exists, update their membership status
@@ -182,7 +196,12 @@ export async function POST(request: NextRequest) {
         }
       } else {
         // Step 4: No existing client - create new one
-        console.log('[SQUARESPACE] Creating new client for:', email);
+        console.log('[SQUARESPACE] ⚠️  No existing client found. Creating new client for:', {
+          email,
+          firstName,
+          lastName
+        });
+        console.log('[SQUARESPACE] ⚠️  If this is a duplicate, please check email aliases!');
 
         const { data: newClient, error: createError } = await supabase
           .from('clients')
@@ -197,17 +216,29 @@ export async function POST(request: NextRequest) {
           .select();
 
         if (createError) {
-          console.error('[SQUARESPACE] Error creating new client:', createError);
+          console.error('[SQUARESPACE] ❌ Error creating new client:', createError);
           // Don't throw - we'll still create the membership record
         } else if (newClient && newClient.length > 0) {
           foundClientId = newClient[0].id;
           clientWasCreated = true;
-          console.log('[SQUARESPACE] Successfully created new client:', {
+          console.log('[SQUARESPACE] ✅ Successfully created new client:', {
             email: email,
             firstName: firstName,
             lastName: lastName,
             clientId: newClient[0].id
           });
+
+          // Set up email alias for the new client
+          try {
+            await clientEmailAliasService.setupAliasesAfterMerge(
+              newClient[0].id,
+              email,
+              email
+            );
+            console.log('[SQUARESPACE] ✅ Email alias set up for new client');
+          } catch (aliasError) {
+            console.error('[SQUARESPACE] ⚠️  Failed to set up email alias for new client:', aliasError);
+          }
         }
       }
     } catch (error) {

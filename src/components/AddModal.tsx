@@ -577,6 +577,28 @@ function ClientForm({ onSubmit }: { onSubmit: () => void }) {
     e.preventDefault();
 
     try {
+      // Check if email already exists as an alias before creating
+      if (formData.email && formData.email.trim()) {
+        const { ClientEmailAliasService } = await import('@/services/clientEmailAliasService');
+        const existingClientId = await ClientEmailAliasService.findClientByEmail(formData.email.trim());
+
+        if (existingClientId) {
+          // Fetch the existing client details
+          const { clientService } = await import('@/services/clientService');
+          const existingClient = await clientService.getById(existingClientId);
+
+          if (existingClient) {
+            alert(
+              `This email is already linked to an existing client:\n\n` +
+              `${existingClient.firstName} ${existingClient.lastName}` +
+              (existingClient.dogName ? ` (${existingClient.dogName})` : '') +
+              `\n\nPlease use the existing client record or contact support if you believe this is an error.`
+            );
+            return;
+          }
+        }
+      }
+
       await createClient({
         firstName: formData.firstName,
         lastName: formData.lastName,
