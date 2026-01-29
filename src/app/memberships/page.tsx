@@ -7,6 +7,7 @@ import Header from '@/components/layout/Header';
 import { Membership, Client } from '@/types';
 import { ChevronDown, ChevronRight, CreditCard, TrendingUp, TrendingDown, Plus, MapPin } from 'lucide-react';
 import AddMembershipSidepane from '@/components/sidepanes/AddMembershipSidepane';
+import ClientModal from '@/components/modals/ClientModal';
 import EditClientModal from '@/components/modals/EditClientModal';
 import { formatClientWithAllDogs, getClientDogsPart } from '@/utils/dateFormatting';
 
@@ -30,6 +31,7 @@ export default function MembershipsPage() {
   const [showAddMembershipSidepane, setShowAddMembershipSidepane] = useState(false);
   const [showMembersMap, setShowMembersMap] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [showClientModal, setShowClientModal] = useState(false);
   const [showEditClientModal, setShowEditClientModal] = useState(false);
 
   const filteredMemberships = state.memberships.filter(membership => {
@@ -136,8 +138,24 @@ export default function MembershipsPage() {
   const handleMembershipClick = (client: Client | undefined) => {
     if (client) {
       setSelectedClient(client);
-      setShowEditClientModal(true);
+      setShowClientModal(true);
     }
+  };
+
+  const handleEditClient = (client: Client) => {
+    setShowClientModal(false);
+    setSelectedClient(client);
+    setShowEditClientModal(true);
+  };
+
+  const handleCloseClientModal = () => {
+    setShowClientModal(false);
+    setSelectedClient(null);
+  };
+
+  const handleCloseEditClientModal = () => {
+    setShowEditClientModal(false);
+    setSelectedClient(null);
   };
 
   return (
@@ -296,13 +314,17 @@ export default function MembershipsPage() {
         onClose={() => setShowMembersMap(false)}
       />
 
+      <ClientModal
+        client={selectedClient}
+        isOpen={showClientModal}
+        onClose={handleCloseClientModal}
+        onEditClient={handleEditClient}
+      />
+
       <EditClientModal
         client={selectedClient}
         isOpen={showEditClientModal}
-        onClose={() => {
-          setShowEditClientModal(false);
-          setSelectedClient(null);
-        }}
+        onClose={handleCloseEditClientModal}
       />
     </div>
   );
