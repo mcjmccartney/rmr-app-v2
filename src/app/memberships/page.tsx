@@ -280,7 +280,7 @@ export default function MembershipsPage() {
                                 <p className="text-sm text-gray-500">
                                   {new Date(membership.date).toLocaleDateString('en-GB')}
                                 </p>
-                                {client && client.email !== membership.email && (
+                                {client && client.email?.toLowerCase() !== membership.email.toLowerCase() && (
                                   <p className="text-xs text-gray-400">
                                     via {membership.email}
                                   </p>
