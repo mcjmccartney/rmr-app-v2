@@ -4,9 +4,10 @@ import { useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useApp } from '@/context/AppContext';
 import Header from '@/components/layout/Header';
-import { Membership } from '@/types';
+import { Membership, Client } from '@/types';
 import { ChevronDown, ChevronRight, CreditCard, TrendingUp, TrendingDown, Plus, MapPin } from 'lucide-react';
 import AddMembershipSidepane from '@/components/sidepanes/AddMembershipSidepane';
+import EditClientModal from '@/components/modals/EditClientModal';
 import { formatClientWithAllDogs, getClientDogsPart } from '@/utils/dateFormatting';
 
 // Dynamic import for heavy map component (includes Mapbox GL JS)
@@ -28,6 +29,8 @@ export default function MembershipsPage() {
   const [expandedMonths, setExpandedMonths] = useState<Set<string>>(new Set());
   const [showAddMembershipSidepane, setShowAddMembershipSidepane] = useState(false);
   const [showMembersMap, setShowMembersMap] = useState(false);
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [showEditClientModal, setShowEditClientModal] = useState(false);
 
   const filteredMemberships = state.memberships.filter(membership => {
     const searchTerm = searchQuery.toLowerCase();
@@ -128,6 +131,13 @@ export default function MembershipsPage() {
     }
 
     return ((currentCount - previousCount) / previousCount) * 100;
+  };
+
+  const handleMembershipClick = (client: Client | undefined) => {
+    if (client) {
+      setSelectedClient(client);
+      setShowEditClientModal(true);
+    }
   };
 
   return (
@@ -232,7 +242,10 @@ export default function MembershipsPage() {
                         return (
                           <div
                             key={membership.id}
-                            className="p-4 border-b border-gray-100 last:border-b-0"
+                            onClick={() => handleMembershipClick(client)}
+                            className={`p-4 border-b border-gray-100 last:border-b-0 transition-colors ${
+                              client ? 'cursor-pointer hover:bg-gray-50 active:bg-gray-100' : ''
+                            }`}
                           >
                             <div className="flex justify-between items-start">
                               <div>
@@ -281,6 +294,15 @@ export default function MembershipsPage() {
       <MembersMapModal
         isOpen={showMembersMap}
         onClose={() => setShowMembersMap(false)}
+      />
+
+      <EditClientModal
+        client={selectedClient}
+        isOpen={showEditClientModal}
+        onClose={() => {
+          setShowEditClientModal(false);
+          setSelectedClient(null);
+        }}
       />
     </div>
   );

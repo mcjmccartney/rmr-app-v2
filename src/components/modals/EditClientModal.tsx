@@ -5,6 +5,7 @@ import { Client } from '@/types';
 import { useApp } from '@/context/AppContext';
 import SlideUpModal from './SlideUpModal';
 import { ClientEmailAliasService } from '@/services/clientEmailAliasService';
+import { getMostRecentMembership, updateFutureSessionPricesForMember } from '@/utils/membershipPricing';
 import { X, Plus } from 'lucide-react';
 
 interface EditClientModalProps {
@@ -153,6 +154,34 @@ export default function EditClientModal({ client, isOpen, onClose }: EditClientM
 
     try {
       await updateClient(client.id, updates);
+
+      // If membership was just enabled, update future session prices
+      if (formData.membership && !client.membership) {
+        try {
+          console.log('[EDIT CLIENT] Membership enabled - updating future session prices...');
+
+          // Get the most recent membership payment date
+          const recentMembership = await getMostRecentMembership(client.id);
+
+          if (recentMembership) {
+            const { updatedCount } = await updateFutureSessionPricesForMember(
+              client.id,
+              recentMembership.date
+            );
+            console.log(`[EDIT CLIENT] ✅ Updated ${updatedCount} future session price(s)`);
+
+            if (updatedCount > 0) {
+              alert(`Client updated! Updated ${updatedCount} future session price(s) to member rates.`);
+            }
+          } else {
+            console.log('[EDIT CLIENT] No membership payment found - cannot update session prices');
+          }
+        } catch (pricingError) {
+          console.error('[EDIT CLIENT] Failed to update future session prices:', pricingError);
+          // Don't fail the whole operation - client was updated successfully
+        }
+      }
+
       onClose();
     } catch (error) {
       console.error('Failed to update client:', error);

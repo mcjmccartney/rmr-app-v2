@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { clientEmailAliasService } from '@/services/clientEmailAliasService';
+import { updateFutureSessionPricesForMember } from '@/utils/membershipPricing';
 import { sanitizeEmail, sanitizeString, addSecurityHeaders } from '@/lib/security';
 import crypto from 'crypto';
 
@@ -271,6 +272,21 @@ export async function POST(request: NextRequest) {
       amount,
       date: membershipData.date
     });
+
+    // Update future session prices if client exists
+    if (foundClientId) {
+      try {
+        console.log('[SQUARESPACE] Updating future session prices for member...');
+        const { updatedCount } = await updateFutureSessionPricesForMember(
+          foundClientId,
+          membershipData.date
+        );
+        console.log(`[SQUARESPACE] ✅ Updated ${updatedCount} future session price(s)`);
+      } catch (pricingError) {
+        console.error('[SQUARESPACE] ⚠️  Failed to update future session prices:', pricingError);
+        // Don't fail the webhook - membership was created successfully
+      }
+    }
 
     // Return success response
     return addSecurityHeaders(NextResponse.json({

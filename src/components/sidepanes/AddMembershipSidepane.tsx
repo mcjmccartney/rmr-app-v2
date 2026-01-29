@@ -6,6 +6,7 @@ import { Client } from '@/types';
 import SlideUpModal from '@/components/modals/SlideUpModal';
 import SearchableDropdown from '@/components/ui/SearchableDropdown';
 import { formatClientWithAllDogs } from '@/utils/dateFormatting';
+import { updateFutureSessionPricesForMember } from '@/utils/membershipPricing';
 
 interface AddMembershipSidepaneProps {
   isOpen: boolean;
@@ -67,6 +68,23 @@ export default function AddMembershipSidepane({ isOpen, onClose }: AddMembership
         date: formData.date, // YYYY-MM-DD format
         amount: amount
       });
+
+      // Update future session prices for this member
+      try {
+        console.log('[ADD MEMBERSHIP] Updating future session prices...');
+        const { updatedCount } = await updateFutureSessionPricesForMember(
+          formData.clientId,
+          formData.date
+        );
+        console.log(`[ADD MEMBERSHIP] ✅ Updated ${updatedCount} future session price(s)`);
+
+        if (updatedCount > 0) {
+          alert(`Membership created! Updated ${updatedCount} future session price(s) to member rates.`);
+        }
+      } catch (pricingError) {
+        console.error('[ADD MEMBERSHIP] Failed to update future session prices:', pricingError);
+        // Don't fail the whole operation - membership was created successfully
+      }
 
       // Reset form
       setFormData({
