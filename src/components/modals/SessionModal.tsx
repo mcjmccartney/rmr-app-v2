@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import { Session } from '@/types';
 import { useApp } from '@/context/AppContext';
 import SlideUpModal from './SlideUpModal';
@@ -21,7 +21,7 @@ interface SessionModalProps {
   onViewBehaviourQuestionnaire?: (behaviourQuestionnaireId: string) => void;
 }
 
-export default function SessionModal({ session, isOpen, onClose, onEditSession, onEditClient, onCreateSessionPlan, onViewBehaviouralBrief, onViewBehaviourQuestionnaire }: SessionModalProps) {
+const SessionModal = memo(function SessionModal({ session, isOpen, onClose, onEditSession, onEditClient, onCreateSessionPlan, onViewBehaviouralBrief, onViewBehaviourQuestionnaire }: SessionModalProps) {
   const { state, deleteSession, updateSession } = useApp();
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -520,4 +520,6 @@ export default function SessionModal({ session, isOpen, onClose, onEditSession, 
       </div>
     </SlideUpModal>
   );
-}
+});
+
+export default SessionModal;

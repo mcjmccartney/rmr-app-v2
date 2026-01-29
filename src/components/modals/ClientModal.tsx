@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Client, Session, Membership } from '@/types';
 import { useApp } from '@/context/AppContext';
@@ -16,7 +16,7 @@ interface ClientModalProps {
   onViewBehaviourQuestionnaire?: (behaviourQuestionnaireId: string) => void;
 }
 
-export default function ClientModal({ client, isOpen, onClose, onEditClient, onViewBehaviouralBrief, onViewBehaviourQuestionnaire }: ClientModalProps) {
+const ClientModal = memo(function ClientModal({ client, isOpen, onClose, onEditClient, onViewBehaviouralBrief, onViewBehaviourQuestionnaire }: ClientModalProps) {
   const { state, updateClient, deleteClient, getMembershipsByClientId, getMembershipsByEmail, getMembershipsByClientIdWithAliases } = useApp();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'sessions' | 'memberships'>('sessions');
@@ -595,4 +595,6 @@ export default function ClientModal({ client, isOpen, onClose, onEditClient, onV
       </div>
     </SlideUpModal>
   );
-}
+});
+
+export default ClientModal;

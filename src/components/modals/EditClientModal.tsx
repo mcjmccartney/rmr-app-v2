@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo } from 'react';
 import { Client } from '@/types';
 import { useApp } from '@/context/AppContext';
 import SlideUpModal from './SlideUpModal';
@@ -14,7 +14,7 @@ interface EditClientModalProps {
   onClose: () => void;
 }
 
-export default function EditClientModal({ client, isOpen, onClose }: EditClientModalProps) {
+const EditClientModal = memo(function EditClientModal({ client, isOpen, onClose }: EditClientModalProps) {
   const { updateClient, state, loadClientEmailAliases } = useApp();
   const [formData, setFormData] = useState({
     firstName: '',
@@ -436,4 +436,6 @@ export default function EditClientModal({ client, isOpen, onClose }: EditClientM
       </form>
     </SlideUpModal>
   );
-}
+});
+
+export default EditClientModal;
