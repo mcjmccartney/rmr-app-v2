@@ -187,17 +187,29 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
 
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
 
-  // Helper function to check if this is the client's first Online or In-Person session
-  const isFirstSession = (clientId: string, sessionType: Session['sessionType']): boolean => {
+  // Helper function to check if this is the first Online or In-Person session for a specific dog
+  const isFirstSession = (clientId: string, sessionType: Session['sessionType'], dogName?: string): boolean => {
     if (sessionType !== 'Online' && sessionType !== 'In-Person') {
       return false; // Only apply first session pricing to Online and In-Person
     }
 
-    const clientSessions = state.sessions.filter(
-      s => s.clientId === clientId && (s.sessionType === 'Online' || s.sessionType === 'In-Person')
-    );
+    // If no dog name provided, use the client's primary dog
+    const client = state.clients.find(c => c.id === clientId);
+    const sessionDogName = dogName || client?.dogName || '';
 
-    return clientSessions.length === 0; // True if no existing Online/In-Person sessions
+    // Find all Online/In-Person sessions for this client + dog combination
+    const dogSessions = state.sessions.filter(s => {
+      if (s.clientId !== clientId) return false;
+      if (s.sessionType !== 'Online' && s.sessionType !== 'In-Person') return false;
+
+      // Get the dog name for this session
+      const existingSessionDogName = s.dogName || client?.dogName || '';
+
+      // Check if it's the same dog (case-insensitive)
+      return existingSessionDogName.toLowerCase().trim() === sessionDogName.toLowerCase().trim();
+    });
+
+    return dogSessions.length === 0; // True if no existing Online/In-Person sessions for this dog
   };
 
   const handleClientChange = (clientId: string) => {
@@ -207,7 +219,7 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
     // Set default dog name to primary dog if available
     const defaultDogName = client?.dogName || '';
 
-    const isFirst = isFirstSession(clientId, formData.sessionType);
+    const isFirst = isFirstSession(clientId, formData.sessionType, defaultDogName);
     // If "Apply Follow-up Rate" is checked, always use follow-up rate (isFirst = false)
     const useFirstSessionRate = applyFollowupRate ? false : isFirst;
 
@@ -224,7 +236,7 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
   };
 
   const handleSessionTypeChange = (sessionType: Session['sessionType']) => {
-    const isFirst = selectedClient ? isFirstSession(selectedClient.id, sessionType) : false;
+    const isFirst = selectedClient ? isFirstSession(selectedClient.id, sessionType, formData.dogName) : false;
     // If "Apply Follow-up Rate" is checked, always use follow-up rate (isFirst = false)
     const useFirstSessionRate = applyFollowupRate ? false : isFirst;
 
@@ -248,7 +260,7 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
 
     // Recalculate quote with new rate
     if (selectedClient) {
-      const isFirst = isFirstSession(selectedClient.id, formData.sessionType);
+      const isFirst = isFirstSession(selectedClient.id, formData.sessionType, formData.dogName);
       // If checkbox is checked, always use follow-up rate (isFirst = false)
       const useFirstSessionRate = checked ? false : isFirst;
 
@@ -266,7 +278,7 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
     const travelExpense = value as 'Zone 1' | 'Zone 2' | 'Zone 3' | 'Zone 4' | '';
 
     // Calculate base quote
-    const isFirst = selectedClient ? isFirstSession(selectedClient.id, formData.sessionType) : false;
+    const isFirst = selectedClient ? isFirstSession(selectedClient.id, formData.sessionType, formData.dogName) : false;
     const useFirstSessionRate = applyFollowupRate ? false : isFirst;
     const baseQuote = calculateQuote(formData.sessionType, selectedClient?.membership || false, useFirstSessionRate);
 
@@ -479,12 +491,12 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
         />
         {selectedClient && (
           <p className="text-sm text-gray-500 mt-1">
-            Auto-calculated: £{calculateQuote(formData.sessionType, selectedClient.membership, applyFollowupRate ? false : isFirstSession(selectedClient.id, formData.sessionType))}
+            Auto-calculated: £{calculateQuote(formData.sessionType, selectedClient.membership, applyFollowupRate ? false : isFirstSession(selectedClient.id, formData.sessionType, formData.dogName))}
             {selectedClient.membership ? ' (Member)' : ' (Non-member)'}
             {(formData.sessionType === 'Online' || formData.sessionType === 'In-Person') && (
               applyFollowupRate
                 ? ' - Follow-up Rate'
-                : isFirstSession(selectedClient.id, formData.sessionType)
+                : isFirstSession(selectedClient.id, formData.sessionType, formData.dogName)
                   ? ' - First Session'
                   : ' - Follow-up Session'
             )}
@@ -495,7 +507,7 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
       {/* Apply Follow-up Rate Checkbox - Only show for Online/In-Person first sessions */}
       {selectedClient &&
        (formData.sessionType === 'Online' || formData.sessionType === 'In-Person') &&
-       isFirstSession(selectedClient.id, formData.sessionType) && (
+       isFirstSession(selectedClient.id, formData.sessionType, formData.dogName) && (
         <div className="flex items-center">
           <input
             type="checkbox"
