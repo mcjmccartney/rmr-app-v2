@@ -117,6 +117,25 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
     }
   };
 
+  const handleDogNameChange = (dogName: string) => {
+    if (!selectedClient || !session) return;
+
+    // Check if this is the first session for this specific dog
+    const isFirst = isFirstSession(selectedClient.id, formData.sessionType as Session['sessionType'], dogName, session.id);
+    // If "Apply Follow-up Rate" is checked, always use follow-up rate (isFirst = false)
+    const useFirstSessionRate = applyFollowupRate ? false : isFirst;
+
+    // Calculate quote with travel expense
+    const baseQuote = calculateQuote(formData.sessionType as Session['sessionType'], selectedClient.membership, useFirstSessionRate);
+    const travelCost = getTravelExpenseCost(formData.travelExpense as 'Zone 1' | 'Zone 2' | 'Zone 3' | null);
+
+    setFormData({
+      ...formData,
+      dogName,
+      quote: (baseQuote + travelCost).toString()
+    });
+  };
+
   // Generate time options
   const hourOptions = generateHourOptions();
   const minuteOptions = generateMinuteOptions();
@@ -304,7 +323,7 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
             </label>
             <CustomDropdown
               value={formData.dogName}
-              onChange={(value) => setFormData({ ...formData, dogName: value })}
+              onChange={handleDogNameChange}
               options={[
                 ...(selectedClient.dogName ? [{ value: selectedClient.dogName, label: `${selectedClient.dogName} (Primary)` }] : []),
                 ...(selectedClient.otherDogs?.map((dog: string) => ({ value: dog, label: dog })) || [])

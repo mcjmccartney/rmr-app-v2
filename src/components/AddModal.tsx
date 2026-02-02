@@ -293,6 +293,25 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
     });
   };
 
+  const handleDogNameChange = (dogName: string) => {
+    if (!selectedClient) return;
+
+    // Check if this is the first session for this specific dog
+    const isFirst = isFirstSession(selectedClient.id, formData.sessionType, dogName);
+    // If "Apply Follow-up Rate" is checked, always use follow-up rate (isFirst = false)
+    const useFirstSessionRate = applyFollowupRate ? false : isFirst;
+
+    // Calculate quote with travel expense
+    const baseQuote = calculateQuote(formData.sessionType, selectedClient.membership, useFirstSessionRate);
+    const travelCost = getTravelExpenseCost(formData.travelExpense as 'Zone 1' | 'Zone 2' | 'Zone 3' | 'Zone 4' | null);
+
+    setFormData({
+      ...formData,
+      dogName,
+      quote: (baseQuote + travelCost).toString()
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -406,7 +425,7 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
           </label>
           <CustomDropdown
             value={formData.dogName}
-            onChange={(value) => setFormData({ ...formData, dogName: value })}
+            onChange={handleDogNameChange}
             options={[
               ...(selectedClient.dogName ? [{ value: selectedClient.dogName, label: `${selectedClient.dogName} (Primary)` }] : []),
               ...(selectedClient.otherDogs?.map(dog => ({ value: dog, label: dog })) || [])
