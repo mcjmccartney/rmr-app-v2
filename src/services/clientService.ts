@@ -99,6 +99,9 @@ export const clientService = {
 
   // Update existing client
   async update(id: string, updates: Partial<Client>): Promise<Client> {
+    // Get the original client data to detect dog name changes
+    const originalClient = await this.getById(id);
+
     const dbRow = clientToDbRow(updates)
 
     const { data, error } = await supabase
@@ -113,7 +116,70 @@ export const clientService = {
       throw error
     }
 
-    return dbRowToClient(data)
+    const updatedClient = dbRowToClient(data);
+
+    // If the primary dog name was changed, update all related sessions
+    if (originalClient && updates.dogName !== undefined && originalClient.dogName && updates.dogName !== originalClient.dogName) {
+      console.log(`[CLIENT UPDATE] Primary dog name changed from "${originalClient.dogName}" to "${updates.dogName}" for client ${id}`);
+
+      try {
+        // Update all sessions with the old dog name to use the new dog name
+        const { data: updatedSessions, error: sessionUpdateError } = await supabase
+          .from('sessions')
+          .update({
+            dog_name: updates.dogName,
+            updated_at: new Date().toISOString()
+          })
+          .eq('client_id', id)
+          .ilike('dog_name', originalClient.dogName) // Case-insensitive match
+          .select();
+
+        if (sessionUpdateError) {
+          console.error('[CLIENT UPDATE] Error updating session dog names:', sessionUpdateError);
+        } else {
+          console.log(`[CLIENT UPDATE] ✅ Updated ${updatedSessions?.length || 0} session(s) with new dog name "${updates.dogName}"`);
+        }
+      } catch (sessionError) {
+        console.error('[CLIENT UPDATE] Failed to update session dog names:', sessionError);
+        // Don't fail the client update if session updates fail
+      }
+    }
+
+    // If other_dogs array was changed, update sessions for those dogs too
+    if (originalClient && updates.otherDogs !== undefined && originalClient.otherDogs) {
+      // Find dogs that had their spelling changed
+      for (let i = 0; i < Math.min(originalClient.otherDogs.length, updates.otherDogs.length); i++) {
+        const oldDogName = originalClient.otherDogs[i];
+        const newDogName = updates.otherDogs[i];
+
+        // Check if this is a spelling change (case-insensitive match but different spelling)
+        if (oldDogName.toLowerCase() === newDogName.toLowerCase() && oldDogName !== newDogName) {
+          console.log(`[CLIENT UPDATE] Other dog name changed from "${oldDogName}" to "${newDogName}" for client ${id}`);
+
+          try {
+            const { data: updatedSessions, error: sessionUpdateError } = await supabase
+              .from('sessions')
+              .update({
+                dog_name: newDogName,
+                updated_at: new Date().toISOString()
+              })
+              .eq('client_id', id)
+              .ilike('dog_name', oldDogName) // Case-insensitive match
+              .select();
+
+            if (sessionUpdateError) {
+              console.error('[CLIENT UPDATE] Error updating session dog names for other dog:', sessionUpdateError);
+            } else {
+              console.log(`[CLIENT UPDATE] ✅ Updated ${updatedSessions?.length || 0} session(s) with new dog name "${newDogName}"`);
+            }
+          } catch (sessionError) {
+            console.error('[CLIENT UPDATE] Failed to update session dog names for other dog:', sessionError);
+          }
+        }
+      }
+    }
+
+    return updatedClient;
   },
 
   // Delete client
