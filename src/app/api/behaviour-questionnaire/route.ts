@@ -298,17 +298,75 @@ export async function POST(request: NextRequest) {
 
     if (questionnaireError) throw questionnaireError;
 
-    // Update client with dog name for easier lookup (if it's their first/primary dog)
-    const finalClientId = client.id;
+    // Update client's dog name to match owner's spelling from questionnaire
+    if (existingClient) {
+      const questionnaireDogName = formData.dogName.trim();
+      const currentPrimaryDog = existingClient.dogName?.trim() || '';
+      const currentOtherDogs = existingClient.otherDogs || [];
 
-    // Only update the client's primary dog name if they don't have one set yet
-    if (!client.dogName) {
-      await supabaseServiceRole
-        .from('clients')
-        .update({
-          dog_name: formData.dogName, // Set as primary dog if none exists
-        })
-        .eq('id', finalClientId);
+      // Check if questionnaire dog matches primary dog (case-insensitive)
+      if (currentPrimaryDog && currentPrimaryDog.toLowerCase() === questionnaireDogName.toLowerCase()) {
+        // Update primary dog name to match owner's spelling
+        if (currentPrimaryDog !== questionnaireDogName) {
+          await supabaseServiceRole
+            .from('clients')
+            .update({
+              dog_name: questionnaireDogName,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', existingClient.id);
+
+          console.log(`Updated primary dog name from "${currentPrimaryDog}" to "${questionnaireDogName}" for client ${existingClient.id}`);
+        }
+      }
+      // Check if questionnaire dog matches any dog in other_dogs (case-insensitive)
+      else {
+        const matchingDogIndex = currentOtherDogs.findIndex(
+          dog => dog.toLowerCase().trim() === questionnaireDogName.toLowerCase()
+        );
+
+        if (matchingDogIndex !== -1) {
+          // Update the matching dog's spelling in other_dogs array
+          const updatedOtherDogs = [...currentOtherDogs];
+          updatedOtherDogs[matchingDogIndex] = questionnaireDogName;
+
+          await supabaseServiceRole
+            .from('clients')
+            .update({
+              other_dogs: updatedOtherDogs,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', existingClient.id);
+
+          console.log(`Updated other dog name from "${currentOtherDogs[matchingDogIndex]}" to "${questionnaireDogName}" for client ${existingClient.id}`);
+        }
+        // Dog doesn't exist - add to other_dogs or set as primary if none exists
+        else if (!currentPrimaryDog) {
+          // No primary dog - set this as primary
+          await supabaseServiceRole
+            .from('clients')
+            .update({
+              dog_name: questionnaireDogName,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', existingClient.id);
+
+          console.log(`Set "${questionnaireDogName}" as primary dog for client ${existingClient.id}`);
+        } else {
+          // Add to other_dogs array
+          const updatedOtherDogs = [...currentOtherDogs, questionnaireDogName];
+
+          await supabaseServiceRole
+            .from('clients')
+            .update({
+              other_dogs: updatedOtherDogs,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', existingClient.id);
+
+          console.log(`Added "${questionnaireDogName}" to other_dogs for client ${existingClient.id}`);
+        }
+      }
     }
 
     // NEW: Populate client address if blank and this is for an existing client
