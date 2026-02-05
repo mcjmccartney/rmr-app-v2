@@ -156,11 +156,11 @@ function SessionPlanContent() {
 
           setExistingSessionPlan(existingPlan);
           setFormData({
-            mainGoal1: replaceDogNames(existingPlan.mainGoal1 || ''),
-            mainGoal2: replaceDogNames(existingPlan.mainGoal2 || ''),
-            mainGoal3: replaceDogNames(existingPlan.mainGoal3 || ''),
-            mainGoal4: replaceDogNames(existingPlan.mainGoal4 || ''),
-            explanationOfBehaviour: replaceDogNames(existingPlan.explanationOfBehaviour || ''),
+            mainGoal1: existingPlan.mainGoal1 || '',
+            mainGoal2: existingPlan.mainGoal2 || '',
+            mainGoal3: existingPlan.mainGoal3 || '',
+            mainGoal4: existingPlan.mainGoal4 || '',
+            explanationOfBehaviour: existingPlan.explanationOfBehaviour || '',
           });
           setSelectedActionPoints(existingPlan.actionPoints || []);
           setSelectedDogClubGuides(existingPlan.dogClubGuides || []);
