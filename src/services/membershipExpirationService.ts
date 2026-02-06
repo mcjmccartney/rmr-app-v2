@@ -38,11 +38,10 @@ export const membershipExpirationService = {
       const mostRecentMembership = sortedMemberships[0];
       const lastPaymentDate = new Date(mostRecentMembership.date);
 
-      // Calculate expiration date: 8:00 AM on the following day of the next month
-      // For example: payment on Dec 22 expires at 8:00 AM on Jan 23
+      // Calculate expiration date: 1 calendar month from payment date
+      // For example: payment on Jan 6 expires at 8:00 AM on Feb 7 (flagged as expired on Feb 7 morning check)
       const expirationDate = new Date(lastPaymentDate);
       expirationDate.setMonth(expirationDate.getMonth() + 1); // Next month (same day)
-      expirationDate.setDate(expirationDate.getDate() + 1); // Following day
       expirationDate.setHours(8, 0, 0, 0); // 8:00 AM (when cron runs)
 
       const expirationEndOfDay = new Date(expirationDate);

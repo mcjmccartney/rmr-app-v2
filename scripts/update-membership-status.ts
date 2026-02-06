@@ -111,13 +111,14 @@ async function updateMembershipStatuses() {
           continue;
         }
 
-        // Check if client has any recent memberships (within last 1 month)
+        // Check if client has any recent memberships (within last 1 calendar month)
+        // Payment on Jan 6 → Valid until Feb 6 (expires at 8:00 AM on Feb 7)
         const oneMonthAgo = new Date();
         oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
 
         const recentMemberships = clientMemberships.filter(membership => {
           const membershipDate = new Date(membership.date);
-          return membershipDate >= oneMonthAgo;
+          return membershipDate > oneMonthAgo; // Use > so payment on same date 1 month ago is expired
         });
 
         const shouldBeMember = recentMemberships.length > 0;
