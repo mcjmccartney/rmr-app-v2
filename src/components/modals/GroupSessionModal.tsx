@@ -109,24 +109,16 @@ export default function GroupSessionModal({ session, isOpen, onClose, onEditSess
     if (!session) return;
 
     if (participants.length === 0) {
-      alert('Please add participants before sending the event email.');
+      console.warn('Cannot send event email: No participants found');
       return;
     }
-
-    const confirmed = confirm(
-      `Send event email to ${participants.length} participant${participants.length !== 1 ? 's' : ''}?\n\n` +
-      `This will trigger the email workflow in Make.com.`
-    );
-
-    if (!confirmed) return;
 
     try {
       setSendingEmail(true);
       await sendGroupEventEmail(session);
-      alert('✅ Event email sent successfully!');
+      console.log('✅ Event email sent successfully');
     } catch (error) {
-      console.error('Error sending event email:', error);
-      alert(`❌ Failed to send event email: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error('❌ Failed to send event email:', error);
     } finally {
       setSendingEmail(false);
     }
