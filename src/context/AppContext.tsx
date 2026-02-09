@@ -1016,11 +1016,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
           }
         }
 
-        // Format client emails (comma-separated for BCC)
+        // Format client emails (semicolon-separated for Outlook BCC)
         const groupClientEmails = participantClients
           .map(c => c.email)
           .filter(email => email) // Remove any undefined/null emails
-          .join(',');
+          .join(';');
 
         // Format client first names (e.g., "John, David, Hilary & Steve")
         const formatGroupNames = (names: string[]): string => {
@@ -1377,11 +1377,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
           }
         }
 
-        // Format client emails (comma-separated for BCC)
+        // Format client emails (semicolon-separated for Outlook BCC)
         const groupClientEmails = participantClients
           .map(c => c.email)
           .filter(email => email) // Remove any undefined/null emails
-          .join(',');
+          .join(';');
 
         // Format client first names (e.g., "John, David, Hilary & Steve")
         const formatGroupNames = (names: string[]): string => {
@@ -2287,11 +2287,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       console.log(`[GROUP_EVENT_EMAIL] Successfully fetched ${participantClients.length} clients`);
 
-      // Format client emails (comma-separated for BCC)
+      // Format client emails (semicolon-separated for Outlook BCC)
       const groupClientEmails = participantClients
         .map(c => c.email)
         .filter(email => email) // Remove any undefined/null emails
-        .join(',');
+        .join(';');
 
       // Format client first names (e.g., "John, David, Hilary & Steve")
       const formatGroupNames = (names: string[]): string => {
