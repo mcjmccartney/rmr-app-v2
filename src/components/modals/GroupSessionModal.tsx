@@ -5,7 +5,7 @@ import { Session, SessionParticipant, Client } from '@/types';
 import { useApp } from '@/context/AppContext';
 import SlideUpModal from './SlideUpModal';
 import { formatDateTime, formatClientWithAllDogs } from '@/utils/dateFormatting';
-import { Users, Plus, Trash2, Check, X } from 'lucide-react';
+import { Users, Plus, Trash2, Check, X, Mail } from 'lucide-react';
 import SearchableDropdown from '../ui/SearchableDropdown';
 
 interface GroupSessionModalProps {
@@ -16,12 +16,13 @@ interface GroupSessionModalProps {
 }
 
 export default function GroupSessionModal({ session, isOpen, onClose, onEditSession }: GroupSessionModalProps) {
-  const { state, getSessionParticipants, createSessionParticipant, updateSessionParticipant, deleteSessionParticipant } = useApp();
+  const { state, getSessionParticipants, createSessionParticipant, updateSessionParticipant, deleteSessionParticipant, sendGroupEventEmail } = useApp();
   const [participants, setParticipants] = useState<SessionParticipant[]>([]);
   const [loading, setLoading] = useState(false);
   const [showAddParticipant, setShowAddParticipant] = useState(false);
   const [selectedClientId, setSelectedClientId] = useState('');
   const [individualQuote, setIndividualQuote] = useState(5); // Default £5 per participant
+  const [sendingEmail, setSendingEmail] = useState(false);
 
   useEffect(() => {
     if (session && isOpen) {
@@ -97,11 +98,38 @@ export default function GroupSessionModal({ session, isOpen, onClose, onEditSess
 
   const updateSessionTotal = async () => {
     if (!session) return;
-    
+
     const totalQuote = participants.length * individualQuote;
     // This would need to be implemented to update the session's quote
     // For now, we'll just log it
     console.log('Session total should be updated to:', totalQuote);
+  };
+
+  const handleSendEventEmail = async () => {
+    if (!session) return;
+
+    if (participants.length === 0) {
+      alert('Please add participants before sending the event email.');
+      return;
+    }
+
+    const confirmed = confirm(
+      `Send event email to ${participants.length} participant${participants.length !== 1 ? 's' : ''}?\n\n` +
+      `This will trigger the email workflow in Make.com.`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setSendingEmail(true);
+      await sendGroupEventEmail(session);
+      alert('✅ Event email sent successfully!');
+    } catch (error) {
+      console.error('Error sending event email:', error);
+      alert(`❌ Failed to send event email: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setSendingEmail(false);
+    }
   };
 
   const getClientName = (clientId: string) => {
@@ -282,20 +310,34 @@ export default function GroupSessionModal({ session, isOpen, onClose, onEditSess
 
 
         {/* Action Buttons */}
-        <div className="flex gap-3 pt-4 border-t">
+        <div className="space-y-3 pt-4 border-t">
+          {/* Send Event Email Button */}
           <button
-            onClick={() => onEditSession(session)}
-            className="flex-1 text-white py-3 px-4 rounded-md hover:opacity-90 font-medium"
+            onClick={handleSendEventEmail}
+            disabled={sendingEmail || participants.length === 0}
+            className="w-full flex items-center justify-center gap-2 text-white py-3 px-4 rounded-md hover:opacity-90 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             style={{ backgroundColor: '#973b00' }}
           >
-            Edit Session Details
+            <Mail size={18} />
+            {sendingEmail ? 'Sending...' : 'Send Event Email'}
           </button>
-          <button
-            onClick={onClose}
-            className="px-6 py-3 border border-gray-300 rounded-md hover:bg-gray-50 font-medium"
-          >
-            Close
-          </button>
+
+          {/* Other Action Buttons */}
+          <div className="flex gap-3">
+            <button
+              onClick={() => onEditSession(session)}
+              className="flex-1 text-white py-3 px-4 rounded-md hover:opacity-90 font-medium"
+              style={{ backgroundColor: '#973b00' }}
+            >
+              Edit Session Details
+            </button>
+            <button
+              onClick={onClose}
+              className="px-6 py-3 border border-gray-300 rounded-md hover:bg-gray-50 font-medium"
+            >
+              Close
+            </button>
+          </div>
         </div>
       </div>
     </SlideUpModal>

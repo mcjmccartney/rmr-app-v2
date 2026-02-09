@@ -337,6 +337,7 @@ const AppContext = createContext<{
   deleteSessionParticipant: (id: string) => Promise<void>;
   getSessionParticipants: (sessionId: string) => Promise<SessionParticipant[]>;
   pairMembershipsWithClients: () => Promise<any>;
+  sendGroupEventEmail: (session: Session) => Promise<void>;
 } | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
@@ -2230,6 +2231,93 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Send Group Event Email - manually trigger webhook with sendSessionEmail: true
+  const sendGroupEventEmail = async (session: Session): Promise<void> => {
+    try {
+      console.log(`[GROUP_EVENT_EMAIL] Manually sending event email for ${session.sessionType} session ${session.id}`);
+
+      if (session.sessionType !== 'Group' && session.sessionType !== 'RMR Live') {
+        console.error('[GROUP_EVENT_EMAIL] This function is only for Group or RMR Live sessions');
+        throw new Error('This function is only for Group or RMR Live sessions');
+      }
+
+      // Fetch participants for Group sessions
+      const participants = await sessionParticipantService.getBySessionId(session.id);
+
+      if (participants.length === 0) {
+        console.error('[GROUP_EVENT_EMAIL] No participants found for this session');
+        throw new Error('No participants found. Please add participants before sending the event email.');
+      }
+
+      // Get client data for each participant
+      const participantClients = participants
+        .map(p => state.clients.find(c => c.id === p.clientId))
+        .filter((c): c is Client => c !== undefined);
+
+      // Format client emails (comma-separated for BCC)
+      const groupClientEmails = participantClients
+        .map(c => c.email)
+        .filter(email => email) // Remove any undefined/null emails
+        .join(',');
+
+      // Format client first names (e.g., "John, David, Hilary & Steve")
+      const formatGroupNames = (names: string[]): string => {
+        if (names.length === 0) return '';
+        if (names.length === 1) return names[0];
+        if (names.length === 2) return `${names[0]} & ${names[1]}`;
+        const lastIndex = names.length - 1;
+        return `${names.slice(0, lastIndex).join(', ')} & ${names[lastIndex]}`;
+      };
+
+      const firstNames = participantClients
+        .map(c => c.firstName)
+        .filter(name => name); // Remove any undefined/null names
+      const groupClientNames = formatGroupNames(firstNames);
+
+      const webhookData = {
+        sessionId: session.id,
+        sessionType: session.sessionType,
+        bookingDate: session.bookingDate,
+        bookingTime: session.bookingTime.substring(0, 5),
+        quote: session.quote,
+        notes: session.notes || '',
+        createdAt: new Date().toISOString(),
+        isGroupOrRMRLive: true,
+        // Group session parameters
+        groupClientEmails: groupClientEmails,
+        groupClientNames: groupClientNames,
+        // IMPORTANT: Set this to true to trigger the email
+        sendSessionEmail: true,
+        createCalendarEvent: false,
+        isManualTrigger: true
+      };
+
+      console.log(`[GROUP_EVENT_EMAIL] Sending webhook for ${participants.length} participants`);
+      console.log(`[GROUP_EVENT_EMAIL] Group emails: ${groupClientEmails}`);
+      console.log(`[GROUP_EVENT_EMAIL] Group names: ${groupClientNames}`);
+
+      // Send webhook to Make.com
+      const response = await fetch('https://hook.eu1.make.com/lipggo8kcd8kwq2vp6j6mr3gnxbx12h7', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(webhookData)
+      });
+
+      if (response.ok) {
+        console.log(`[GROUP_EVENT_EMAIL] ✅ Successfully sent event email webhook for session ${session.id}`);
+      } else {
+        console.error(`[GROUP_EVENT_EMAIL] ❌ Failed to send webhook:`, response.status, response.statusText);
+        throw new Error(`Failed to send event email: ${response.status} ${response.statusText}`);
+      }
+
+    } catch (error) {
+      console.error('[GROUP_EVENT_EMAIL] Error sending event email:', error);
+      throw error;
+    }
+  };
+
   // Load initial data and setup real-time subscriptions
   useEffect(() => {
     if (isInitializedRef.current) return;
@@ -2353,6 +2441,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       deleteSessionParticipant,
       getSessionParticipants,
       pairMembershipsWithClients,
+      sendGroupEventEmail,
     }}>
       {children}
     </AppContext.Provider>
