@@ -999,6 +999,34 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (!session.clientId && (session.sessionType === 'Group' || session.sessionType === 'RMR Live')) {
         console.log('Group/RMR Live session without client, triggering webhook with minimal data');
 
+        // Fetch participants for Group sessions
+        const participants = await sessionParticipantService.getBySessionId(session.id);
+
+        // Get client data for each participant
+        const participantClients = participants
+          .map(p => state.clients.find(c => c.id === p.clientId))
+          .filter((c): c is Client => c !== undefined);
+
+        // Format client emails (comma-separated for BCC)
+        const groupClientEmails = participantClients
+          .map(c => c.email)
+          .filter(email => email) // Remove any undefined/null emails
+          .join(',');
+
+        // Format client first names (e.g., "John, David, Hilary & Steve")
+        const formatGroupNames = (names: string[]): string => {
+          if (names.length === 0) return '';
+          if (names.length === 1) return names[0];
+          if (names.length === 2) return `${names[0]} & ${names[1]}`;
+          const lastIndex = names.length - 1;
+          return `${names.slice(0, lastIndex).join(', ')} & ${names[lastIndex]}`;
+        };
+
+        const firstNames = participantClients
+          .map(c => c.firstName)
+          .filter(name => name); // Remove any undefined/null names
+        const groupClientNames = formatGroupNames(firstNames);
+
         const minimalWebhookData = {
           sessionId: session.id,
           sessionType: session.sessionType,
@@ -1007,8 +1035,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
           quote: session.quote,
           notes: session.notes || '',
           createdAt: new Date().toISOString(),
-          isGroupOrRMRLive: true
+          isGroupOrRMRLive: true,
+          // New Group session parameters
+          groupClientEmails: groupClientEmails,
+          groupClientNames: groupClientNames
         };
+
+        console.log(`[SESSION_WEBHOOK] Creating ${session.sessionType} session with ${participants.length} participants`);
+        console.log(`[SESSION_WEBHOOK] Group emails: ${groupClientEmails}`);
+        console.log(`[SESSION_WEBHOOK] Group names: ${groupClientNames}`);
 
         // Trigger the webhook for Group/RMR Live sessions
         await fetch('https://hook.eu1.make.com/lipggo8kcd8kwq2vp6j6mr3gnxbx12h7', {
@@ -1317,6 +1352,34 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       // Handle Group and RMR Live sessions differently
       if (session.sessionType === 'Group' || session.sessionType === 'RMR Live') {
+        // Fetch participants for Group sessions
+        const participants = await sessionParticipantService.getBySessionId(session.id);
+
+        // Get client data for each participant
+        const participantClients = participants
+          .map(p => state.clients.find(c => c.id === p.clientId))
+          .filter((c): c is Client => c !== undefined);
+
+        // Format client emails (comma-separated for BCC)
+        const groupClientEmails = participantClients
+          .map(c => c.email)
+          .filter(email => email) // Remove any undefined/null emails
+          .join(',');
+
+        // Format client first names (e.g., "John, David, Hilary & Steve")
+        const formatGroupNames = (names: string[]): string => {
+          if (names.length === 0) return '';
+          if (names.length === 1) return names[0];
+          if (names.length === 2) return `${names[0]} & ${names[1]}`;
+          const lastIndex = names.length - 1;
+          return `${names.slice(0, lastIndex).join(', ')} & ${names[lastIndex]}`;
+        };
+
+        const firstNames = participantClients
+          .map(c => c.firstName)
+          .filter(name => name); // Remove any undefined/null names
+        const groupClientNames = formatGroupNames(firstNames);
+
         const minimalWebhookData = {
           sessionId: session.id,
           sessionType: session.sessionType,
@@ -1325,10 +1388,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
           quote: session.quote,
           isUpdate: true,
           sendSessionEmail: false,
-          createCalendarEvent: false
+          createCalendarEvent: false,
+          // New Group session parameters
+          groupClientEmails: groupClientEmails,
+          groupClientNames: groupClientNames
         };
 
-        console.log(`[SESSION_WEBHOOK] Sending ${session.sessionType} webhook for session update ${session.id}`);
+        console.log(`[SESSION_WEBHOOK] Sending ${session.sessionType} webhook for session update ${session.id} with ${participants.length} participants`);
+        console.log(`[SESSION_WEBHOOK] Group emails: ${groupClientEmails}`);
+        console.log(`[SESSION_WEBHOOK] Group names: ${groupClientNames}`);
 
         const response = await fetch('https://hook.eu1.make.com/lipggo8kcd8kwq2vp6j6mr3gnxbx12h7', {
           method: 'POST',
