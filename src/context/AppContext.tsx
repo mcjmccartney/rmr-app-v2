@@ -1016,11 +1016,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
           }
         }
 
-        // Format client emails (semicolon-separated for Outlook BCC)
+        // Format client emails as array for Make.com
         const groupClientEmails = participantClients
           .map(c => c.email)
-          .filter(email => email) // Remove any undefined/null emails
-          .join(';');
+          .filter(email => email); // Remove any undefined/null emails
 
         // Format client first names (e.g., "John, David, Hilary & Steve")
         const formatGroupNames = (names: string[]): string => {
@@ -1051,7 +1050,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         };
 
         console.log(`[SESSION_WEBHOOK] Creating ${session.sessionType} session with ${participants.length} participants`);
-        console.log(`[SESSION_WEBHOOK] Group emails: ${groupClientEmails}`);
+        console.log(`[SESSION_WEBHOOK] Group emails (array):`, groupClientEmails);
         console.log(`[SESSION_WEBHOOK] Group names: ${groupClientNames}`);
 
         // Trigger the webhook for Group/RMR Live sessions
@@ -1377,11 +1376,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
           }
         }
 
-        // Format client emails (semicolon-separated for Outlook BCC)
+        // Format client emails as array for Make.com
         const groupClientEmails = participantClients
           .map(c => c.email)
-          .filter(email => email) // Remove any undefined/null emails
-          .join(';');
+          .filter(email => email); // Remove any undefined/null emails
 
         // Format client first names (e.g., "John, David, Hilary & Steve")
         const formatGroupNames = (names: string[]): string => {
@@ -1412,7 +1410,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         };
 
         console.log(`[SESSION_WEBHOOK] Sending ${session.sessionType} webhook for session update ${session.id} with ${participants.length} participants`);
-        console.log(`[SESSION_WEBHOOK] Group emails: ${groupClientEmails}`);
+        console.log(`[SESSION_WEBHOOK] Group emails (array):`, groupClientEmails);
         console.log(`[SESSION_WEBHOOK] Group names: ${groupClientNames}`);
 
         const response = await fetch('https://hook.eu1.make.com/lipggo8kcd8kwq2vp6j6mr3gnxbx12h7', {
@@ -2287,11 +2285,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       console.log(`[GROUP_EVENT_EMAIL] Successfully fetched ${participantClients.length} clients`);
 
-      // Format client emails (semicolon-separated for Outlook BCC)
+      // Format client emails as array for Make.com
       const groupClientEmails = participantClients
         .map(c => c.email)
-        .filter(email => email) // Remove any undefined/null emails
-        .join(';');
+        .filter(email => email); // Remove any undefined/null emails
 
       // Format client first names (e.g., "John, David, Hilary & Steve")
       const formatGroupNames = (names: string[]): string => {
@@ -2326,7 +2323,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       };
 
       console.log(`[GROUP_EVENT_EMAIL] Sending webhook for ${participants.length} participants`);
-      console.log(`[GROUP_EVENT_EMAIL] Group emails: ${groupClientEmails}`);
+      console.log(`[GROUP_EVENT_EMAIL] Group emails (array):`, groupClientEmails);
       console.log(`[GROUP_EVENT_EMAIL] Group names: ${groupClientNames}`);
 
       // Send webhook to Make.com
