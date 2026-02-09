@@ -1003,10 +1003,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
         // Fetch participants for Group sessions
         const participants = await sessionParticipantService.getBySessionId(session.id);
 
-        // Get client data for each participant
-        const participantClients = participants
-          .map(p => state.clients.find(c => c.id === p.clientId))
-          .filter((c): c is Client => c !== undefined);
+        // Fetch fresh client data directly from the database instead of relying on state
+        const participantClients: Client[] = [];
+        for (const participant of participants) {
+          try {
+            const client = await clientService.getById(participant.clientId);
+            if (client) {
+              participantClients.push(client);
+            }
+          } catch (error) {
+            console.error(`[SESSION_WEBHOOK] Error fetching client ${participant.clientId}:`, error);
+          }
+        }
 
         // Format client emails (comma-separated for BCC)
         const groupClientEmails = participantClients
@@ -1356,10 +1364,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
         // Fetch participants for Group sessions
         const participants = await sessionParticipantService.getBySessionId(session.id);
 
-        // Get client data for each participant
-        const participantClients = participants
-          .map(p => state.clients.find(c => c.id === p.clientId))
-          .filter((c): c is Client => c !== undefined);
+        // Fetch fresh client data directly from the database instead of relying on state
+        const participantClients: Client[] = [];
+        for (const participant of participants) {
+          try {
+            const client = await clientService.getById(participant.clientId);
+            if (client) {
+              participantClients.push(client);
+            }
+          } catch (error) {
+            console.error(`[SESSION_WEBHOOK] Error fetching client ${participant.clientId}:`, error);
+          }
+        }
 
         // Format client emails (comma-separated for BCC)
         const groupClientEmails = participantClients
