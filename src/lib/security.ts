@@ -131,7 +131,7 @@ export function addSecurityHeaders(response: NextResponse, allowEmbedding: boole
     // Image sources - allow data URIs, HTTPS, and blobs for uploaded images
     "img-src 'self' data: https: blob:",
     // Connection sources - restrict to known APIs only
-    "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://hook.eu1.make.com https://api.stripe.com https://docs.google.com https://www.googleapis.com https://api.mapbox.com https://i.ibb.co",
+    "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://hook.eu1.make.com https://api.stripe.com https://docs.google.com https://www.googleapis.com https://api.mapbox.com https://i.ibb.co https://n8n.srv836498.hstgr.cloud",
     // Frame sources - only Stripe
     "frame-src 'self' https://js.stripe.com https://hooks.stripe.com",
     // Worker sources - for service workers and web workers
