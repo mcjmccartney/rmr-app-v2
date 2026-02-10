@@ -203,13 +203,17 @@ function ClientsPageContent() {
 
   // Handle sending selected members to n8n webhook
   const handleSendToN8n = async () => {
+    console.log('[N8N_WEBHOOK] Button clicked!');
+    console.log('[N8N_WEBHOOK] Selected clients count:', selectedClients.size);
+
     if (selectedClients.size === 0) {
-      console.warn('No members selected to send to n8n');
+      console.warn('[N8N_WEBHOOK] No members selected to send to n8n');
       return;
     }
 
     try {
       setSendingToN8n(true);
+      console.log('[N8N_WEBHOOK] Starting webhook send...');
 
       // Get the selected clients' emails as an array
       const memberEmails = Array.from(selectedClients)
@@ -231,8 +235,11 @@ function ClientsPageContent() {
       console.log('[N8N_WEBHOOK] Member emails (array):', memberEmails);
       console.log('[N8N_WEBHOOK] Member first names (array):', memberFirstNames);
 
+      const webhookUrl = 'https://n8n.srv836498.hstgr.cloud/webhook-test/fbd5123f-deec-414a-bf46-f6190f833c76';
+      console.log('[N8N_WEBHOOK] Webhook URL:', webhookUrl);
+
       // Send to n8n webhook (test endpoint)
-      const response = await fetch('https://n8n.srv836498.hstgr.cloud/webhook-test/fbd5123f-deec-414a-bf46-f6190f833c76', {
+      const response = await fetch(webhookUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -243,16 +250,24 @@ function ClientsPageContent() {
         })
       });
 
+      console.log('[N8N_WEBHOOK] Response status:', response.status);
+      console.log('[N8N_WEBHOOK] Response ok:', response.ok);
+
       if (response.ok) {
+        const responseData = await response.text();
         console.log(`[N8N_WEBHOOK] ✅ Successfully sent ${memberEmails.length} members to n8n`);
+        console.log('[N8N_WEBHOOK] Response data:', responseData);
       } else {
+        const errorText = await response.text();
         console.error(`[N8N_WEBHOOK] ❌ Failed to send webhook:`, response.status, response.statusText);
+        console.error('[N8N_WEBHOOK] Error response:', errorText);
       }
 
     } catch (error) {
       console.error('[N8N_WEBHOOK] Error sending to n8n:', error);
     } finally {
       setSendingToN8n(false);
+      console.log('[N8N_WEBHOOK] Finished webhook send');
     }
   };
 
@@ -746,10 +761,23 @@ function ClientsPageContent() {
               <button
                 onClick={handleSendToN8n}
                 disabled={selectedClients.size === 0 || sendingToN8n}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-2 px-4 py-2 text-white rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{
+                  backgroundColor: (selectedClients.size === 0 || sendingToN8n) ? '#9bb59b' : '#4f6749'
+                }}
+                onMouseEnter={(e) => {
+                  if (selectedClients.size > 0 && !sendingToN8n) {
+                    e.currentTarget.style.backgroundColor = '#3d5038';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (selectedClients.size > 0 && !sendingToN8n) {
+                    e.currentTarget.style.backgroundColor = '#4f6749';
+                  }
+                }}
               >
                 <Send size={16} />
-                {sendingToN8n ? 'Sending...' : 'Send Email'}
+                {sendingToN8n ? 'Sending...' : 'Send Draft Email'}
               </button>
 
               <div className="flex space-x-3">
