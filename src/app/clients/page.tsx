@@ -231,8 +231,8 @@ function ClientsPageContent() {
       console.log('[N8N_WEBHOOK] Member emails (array):', memberEmails);
       console.log('[N8N_WEBHOOK] Member first names (array):', memberFirstNames);
 
-      // Send to n8n webhook
-      const response = await fetch('https://n8n.srv836498.hstgr.cloud/webhook/fbd5123f-deec-414a-bf46-f6190f833c76', {
+      // Send to n8n webhook (test endpoint)
+      const response = await fetch('https://n8n.srv836498.hstgr.cloud/webhook-test/fbd5123f-deec-414a-bf46-f6190f833c76', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
