@@ -659,6 +659,7 @@ export default function SessionPlanPreviewPage() {
 
                   <div style={{
                     fontFamily: 'Arial, sans-serif',
+                    fontSize: '14px'
                     display: 'flex'
                   }}>
                     <div style={{ flex: 1 }}>
