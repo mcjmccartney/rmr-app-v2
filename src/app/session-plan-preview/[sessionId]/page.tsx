@@ -633,6 +633,7 @@ export default function SessionPlanPreviewPage() {
                     borderRadius: '0.5rem',
                     padding: '1.5rem 1rem 1rem',
                     display: 'grid',
+                    fontSize: '15px',
                     gridTemplateColumns: '1fr 1fr',
                     gap: '0.5rem 2rem'
                   }}>
@@ -659,7 +660,7 @@ export default function SessionPlanPreviewPage() {
 
                   <div style={{
                     fontFamily: 'Arial, sans-serif',
-                    fontSize: '14px'
+                    fontSize: '15px',
                     display: 'flex'
                   }}>
                     <div style={{ flex: 1 }}>
