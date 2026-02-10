@@ -542,6 +542,7 @@ export default function SessionPlanPreviewPage() {
         .action-point {
           page-break-inside: avoid;
           break-inside: avoid;
+          font-size: 15px;
         }
 
         @media print {
@@ -563,6 +564,7 @@ export default function SessionPlanPreviewPage() {
           .action-point {
             page-break-inside: avoid;
             break-inside: avoid;
+            font-size: 15px;
           }
         }
       `}</style>
