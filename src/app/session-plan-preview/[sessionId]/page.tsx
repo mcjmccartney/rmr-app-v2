@@ -46,7 +46,7 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
 
     // Measure the actual reminder height
     const reminderBlock = document.createElement('div');
-    reminderBlock.style.fontSize = '16px';
+    reminderBlock.style.fontSize = '15px';
     reminderBlock.style.fontFamily = 'Arial, sans-serif';
     reminderBlock.innerHTML = `
       <p style="margin: 0;">
@@ -251,7 +251,7 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
                     bottom: '80px',
                     left: '3.4rem',
                     right: '3.4rem',
-                    fontSize: '16px',
+                    fontSize: '15px',
                     fontFamily: 'Arial, sans-serif'
                   }}
                 >
@@ -296,7 +296,7 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
                 bottom: '80px',
                 left: '3.4rem',
                 right: '3.4rem',
-                fontSize: '16px',
+                fontSize: '15px',
                 fontFamily: 'Arial, sans-serif'
               }}
             >
