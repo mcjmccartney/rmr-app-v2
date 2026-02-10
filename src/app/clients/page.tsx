@@ -288,10 +288,10 @@ function ClientsPageContent() {
       console.log('[N8N_WEBHOOK] Upcoming Group sessions count:', upcomingGroupSessions.length);
       console.log('[N8N_WEBHOOK] Upcoming sessions list:\n', upcomingSessionsList);
 
-      const webhookUrl = 'https://n8n.srv836498.hstgr.cloud/webhook-test/fbd5123f-deec-414a-bf46-f6190f833c76';
+      const webhookUrl = 'https://n8n.srv836498.hstgr.cloud/webhook/fbd5123f-deec-414a-bf46-f6190f833c76';
       console.log('[N8N_WEBHOOK] Webhook URL:', webhookUrl);
 
-      // Send to n8n webhook (test endpoint)
+      // Send to n8n webhook (production endpoint)
       const response = await fetch(webhookUrl, {
         method: 'POST',
         headers: {
