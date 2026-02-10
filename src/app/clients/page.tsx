@@ -223,17 +223,70 @@ function ClientsPageContent() {
         })
         .filter(email => email !== null && email !== ''); // Remove null/empty emails
 
-      // Get the selected clients' first names as an array
-      const memberFirstNames = Array.from(selectedClients)
-        .map(clientId => {
-          const client = state.clients.find(c => c.id === clientId);
-          return client?.firstName || null;
+      // Get upcoming Group sessions from today onwards
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Reset to midnight for accurate comparison
+
+      const upcomingGroupSessions = state.sessions
+        .filter(session => {
+          // Only include Group sessions
+          if (session.sessionType !== 'Group') return false;
+
+          // Only include sessions from today onwards
+          const sessionDate = new Date(session.bookingDate);
+          sessionDate.setHours(0, 0, 0, 0);
+          return sessionDate >= today;
         })
-        .filter(name => name !== null && name !== ''); // Remove null/empty names
+        .sort((a, b) => {
+          // Sort by date, then by time
+          const dateCompare = a.bookingDate.localeCompare(b.bookingDate);
+          if (dateCompare !== 0) return dateCompare;
+          return a.bookingTime.localeCompare(b.bookingTime);
+        });
+
+      // Format sessions as unordered list
+      // Format: "- Wednesday 4th Feb at 7pm"
+      const formatSessionDateTime = (dateString: string, timeString: string): string => {
+        const date = new Date(dateString);
+
+        // Get day name (e.g., "Wednesday")
+        const dayName = date.toLocaleDateString('en-GB', { weekday: 'long' });
+
+        // Get day with ordinal suffix (e.g., "4th")
+        const day = date.getDate();
+        const ordinalSuffix = (day: number): string => {
+          if (day > 3 && day < 21) return 'th';
+          switch (day % 10) {
+            case 1: return 'st';
+            case 2: return 'nd';
+            case 3: return 'rd';
+            default: return 'th';
+          }
+        };
+        const dayWithOrdinal = `${day}${ordinalSuffix(day)}`;
+
+        // Get month abbreviation (e.g., "Feb")
+        const month = date.toLocaleDateString('en-GB', { month: 'short' });
+
+        // Convert 24-hour time to 12-hour with am/pm (e.g., "19:00" -> "7pm")
+        const [hours, minutes] = timeString.split(':').map(Number);
+        const isPM = hours >= 12;
+        const hour12 = hours % 12 || 12;
+        const minuteStr = minutes > 0 ? `:${minutes.toString().padStart(2, '0')}` : '';
+        const ampm = isPM ? 'pm' : 'am';
+        const time12 = `${hour12}${minuteStr}${ampm}`;
+
+        return `- ${dayName} ${dayWithOrdinal} ${month} at ${time12}`;
+      };
+
+      const upcomingSessionsList = upcomingGroupSessions
+        .map(session => formatSessionDateTime(session.bookingDate, session.bookingTime))
+        .join('\n');
 
       console.log(`[N8N_WEBHOOK] Sending ${memberEmails.length} members to n8n webhook`);
       console.log('[N8N_WEBHOOK] Member emails (array):', memberEmails);
-      console.log('[N8N_WEBHOOK] Member first names (array):', memberFirstNames);
+      console.log('[N8N_WEBHOOK] Upcoming Group sessions count:', upcomingGroupSessions.length);
+      console.log('[N8N_WEBHOOK] Upcoming sessions list:\n', upcomingSessionsList);
 
       const webhookUrl = 'https://n8n.srv836498.hstgr.cloud/webhook-test/fbd5123f-deec-414a-bf46-f6190f833c76';
       console.log('[N8N_WEBHOOK] Webhook URL:', webhookUrl);
@@ -246,7 +299,7 @@ function ClientsPageContent() {
         },
         body: JSON.stringify({
           memberEmails: memberEmails,
-          memberFirstNames: memberFirstNames
+          upcomingSessions: upcomingSessionsList
         })
       });
 
