@@ -211,22 +211,25 @@ function ClientsPageContent() {
     try {
       setSendingToN8n(true);
 
-      // Get the selected clients' data
-      const selectedMembersData = Array.from(selectedClients)
+      // Get the selected clients' emails as an array
+      const memberEmails = Array.from(selectedClients)
         .map(clientId => {
           const client = state.clients.find(c => c.id === clientId);
-          if (client) {
-            return {
-              firstName: client.firstName || '',
-              email: client.email || ''
-            };
-          }
-          return null;
+          return client?.email || null;
         })
-        .filter(member => member !== null && member.email); // Remove null entries and entries without email
+        .filter(email => email !== null && email !== ''); // Remove null/empty emails
 
-      console.log(`[N8N_WEBHOOK] Sending ${selectedMembersData.length} members to n8n webhook`);
-      console.log('[N8N_WEBHOOK] Members data:', selectedMembersData);
+      // Get the selected clients' first names as an array
+      const memberFirstNames = Array.from(selectedClients)
+        .map(clientId => {
+          const client = state.clients.find(c => c.id === clientId);
+          return client?.firstName || null;
+        })
+        .filter(name => name !== null && name !== ''); // Remove null/empty names
+
+      console.log(`[N8N_WEBHOOK] Sending ${memberEmails.length} members to n8n webhook`);
+      console.log('[N8N_WEBHOOK] Member emails (array):', memberEmails);
+      console.log('[N8N_WEBHOOK] Member first names (array):', memberFirstNames);
 
       // Send to n8n webhook
       const response = await fetch('https://n8n.srv836498.hstgr.cloud/webhook/fbd5123f-deec-414a-bf46-f6190f833c76', {
@@ -235,12 +238,13 @@ function ClientsPageContent() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          members: selectedMembersData
+          memberEmails: memberEmails,
+          memberFirstNames: memberFirstNames
         })
       });
 
       if (response.ok) {
-        console.log(`[N8N_WEBHOOK] ✅ Successfully sent ${selectedMembersData.length} members to n8n`);
+        console.log(`[N8N_WEBHOOK] ✅ Successfully sent ${memberEmails.length} members to n8n`);
       } else {
         console.error(`[N8N_WEBHOOK] ❌ Failed to send webhook:`, response.status, response.statusText);
       }
