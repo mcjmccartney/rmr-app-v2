@@ -281,7 +281,7 @@ function ClientsPageContent() {
 
       const upcomingSessionsList = upcomingGroupSessions
         .map(session => formatSessionDateTime(session.bookingDate, session.bookingTime))
-        .join('\n');
+        .join('<br/>');
 
       console.log(`[N8N_WEBHOOK] Sending ${memberEmails.length} members to n8n webhook`);
       console.log('[N8N_WEBHOOK] Member emails (array):', memberEmails);
