@@ -276,7 +276,7 @@ function ClientsPageContent() {
         const ampm = isPM ? 'pm' : 'am';
         const time12 = `${hour12}${minuteStr}${ampm}`;
 
-        return `- ${dayName} ${dayWithOrdinal} ${month} at ${time12}`;
+        return `• ${dayName} ${dayWithOrdinal} ${month} at ${time12}`;
       };
 
       const upcomingSessionsList = upcomingGroupSessions
