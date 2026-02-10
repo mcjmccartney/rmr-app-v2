@@ -11,7 +11,7 @@ import BehaviouralBriefModal from '@/components/modals/BehaviouralBriefModal';
 import BehaviourQuestionnaireModal from '@/components/modals/BehaviourQuestionnaireModal';
 import RMRLogo from '@/components/RMRLogo';
 import { Client, Session, BehaviouralBrief, BehaviourQuestionnaire, Membership } from '@/types';
-import { Calendar, UserPlus, Users, UserCheck, ClipboardList, FileQuestion, Star, Edit3, Download, FileSpreadsheet } from 'lucide-react';
+import { Calendar, UserPlus, Users, UserCheck, ClipboardList, FileQuestion, Star, Edit3, Download, FileSpreadsheet, Send } from 'lucide-react';
 import { groupCoachingResetService } from '@/services/groupCoachingResetService';
 import { formatClientWithAllDogs, getClientDogsPart } from '@/utils/dateFormatting';
 import * as XLSX from 'xlsx';
@@ -34,6 +34,7 @@ function ClientsPageContent() {
   const [showActiveOnly, setShowActiveOnly] = useState(false);
   const [selectedClients, setSelectedClients] = useState<Set<string>>(new Set());
   const [showExportModal, setShowExportModal] = useState(false);
+  const [sendingToN8n, setSendingToN8n] = useState(false);
 
   // Membership tracking state - stores reset dates for each client (now from database)
   const [membershipResets, setMembershipResets] = useState<{ [clientId: string]: string }>({});
@@ -197,6 +198,57 @@ function ClientsPageContent() {
     } catch (error) {
       console.error('❌ Error resetting group coaching counts:', error);
       alert('Failed to reset group coaching counts. Please try again.');
+    }
+  };
+
+  // Handle sending selected members to n8n webhook
+  const handleSendToN8n = async () => {
+    if (selectedClients.size === 0) {
+      console.warn('No members selected to send to n8n');
+      return;
+    }
+
+    try {
+      setSendingToN8n(true);
+
+      // Get the selected clients' data
+      const selectedMembersData = Array.from(selectedClients)
+        .map(clientId => {
+          const client = state.clients.find(c => c.id === clientId);
+          if (client) {
+            return {
+              firstName: client.firstName || '',
+              email: client.email || ''
+            };
+          }
+          return null;
+        })
+        .filter(member => member !== null && member.email); // Remove null entries and entries without email
+
+      console.log(`[N8N_WEBHOOK] Sending ${selectedMembersData.length} members to n8n webhook`);
+      console.log('[N8N_WEBHOOK] Members data:', selectedMembersData);
+
+      // Send to n8n webhook
+      const response = await fetch('https://n8n.srv836498.hstgr.cloud/webhook/fbd5123f-deec-414a-bf46-f6190f833c76', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          members: selectedMembersData
+        })
+      });
+
+      if (response.ok) {
+        console.log(`[N8N_WEBHOOK] ✅ Successfully sent ${selectedMembersData.length} members to n8n`);
+      } else {
+        console.error(`[N8N_WEBHOOK] ❌ Failed to send webhook:`, response.status, response.statusText);
+      }
+
+    } catch (error) {
+      console.error('[N8N_WEBHOOK] Error sending to n8n:', error);
+    } finally {
+      setSendingToN8n(false);
     }
   };
 
@@ -686,19 +738,30 @@ function ClientsPageContent() {
               </table>
             </div>
 
-            <div className="flex justify-end space-x-3 mt-4 pt-4 border-t border-gray-200">
+            <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-200">
               <button
-                onClick={() => setShowExportModal(false)}
-                className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                onClick={handleSendToN8n}
+                disabled={selectedClients.size === 0 || sendingToN8n}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Cancel
+                <Send size={16} />
+                {sendingToN8n ? 'Sending...' : 'Send Email'}
               </button>
-              <button
-                onClick={handleBulkAddedToSession}
-                className="px-4 py-2 bg-amber-800 text-white rounded-lg hover:bg-amber-700 transition-colors font-medium"
-              >
-                Added
-              </button>
+
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => setShowExportModal(false)}
+                  className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleBulkAddedToSession}
+                  className="px-4 py-2 bg-amber-800 text-white rounded-lg hover:bg-amber-700 transition-colors font-medium"
+                >
+                  Added
+                </button>
+              </div>
             </div>
           </div>
         </div>
