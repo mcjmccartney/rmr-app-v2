@@ -103,40 +103,100 @@ function ClientsPageContent() {
     }
   }, [searchParams, state.clients, router]);
 
-  // Calculate membership count since reset for a client (including email aliases)
-  const getMembershipCountSinceReset = (client: Client): number => {
-    if (!client.email && !state.clientEmailAliases[client.id]) return 0;
+  // Auto-reset when Group sessions have passed
+  useEffect(() => {
+    const autoResetForPastGroupSessions = async () => {
+      // Only run after resets are loaded and we have sessions and participants
+      if (!resetsLoaded || state.sessions.length === 0 || state.sessionParticipants.length === 0) {
+        return;
+      }
 
+      try {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        // Get all past Group sessions
+        const pastGroupSessions = state.sessions.filter(session => {
+          if (session.sessionType !== 'Group') return false;
+          const sessionDate = new Date(session.bookingDate);
+          sessionDate.setHours(0, 0, 0, 0);
+          return sessionDate < today;
+        });
+
+        if (pastGroupSessions.length === 0) return;
+
+        // For each member, check if they participated in any past Group sessions
+        const updates: { [clientId: string]: string } = {};
+
+        for (const client of state.clients) {
+          if (!client.membership) continue; // Only check members
+
+          // Find all past Group sessions this client participated in
+          const clientPastGroupSessions = pastGroupSessions.filter(session => {
+            return state.sessionParticipants.some(
+              participant => participant.sessionId === session.id && participant.clientId === client.id
+            );
+          });
+
+          if (clientPastGroupSessions.length === 0) continue;
+
+          // Find the most recent past Group session they participated in
+          const mostRecentSession = clientPastGroupSessions.sort((a, b) =>
+            b.bookingDate.localeCompare(a.bookingDate)
+          )[0];
+
+          const currentResetDate = membershipResets[client.id];
+
+          // If they don't have a reset date, or their reset date is before the most recent Group session,
+          // add a new reset with the session date
+          if (!currentResetDate || currentResetDate < mostRecentSession.bookingDate) {
+            console.log(`🔄 Auto-resetting ${client.firstName} ${client.lastName} to ${mostRecentSession.bookingDate} (participated in past Group session)`);
+
+            // Add reset to database
+            await groupCoachingResetService.addReset(client.id, mostRecentSession.bookingDate);
+
+            // Track for local state update
+            updates[client.id] = mostRecentSession.bookingDate;
+          }
+        }
+
+        // Update local state if any resets were added
+        if (Object.keys(updates).length > 0) {
+          setMembershipResets(prev => ({
+            ...prev,
+            ...updates
+          }));
+          console.log(`✅ Auto-reset ${Object.keys(updates).length} members for past Group sessions`);
+        }
+      } catch (error) {
+        console.error('❌ Error auto-resetting for past Group sessions:', error);
+      }
+    };
+
+    autoResetForPastGroupSessions();
+  }, [resetsLoaded, state.sessions, state.sessionParticipants, state.clients, membershipResets]);
+
+  // Calculate months since last Group Coaching reset for a client
+  const getMembershipCountSinceReset = (client: Client): number => {
     const resetDate = membershipResets[client.id];
 
-    // Get all emails for this client (primary + aliases)
-    const clientEmails: string[] = [];
-    if (client.email) {
-      clientEmails.push(client.email.toLowerCase());
-    }
-
-    // Add email aliases
-    const aliases = state.clientEmailAliases[client.id] || [];
-    aliases.forEach(alias => {
-      if (alias.email && !clientEmails.includes(alias.email.toLowerCase())) {
-        clientEmails.push(alias.email.toLowerCase());
-      }
-    });
-
-    if (clientEmails.length === 0) return 0;
-
-    // Find memberships for any of the client's emails
-    const clientMemberships = state.memberships.filter(m =>
-      clientEmails.includes(m.email.toLowerCase())
-    );
-
     if (!resetDate) {
-      // No reset date, count all memberships
-      return clientMemberships.length;
+      // No reset date - return 0 (they haven't been added to a Group session yet)
+      return 0;
     }
 
-    // Count memberships after reset date
-    return clientMemberships.filter(m => m.date > resetDate).length;
+    // Calculate months between reset date and today
+    const reset = new Date(resetDate);
+    const today = new Date();
+
+    // Calculate the difference in months
+    const yearsDiff = today.getFullYear() - reset.getFullYear();
+    const monthsDiff = today.getMonth() - reset.getMonth();
+
+    const totalMonths = yearsDiff * 12 + monthsDiff;
+
+    // Return 0 if negative (shouldn't happen, but safety check)
+    return Math.max(0, totalMonths);
   };
 
   // Handle "Added to Session" button click
