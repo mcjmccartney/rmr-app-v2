@@ -129,13 +129,15 @@ export const useSessionColors = (data: SessionColorData) => {
       const isFullyCompleted = hasSignedBookingTerms && (hasFilledQuestionnaire || !!session.questionnaireBypass);
       const isAllComplete = isPaid && hasSignedBookingTerms && isSessionPlanSent;
 
-      // Debug logging for specific clients (including Hayley and Dominique)
+      // Debug logging for specific clients (including Hayley, Dominique, and Nicole)
       if (client && (client.firstName?.toLowerCase().includes('aimee') ||
                      client.firstName?.toLowerCase().includes('aim') ||
                      client.lastName?.toLowerCase().includes('proctor') ||
                      client.lastName?.toLowerCase().includes('parry') ||
                      client.firstName?.toLowerCase().includes('hayley') ||
-                     client.firstName?.toLowerCase().includes('dominique'))) {
+                     client.firstName?.toLowerCase().includes('dominique') ||
+                     client.firstName?.toLowerCase().includes('nicole') ||
+                     client.lastName?.toLowerCase().includes('lewis'))) {
         const sessionDogName = session.dogName || client.dogName;
 
         // Get ALL questionnaires that might be related (by any email in the system)
@@ -222,7 +224,9 @@ export const useSessionColors = (data: SessionColorData) => {
 
       // Log final color decision for debug clients
       if (client && (client.firstName?.toLowerCase().includes('hayley') ||
-                     client.firstName?.toLowerCase().includes('dominique'))) {
+                     client.firstName?.toLowerCase().includes('dominique') ||
+                     client.firstName?.toLowerCase().includes('nicole') ||
+                     client.lastName?.toLowerCase().includes('lewis'))) {
         console.log(`[SESSION COLOR FINAL] ${client.firstName} ${client.lastName} - ${session.bookingDate}:`, {
           backgroundColor,
           reason: backgroundColor === '#36454F' ? 'All Complete (Paid + Terms + Plan Sent)' :
