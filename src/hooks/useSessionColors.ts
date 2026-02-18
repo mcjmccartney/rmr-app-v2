@@ -89,9 +89,14 @@ export const useSessionColors = (data: SessionColorData) => {
       const clientEmails = getClientEmails(client, data.clientEmailAliases || {});
 
       // Check if session date has passed
-      const sessionDate = new Date(session.bookingDate);
+      // Parse date string as local date to avoid timezone issues
+      const [year, month, day] = session.bookingDate.split('-').map(Number);
+      const sessionDate = new Date(year, month - 1, day); // month is 0-indexed
+      sessionDate.setHours(0, 0, 0, 0); // Ensure midnight
+
       const today = new Date();
       today.setHours(0, 0, 0, 0); // Reset time to start of day for accurate comparison
+
       const isSessionPast = sessionDate < today;
 
       // Special handling for Group and RMR Live sessions
@@ -124,11 +129,13 @@ export const useSessionColors = (data: SessionColorData) => {
       const isFullyCompleted = hasSignedBookingTerms && (hasFilledQuestionnaire || !!session.questionnaireBypass);
       const isAllComplete = isPaid && hasSignedBookingTerms && isSessionPlanSent;
 
-      // Debug logging for specific clients
+      // Debug logging for specific clients (including Hayley and Dominique)
       if (client && (client.firstName?.toLowerCase().includes('aimee') ||
                      client.firstName?.toLowerCase().includes('aim') ||
                      client.lastName?.toLowerCase().includes('proctor') ||
-                     client.lastName?.toLowerCase().includes('parry'))) {
+                     client.lastName?.toLowerCase().includes('parry') ||
+                     client.firstName?.toLowerCase().includes('hayley') ||
+                     client.firstName?.toLowerCase().includes('dominique'))) {
         const sessionDogName = session.dogName || client.dogName;
 
         // Get ALL questionnaires that might be related (by any email in the system)
@@ -146,6 +153,11 @@ export const useSessionColors = (data: SessionColorData) => {
 
         console.log(`[SESSION COLOR DEBUG] ${client.firstName} ${client.lastName}:`, {
           sessionId: session.id,
+          bookingDate: session.bookingDate,
+          bookingTime: session.bookingTime,
+          sessionDateObject: sessionDate,
+          todayObject: today,
+          isSessionPast,
           sessionDogName,
           sessionDogNameTrimmed: sessionDogName?.trim(),
           clientDogName: client.dogName,
@@ -155,8 +167,11 @@ export const useSessionColors = (data: SessionColorData) => {
           hasFilledQuestionnaire,
           isPaid,
           isFullyCompleted,
+          isAllComplete,
           questionnaireBypass: session.questionnaireBypass,
+          sessionPlanSent: session.sessionPlanSent,
           bookingTermsInDB: data.bookingTerms?.filter(bt => clientEmails.includes(bt.email?.toLowerCase() || '')),
+          allBookingTermsEmails: data.bookingTerms?.map(bt => bt.email?.toLowerCase()),
           allQuestionnairesForClient: data.behaviourQuestionnaires?.filter(q =>
             clientEmails.includes(q.email?.toLowerCase() || '')
           ).map(q => ({
@@ -169,7 +184,8 @@ export const useSessionColors = (data: SessionColorData) => {
           matchingQuestionnaire: data.behaviourQuestionnaires?.filter(q =>
             clientEmails.includes(q.email?.toLowerCase() || '') &&
             (q.dogName?.trim().toLowerCase() === sessionDogName?.trim().toLowerCase())
-          )
+          ),
+          finalBackgroundColor: null // Will be set below
         });
       }
 
@@ -198,10 +214,28 @@ export const useSessionColors = (data: SessionColorData) => {
         className = "w-full text-white text-xs px-2 py-1 rounded text-left transition-colors flex-shrink-0 hover:opacity-80 cursor-pointer";
         mobileClassName = "w-full text-white p-4 rounded-lg text-left transition-colors hover:opacity-80 cursor-pointer";
       } else {
-        // Default = amber-800 background
+        // Default = amber-800 background (RED - incomplete)
         backgroundColor = '#973b00';
         className = "w-full bg-amber-800 text-white text-xs px-2 py-1 rounded text-left transition-colors flex-shrink-0 hover:bg-amber-700 cursor-pointer";
         mobileClassName = "w-full bg-amber-800 text-white p-4 rounded-lg text-left hover:bg-amber-700 transition-colors cursor-pointer";
+      }
+
+      // Log final color decision for debug clients
+      if (client && (client.firstName?.toLowerCase().includes('hayley') ||
+                     client.firstName?.toLowerCase().includes('dominique'))) {
+        console.log(`[SESSION COLOR FINAL] ${client.firstName} ${client.lastName} - ${session.bookingDate}:`, {
+          backgroundColor,
+          reason: backgroundColor === '#36454F' ? 'All Complete (Paid + Terms + Plan Sent)' :
+                  backgroundColor === '#4f6749' ? 'Fully Completed + Paid (Terms + Questionnaire + Paid)' :
+                  backgroundColor === '#e17100' ? 'Fully Completed but Not Paid (Terms + Questionnaire)' :
+                  backgroundColor === '#973b00' ? 'INCOMPLETE (Missing Terms or Questionnaire)' : 'Unknown',
+          hasSignedBookingTerms,
+          hasFilledQuestionnaire,
+          isPaid,
+          isSessionPlanSent,
+          isFullyCompleted,
+          isAllComplete
+        });
       }
 
       colorMap.set(session.id, {
