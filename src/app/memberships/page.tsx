@@ -100,7 +100,8 @@ export default function MembershipsPage() {
   };
 
   // Calculate percentage change from previous month based on number of memberships
-  // Compares payments from start of month to the same day in both months
+  // For current incomplete month: compares payments from start of month to the same day in both months
+  // For completed months: compares all payments in both months
   const calculatePercentageChange = (currentMonthKey: string, currentMemberships: Membership[]) => {
     // Parse current month string like "June 2025"
     const [currentMonthName, currentYearStr] = currentMonthKey.split(' ');
@@ -126,11 +127,29 @@ export default function MembershipsPage() {
       return null; // No previous month data
     }
 
-    // Find the latest payment date in the current month to determine the day cutoff
     if (currentMemberships.length === 0) {
       return null;
     }
 
+    // Determine if this is the current month (incomplete)
+    const today = new Date();
+    const todayMonth = monthNames[today.getMonth()];
+    const todayYear = today.getFullYear();
+    const isCurrentMonth = currentMonthName === todayMonth && currentYear === todayYear;
+
+    // For completed months, use full month comparison (old logic)
+    if (!isCurrentMonth) {
+      const currentCount = currentMemberships.length;
+      const previousCount = previousMonthMemberships.length;
+
+      if (previousCount === 0) {
+        return currentCount > 0 ? 100 : 0;
+      }
+
+      return ((currentCount - previousCount) / previousCount) * 100;
+    }
+
+    // For current incomplete month, use same-day comparison (new logic)
     const latestPaymentDate = currentMemberships.reduce((latest, membership) => {
       const membershipDate = new Date(membership.date);
       return membershipDate > latest ? membershipDate : latest;
