@@ -100,6 +100,7 @@ export default function MembershipsPage() {
   };
 
   // Calculate percentage change from previous month based on number of memberships
+  // Compares payments from start of month to the same day in both months
   const calculatePercentageChange = (currentMonthKey: string, currentMemberships: Membership[]) => {
     // Parse current month string like "June 2025"
     const [currentMonthName, currentYearStr] = currentMonthKey.split(' ');
@@ -125,8 +126,32 @@ export default function MembershipsPage() {
       return null; // No previous month data
     }
 
-    const currentCount = currentMemberships.length;
-    const previousCount = previousMonthMemberships.length;
+    // Find the latest payment date in the current month to determine the day cutoff
+    if (currentMemberships.length === 0) {
+      return null;
+    }
+
+    const latestPaymentDate = currentMemberships.reduce((latest, membership) => {
+      const membershipDate = new Date(membership.date);
+      return membershipDate > latest ? membershipDate : latest;
+    }, new Date(currentMemberships[0].date));
+
+    const dayOfMonth = latestPaymentDate.getDate(); // e.g., 18 for Feb 18
+
+    // Filter current month payments up to that day (e.g., Feb 1-18)
+    const currentMonthPaymentsUpToDay = currentMemberships.filter(membership => {
+      const paymentDate = new Date(membership.date);
+      return paymentDate.getDate() <= dayOfMonth;
+    });
+
+    // Filter previous month payments up to the same day (e.g., Jan 1-18)
+    const previousMonthPaymentsUpToDay = previousMonthMemberships.filter(membership => {
+      const paymentDate = new Date(membership.date);
+      return paymentDate.getDate() <= dayOfMonth;
+    });
+
+    const currentCount = currentMonthPaymentsUpToDay.length;
+    const previousCount = previousMonthPaymentsUpToDay.length;
 
     if (previousCount === 0) {
       return currentCount > 0 ? 100 : 0; // If previous was 0 and current > 0, show 100% increase
