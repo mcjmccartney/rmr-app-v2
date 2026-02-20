@@ -68,6 +68,17 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
     const REMINDER_HEIGHT = reminderBlock.offsetHeight;
     tempWrapper.innerHTML = '';
 
+    // Measure the title height on first dynamic page
+    const titleBlock = document.createElement('h1');
+    titleBlock.style.fontSize = '2.25rem';
+    titleBlock.style.marginBottom = '1.5rem';
+    titleBlock.style.fontWeight = 'bold';
+    titleBlock.style.fontFamily = 'Arial, sans-serif';
+    titleBlock.textContent = title;
+    tempWrapper.appendChild(titleBlock);
+    const TITLE_HEIGHT = titleBlock.offsetHeight;
+    tempWrapper.innerHTML = '';
+
     const builtPages: EditableActionPoint[][] = [];
     let currentPage: EditableActionPoint[] = [];
     let currentHeight = 0;
@@ -114,7 +125,11 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
 
       // Use CONTENT_MAX_FINAL for the last action point (it will use the smaller final footer)
       // Use CONTENT_MAX_MIDDLE for all other action points
-      const contentMax = isLastOverall ? CONTENT_MAX_FINAL : CONTENT_MAX_MIDDLE;
+      // For the first page (pageIndex === 0), subtract the title height
+      let contentMax = isLastOverall ? CONTENT_MAX_FINAL : CONTENT_MAX_MIDDLE;
+      if (pageIndex === 0) {
+        contentMax -= TITLE_HEIGHT;
+      }
 
       if (currentHeight + blockHeight > contentMax) {
         builtPages.push(currentPage);
