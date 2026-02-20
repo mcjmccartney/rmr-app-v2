@@ -40,14 +40,15 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
     tempWrapper.style.position = 'absolute';
     tempWrapper.style.visibility = 'hidden';
     tempWrapper.style.width = '210mm';
-    tempWrapper.style.padding = '0 3.4rem';
+    tempWrapper.style.padding = '20px 3.4rem 0 3.4rem';
     tempWrapper.style.fontFamily = 'Arial, sans-serif';
     document.body.appendChild(tempWrapper);
 
-    // Measure the actual reminder height
+    // Measure the actual reminder height including margin
     const reminderBlock = document.createElement('div');
     reminderBlock.style.fontSize = '15px';
     reminderBlock.style.fontFamily = 'Arial, sans-serif';
+    reminderBlock.style.marginTop = '2rem';
     reminderBlock.innerHTML = `
       <p style="margin: 0;">
         <strong>Reminder:</strong><br />
@@ -63,8 +64,7 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
       </p>
     `;
     tempWrapper.appendChild(reminderBlock);
-    // Reminder is positioned absolutely at bottom: 80px, so we only need to reserve its actual height
-    // The 80px positioning is handled by the absolute positioning, not by content flow
+    // Reminder now flows in the document with 2rem top margin
     const REMINDER_HEIGHT = reminderBlock.offsetHeight;
     tempWrapper.innerHTML = '';
 
@@ -77,14 +77,13 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
       // Create wrapper to match actual rendering structure
       const wrapper = document.createElement('div');
       const isFirstOnPage = currentPage.length === 0;
-      const isFirstOverall = apIndex === 0;
       const isLastOverall = apIndex === editableActionPoints.length - 1;
 
       // Match the actual rendering logic
-      // marginBottom: '2rem' on all action points EXCEPT the last one overall
-      // marginTop: conditional based on position
-      wrapper.style.marginBottom = isLastOverall ? '0' : '2rem';
-      wrapper.style.marginTop = (pageIndex === 0 && isFirstOverall) ? '0' : (isFirstOnPage) ? '2rem' : '0';
+      // marginBottom: '0' if last on page (will be recalculated if it moves to new page)
+      // marginTop: '0' if first on page, '2rem' otherwise
+      wrapper.style.marginBottom = '2rem'; // Default, will be set to 0 for last on page later
+      wrapper.style.marginTop = isFirstOnPage ? '0' : '2rem';
       wrapper.style.position = 'relative';
 
       const block = document.createElement('div');
@@ -124,8 +123,8 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
         pageIndex++;
 
         // Re-measure with correct margin for first item on new page
-        wrapper.style.marginBottom = isLastOverall ? '0' : '2rem';
-        wrapper.style.marginTop = '2rem'; // First on continuation page
+        wrapper.style.marginBottom = '2rem'; // Default, will be 0 if last on this new page
+        wrapper.style.marginTop = '0'; // First on new page
         wrapper.style.position = 'relative';
 
         block.innerHTML = `
@@ -157,12 +156,11 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
     if (currentPage.length > 0) builtPages.push(currentPage);
 
     // Check if there's enough space for the reminder on the last page
-    // Reminder is positioned at bottom: 80px and has its own height (~REMINDER_HEIGHT)
-    // We need to ensure there's enough space in page-content for the reminder to not overlap with action points
-    // Total space needed = REMINDER_HEIGHT + 80px (bottom positioning) + 20px (safety margin)
+    // Reminder now flows in the document with 2rem top margin
+    // We need to ensure there's enough space in page-content for the reminder after action points
     const lastPageHeight = currentHeight;
     const remainingSpace = CONTENT_MAX_FINAL - lastPageHeight;
-    const spaceNeededForReminder = REMINDER_HEIGHT + 80 + 20; // reminder height + bottom position + margin
+    const spaceNeededForReminder = REMINDER_HEIGHT + 20; // reminder height (includes 2rem margin) + safety margin
     const needsNewPage = remainingSpace < spaceNeededForReminder;
     setNeedsSeparateReminderPage(needsNewPage);
 
@@ -194,7 +192,7 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
               {pageIndex === 0 && (
                 <h1 style={{
                   fontSize: '2.25rem',
-                  marginBottom: '2.5rem',
+                  marginBottom: '1.5rem',
                   fontWeight: 'bold',
                   fontFamily: 'Arial, sans-serif'
                 }}>
@@ -203,14 +201,15 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
               )}
 
               {page.map((ap, i) => {
-                const isLastActionPoint = pageIndex === pages.length - 1 && i === page.length - 1;
+                const isFirstOnPage = i === 0;
+                const isLastOnPage = i === page.length - 1;
                 return (
                   <div
                     key={i}
                     className="action-point"
                     style={{
-                      marginBottom: isLastActionPoint ? '0' : '2rem',
-                      marginTop: (pageIndex === 0 && i === 0) ? '0' : (i === 0) ? '2rem' : '0',
+                      marginBottom: isLastOnPage ? '0' : '2rem',
+                      marginTop: isFirstOnPage ? '0' : '2rem',
                       position: 'relative'
                     }}
                   >
@@ -247,10 +246,7 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
               {showReminderOnThisPage && (
                 <div
                   style={{
-                    position: 'absolute',
-                    bottom: '80px',
-                    left: '3.4rem',
-                    right: '3.4rem',
+                    marginTop: '2rem',
                     fontSize: '15px',
                     fontFamily: 'Arial, sans-serif'
                   }}
@@ -292,10 +288,7 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
           <div className="page-content">
             <div
               style={{
-                position: 'absolute',
-                bottom: '80px',
-                left: '3.4rem',
-                right: '3.4rem',
+                marginTop: '2rem',
                 fontSize: '15px',
                 fontFamily: 'Arial, sans-serif'
               }}
@@ -523,7 +516,7 @@ export default function SessionPlanPreviewPage() {
         .page-header {
           width: 100%;
           height: auto;
-          margin-bottom: 20px;
+          display: block;
         }
 
         .page-footer {
@@ -534,7 +527,7 @@ export default function SessionPlanPreviewPage() {
         }
 
         .page-content {
-          padding: 0 3.4rem;
+          padding: 20px 3.4rem 0 3.4rem;
           flex: 1;
           position: relative;
         }
@@ -606,7 +599,7 @@ export default function SessionPlanPreviewPage() {
             <div className="page-content">
               <h1 style={{
                 fontSize: '2.25rem',
-                marginBottom: '2.5rem',
+                marginBottom: '1.5rem',
                 fontWeight: 'bold',
                 fontFamily: 'Arial, sans-serif'
               }}>
