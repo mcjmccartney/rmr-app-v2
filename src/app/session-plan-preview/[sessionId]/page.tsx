@@ -144,12 +144,18 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
       const pageHeight = measureCurrentPage();
 
       // Determine content max for this page
+      // Use CONTENT_MAX_FINAL if this is the last action point overall
+      // OR if this is the last page of action points (we'll use final footer)
       let contentMax = isLastOverall ? CONTENT_MAX_FINAL : CONTENT_MAX_MIDDLE;
+
+      console.log(`AP ${apIndex + 1}: pageHeight=${pageHeight}, contentMax=${contentMax}, isLastOverall=${isLastOverall}`);
 
       // Check if it fits
       if (pageHeight > contentMax) {
         // Remove the action point that doesn't fit
         currentPage.pop();
+
+        console.log(`AP ${apIndex + 1} doesn't fit, moving to next page`);
 
         // Save the current page (if it has items)
         if (currentPage.length > 0) {
