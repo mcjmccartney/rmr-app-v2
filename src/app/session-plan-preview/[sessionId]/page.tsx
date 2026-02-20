@@ -79,8 +79,8 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
     // Helper function to create an action point element
     const createActionPointElement = (ap: EditableActionPoint, isFirstOnPage: boolean, isLastOnPage: boolean) => {
       const wrapper = document.createElement('div');
-      wrapper.style.marginBottom = isLastOnPage ? '0' : '2rem';
-      wrapper.style.marginTop = isFirstOnPage ? '0' : '2rem';
+      wrapper.style.marginBottom = '0';
+      wrapper.style.marginTop = isFirstOnPage ? '0' : '1.5rem';
       wrapper.style.position = 'relative';
 
       const block = document.createElement('div');
@@ -214,14 +214,13 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
 
               {page.map((ap, i) => {
                 const isFirstOnPage = i === 0;
-                const isLastOnPage = i === page.length - 1;
                 return (
                   <div
                     key={i}
                     className="action-point"
                     style={{
-                      marginBottom: isLastOnPage ? '0' : '2rem',
-                      marginTop: isFirstOnPage ? '0' : '2rem',
+                      marginBottom: '0',
+                      marginTop: isFirstOnPage ? '0' : '1.5rem',
                       position: 'relative'
                     }}
                   >
