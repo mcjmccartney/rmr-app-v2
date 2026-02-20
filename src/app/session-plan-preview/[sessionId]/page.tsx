@@ -77,10 +77,10 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
     let pageIndex = 0;
 
     // Helper function to create an action point element
-    const createActionPointElement = (ap: EditableActionPoint, isFirstOnPage: boolean, isLastOnPage: boolean) => {
+    const createActionPointElement = (ap: EditableActionPoint, isFirstOnPage: boolean, isLastOnPage: boolean, isVeryFirstOverall: boolean) => {
       const wrapper = document.createElement('div');
       wrapper.style.marginBottom = '0';
-      wrapper.style.marginTop = isFirstOnPage ? '0' : '1.5rem';
+      wrapper.style.marginTop = isVeryFirstOverall ? '0' : '1.5rem';
       wrapper.style.position = 'relative';
 
       const block = document.createElement('div');
@@ -125,7 +125,9 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
       currentPage.forEach((ap, index) => {
         const isFirstOnPage = index === 0;
         const isLastOnPage = index === currentPage.length - 1;
-        const element = createActionPointElement(ap, isFirstOnPage, isLastOnPage);
+        // Very first action point overall is on pageIndex 0 and index 0
+        const isVeryFirstOverall = pageIndex === 0 && index === 0;
+        const element = createActionPointElement(ap, isFirstOnPage, isLastOnPage, isVeryFirstOverall);
         tempWrapper.appendChild(element);
       });
 
@@ -213,14 +215,15 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
               )}
 
               {page.map((ap, i) => {
-                const isFirstOnPage = i === 0;
+                // Very first action point overall is on pageIndex 0 and i 0
+                const isVeryFirstOverall = pageIndex === 0 && i === 0;
                 return (
                   <div
                     key={i}
                     className="action-point"
                     style={{
                       marginBottom: '0',
-                      marginTop: isFirstOnPage ? '0' : '1.5rem',
+                      marginTop: isVeryFirstOverall ? '0' : '1.5rem',
                       position: 'relative'
                     }}
                   >
