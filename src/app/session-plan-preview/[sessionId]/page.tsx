@@ -131,7 +131,23 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
         contentMax -= TITLE_HEIGHT;
       }
 
-      if (currentHeight + blockHeight > contentMax) {
+      // Check if it fits with current margins
+      let fitsOnPage = currentHeight + blockHeight <= contentMax;
+
+      // If it doesn't fit, try measuring as last on page (marginBottom: 0)
+      let blockHeightAsLast = blockHeight;
+      if (!fitsOnPage && !isLastOverall) {
+        wrapper.style.marginBottom = '0';
+        wrapper.appendChild(block);
+        tempWrapper.appendChild(wrapper);
+        blockHeightAsLast = wrapper.offsetHeight;
+        tempWrapper.innerHTML = '';
+
+        // Check if it fits as last on page
+        fitsOnPage = currentHeight + blockHeightAsLast <= contentMax;
+      }
+
+      if (!fitsOnPage) {
         builtPages.push(currentPage);
         currentPage = [];
         currentHeight = 0;
@@ -163,7 +179,8 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
         currentHeight = newBlockHeight;
       } else {
         currentPage.push(ap);
-        currentHeight += blockHeight;
+        // Use the height that was measured (either with marginBottom: 2rem or 0)
+        currentHeight += (blockHeightAsLast < blockHeight) ? blockHeightAsLast : blockHeight;
       }
     });
 
@@ -261,7 +278,10 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
               {showReminderOnThisPage && (
                 <div
                   style={{
-                    marginTop: '2rem',
+                    position: 'absolute',
+                    bottom: '113px',
+                    left: '3.4rem',
+                    right: '3.4rem',
                     fontSize: '15px',
                     fontFamily: 'Arial, sans-serif'
                   }}
@@ -303,7 +323,10 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
           <div className="page-content">
             <div
               style={{
-                marginTop: '2rem',
+                position: 'absolute',
+                bottom: '93px',
+                left: '3.4rem',
+                right: '3.4rem',
                 fontSize: '15px',
                 fontFamily: 'Arial, sans-serif'
               }}
