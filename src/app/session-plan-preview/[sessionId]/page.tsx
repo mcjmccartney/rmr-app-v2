@@ -20,9 +20,10 @@ interface DynamicActionPointPagesProps {
   editableActionPoints: EditableActionPoint[];
   isPlaywrightMode?: boolean;
   noFirstPage?: boolean;
+  onPaginationComplete?: () => void;
 }
 
-function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode = false, noFirstPage = true }: DynamicActionPointPagesProps) {
+function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode = false, noFirstPage = true, onPaginationComplete }: DynamicActionPointPagesProps) {
   const [pages, setPages] = useState<EditableActionPoint[][]>([]);
   const [needsSeparateReminderPage, setNeedsSeparateReminderPage] = useState(false);
 
@@ -172,7 +173,12 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
 
     document.body.removeChild(tempWrapper);
     setPages(builtPages);
-  }, [editableActionPoints]);
+
+    // Signal that pagination is complete
+    if (onPaginationComplete) {
+      onPaginationComplete();
+    }
+  }, [editableActionPoints, onPaginationComplete]);
 
   return (
     <>
@@ -352,12 +358,13 @@ export default function SessionPlanPreviewPage() {
   const [title, setTitle] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [buttonText, setButtonText] = useState('Generate PDF & Send Email');
+  const [paginationComplete, setPaginationComplete] = useState(false);
 
   useEffect(() => {
-    if (!loading) {
+    if (!loading && paginationComplete) {
       document.body.setAttribute("data-paged-ready", "true");
     }
-  }, [loading]);
+  }, [loading, paginationComplete]);
 
   const handleGeneratePDF = async () => {
     if (!sessionPlan || !session || !client) {
@@ -702,6 +709,7 @@ export default function SessionPlanPreviewPage() {
           editableActionPoints={editableActionPoints}
           isPlaywrightMode={isPlaywrightMode}
           noFirstPage={sessionPlan?.noFirstPage ?? true}
+          onPaginationComplete={() => setPaginationComplete(true)}
         />
 
       </div>
