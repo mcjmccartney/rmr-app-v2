@@ -32,10 +32,11 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
 
     // Approx A4 height in px (297mm * 3.78)
     const PAGE_HEIGHT = 297 * 3.78; // ~1122px
-    // Header (113px) + margin (20px) + Middle Footer (113px) = 246px
-    const CONTENT_MAX_MIDDLE = PAGE_HEIGHT - 246;
-    // Header (113px) + margin (20px) + Final Footer (~93px) = ~226px
-    const CONTENT_MAX_FINAL = PAGE_HEIGHT - 226;
+    // Header (113px) + Middle Footer (113px) = 226px
+    // Note: tempWrapper already has padding: 20px top, so we don't subtract it here
+    const CONTENT_MAX_MIDDLE = PAGE_HEIGHT - 226;
+    // Header (113px) + Final Footer (~93px) = ~206px
+    const CONTENT_MAX_FINAL = PAGE_HEIGHT - 206;
 
     const tempWrapper = document.createElement('div');
     tempWrapper.style.position = 'absolute';
@@ -110,6 +111,7 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
     const measureCurrentPage = () => {
       tempWrapper.innerHTML = '';
 
+      let titleHeight = 0;
       // Add title on first page
       if (pageIndex === 0) {
         const titleBlock = document.createElement('h1');
@@ -119,6 +121,7 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
         titleBlock.style.fontFamily = 'Arial, sans-serif';
         titleBlock.textContent = title;
         tempWrapper.appendChild(titleBlock);
+        titleHeight = titleBlock.offsetHeight;
       }
 
       // Add all action points on current page
@@ -131,7 +134,9 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
         tempWrapper.appendChild(element);
       });
 
-      return tempWrapper.offsetHeight;
+      const totalHeight = tempWrapper.offsetHeight;
+      console.log(`measureCurrentPage: pageIndex=${pageIndex}, titleHeight=${titleHeight}, totalHeight=${totalHeight}, actionPoints=${currentPage.length}`);
+      return totalHeight;
     };
 
     editableActionPoints.forEach((ap, apIndex) => {
