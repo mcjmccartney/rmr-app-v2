@@ -68,32 +68,17 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
     const REMINDER_HEIGHT = reminderBlock.offsetHeight;
     tempWrapper.innerHTML = '';
 
-    // Measure the title height on first dynamic page
-    const titleBlock = document.createElement('h1');
-    titleBlock.style.fontSize = '2.25rem';
-    titleBlock.style.marginBottom = '1.5rem';
-    titleBlock.style.fontWeight = 'bold';
-    titleBlock.style.fontFamily = 'Arial, sans-serif';
-    titleBlock.textContent = title;
-    tempWrapper.appendChild(titleBlock);
-    const TITLE_HEIGHT = titleBlock.offsetHeight;
+    // Clear temp wrapper
     tempWrapper.innerHTML = '';
 
     const builtPages: EditableActionPoint[][] = [];
     let currentPage: EditableActionPoint[] = [];
-    let currentHeight = 0;
     let pageIndex = 0;
 
-    editableActionPoints.forEach((ap, apIndex) => {
-      // Create wrapper to match actual rendering structure
+    // Helper function to create an action point element
+    const createActionPointElement = (ap: EditableActionPoint, isFirstOnPage: boolean, isLastOnPage: boolean) => {
       const wrapper = document.createElement('div');
-      const isFirstOnPage = currentPage.length === 0;
-      const isLastOverall = apIndex === editableActionPoints.length - 1;
-
-      // Match the actual rendering logic
-      // marginBottom: '0' if last on page (will be recalculated if it moves to new page)
-      // marginTop: '0' if first on page, '2rem' otherwise
-      wrapper.style.marginBottom = '2rem'; // Default, will be set to 0 for last on page later
+      wrapper.style.marginBottom = isLastOnPage ? '0' : '2rem';
       wrapper.style.marginTop = isFirstOnPage ? '0' : '2rem';
       wrapper.style.position = 'relative';
 
@@ -111,99 +96,66 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
         </div>
       `;
 
-      // Apply paragraph spacing styles to match rendered output
       const paragraphs = block.querySelectorAll('p');
       paragraphs.forEach((p, index) => {
         (p as HTMLElement).style.marginBottom = index === paragraphs.length - 1 ? '0' : '1rem';
       });
 
       wrapper.appendChild(block);
-      tempWrapper.appendChild(wrapper);
+      return wrapper;
+    };
 
-      const blockHeight = wrapper.offsetHeight;
-      tempWrapper.innerHTML = ''; // clean for next measure
+    // Helper function to build and measure the current page
+    const measureCurrentPage = () => {
+      tempWrapper.innerHTML = '';
 
-      // Use CONTENT_MAX_FINAL for the last action point (it will use the smaller final footer)
-      // Use CONTENT_MAX_MIDDLE for all other action points
-      // For the first page (pageIndex === 0), subtract the title height
-      let contentMax = isLastOverall ? CONTENT_MAX_FINAL : CONTENT_MAX_MIDDLE;
+      // Add title on first page
       if (pageIndex === 0) {
-        contentMax -= TITLE_HEIGHT;
+        const titleBlock = document.createElement('h1');
+        titleBlock.style.fontSize = '2.25rem';
+        titleBlock.style.marginBottom = '1.5rem';
+        titleBlock.style.fontWeight = 'bold';
+        titleBlock.style.fontFamily = 'Arial, sans-serif';
+        titleBlock.textContent = title;
+        tempWrapper.appendChild(titleBlock);
       }
 
-      // Check if it fits with current margins
-      let fitsOnPage = currentHeight + blockHeight <= contentMax;
+      // Add all action points on current page
+      currentPage.forEach((ap, index) => {
+        const isFirstOnPage = index === 0;
+        const isLastOnPage = index === currentPage.length - 1;
+        const element = createActionPointElement(ap, isFirstOnPage, isLastOnPage);
+        tempWrapper.appendChild(element);
+      });
 
-      // If it doesn't fit, try measuring as last on page (marginBottom: 0)
-      let blockHeightAsLast = blockHeight;
-      if (!fitsOnPage && !isLastOverall) {
-        // Create fresh wrapper and block elements for re-measurement
-        const wrapperRecheck = document.createElement('div');
-        wrapperRecheck.style.marginBottom = '0';
-        wrapperRecheck.style.marginTop = isFirstOnPage ? '0' : '2rem';
-        wrapperRecheck.style.position = 'relative';
+      return tempWrapper.offsetHeight;
+    };
 
-        const blockRecheck = document.createElement('div');
-        blockRecheck.style.border = '5px solid #4e6749';
-        blockRecheck.style.borderRadius = '0.5rem';
-        blockRecheck.style.padding = '1.5rem 1rem 1rem 1rem';
+    editableActionPoints.forEach((ap, apIndex) => {
+      const isLastOverall = apIndex === editableActionPoints.length - 1;
 
-        blockRecheck.innerHTML = `
-          <h3 style="font-size:1.875rem;font-style:italic;margin-bottom:1rem;">
-            ${ap.header}
-          </h3>
-          <div class="action-point-content">
-            ${ap.details}
-          </div>
-        `;
-        const paragraphsRecheck = blockRecheck.querySelectorAll('p');
-        paragraphsRecheck.forEach((p, index) => {
-          (p as HTMLElement).style.marginBottom = index === paragraphsRecheck.length - 1 ? '0' : '1rem';
-        });
+      // Add action point to current page
+      currentPage.push(ap);
 
-        wrapperRecheck.appendChild(blockRecheck);
-        tempWrapper.appendChild(wrapperRecheck);
-        blockHeightAsLast = wrapperRecheck.offsetHeight;
-        tempWrapper.innerHTML = '';
+      // Measure the current page with this action point
+      const pageHeight = measureCurrentPage();
 
-        // Check if it fits as last on page
-        fitsOnPage = currentHeight + blockHeightAsLast <= contentMax;
-      }
+      // Determine content max for this page
+      let contentMax = isLastOverall ? CONTENT_MAX_FINAL : CONTENT_MAX_MIDDLE;
 
-      if (!fitsOnPage) {
-        builtPages.push(currentPage);
-        currentPage = [];
-        currentHeight = 0;
+      // Check if it fits
+      if (pageHeight > contentMax) {
+        // Remove the action point that doesn't fit
+        currentPage.pop();
+
+        // Save the current page (if it has items)
+        if (currentPage.length > 0) {
+          builtPages.push(currentPage);
+        }
+
+        // Start a new page with this action point
+        currentPage = [ap];
         pageIndex++;
-
-        // Re-measure with correct margin for first item on new page
-        wrapper.style.marginBottom = '2rem'; // Default, will be 0 if last on this new page
-        wrapper.style.marginTop = '0'; // First on new page
-        wrapper.style.position = 'relative';
-
-        block.innerHTML = `
-          <h3 style="font-size:1.875rem;font-style:italic;margin-bottom:1rem;">
-            ${ap.header}
-          </h3>
-          <div class="action-point-content">
-            ${ap.details}
-          </div>
-        `;
-        const paragraphs2 = block.querySelectorAll('p');
-        paragraphs2.forEach((p, index) => {
-          (p as HTMLElement).style.marginBottom = index === paragraphs2.length - 1 ? '0' : '1rem';
-        });
-        wrapper.appendChild(block);
-        tempWrapper.appendChild(wrapper);
-        const newBlockHeight = wrapper.offsetHeight;
-        tempWrapper.innerHTML = '';
-
-        currentPage.push(ap);
-        currentHeight = newBlockHeight;
-      } else {
-        currentPage.push(ap);
-        // Use the height that was measured (either with marginBottom: 2rem or 0)
-        currentHeight += (blockHeightAsLast < blockHeight) ? blockHeightAsLast : blockHeight;
       }
     });
 
@@ -211,9 +163,8 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
     if (currentPage.length > 0) builtPages.push(currentPage);
 
     // Check if there's enough space for the reminder on the last page
-    // Reminder now flows in the document with 2rem top margin
-    // We need to ensure there's enough space in page-content for the reminder after action points
-    const lastPageHeight = currentHeight;
+    // Measure the last page to see if reminder fits
+    const lastPageHeight = measureCurrentPage();
     const remainingSpace = CONTENT_MAX_FINAL - lastPageHeight;
     const spaceNeededForReminder = REMINDER_HEIGHT + 20; // reminder height (includes 2rem margin) + safety margin
     const needsNewPage = remainingSpace < spaceNeededForReminder;
