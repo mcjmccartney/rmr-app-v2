@@ -138,6 +138,23 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
       let blockHeightAsLast = blockHeight;
       if (!fitsOnPage && !isLastOverall) {
         wrapper.style.marginBottom = '0';
+        wrapper.style.marginTop = isFirstOnPage ? '0' : '2rem';
+        wrapper.style.position = 'relative';
+
+        // Recreate the block content
+        block.innerHTML = `
+          <h3 style="font-size:1.875rem;font-style:italic;margin-bottom:1rem;">
+            ${ap.header}
+          </h3>
+          <div class="action-point-content">
+            ${ap.details}
+          </div>
+        `;
+        const paragraphsRecheck = block.querySelectorAll('p');
+        paragraphsRecheck.forEach((p, index) => {
+          (p as HTMLElement).style.marginBottom = index === paragraphsRecheck.length - 1 ? '0' : '1rem';
+        });
+
         wrapper.appendChild(block);
         tempWrapper.appendChild(wrapper);
         blockHeightAsLast = wrapper.offsetHeight;
