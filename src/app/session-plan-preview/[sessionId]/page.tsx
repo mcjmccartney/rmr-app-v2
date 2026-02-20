@@ -135,8 +135,10 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
       });
 
       const totalHeight = tempWrapper.offsetHeight;
-      console.log(`measureCurrentPage: pageIndex=${pageIndex}, titleHeight=${titleHeight}, totalHeight=${totalHeight}, actionPoints=${currentPage.length}`);
-      return totalHeight;
+      // Subtract the 20px top padding since it's included in offsetHeight but not in our content max calculations
+      const contentHeight = totalHeight - 20;
+      console.log(`measureCurrentPage: pageIndex=${pageIndex}, titleHeight=${titleHeight}, totalHeight=${totalHeight}, contentHeight=${contentHeight}, actionPoints=${currentPage.length}`);
+      return contentHeight;
     };
 
     editableActionPoints.forEach((ap, apIndex) => {
