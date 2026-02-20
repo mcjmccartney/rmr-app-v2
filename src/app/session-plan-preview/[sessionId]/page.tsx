@@ -137,12 +137,18 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
       // If it doesn't fit, try measuring as last on page (marginBottom: 0)
       let blockHeightAsLast = blockHeight;
       if (!fitsOnPage && !isLastOverall) {
-        wrapper.style.marginBottom = '0';
-        wrapper.style.marginTop = isFirstOnPage ? '0' : '2rem';
-        wrapper.style.position = 'relative';
+        // Create fresh wrapper and block elements for re-measurement
+        const wrapperRecheck = document.createElement('div');
+        wrapperRecheck.style.marginBottom = '0';
+        wrapperRecheck.style.marginTop = isFirstOnPage ? '0' : '2rem';
+        wrapperRecheck.style.position = 'relative';
 
-        // Recreate the block content
-        block.innerHTML = `
+        const blockRecheck = document.createElement('div');
+        blockRecheck.style.border = '5px solid #4e6749';
+        blockRecheck.style.borderRadius = '0.5rem';
+        blockRecheck.style.padding = '1.5rem 1rem 1rem 1rem';
+
+        blockRecheck.innerHTML = `
           <h3 style="font-size:1.875rem;font-style:italic;margin-bottom:1rem;">
             ${ap.header}
           </h3>
@@ -150,14 +156,14 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
             ${ap.details}
           </div>
         `;
-        const paragraphsRecheck = block.querySelectorAll('p');
+        const paragraphsRecheck = blockRecheck.querySelectorAll('p');
         paragraphsRecheck.forEach((p, index) => {
           (p as HTMLElement).style.marginBottom = index === paragraphsRecheck.length - 1 ? '0' : '1rem';
         });
 
-        wrapper.appendChild(block);
-        tempWrapper.appendChild(wrapper);
-        blockHeightAsLast = wrapper.offsetHeight;
+        wrapperRecheck.appendChild(blockRecheck);
+        tempWrapper.appendChild(wrapperRecheck);
+        blockHeightAsLast = wrapperRecheck.offsetHeight;
         tempWrapper.innerHTML = '';
 
         // Check if it fits as last on page
