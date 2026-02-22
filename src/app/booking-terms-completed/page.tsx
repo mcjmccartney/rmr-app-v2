@@ -16,21 +16,8 @@ export default function BookingTermsCompletedPage() {
                 Booking Terms
               </h1>
               <p className="text-gray-700">
-                Thank you! Your booking terms has successfully submitted. You may now close this window or Return to Home.
+                Thank you! You have successfully agreed to the booking terms. You may now close this window.
               </p>
-            </div>
-
-            <div className="space-y-4">
-              
-              <button
-                onClick={() => window.location.href = 'https://www.raisingmyrescue.co.uk'}
-                className="w-full text-white font-medium py-3 px-6 rounded transition-colors"
-                style={{ backgroundColor: '#4f6749' }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3d5237'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#4f6749'}
-              >
-                Return to Home
-              </button>
             </div>
           </div>
         </div>
