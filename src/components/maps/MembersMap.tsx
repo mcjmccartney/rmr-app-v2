@@ -86,18 +86,14 @@ export default function MembersMap({ locations, onClientClick }: MembersMapProps
     const bounds = new mapboxgl.LngLatBounds();
 
     locations.forEach(location => {
-      // Create simple drop pin marker element
+      // Create Google Maps-style pin marker element
       const markerElement = document.createElement('div');
       markerElement.className = 'mapbox-marker';
-      markerElement.style.cssText = `
-        width: 30px;
-        height: 30px;
-        background-color: #92400e;
-        border: 2px solid white;
-        border-radius: 50% 50% 50% 0;
-        transform: rotate(-45deg);
-        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        cursor: pointer;
+      markerElement.innerHTML = `
+        <svg width="32" height="42" viewBox="0 0 32 42" fill="none" xmlns="http://www.w3.org/2000/svg" style="cursor: pointer; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">
+          <path d="M16 0C7.163 0 0 7.163 0 16C0 28 16 42 16 42C16 42 32 28 32 16C32 7.163 24.837 0 16 0Z" fill="#5a6f54"/>
+          <circle cx="16" cy="16" r="6" fill="white"/>
+        </svg>
       `;
 
       // Add click handler to open client modal
@@ -139,18 +135,6 @@ export default function MembersMap({ locations, onClientClick }: MembersMapProps
   return (
     <div className="relative w-full h-full">
       <div ref={mapContainer} className="w-full h-full" />
-
-      {/* Member count badge */}
-      {locations.length > 0 && (
-        <div className="absolute top-4 left-4 bg-white rounded-lg shadow-lg px-3 py-2 border">
-          <div className="flex items-center gap-2">
-            <span className="text-amber-800">👤</span>
-            <span className="text-sm font-medium text-gray-900">
-              {locations.length} Member{locations.length !== 1 ? 's' : ''}
-            </span>
-          </div>
-        </div>
-      )}
 
       {/* Map attribution */}
       <div className="absolute bottom-2 right-2 bg-white bg-opacity-90 px-2 py-1 rounded text-xs text-gray-600">
