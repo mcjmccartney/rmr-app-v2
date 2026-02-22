@@ -127,11 +127,18 @@ export default function MembersMapModal({ isOpen, onClose }: MembersMapModalProp
     }
   };
 
-  // Extract postcode from address (UK postcode at end of address)
+  // Extract postcode/zip code from address (UK or US format)
   const extractPostcode = (address: string): string => {
     // UK postcode pattern: matches postcodes like "SW1A 1AA", "M1 1AE", "EC1A 1BB"
-    const postcodeMatch = address.match(/([A-Z]{1,2}\d{1,2}[A-Z]?\s?\d[A-Z]{2})$/i);
-    return postcodeMatch ? postcodeMatch[1] : address;
+    const ukPostcodeMatch = address.match(/([A-Z]{1,2}\d{1,2}[A-Z]?\s?\d[A-Z]{2})$/i);
+    if (ukPostcodeMatch) return ukPostcodeMatch[1];
+
+    // US zip code pattern: matches 5-digit or 5+4 format like "08003", "90210-1234"
+    const usZipMatch = address.match(/(\d{5}(-\d{4})?)$/);
+    if (usZipMatch) return usZipMatch[1];
+
+    // Fall back to full address if no postcode/zip found
+    return address;
   };
 
   // Get all members who've ever paid (current + past)
