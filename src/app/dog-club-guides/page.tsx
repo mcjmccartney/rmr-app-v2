@@ -114,11 +114,17 @@ export default function DogClubGuidesPage() {
       {/* Header */}
       <Header
         title="Dog Club Guides"
-        leftButton={{
-          icon: ArrowLeft,
-          onClick: handleBack,
-          label: 'Back'
-        }}
+        buttons={[
+          {
+            icon: ArrowLeft,
+            onClick: handleBack,
+            title: 'Back to Sessions',
+            iconOnly: true
+          }
+        ]}
+        showSearch
+        onSearch={setSearchQuery}
+        searchPlaceholder="Search guides..."
       />
 
       {/* Content */}
