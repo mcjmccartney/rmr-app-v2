@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useReducer, ReactNode, useEffect, useCallback, useRef } from 'react';
-import { AppState, AppAction, Session, Client, Membership, BookingTerms, ActionPoint, SessionParticipant } from '@/types';
+import { AppState, AppAction, Session, Client, Membership, BookingTerms, ActionPoint, DogClubGuide, SessionParticipant } from '@/types';
 import { clientService } from '@/services/clientService';
 import { sessionService } from '@/services/sessionService';
 import { membershipService } from '@/services/membershipService';
@@ -9,6 +9,7 @@ import { behaviouralBriefService } from '@/services/behaviouralBriefService';
 import { behaviourQuestionnaireService } from '@/services/behaviourQuestionnaireService';
 import { bookingTermsService } from '@/services/bookingTermsService';
 import { sessionPlanService } from '@/services/sessionPlanService';
+import { dogClubGuidesService } from '@/services/dogClubGuidesService';
 import { paymentService } from '@/services/paymentService';
 import { supabase } from '@/lib/supabase';
 import { DuplicateDetectionService } from '@/services/duplicateDetectionService';
@@ -68,6 +69,7 @@ const initialState: AppState = {
   behaviourQuestionnaires: [],
   sessionPlans: [],
   actionPoints: [],
+  dogClubGuides: [],
   memberships: [],
   bookingTerms: [],
   clientEmailAliases: {},
@@ -223,6 +225,26 @@ function appReducer(state: AppState, action: AppAction): AppState {
         actionPoints: state.actionPoints.filter(actionPoint => actionPoint.id !== action.payload),
       };
 
+    case 'SET_DOG_CLUB_GUIDES':
+      return { ...state, dogClubGuides: action.payload };
+
+    case 'ADD_DOG_CLUB_GUIDE':
+      return { ...state, dogClubGuides: [...state.dogClubGuides, action.payload] };
+
+    case 'UPDATE_DOG_CLUB_GUIDE':
+      return {
+        ...state,
+        dogClubGuides: state.dogClubGuides.map(guide =>
+          guide.id === action.payload.id ? action.payload : guide
+        ),
+      };
+
+    case 'DELETE_DOG_CLUB_GUIDE':
+      return {
+        ...state,
+        dogClubGuides: state.dogClubGuides.filter(guide => guide.id !== action.payload),
+      };
+
     case 'SET_POTENTIAL_DUPLICATES':
       return { ...state, potentialDuplicates: action.payload };
 
@@ -306,11 +328,15 @@ const AppContext = createContext<{
   loadBookingTerms: () => Promise<void>;
   loadClientEmailAliases: () => Promise<void>;
   loadActionPoints: () => Promise<void>;
+  loadDogClubGuides: () => Promise<void>;
   loadSessionParticipants: () => Promise<void>;
   loadSessionPlans: () => Promise<void>;
   createActionPoint: (actionPoint: Omit<ActionPoint, 'id'>) => Promise<ActionPoint>;
   updateActionPoint: (id: string, updates: Partial<ActionPoint>) => Promise<ActionPoint>;
   deleteActionPoint: (id: string) => Promise<void>;
+  createDogClubGuide: (guide: Omit<DogClubGuide, 'id' | 'createdAt' | 'updatedAt'>) => Promise<DogClubGuide>;
+  updateDogClubGuide: (id: string, updates: Partial<DogClubGuide>) => Promise<DogClubGuide>;
+  deleteDogClubGuide: (id: string) => Promise<void>;
   detectDuplicates: () => Promise<void>;
   dismissDuplicate: (duplicateId: string) => Promise<void>;
   clearDismissedDuplicates: () => Promise<void>;
@@ -479,6 +505,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
       dispatch({ type: 'SET_ACTION_POINTS', payload: actionPoints });
     } catch (error) {
       console.error('Failed to load action points:', error);
+    }
+  }, []);
+
+  // Load dog club guides from Supabase
+  const loadDogClubGuides = useCallback(async () => {
+    try {
+      console.log('Loading dog club guides...');
+      const guides = await dogClubGuidesService.getAll();
+      console.log('Loaded dog club guides:', guides.length);
+      dispatch({ type: 'SET_DOG_CLUB_GUIDES', payload: guides });
+    } catch (error) {
+      console.error('Failed to load dog club guides:', error);
     }
   }, []);
 
@@ -784,6 +822,41 @@ export function AppProvider({ children }: { children: ReactNode }) {
       dispatch({ type: 'DELETE_ACTION_POINT', payload: id });
     } catch (error) {
       console.error('Failed to delete action point:', error);
+      throw error;
+    }
+  };
+
+  // Create dog club guide in Supabase
+  const createDogClubGuide = async (guideData: Omit<DogClubGuide, 'id' | 'createdAt' | 'updatedAt'>): Promise<DogClubGuide> => {
+    try {
+      const guide = await dogClubGuidesService.create(guideData);
+      dispatch({ type: 'ADD_DOG_CLUB_GUIDE', payload: guide });
+      return guide;
+    } catch (error) {
+      console.error('Failed to create dog club guide:', error);
+      throw error;
+    }
+  };
+
+  // Update dog club guide in Supabase
+  const updateDogClubGuide = async (id: string, updates: Partial<DogClubGuide>): Promise<DogClubGuide> => {
+    try {
+      const guide = await dogClubGuidesService.update(id, updates);
+      dispatch({ type: 'UPDATE_DOG_CLUB_GUIDE', payload: guide });
+      return guide;
+    } catch (error) {
+      console.error('Failed to update dog club guide:', error);
+      throw error;
+    }
+  };
+
+  // Delete dog club guide from Supabase
+  const deleteDogClubGuide = async (id: string): Promise<void> => {
+    try {
+      await dogClubGuidesService.delete(id);
+      dispatch({ type: 'DELETE_DOG_CLUB_GUIDE', payload: id });
+    } catch (error) {
+      console.error('Failed to delete dog club guide:', error);
       throw error;
     }
   };
@@ -2380,6 +2453,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             await Promise.all([
               loadMemberships(),
               loadActionPoints(),
+              loadDogClubGuides(),
               loadBehaviouralBriefs(),
             ]);
             console.log('✅ Secondary data batch 1 loaded');
@@ -2443,11 +2517,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
       loadBookingTerms,
       loadClientEmailAliases,
       loadActionPoints,
+      loadDogClubGuides,
       loadSessionParticipants,
       loadSessionPlans,
       createActionPoint,
       updateActionPoint,
       deleteActionPoint,
+      createDogClubGuide,
+      updateDogClubGuide,
+      deleteDogClubGuide,
       detectDuplicates,
       dismissDuplicate,
       clearDismissedDuplicates,

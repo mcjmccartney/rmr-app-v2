@@ -44,6 +44,14 @@ export interface EditableActionPoint {
   details: string;
 }
 
+export interface DogClubGuide {
+  id: string;
+  title: string;
+  url: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
 export interface SessionPlan {
   id: string;
   sessionId: string;
@@ -235,6 +243,7 @@ export interface AppState {
   behaviourQuestionnaires: BehaviourQuestionnaire[];
   sessionPlans: SessionPlan[];
   actionPoints: ActionPoint[];
+  dogClubGuides: DogClubGuide[];
   memberships: Membership[];
   bookingTerms: BookingTerms[];
   clientEmailAliases: { [clientId: string]: ClientEmailAlias[] };
@@ -279,6 +288,10 @@ export type AppAction =
   | { type: 'ADD_ACTION_POINT'; payload: ActionPoint }
   | { type: 'UPDATE_ACTION_POINT'; payload: ActionPoint }
   | { type: 'DELETE_ACTION_POINT'; payload: string }
+  | { type: 'SET_DOG_CLUB_GUIDES'; payload: DogClubGuide[] }
+  | { type: 'ADD_DOG_CLUB_GUIDE'; payload: DogClubGuide }
+  | { type: 'UPDATE_DOG_CLUB_GUIDE'; payload: DogClubGuide }
+  | { type: 'DELETE_DOG_CLUB_GUIDE'; payload: string }
   | { type: 'SET_POTENTIAL_DUPLICATES'; payload: PotentialDuplicate[] }
   | { type: 'REMOVE_POTENTIAL_DUPLICATE'; payload: string }
   | { type: 'SET_SESSION_PLANS'; payload: SessionPlan[] }

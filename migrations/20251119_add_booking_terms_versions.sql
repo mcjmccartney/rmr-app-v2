@@ -31,7 +31,7 @@ CREATE INDEX IF NOT EXISTS idx_booking_terms_version_id ON booking_terms(version
 INSERT INTO booking_terms_versions (version_number, title, html_content, is_active, activated_at)
 VALUES (
   1,
-  'Service Agreement v1',
+  'Booking Terms & Service Agreement',
   '<div class="space-y-6">
     <div>
       <h2 class="text-xl font-semibold mb-4" style="color: #4f6749;">1-1 Sessions</h2>

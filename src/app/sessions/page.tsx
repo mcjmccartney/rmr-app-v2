@@ -12,7 +12,7 @@ import AddModal from '@/components/AddModal';
 import { Session, Client } from '@/types';
 
 import { formatDateTime, formatFullMonthYear, formatClientWithAllDogs, getClientDogsPart } from '@/utils/dateFormatting';
-import { Calendar, UserPlus, ChevronDown, ChevronRight, Target, Edit3, FileText } from 'lucide-react';
+import { Calendar, UserPlus, ChevronDown, ChevronRight, Target, Edit3, FileText, BookOpen } from 'lucide-react';
 
 export default function SessionsPage() {
   const { state } = useApp();
@@ -166,6 +166,10 @@ export default function SessionsPage() {
     router.push('/booking-terms-admin');
   };
 
+  const handleDogClubGuides = () => {
+    router.push('/dog-club-guides');
+  };
+
 
 
   const toggleMonth = (monthKey: string) => {
@@ -188,6 +192,12 @@ export default function SessionsPage() {
         <Header
           title="Sessions"
           buttons={[
+            {
+              icon: BookOpen,
+              onClick: handleDogClubGuides,
+              title: 'Dog Club Guides',
+              iconOnly: true
+            },
             {
               icon: FileText,
               onClick: handleBookingTermsAdmin,

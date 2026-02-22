@@ -144,7 +144,7 @@ function BookingTermsContent() {
         <div className="w-full max-w-4xl rounded-lg shadow-lg" style={{ backgroundColor: '#ebeadf' }}>
           <div className="p-8">
             <h2 className="text-2xl font-bold text-center mb-8" style={{ color: '#4f6749' }}>
-              {activeVersion?.title || 'Service Agreement'}
+              {activeVersion?.title || 'Booking Terms & Service Agreement'}
             </h2>
 
             <div className="space-y-6 text-gray-800 mb-8 max-h-96 overflow-y-auto">

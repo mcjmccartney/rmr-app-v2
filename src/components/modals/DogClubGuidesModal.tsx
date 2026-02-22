@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { X, ArrowLeft, ExternalLink } from 'lucide-react';
-import { DOG_CLUB_GUIDES, type DogClubGuide } from '@/data/dogClubGuides';
+import { useApp } from '@/context/AppContext';
 
 interface DogClubGuidesModalProps {
   isOpen: boolean;
@@ -17,6 +17,7 @@ export default function DogClubGuidesModal({
   selectedGuides,
   onGuideToggle
 }: DogClubGuidesModalProps) {
+  const { state } = useApp();
   const [guideSearch, setGuideSearch] = useState('');
   const [isMobile, setIsMobile] = useState(false);
 
@@ -46,7 +47,7 @@ export default function DogClubGuidesModal({
 
   if (!isOpen) return null;
 
-  const filteredGuides = DOG_CLUB_GUIDES.filter(guide => {
+  const filteredGuides = state.dogClubGuides.filter(guide => {
     if (!guideSearch) return true;
     const searchLower = guideSearch.toLowerCase();
     return guide.title.toLowerCase().includes(searchLower) ||

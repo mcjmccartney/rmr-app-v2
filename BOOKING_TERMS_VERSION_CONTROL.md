@@ -26,7 +26,7 @@ The admin page shows a table of all booking terms versions with:
 ### 3. Create a New Version
 
 1. Click the **"Create New Version"** button
-2. Enter a title (e.g., "Service Agreement v2")
+2. The title will be automatically set to "Booking Terms & Service Agreement"
 3. Edit the content using the rich text editor
 4. Preview the content below the editor
 5. Click **"Save"** to create the version
@@ -58,7 +58,7 @@ When clients visit the booking terms page (`/booking-terms?email=...`):
 ### `booking_terms_versions` Table
 - `id` - Unique identifier
 - `version_number` - Sequential version number (1, 2, 3, etc.)
-- `title` - Display title (e.g., "Service Agreement v2")
+- `title` - Display title (always "Booking Terms & Service Agreement")
 - `html_content` - The full HTML content of the terms
 - `is_active` - Boolean indicating if this is the active version
 - `created_by` - Email of admin who created it
@@ -129,7 +129,7 @@ All formatting is preserved when clients view the terms.
 ## Best Practices
 
 1. **Test Before Activating**: Create and preview new versions before setting them as active
-2. **Version Naming**: Use clear version numbers in titles (e.g., "Service Agreement v2")
+2. **Consistent Title**: All versions use the same title "Booking Terms & Service Agreement" for consistency
 3. **Keep History**: Don't delete old versions - they're linked to client signatures
 4. **Review Changes**: Always preview content before saving
 5. **Communicate Changes**: Let clients know when terms have been updated
