@@ -13,6 +13,7 @@ interface MapboxGL {
 
 interface MemberLocation {
   id: string;
+  clientId: string;
   clientName: string;
   dogName?: string;
   email?: string;
@@ -24,9 +25,10 @@ interface MemberLocation {
 
 interface MembersMapProps {
   locations: MemberLocation[];
+  onClientClick: (clientId: string) => void;
 }
 
-export default function MembersMap({ locations }: MembersMapProps) {
+export default function MembersMap({ locations, onClientClick }: MembersMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<any>(null);
   const [mapboxgl, setMapboxgl] = useState<MapboxGL | null>(null);
@@ -82,63 +84,30 @@ export default function MembersMap({ locations }: MembersMapProps) {
     markersRef.current = [];
 
     const bounds = new mapboxgl.LngLatBounds();
-    
+
     locations.forEach(location => {
-      // Create custom marker element
+      // Create simple drop pin marker element
       const markerElement = document.createElement('div');
       markerElement.className = 'mapbox-marker';
-      markerElement.innerHTML = `
-        <div style="
-          background-color: #92400e;
-          color: white;
-          border-radius: 50%;
-          width: 32px;
-          height: 32px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border: 2px solid white;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-          font-size: 14px;
-          cursor: pointer;
-          transform: scale(1);
-          transition: transform 0.2s ease;
-        ">👤</div>
+      markerElement.style.cssText = `
+        width: 30px;
+        height: 30px;
+        background-color: #92400e;
+        border: 2px solid white;
+        border-radius: 50% 50% 50% 0;
+        transform: rotate(-45deg);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        cursor: pointer;
       `;
 
-      // Add hover effect
-      markerElement.addEventListener('mouseenter', () => {
-        markerElement.style.transform = 'scale(1.1)';
+      // Add click handler to open client modal
+      markerElement.addEventListener('click', () => {
+        onClientClick(location.clientId);
       });
-      markerElement.addEventListener('mouseleave', () => {
-        markerElement.style.transform = 'scale(1)';
-      });
-
-      // Create popup content
-      const popupContent = `
-        <div style="padding: 12px; min-width: 200px;">
-          <h3 style="margin: 0 0 8px 0; font-size: 16px; font-weight: bold; color: #92400e;">
-            ${location.clientName}
-          </h3>
-          ${location.dogName ? `<p style="margin: 4px 0; font-size: 14px;"><strong>Dog:</strong> ${location.dogName}</p>` : ''}
-          ${location.email ? `<p style="margin: 4px 0; font-size: 14px;"><strong>Email:</strong> ${location.email}</p>` : ''}
-          ${location.membershipDate ? `<p style="margin: 4px 0; font-size: 14px;"><strong>Member since:</strong> ${new Date(location.membershipDate).toLocaleDateString()}</p>` : ''}
-          <p style="margin: 8px 0 0 0; font-size: 12px; color: #666; border-top: 1px solid #eee; padding-top: 8px;">
-            <strong>Address:</strong> ${location.address}
-          </p>
-        </div>
-      `;
-
-      const popup = new mapboxgl.Popup({
-        offset: 25,
-        closeButton: true,
-        closeOnClick: false
-      }).setHTML(popupContent);
 
       // Create marker
       const marker = new mapboxgl.Marker(markerElement)
         .setLngLat([location.longitude, location.latitude])
-        .setPopup(popup)
         .addTo(map.current);
 
       markersRef.current.push(marker);
@@ -154,7 +123,7 @@ export default function MembersMap({ locations }: MembersMapProps) {
         maxZoom: 12
       });
     }
-  }, [locations, mapboxgl]);
+  }, [locations, mapboxgl, onClientClick]);
 
   if (!mapboxgl) {
     return (
