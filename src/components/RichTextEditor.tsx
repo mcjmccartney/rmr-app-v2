@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Bold, Italic, Underline, Link as LinkIcon, Unlink } from 'lucide-react';
+import { Bold, Italic, Underline, Link as LinkIcon, Unlink, Heading2, Type } from 'lucide-react';
 
 interface RichTextEditorProps {
   value: string;
@@ -265,6 +265,43 @@ export default function RichTextEditor({
     handleInput();
   };
 
+  // Apply green header style
+  const applyGreenHeader = () => {
+    if (disabled) return;
+
+    const selection = window.getSelection();
+    if (selection && selection.rangeCount > 0) {
+      const range = selection.getRangeAt(0);
+
+      // Create a styled header element
+      const headerHtml = `<h2 style="color: #4f6749; font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem;">${selection.toString() || 'Header Text'}</h2>`;
+
+      // Insert the header
+      document.execCommand('insertHTML', false, headerHtml);
+
+      editorRef.current?.focus();
+      handleInput();
+    }
+  };
+
+  // Apply body text style (reset to normal)
+  const applyBodyText = () => {
+    if (disabled) return;
+
+    const selection = window.getSelection();
+    if (selection && selection.rangeCount > 0) {
+      // Remove formatting by wrapping in a span with default styles
+      const text = selection.toString();
+      if (text) {
+        const bodyHtml = `<span style="color: inherit; font-size: inherit; font-weight: normal;">${text}</span>`;
+        document.execCommand('insertHTML', false, bodyHtml);
+      }
+
+      editorRef.current?.focus();
+      handleInput();
+    }
+  };
+
   // Handle focus events
   const handleFocus = () => {
     setIsFocused(true);
@@ -364,6 +401,32 @@ export default function RichTextEditor({
               <Unlink size={16} />
             </button>
           )}
+
+          <div className="w-px h-6 bg-gray-300 mx-1" />
+
+          <button
+            type="button"
+            onClick={applyGreenHeader}
+            disabled={disabled}
+            className={`p-2 rounded hover:bg-gray-200 transition-colors ${
+              disabled ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
+            title="Green Header"
+            style={{ color: '#4f6749' }}
+          >
+            <Heading2 size={16} />
+          </button>
+          <button
+            type="button"
+            onClick={applyBodyText}
+            disabled={disabled}
+            className={`p-2 rounded hover:bg-gray-200 transition-colors ${
+              disabled ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
+            title="Body Text"
+          >
+            <Type size={16} />
+          </button>
         </div>
 
       {/* Editor */}

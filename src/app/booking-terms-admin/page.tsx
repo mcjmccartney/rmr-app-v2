@@ -154,7 +154,7 @@ export default function BookingTermsAdminPage() {
 
   const handleCreateNew = () => {
     const nextVersionNumber = Math.max(...versions.map(v => v.version_number), 0) + 1
-    setEditingTitle(`Service Agreement v${nextVersionNumber}`)
+    setEditingTitle('Booking Terms & Service Agreement')
     setEditingHtml(versions.find(v => v.is_active)?.html_content || '')
     setShowNewVersionForm(true)
     setEditingVersion(null)
@@ -241,8 +241,9 @@ export default function BookingTermsAdminPage() {
                   type="text"
                   value={editingTitle}
                   onChange={(e) => setEditingTitle(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                  placeholder="e.g., Service Agreement v2"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent bg-gray-100"
+                  placeholder="Booking Terms & Service Agreement"
+                  readOnly
                 />
               </div>
 
