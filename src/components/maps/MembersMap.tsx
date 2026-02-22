@@ -33,6 +33,7 @@ export default function MembersMap({ locations, onClientClick }: MembersMapProps
   const map = useRef<any>(null);
   const [mapboxgl, setMapboxgl] = useState<MapboxGL | null>(null);
   const markersRef = useRef<any[]>([]);
+  const hasInitializedBounds = useRef(false);
 
   // Dynamically import Mapbox GL JS
   useEffect(() => {
@@ -112,12 +113,13 @@ export default function MembersMap({ locations, onClientClick }: MembersMapProps
       bounds.extend([location.longitude, location.latitude]);
     });
 
-    // Fit map to show all markers
-    if (locations.length > 0) {
+    // Fit map to show all markers only on initial load
+    if (locations.length > 0 && !hasInitializedBounds.current) {
       map.current.fitBounds(bounds, {
         padding: 50,
         maxZoom: 12
       });
+      hasInitializedBounds.current = true;
     }
   }, [locations, mapboxgl, onClientClick]);
 
