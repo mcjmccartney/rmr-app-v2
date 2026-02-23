@@ -195,7 +195,7 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
     // Measure the last page to see if reminder fits
     const lastPageHeight = measureCurrentPage();
     const remainingSpace = CONTENT_MAX_FINAL - lastPageHeight;
-    const spaceNeededForReminder = REMINDER_HEIGHT + 20; // reminder height (includes 2rem margin) + safety margin
+    const spaceNeededForReminder = REMINDER_HEIGHT; // reminder height (includes 2rem margin)
     const needsNewPage = remainingSpace < spaceNeededForReminder;
     setNeedsSeparateReminderPage(needsNewPage);
 
