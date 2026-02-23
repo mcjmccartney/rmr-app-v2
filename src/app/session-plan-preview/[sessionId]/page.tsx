@@ -294,7 +294,7 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
                     fontFamily: 'Arial, sans-serif'
                   }}
                 >
-                  <p style={{ margin: 0 }}>
+                  <p style={{ margin: 0, marginBottom: '80px' }}>
                     <strong>Reminder:</strong><br />
                     I'm here to support you and your dog from a behavioural perspective.
                     Sometimes, behavioural challenges can be linked to pain, diet, or
