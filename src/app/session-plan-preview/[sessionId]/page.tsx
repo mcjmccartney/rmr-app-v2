@@ -228,19 +228,25 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
               className="page-header"
             />
 
-            <div className="page-content">
-              {pageIndex === 0 && (
-                <h1 style={{
-                  fontSize: '2.25rem',
-                  marginBottom: '1.5rem',
-                  fontWeight: 'bold',
-                  fontFamily: 'Arial, sans-serif'
-                }}>
-                  {title}
-                </h1>
-              )}
+            <div className="page-content" style={{
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              minHeight: '100%'
+            }}>
+              <div>
+                {pageIndex === 0 && (
+                  <h1 style={{
+                    fontSize: '2.25rem',
+                    marginBottom: '1.5rem',
+                    fontWeight: 'bold',
+                    fontFamily: 'Arial, sans-serif'
+                  }}>
+                    {title}
+                  </h1>
+                )}
 
-              {page.map((ap, i) => {
+                {page.map((ap, i) => {
                 // Very first action point overall is on pageIndex 0 and i 0
                 const isVeryFirstOverall = pageIndex === 0 && i === 0;
                 return (
@@ -281,12 +287,14 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
                   </div>
                 );
               })}
+              </div>
 
               {/* REMINDER - show on last action point page if there's room */}
               {showReminderOnThisPage && (
                 <div
                   style={{
-                    marginTop: '2rem',
+                    marginTop: 'auto',
+                    paddingTop: '2rem',
                     fontSize: '15px',
                     fontFamily: 'Arial, sans-serif'
                   }}
