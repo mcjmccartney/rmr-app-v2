@@ -36,7 +36,7 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
     // Note: tempWrapper already has padding: 20px top, so we don't subtract it here
     const CONTENT_MAX_MIDDLE = PAGE_HEIGHT - 226;
     // Header (113px) + Final Footer - adjusted to allow more content = ~122.66px
-    const CONTENT_MAX_FINAL = PAGE_HEIGHT - 100;
+    const CONTENT_MAX_FINAL = PAGE_HEIGHT - 50;
 
     const tempWrapper = document.createElement('div');
     tempWrapper.style.position = 'absolute';
