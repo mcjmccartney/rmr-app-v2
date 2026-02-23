@@ -192,13 +192,13 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
     if (currentPage.length > 0) builtPages.push(currentPage);
 
     // Check if there's enough space for the reminder on the last page
-    // The Reminder is positioned absolutely at bottom: 113px
+    // The Reminder is positioned absolutely at bottom: 90px
     // So we need to check if the Action Points content ends high enough
     // that it won't overlap with the absolutely-positioned Reminder
     const lastPageHeight = measureCurrentPage();
-    // Reminder is at bottom: 113px, so it occupies from (CONTENT_MAX_FINAL - 113 - REMINDER_HEIGHT) to (CONTENT_MAX_FINAL - 113)
+    // Reminder is at bottom: 90px, so it occupies from (CONTENT_MAX_FINAL - 90 - REMINDER_HEIGHT) to (CONTENT_MAX_FINAL - 90)
     // Action Points need to end before they would overlap with the Reminder
-    const reminderTopPosition = CONTENT_MAX_FINAL - 113 - REMINDER_HEIGHT;
+    const reminderTopPosition = CONTENT_MAX_FINAL - 90 - REMINDER_HEIGHT;
     const needsNewPage = lastPageHeight > reminderTopPosition;
     setNeedsSeparateReminderPage(needsNewPage);
 
@@ -290,7 +290,7 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
                 <div
                   style={{
                     position: 'absolute',
-                    bottom: '113px',
+                    bottom: '90px',
                     left: '3.4rem',
                     right: '3.4rem',
                     fontSize: '15px',
