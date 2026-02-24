@@ -47,7 +47,7 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
     document.body.appendChild(tempWrapper);
 
     // Measure the actual reminder height
-    // Match the actual rendering: absolute positioning at bottom: '93px' (93px from page bottom for footer)
+    // Match the actual rendering: absolute positioning at bottom: '113px' (113px from page bottom for footer)
     const reminderBlock = document.createElement('div');
     reminderBlock.style.fontSize = '15px';
     reminderBlock.style.fontFamily = 'Arial, sans-serif';
@@ -66,8 +66,8 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
       </p>
     `;
     tempWrapper.appendChild(reminderBlock);
-    // Reminder height + 93px footer space
-    const REMINDER_HEIGHT = reminderBlock.offsetHeight + 93;
+    // Reminder height + 113px footer space
+    const REMINDER_HEIGHT = reminderBlock.offsetHeight + 113;
     tempWrapper.innerHTML = '';
 
     const builtPages: EditableActionPoint[][] = [];
@@ -283,8 +283,8 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
               {showReminderOnThisPage && (
                 <div
                   style={{
-                    /*position: 'absolute',
-                    bottom: '93px',*/
+                    position: 'absolute',
+                    bottom: '113px',
                     left: '3.4rem',
                     right: '3.4rem',
                     fontSize: '15px',
