@@ -46,13 +46,13 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
     tempWrapper.style.fontFamily = 'Arial, sans-serif';
     document.body.appendChild(tempWrapper);
 
-    // Measure the actual reminder height including margin
+    // Measure the actual reminder height including margin-bottom
+    // Match the actual rendering: absolute positioning with marginBottom: '80px'
     const reminderBlock = document.createElement('div');
     reminderBlock.style.fontSize = '15px';
     reminderBlock.style.fontFamily = 'Arial, sans-serif';
-    reminderBlock.style.marginTop = '2rem';
     reminderBlock.innerHTML = `
-      <p style="margin: 0;">
+      <p style="margin: 0; margin-bottom: 80px;">
         <strong>Reminder:</strong><br />
         I'm here to support you and your dog from a behavioural perspective.
         Sometimes, behavioural challenges can be linked to pain, diet, or
@@ -66,11 +66,8 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
       </p>
     `;
     tempWrapper.appendChild(reminderBlock);
-    // Reminder now flows in the document with 2rem top margin
+    // Reminder height includes the 80px bottom margin
     const REMINDER_HEIGHT = reminderBlock.offsetHeight;
-    tempWrapper.innerHTML = '';
-
-    // Clear temp wrapper
     tempWrapper.innerHTML = '';
 
     const builtPages: EditableActionPoint[][] = [];
