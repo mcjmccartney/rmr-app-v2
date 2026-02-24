@@ -284,7 +284,7 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
                 <div
                   style={{
                     position: 'absolute',
-                    bottom: '80px',
+                    bottom: '0px',
                     left: '3.4rem',
                     right: '3.4rem',
                     fontSize: '15px',
