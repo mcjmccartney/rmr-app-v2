@@ -36,7 +36,7 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
     // Note: tempWrapper already has padding: 20px top, so we don't subtract it here
     const CONTENT_MAX_MIDDLE = PAGE_HEIGHT - 226;
     // Header (113px) + Final Footer - adjusted to allow ~900px for Action Points + ~210px for Reminder = ~1110px total
-    const CONTENT_MAX_FINAL = PAGE_HEIGHT - 12;
+    const CONTENT_MAX_FINAL = PAGE_HEIGHT + 50;
 
     const tempWrapper = document.createElement('div');
     tempWrapper.style.position = 'absolute';
@@ -283,8 +283,6 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
               {showReminderOnThisPage && (
                 <div
                   style={{
-                    /*position: '',
-                    bottom: '80px',*/
                     left: '3.4rem',
                     right: '3.4rem',
                     fontSize: '15px',
@@ -329,7 +327,7 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
             <div
               style={{
                 position: 'absolute',
-                bottom: '93px',
+                bottom: '80px',
                 left: '3.4rem',
                 right: '3.4rem',
                 fontSize: '15px',
