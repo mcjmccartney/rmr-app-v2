@@ -136,13 +136,14 @@ export async function GET(req: Request) {
 
     console.log("[PDF-GEN] Fonts loaded — generating PDF with Puppeteer...");
 
-    const pdfBuffer = await page.pdf({
+   /* const pdfBuffer = await page.pdf({
       format: "A4",
       printBackground: true,
       margin: { top: "0", bottom: "0", left: "0", right: "0" },
       preferCSSPageSize: true, // Use CSS @page rules for page sizing
     });
-
+*/
+    
     console.log(`[PDF-GEN] PDF generated, size: ${pdfBuffer.length} bytes`);
 
     await browser.close();
