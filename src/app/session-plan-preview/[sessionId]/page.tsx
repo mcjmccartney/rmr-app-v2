@@ -46,13 +46,13 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
     tempWrapper.style.fontFamily = 'Arial, sans-serif';
     document.body.appendChild(tempWrapper);
 
-    // Measure the actual reminder height including margin-bottom
-    // Match the actual rendering: absolute positioning with marginBottom: '80px'
+    // Measure the actual reminder height
+    // Match the actual rendering: absolute positioning at bottom: '93px' (93px from page bottom for footer)
     const reminderBlock = document.createElement('div');
     reminderBlock.style.fontSize = '15px';
     reminderBlock.style.fontFamily = 'Arial, sans-serif';
     reminderBlock.innerHTML = `
-      <p style="margin: 0; margin-bottom: 80px;">
+      <p style="margin: 0;">
         <strong>Reminder:</strong><br />
         I'm here to support you and your dog from a behavioural perspective.
         Sometimes, behavioural challenges can be linked to pain, diet, or
@@ -66,8 +66,8 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
       </p>
     `;
     tempWrapper.appendChild(reminderBlock);
-    // Reminder height includes the 80px bottom margin
-    const REMINDER_HEIGHT = reminderBlock.offsetHeight;
+    // Reminder height + 93px footer space
+    const REMINDER_HEIGHT = reminderBlock.offsetHeight + 93;
     tempWrapper.innerHTML = '';
 
     const builtPages: EditableActionPoint[][] = [];
@@ -284,14 +284,14 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
                 <div
                   style={{
                     position: 'absolute',
-                    bottom: '0',
+                    bottom: '93px',
                     left: '3.4rem',
                     right: '3.4rem',
                     fontSize: '15px',
                     fontFamily: 'Arial, sans-serif'
                   }}
                 >
-                  <p style={{ margin: 0, marginBottom: '80px' }}>
+                  <p style={{ margin: 0 }}>
                     <strong>Reminder:</strong><br />
                     I'm here to support you and your dog from a behavioural perspective.
                     Sometimes, behavioural challenges can be linked to pain, diet, or
