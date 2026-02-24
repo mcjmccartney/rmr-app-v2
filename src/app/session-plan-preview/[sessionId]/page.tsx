@@ -35,8 +35,8 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
     // Header (113px) + Middle Footer (113px) = 226px
     // Note: tempWrapper already has padding: 20px top, so we don't subtract it here
     const CONTENT_MAX_MIDDLE = PAGE_HEIGHT - 226;
-    // Header (113px) + Final Footer - adjusted to allow ~900px for Action Points + ~210px for Reminder = ~1110px total
-    const CONTENT_MAX_FINAL = PAGE_HEIGHT - 12;
+    // Header (113px) + Final Footer - adjusted to allow ~950px for Action Points + ~110px for Reminder = ~1060px total
+    const CONTENT_MAX_FINAL = PAGE_HEIGHT - 62.66;
 
     const tempWrapper = document.createElement('div');
     tempWrapper.style.position = 'absolute';
@@ -47,9 +47,10 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
     document.body.appendChild(tempWrapper);
 
     // Measure the actual reminder height
-    // Match the actual rendering: absolute positioning at bottom: '113px' (113px from page bottom for footer)
+    // Match the actual rendering: absolute positioning at bottom: '93px' (93px from page bottom for footer)
     const reminderBlock = document.createElement('div');
-    reminderBlock.style.fontSize = '15px';
+    // Use 14px for PDF mode, 15px for browser preview
+    reminderBlock.style.fontSize = isPlaywrightMode ? '14px' : '15px';
     reminderBlock.style.fontFamily = 'Arial, sans-serif';
     reminderBlock.innerHTML = `
       <p style="margin: 0;">
@@ -66,8 +67,8 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
       </p>
     `;
     tempWrapper.appendChild(reminderBlock);
-    // Reminder height + 113px footer space
-    const REMINDER_HEIGHT = reminderBlock.offsetHeight + 113;
+    // Reminder height + 93px footer space
+    const REMINDER_HEIGHT = reminderBlock.offsetHeight + 93;
     tempWrapper.innerHTML = '';
 
     const builtPages: EditableActionPoint[][] = [];
@@ -284,10 +285,10 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
                 <div
                   style={{
                     /*position: 'absolute',
-                    bottom: '0px',*/
+                    bottom: '93px',*/
                     left: '3.4rem',
                     right: '3.4rem',
-                    fontSize: '15px',
+                    fontSize: isPlaywrightMode ? '14px' : '15px',
                     fontFamily: 'Arial, sans-serif'
                   }}
                 >
@@ -332,7 +333,7 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
                 bottom: '80px',
                 left: '3.4rem',
                 right: '3.4rem',
-                fontSize: '15px',
+                fontSize: isPlaywrightMode ? '14px' : '15px',
                 fontFamily: 'Arial, sans-serif'
               }}
             >
