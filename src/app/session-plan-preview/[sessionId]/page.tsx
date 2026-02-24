@@ -50,7 +50,6 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
     // Match the actual rendering: absolute positioning at bottom: '93px' (93px from page bottom for footer)
     const reminderBlock = document.createElement('div');
     // Use 14px for PDF mode, 15px for browser preview
-    reminderBlock.style.fontSize = isPlaywrightMode ? '14px' : '15px';
     reminderBlock.style.fontFamily = 'Arial, sans-serif';
     reminderBlock.innerHTML = `
       <p style="margin: 0;">
@@ -284,11 +283,10 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
               {showReminderOnThisPage && (
                 <div
                   style={{
-                    /*position: 'absolute',
-                    bottom: '93px',*/
+                    position: 'absolute',
+                    bottom: '80px',
                     left: '2rem',
                     right: '2rem',
-                    fontSize: isPlaywrightMode ? '14px' : '15px',
                     fontFamily: 'Arial, sans-serif'
                   }}
                 >
@@ -333,7 +331,6 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
                 bottom: '80px',
                 left: '2rem',
                 right: '2rem',
-                fontSize: isPlaywrightMode ? '14px' : '15px',
                 fontFamily: 'Arial, sans-serif'
               }}
             >
@@ -580,7 +577,7 @@ export default function SessionPlanPreviewPage() {
         .action-point {
           page-break-inside: avoid;
           break-inside: avoid;
-          font-size: 15px;
+          font-size: 14px;
         }
 
         @media print {
@@ -602,7 +599,7 @@ export default function SessionPlanPreviewPage() {
           .action-point {
             page-break-inside: avoid;
             break-inside: avoid;
-            font-size: 15px;
+            font-size: 14px;
           }
         }
       `}</style>
@@ -673,7 +670,7 @@ export default function SessionPlanPreviewPage() {
                     borderRadius: '0.5rem',
                     padding: '1.5rem 1rem 1rem',
                     display: 'grid',
-                    fontSize: '15px',
+                    fontSize: '14px',
                     gridTemplateColumns: '1fr 1fr',
                     gap: '0.5rem 2rem'
                   }}>
@@ -700,7 +697,7 @@ export default function SessionPlanPreviewPage() {
 
                   <div style={{
                     fontFamily: 'Arial, sans-serif',
-                    fontSize: '15px',
+                    fontSize: '14px',
                     display: 'flex'
                   }}>
                     <div style={{ flex: 1 }}>
