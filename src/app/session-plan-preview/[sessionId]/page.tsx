@@ -46,11 +46,11 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
     tempWrapper.style.fontFamily = 'Arial, sans-serif';
     document.body.appendChild(tempWrapper);
 
-    // Measure the actual reminder height including margin
+    // Measure the actual reminder height
+    // Match the actual rendering: absolute positioning at bottom: '93px' (93px from page bottom for footer)
     const reminderBlock = document.createElement('div');
     reminderBlock.style.fontSize = '15px';
     reminderBlock.style.fontFamily = 'Arial, sans-serif';
-    reminderBlock.style.marginTop = '2rem';
     reminderBlock.innerHTML = `
       <p style="margin: 0;">
         <strong>Reminder:</strong><br />
@@ -66,8 +66,8 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
       </p>
     `;
     tempWrapper.appendChild(reminderBlock);
-    // Reminder now flows in the document with 2rem top margin
-    const REMINDER_HEIGHT = reminderBlock.offsetHeight;
+    // Reminder height + 93px footer space
+    const REMINDER_HEIGHT = reminderBlock.offsetHeight + 93;
     tempWrapper.innerHTML = '';
 
     const builtPages: EditableActionPoint[][] = [];
@@ -225,25 +225,19 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
               className="page-header"
             />
 
-            <div className="page-content" style={{
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-              minHeight: '100%'
-            }}>
-              <div>
-                {pageIndex === 0 && (
-                  <h1 style={{
-                    fontSize: '2.25rem',
-                    marginBottom: '1.5rem',
-                    fontWeight: 'bold',
-                    fontFamily: 'Arial, sans-serif'
-                  }}>
-                    {title}
-                  </h1>
-                )}
+            <div className="page-content" style={{ position: 'relative' }}>
+              {pageIndex === 0 && (
+                <h1 style={{
+                  fontSize: '2.25rem',
+                  marginBottom: '1.5rem',
+                  fontWeight: 'bold',
+                  fontFamily: 'Arial, sans-serif'
+                }}>
+                  {title}
+                </h1>
+              )}
 
-                {page.map((ap, i) => {
+              {page.map((ap, i) => {
                 // Very first action point overall is on pageIndex 0 and i 0
                 const isVeryFirstOverall = pageIndex === 0 && i === 0;
                 return (
@@ -284,14 +278,15 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
                   </div>
                 );
               })}
-              </div>
 
               {/* REMINDER - show on last action point page if there's room */}
               {showReminderOnThisPage && (
                 <div
                   style={{
-                    marginTop: 'auto',
-                    paddingTop: '2rem',
+                    /*position: 'absolute',
+                    bottom: '93px',*/
+                    left: '3.4rem',
+                    right: '3.4rem',
                     fontSize: '15px',
                     fontFamily: 'Arial, sans-serif'
                   }}
