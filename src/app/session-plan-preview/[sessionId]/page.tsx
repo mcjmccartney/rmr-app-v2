@@ -283,8 +283,8 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
               {showReminderOnThisPage && (
                 <div
                   style={{
-                    /*position: '',*/
-                    bottom: '80px',
+                    /*position: '',
+                    bottom: '80px',*/
                     left: '3.4rem',
                     right: '3.4rem',
                     fontSize: '15px',
