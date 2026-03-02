@@ -204,8 +204,16 @@ export async function GET(req: Request) {
       bookingTime,
     });
 
+    const pdfWebhookUrl = process.env.NEXT_PUBLIC_MAKE_WEBHOOK_PDF_URL;
+    if (!pdfWebhookUrl) {
+      return NextResponse.json(
+        { error: "NEXT_PUBLIC_MAKE_WEBHOOK_PDF_URL is not configured" },
+        { status: 500 }
+      );
+    }
+
     const makeRes = await fetch(
-      process.env.NEXT_PUBLIC_MAKE_WEBHOOK_PDF_URL!,
+      pdfWebhookUrl,
       {
         method: "POST",
         body: formData as any,
