@@ -191,6 +191,5 @@ export const membershipService = {
   // Memberships are paired with clients by email matching instead.
   async updateClientId(email: string, clientId: string): Promise<void> {
     // No-op: memberships are paired by email, not by storing client_id
-    console.log(`Membership pairing: ${email} paired with client ${clientId} (email-based matching)`);
   }
 }

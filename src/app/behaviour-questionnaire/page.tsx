@@ -154,7 +154,6 @@ function BehaviourQuestionnaireForm() {
             data: formData
           })
         });
-        console.log('Email notification sent for behaviour questionnaire');
       } catch (emailError) {
         console.error('Failed to send email notification:', emailError);
         // Don't fail the form submission if email fails

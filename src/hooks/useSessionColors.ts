@@ -153,42 +153,6 @@ export const useSessionColors = (data: SessionColorData) => {
           matchesDogName: q.dogName?.toLowerCase() === sessionDogName?.toLowerCase()
         }));
 
-        console.log(`[SESSION COLOR DEBUG] ${client.firstName} ${client.lastName}:`, {
-          sessionId: session.id,
-          bookingDate: session.bookingDate,
-          bookingTime: session.bookingTime,
-          sessionDateObject: sessionDate,
-          todayObject: today,
-          isSessionPast,
-          sessionDogName,
-          sessionDogNameTrimmed: sessionDogName?.trim(),
-          clientDogName: client.dogName,
-          clientEmails,
-          clientOtherDogs: client.otherDogs,
-          hasSignedBookingTerms,
-          hasFilledQuestionnaire,
-          isPaid,
-          isFullyCompleted,
-          isAllComplete,
-          questionnaireBypass: session.questionnaireBypass,
-          sessionPlanSent: session.sessionPlanSent,
-          bookingTermsInDB: data.bookingTerms?.filter(bt => clientEmails.includes(bt.email?.toLowerCase() || '')),
-          allBookingTermsEmails: data.bookingTerms?.map(bt => bt.email?.toLowerCase()),
-          allQuestionnairesForClient: data.behaviourQuestionnaires?.filter(q =>
-            clientEmails.includes(q.email?.toLowerCase() || '')
-          ).map(q => ({
-            dogName: q.dogName,
-            dogNameTrimmed: q.dogName?.trim(),
-            email: q.email,
-            matchesAfterTrim: q.dogName?.trim().toLowerCase() === sessionDogName?.trim().toLowerCase()
-          })),
-          possibleRelatedQuestionnaires: allQuestionnairesWithSimilarNames,
-          matchingQuestionnaire: data.behaviourQuestionnaires?.filter(q =>
-            clientEmails.includes(q.email?.toLowerCase() || '') &&
-            (q.dogName?.trim().toLowerCase() === sessionDogName?.trim().toLowerCase())
-          ),
-          finalBackgroundColor: null // Will be set below
-        });
       }
 
       let backgroundColor: string;
@@ -227,19 +191,6 @@ export const useSessionColors = (data: SessionColorData) => {
                      client.firstName?.toLowerCase().includes('dominique') ||
                      client.firstName?.toLowerCase().includes('nicole') ||
                      client.lastName?.toLowerCase().includes('lewis'))) {
-        console.log(`[SESSION COLOR FINAL] ${client.firstName} ${client.lastName} - ${session.bookingDate}:`, {
-          backgroundColor,
-          reason: backgroundColor === '#36454F' ? 'All Complete (Paid + Terms + Plan Sent)' :
-                  backgroundColor === '#4f6749' ? 'Fully Completed + Paid (Terms + Questionnaire + Paid)' :
-                  backgroundColor === '#e17100' ? 'Fully Completed but Not Paid (Terms + Questionnaire)' :
-                  backgroundColor === '#973b00' ? 'INCOMPLETE (Missing Terms or Questionnaire)' : 'Unknown',
-          hasSignedBookingTerms,
-          hasFilledQuestionnaire,
-          isPaid,
-          isSessionPlanSent,
-          isFullyCompleted,
-          isAllComplete
-        });
       }
 
       colorMap.set(session.id, {

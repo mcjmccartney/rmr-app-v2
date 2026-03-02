@@ -62,7 +62,6 @@ export const bookingTermsService = {
 
   // Update client profile to indicate booking terms signed (deprecated - now using booking_terms table)
   async updateClientBookingTermsStatus(email: string): Promise<void> {
-    console.log('updateClientBookingTermsStatus called but deprecated - booking terms are now tracked in separate table');
     // This method is kept for backward compatibility but does nothing
     // The booking terms are now tracked in the booking_terms table
   },

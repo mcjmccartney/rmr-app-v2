@@ -48,15 +48,12 @@ function ClientsPageContent() {
         const localStorageData = localStorage.getItem('membershipResets');
         if (localStorageData) {
           const parsedData = JSON.parse(localStorageData);
-          console.log('📦 Found localStorage data, migrating to database:', parsedData);
 
           try {
             await groupCoachingResetService.migrateFromLocalStorage(parsedData);
             // Clear localStorage after successful migration
             localStorage.removeItem('membershipResets');
-            console.log('✅ Migration complete, localStorage cleared');
           } catch (migrationError) {
-            console.warn('⚠️ Migration failed, keeping localStorage data:', migrationError);
           }
         }
 
@@ -73,14 +70,12 @@ function ClientsPageContent() {
 
         setMembershipResets(resetMap);
         setResetsLoaded(true);
-        console.log('💾 Loaded group coaching resets from database:', resetMap);
       } catch (error) {
         console.error('❌ Error loading group coaching resets:', error);
         // Fallback to localStorage if database fails
         const localStorageData = localStorage.getItem('membershipResets');
         if (localStorageData) {
           setMembershipResets(JSON.parse(localStorageData));
-          console.log('📦 Fallback: Using localStorage data');
         }
         setResetsLoaded(true);
       }
@@ -150,7 +145,6 @@ function ClientsPageContent() {
           // If they don't have a reset date, or their reset date is before the most recent Group session,
           // add a new reset with the session date
           if (!currentResetDate || currentResetDate < mostRecentSession.bookingDate) {
-            console.log(`🔄 Auto-resetting ${client.firstName} ${client.lastName} to ${mostRecentSession.bookingDate} (participated in past Group session)`);
 
             // Add reset to database
             await groupCoachingResetService.addReset(client.id, mostRecentSession.bookingDate);
@@ -166,7 +160,6 @@ function ClientsPageContent() {
             ...prev,
             ...updates
           }));
-          console.log(`✅ Auto-reset ${Object.keys(updates).length} members for past Group sessions`);
         }
       } catch (error) {
         console.error('❌ Error auto-resetting for past Group sessions:', error);
@@ -250,7 +243,6 @@ function ClientsPageContent() {
         ...updates
       }));
 
-      console.log(`✅ Reset group coaching count for ${selectedClients.size} clients`);
 
       // Clear selections and close modal
       setSelectedClients(new Set());
@@ -263,17 +255,13 @@ function ClientsPageContent() {
 
   // Handle sending selected members to n8n webhook
   const handleSendToN8n = async () => {
-    console.log('[N8N_WEBHOOK] Button clicked!');
-    console.log('[N8N_WEBHOOK] Selected clients count:', selectedClients.size);
 
     if (selectedClients.size === 0) {
-      console.warn('[N8N_WEBHOOK] No members selected to send to n8n');
       return;
     }
 
     try {
       setSendingToN8n(true);
-      console.log('[N8N_WEBHOOK] Starting webhook send...');
 
       // Get the selected clients' emails as an array
       const memberEmails = Array.from(selectedClients)
@@ -343,13 +331,8 @@ function ClientsPageContent() {
         .map(session => formatSessionDateTime(session.bookingDate, session.bookingTime))
         .join('<br/>');
 
-      console.log(`[N8N_WEBHOOK] Sending ${memberEmails.length} members to n8n webhook`);
-      console.log('[N8N_WEBHOOK] Member emails (array):', memberEmails);
-      console.log('[N8N_WEBHOOK] Upcoming Group sessions count:', upcomingGroupSessions.length);
-      console.log('[N8N_WEBHOOK] Upcoming sessions list:\n', upcomingSessionsList);
 
       const webhookUrl = 'https://n8n.srv836498.hstgr.cloud/webhook/fbd5123f-deec-414a-bf46-f6190f833c76';
-      console.log('[N8N_WEBHOOK] Webhook URL:', webhookUrl);
 
       // Send to n8n webhook (production endpoint)
       const response = await fetch(webhookUrl, {
@@ -363,13 +346,9 @@ function ClientsPageContent() {
         })
       });
 
-      console.log('[N8N_WEBHOOK] Response status:', response.status);
-      console.log('[N8N_WEBHOOK] Response ok:', response.ok);
 
       if (response.ok) {
         const responseData = await response.text();
-        console.log(`[N8N_WEBHOOK] ✅ Successfully sent ${memberEmails.length} members to n8n`);
-        console.log('[N8N_WEBHOOK] Response data:', responseData);
       } else {
         const errorText = await response.text();
         console.error(`[N8N_WEBHOOK] ❌ Failed to send webhook:`, response.status, response.statusText);
@@ -380,7 +359,6 @@ function ClientsPageContent() {
       console.error('[N8N_WEBHOOK] Error sending to n8n:', error);
     } finally {
       setSendingToN8n(false);
-      console.log('[N8N_WEBHOOK] Finished webhook send');
     }
   };
 

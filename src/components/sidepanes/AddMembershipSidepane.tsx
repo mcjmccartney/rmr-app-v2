@@ -71,12 +71,10 @@ export default function AddMembershipSidepane({ isOpen, onClose }: AddMembership
 
       // Update future session prices for this member
       try {
-        console.log('[ADD MEMBERSHIP] Updating future session prices...');
         const { updatedCount } = await updateFutureSessionPricesForMember(
           formData.clientId,
           formData.date
         );
-        console.log(`[ADD MEMBERSHIP] ✅ Updated ${updatedCount} future session price(s)`);
 
         if (updatedCount > 0) {
           alert(`Membership created! Updated ${updatedCount} future session price(s) to member rates.`);

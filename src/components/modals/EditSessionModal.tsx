@@ -235,7 +235,6 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
     };
 
     try {
-      console.log('Updating session...');
 
       // Update the session - calendar updates are now handled automatically in updateSession
       await updateSession(session.id, updates);
@@ -267,7 +266,6 @@ export default function EditSessionModal({ session, isOpen, onClose }: EditSessi
     setIsSubmitting(true);
 
     try {
-      console.log('Deleting session...');
       await deleteSession(session.id);
       onClose();
     } catch (error) {

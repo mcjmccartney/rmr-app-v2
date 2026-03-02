@@ -131,7 +131,6 @@ export const paymentService = {
 
       default:
         // Fallback for other session types (Group, RMR Live, Phone Call, Coaching)
-        console.warn(`No specific payment link configured for session type: ${session.sessionType}, using Online Catchup link`);
         baseMonzoLink = PAYMENT_LINKS['Online Catchup'];
         break;
     }

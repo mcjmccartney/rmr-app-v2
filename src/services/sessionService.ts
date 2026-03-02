@@ -249,7 +249,6 @@ export const sessionService = {
     if (error) {
       // If dog_name column doesn't exist yet, retry without it
       if (error.code === 'PGRST204' && error.message.includes('dog_name')) {
-        console.warn('dog_name column not found, retrying without it')
         const { dog_name, ...dbRowWithoutDogName } = dbRow
 
         const { data: retryData, error: retryError } = await supabase
@@ -269,7 +268,6 @@ export const sessionService = {
 
       // If special_marking column doesn't exist yet, retry without it
       if (error.code === 'PGRST204' && error.message.includes('special_marking')) {
-        console.warn('special_marking column not found, retrying without it')
         const { special_marking, ...dbRowWithoutSpecialMarking } = dbRow
 
         const { data: retryData, error: retryError } = await supabase

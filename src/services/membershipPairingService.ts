@@ -103,7 +103,6 @@ export const membershipPairingService = {
                 membershipCount: clientMemberships.length
               })
 
-              console.log(`✅ Updated membership status for ${client.first_name} ${client.last_name}: ${currentMembershipStatus} → ${shouldBeMember} (found ${clientMemberships.length} memberships across ${clientEmails.length} emails)`);
             }
           }
 

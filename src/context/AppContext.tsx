@@ -399,7 +399,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const lastCall = recentWebhookCallsRef.current[key];
 
     if (lastCall && (now - lastCall) < 5000) { // 5 second window
-      console.log(`🚫 DUPLICATE WEBHOOK BLOCKED: ${webhookType} for session ${sessionId} (last call ${now - lastCall}ms ago)`);
       return true;
     }
 
@@ -441,9 +440,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Load memberships from Supabase with performance optimization
   const loadMemberships = useCallback(async () => {
     try {
-      console.log('Loading memberships...');
       const memberships = await membershipService.getAll();
-      console.log('Loaded memberships:', memberships.length);
       dispatch({ type: 'SET_MEMBERSHIPS', payload: memberships });
     } catch (error) {
       console.error('Failed to load memberships:', error);
@@ -453,9 +450,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Load behavioural briefs from Supabase with performance optimization
   const loadBehaviouralBriefs = useCallback(async () => {
     try {
-      console.log('Loading behavioural briefs...');
       const briefs = await behaviouralBriefService.getAll();
-      console.log('Loaded behavioural briefs:', briefs.length);
       dispatch({ type: 'SET_BEHAVIOURAL_BRIEFS', payload: briefs });
     } catch (error) {
       console.error('Failed to load behavioural briefs:', error);
@@ -465,9 +460,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Load behaviour questionnaires from Supabase with performance optimization
   const loadBehaviourQuestionnaires = useCallback(async () => {
     try {
-      console.log('Loading behaviour questionnaires...');
       const questionnaires = await behaviourQuestionnaireService.getAll();
-      console.log('Loaded behaviour questionnaires:', questionnaires.length);
       dispatch({ type: 'SET_BEHAVIOUR_QUESTIONNAIRES', payload: questionnaires });
     } catch (error) {
       console.error('Failed to load behaviour questionnaires:', error);
@@ -477,9 +470,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Load booking terms from Supabase with performance optimization
   const loadBookingTerms = useCallback(async () => {
     try {
-      console.log('Loading booking terms...');
       const bookingTerms = await bookingTermsService.getAll();
-      console.log('Loaded booking terms:', bookingTerms.length);
       dispatch({ type: 'SET_BOOKING_TERMS', payload: bookingTerms });
     } catch (error) {
       console.error('Failed to load booking terms:', error);
@@ -499,9 +490,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Load action points from Supabase with performance optimization
   const loadActionPoints = useCallback(async () => {
     try {
-      console.log('Loading action points...');
       const actionPoints = await sessionPlanService.getAllActionPoints();
-      console.log('Loaded action points:', actionPoints.length);
       dispatch({ type: 'SET_ACTION_POINTS', payload: actionPoints });
     } catch (error) {
       console.error('Failed to load action points:', error);
@@ -511,9 +500,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Load dog club guides from Supabase
   const loadDogClubGuides = useCallback(async () => {
     try {
-      console.log('Loading dog club guides...');
       const guides = await dogClubGuidesService.getAll();
-      console.log('Loaded dog club guides:', guides.length);
       dispatch({ type: 'SET_DOG_CLUB_GUIDES', payload: guides });
     } catch (error) {
       console.error('Failed to load dog club guides:', error);
@@ -523,9 +510,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Load session participants from Supabase with performance optimization
   const loadSessionParticipants = useCallback(async () => {
     try {
-      console.log('Loading session participants...');
       const participants = await sessionParticipantService.getAll();
-      console.log('Loaded session participants:', participants.length);
       dispatch({ type: 'SET_SESSION_PARTICIPANTS', payload: participants });
     } catch (error) {
       console.error('Failed to load session participants:', error);
@@ -535,9 +520,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Load session plans from Supabase with performance optimization
   const loadSessionPlans = useCallback(async () => {
     try {
-      console.log('Loading session plans...');
       const sessionPlans = await sessionPlanService.getAll();
-      console.log('Loaded session plans:', sessionPlans.length);
       dispatch({ type: 'SET_SESSION_PLANS', payload: sessionPlans });
     } catch (error) {
       console.error('Failed to load session plans:', error);
@@ -546,11 +529,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // Real-time subscription management with performance optimization
   const setupRealtimeSubscriptions = useCallback(() => {
-    console.log('🔄 Setting up real-time subscriptions...');
 
     // Prevent duplicate subscriptions
     if (Object.keys(subscriptionsRef.current).length > 0) {
-      console.log('⚠️ Subscriptions already exist, skipping setup');
       return;
     }
 
@@ -560,7 +541,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'clients' },
         (payload) => {
-          console.log('🔄 Real-time client change:', payload);
 
           if (payload.eventType === 'INSERT') {
             const newClient = payload.new as any;
@@ -617,7 +597,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'sessions' },
         (payload) => {
-          console.log('🔄 Real-time session change:', payload);
 
           if (payload.eventType === 'INSERT') {
             const newSession = payload.new as any;
@@ -680,7 +659,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'behaviour_questionnaires' },
         (payload) => {
-          console.log('🔄 Real-time questionnaire change:', payload);
 
           if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
             // Reload questionnaires to get the latest data
@@ -700,7 +678,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'behavioural_briefs' },
         (payload) => {
-          console.log('🔄 Real-time brief change:', payload);
 
           if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
             // Reload briefs to get the latest data
@@ -720,7 +697,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'booking_terms' },
         (payload) => {
-          console.log('🔄 Real-time booking terms change:', payload);
 
           if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
             // Reload booking terms to get the latest data
@@ -740,7 +716,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'memberships' },
         (payload) => {
-          console.log('🔄 Real-time membership change:', payload);
 
           if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
             // Reload memberships to get the latest data
@@ -760,7 +735,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'session_plans' },
         (payload) => {
-          console.log('🔄 Real-time session plan change:', payload);
 
           if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
             // Reload session plans to get the latest data
@@ -774,12 +748,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     subscriptionsRef.current.sessionPlans = sessionPlansSubscription;
 
-    console.log('✅ Real-time subscriptions setup complete');
   }, [debouncedDispatch, loadBehaviourQuestionnaires, loadBehaviouralBriefs, loadBookingTerms, loadMemberships, loadSessionPlans]);
 
   // Cleanup subscriptions
   const cleanupSubscriptions = useCallback(() => {
-    console.log('🧹 Cleaning up real-time subscriptions...');
 
     Object.values(subscriptionsRef.current).forEach(subscription => {
       if (subscription) {
@@ -788,7 +760,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
 
     subscriptionsRef.current = {};
-    console.log('✅ Subscriptions cleanup complete');
   }, []);
 
   // Create action point in Supabase
@@ -864,7 +835,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Detect potential duplicate clients (manual scan)
   const detectDuplicates = async () => {
     try {
-      console.log(`🔍 Starting duplicate detection scan for ${state.clients.length} clients...`);
 
       const allDuplicates = DuplicateDetectionService.detectDuplicates(state.clients);
 
@@ -885,7 +855,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const activeDuplicates = allDuplicates.filter(dup => !dismissedIds.includes(dup.id));
       dispatch({ type: 'SET_POTENTIAL_DUPLICATES', payload: activeDuplicates });
 
-      console.log(`✅ Duplicate detection complete. Found ${activeDuplicates.length} potential duplicates.`);
     } catch (error) {
       console.error('❌ Failed to detect duplicates:', error);
       dispatch({ type: 'SET_POTENTIAL_DUPLICATES', payload: [] });
@@ -894,7 +863,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // Dismiss a potential duplicate
   const dismissDuplicate = async (duplicateId: string) => {
-    console.log('🚫 Dismissing duplicate with ID:', duplicateId);
 
     // Remove from state immediately for better UX
     dispatch({ type: 'REMOVE_POTENTIAL_DUPLICATE', payload: duplicateId });
@@ -956,9 +924,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Update membership statuses for all clients
   const updateMembershipStatuses = async () => {
     try {
-      console.log('🔄 Starting membership status update...');
       const result = await membershipExpirationService.updateAllClientMembershipStatuses();
-      console.log(`✅ Membership status update complete: ${result.updated} clients updated`);
 
       // Reload clients to reflect the updated membership statuses
       await loadClients();
@@ -1071,7 +1037,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       // For Group and RMR Live sessions without clients, create minimal webhook data
       if (!session.clientId && (session.sessionType === 'Group' || session.sessionType === 'RMR Live')) {
-        console.log('Group/RMR Live session without client, triggering webhook with minimal data');
 
         // Fetch participants for Group sessions
         const participants = await sessionParticipantService.getBySessionId(session.id);
@@ -1123,9 +1088,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
           groupClientNames: groupClientNames
         };
 
-        console.log(`[SESSION_WEBHOOK] Creating ${session.sessionType} session with ${participants.length} participants`);
-        console.log(`[SESSION_WEBHOOK] Group emails: ${groupClientEmails}`);
-        console.log(`[SESSION_WEBHOOK] Group names: ${groupClientNames}`);
 
         // Trigger the webhook for Group/RMR Live sessions
         await fetch('https://hook.eu1.make.com/lipggo8kcd8kwq2vp6j6mr3gnxbx12h7', {
@@ -1140,7 +1102,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
 
       if (!client || !client.email) {
-        console.log('No client or email found for session, skipping webhook');
         return;
       }
 
@@ -1152,7 +1113,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       const daysUntilSession = Math.ceil((sessionDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
-      console.log(`Session is ${daysUntilSession} days away`);
 
       // Check if client has already signed booking terms by looking in booking_terms table
       const hasSignedBookingTerms = state.bookingTerms.some(bt =>
@@ -1228,7 +1188,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       // Always trigger booking terms webhook for all newly created sessions
       // Comprehensive validation to prevent blank/empty webhook data
       if (isValidWebhookData(webhookData) && !shouldSkipWebhookCall(session.id, 'booking-terms')) {
-        console.log(`[BOOKING_TERMS_WEBHOOK] Adding to queue for new session ${webhookData.sessionId} - ${webhookData.clientFirstName} ${webhookData.clientLastName}`);
         webhookPromises.push(
           fetch('https://hook.eu1.make.com/yaoalfe77uqtw4xv9fbh5atf4okq14wm', {
             method: 'POST',
@@ -1240,9 +1199,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         );
         webhookNames.push('booking terms email webhook');
       } else if (!isValidWebhookData(webhookData)) {
-        console.log(`[BOOKING_TERMS_WEBHOOK] BLOCKED - Invalid data for session ${session.id}. Webhook data:`, webhookData);
       } else {
-        console.log(`[BOOKING_TERMS_WEBHOOK] BLOCKED - Duplicate call prevented for session ${session.id}`);
       }
 
       // Always trigger session webhook for all new sessions
@@ -1304,11 +1261,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
           // For Online sessions, only include Meet link if ≤7 days away
           const includeMeetLink = session.sessionType !== 'Online' || daysUntilSession <= 7;
 
-          console.log(`[CREATE_SESSION] Creating calendar event for new session ${session.id} (${session.sessionType}, ${daysUntilSession} days away, includeMeetLink: ${includeMeetLink})`);
           const calendarResult = await createCalendarEvent(session, includeMeetLink);
 
           if (calendarResult) {
-            console.log(`[CREATE_SESSION] Calendar event created successfully: ${calendarResult.eventId}`, calendarResult.meetLink ? `with Meet link: ${calendarResult.meetLink}` : 'without Meet link');
             // Update session with eventId and meetLink (using internal update to avoid triggering webhooks)
             const updates: Partial<Session> = { eventId: calendarResult.eventId };
             if (calendarResult.meetLink) {
@@ -1336,13 +1291,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Trigger booking terms webhook for session updates
   const triggerBookingTermsWebhookForUpdate = async (session: Session) => {
     try {
-      console.log(`[BOOKING_TERMS_WEBHOOK] Starting webhook for session update ${session.id}`);
 
       // Find the client for this session
       const client = session.clientId ? state.clients.find(c => c.id === session.clientId) : null;
 
       if (!client || !client.email) {
-        console.log(`[BOOKING_TERMS_WEBHOOK] No client or email found for session ${session.id}, skipping webhook`);
         return;
       }
 
@@ -1394,17 +1347,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       // Validate webhook data before sending
       if (!isValidWebhookData(webhookData)) {
-        console.log(`[BOOKING_TERMS_WEBHOOK] BLOCKED - Invalid data for session update ${session.id}. Webhook data:`, webhookData);
         return;
       }
 
       // Check for duplicate webhook calls
       if (shouldSkipWebhookCall(session.id, 'booking-terms-update')) {
-        console.log(`[BOOKING_TERMS_WEBHOOK] BLOCKED - Duplicate call prevented for session update ${session.id}`);
         return;
       }
 
-      console.log(`[BOOKING_TERMS_WEBHOOK] Sending webhook for session update ${session.id} - ${client.firstName} ${client.lastName}`);
 
       // Send webhook to Make.com
       const response = await fetch('https://hook.eu1.make.com/yaoalfe77uqtw4xv9fbh5atf4okq14wm', {
@@ -1416,7 +1366,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       });
 
       if (response.ok) {
-        console.log(`[BOOKING_TERMS_WEBHOOK] ✅ Successfully sent webhook for session update ${session.id}`);
       } else {
         console.error(`[BOOKING_TERMS_WEBHOOK] ❌ Failed to send webhook for session update ${session.id}:`, response.status, response.statusText);
       }
@@ -1430,7 +1379,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Trigger session webhook for session updates
   const triggerSessionWebhookForUpdate = async (session: Session) => {
     try {
-      console.log(`[SESSION_WEBHOOK] Starting webhook for session update ${session.id}`);
 
       // Handle Group and RMR Live sessions differently
       if (session.sessionType === 'Group' || session.sessionType === 'RMR Live') {
@@ -1484,9 +1432,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
           groupClientNames: groupClientNames
         };
 
-        console.log(`[SESSION_WEBHOOK] Sending ${session.sessionType} webhook for session update ${session.id} with ${participants.length} participants`);
-        console.log(`[SESSION_WEBHOOK] Group emails: ${groupClientEmails}`);
-        console.log(`[SESSION_WEBHOOK] Group names: ${groupClientNames}`);
 
         const response = await fetch('https://hook.eu1.make.com/lipggo8kcd8kwq2vp6j6mr3gnxbx12h7', {
           method: 'POST',
@@ -1497,7 +1442,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         });
 
         if (response.ok) {
-          console.log(`[SESSION_WEBHOOK] ✅ Successfully sent ${session.sessionType} webhook for session update ${session.id}`);
         } else {
           console.error(`[SESSION_WEBHOOK] ❌ Failed to send ${session.sessionType} webhook for session update ${session.id}:`, response.status, response.statusText);
         }
@@ -1508,7 +1452,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const client = session.clientId ? state.clients.find(c => c.id === session.clientId) : null;
 
       if (!client || !client.email) {
-        console.log(`[SESSION_WEBHOOK] No client or email found for session ${session.id}, skipping webhook`);
         return;
       }
 
@@ -1572,17 +1515,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       // Validate webhook data before sending
       if (!isValidWebhookData(webhookData)) {
-        console.log(`[SESSION_WEBHOOK] BLOCKED - Invalid data for session update ${session.id}. Webhook data:`, webhookData);
         return;
       }
 
       // Check for duplicate webhook calls
       if (shouldSkipWebhookCall(session.id, 'session-update')) {
-        console.log(`[SESSION_WEBHOOK] BLOCKED - Duplicate call prevented for session update ${session.id}`);
         return;
       }
 
-      console.log(`[SESSION_WEBHOOK] Sending webhook for session update ${session.id} - ${client.firstName} ${client.lastName}`);
 
       // Send webhook to Make.com
       const response = await fetch('https://hook.eu1.make.com/lipggo8kcd8kwq2vp6j6mr3gnxbx12h7', {
@@ -1594,7 +1534,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       });
 
       if (response.ok) {
-        console.log(`[SESSION_WEBHOOK] ✅ Successfully sent webhook for session update ${session.id}`);
       } else {
         console.error(`[SESSION_WEBHOOK] ❌ Failed to send webhook for session update ${session.id}:`, response.status, response.statusText);
       }
@@ -1608,16 +1547,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Internal update session function that bypasses webhook triggers (for system updates like eventId)
   const updateSessionInternal = async (id: string, updates: Partial<Session>): Promise<Session> => {
     try {
-      console.log(`[UPDATE_SESSION_INTERNAL] Starting internal update for session ID: ${id}`);
-      console.log(`[UPDATE_SESSION_INTERNAL] Updates:`, updates);
 
       // Update only this specific session in the database
       const session = await sessionService.update(id, updates);
-      console.log(`[UPDATE_SESSION_INTERNAL] Database updated for session ${id}`);
 
       // Update only this specific session in the state
       dispatch({ type: 'UPDATE_SESSION', payload: session });
-      console.log(`[UPDATE_SESSION_INTERNAL] State updated for session ${id} - NO WEBHOOKS TRIGGERED`);
 
       return session;
     } catch (error) {
@@ -1629,8 +1564,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Update session in Supabase
   const updateSession = async (id: string, updates: Partial<Session>): Promise<Session> => {
     try {
-      console.log(`[UPDATE_SESSION] Starting update for session ID: ${id} ONLY`);
-      console.log(`[UPDATE_SESSION] Updates:`, updates);
 
       // Get the original session data to detect changes
       const originalSession = state.sessions.find(s => s.id === id);
@@ -1640,11 +1573,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       // Update only this specific session in the database
       const session = await sessionService.update(id, updates);
-      console.log(`[UPDATE_SESSION] Database updated for session ${id}`);
 
       // Update only this specific session in the state
       dispatch({ type: 'UPDATE_SESSION', payload: session });
-      console.log(`[UPDATE_SESSION] State updated for session ${id} ONLY`);
 
       // Log audit trail
       await auditService.logSessionUpdate(originalSession, session, user?.email);
@@ -1656,24 +1587,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const changedToOnline = sessionTypeChanged && updates.sessionType === 'Online';
       const calendarRelevantChange = dateChanged || timeChanged || sessionTypeChanged;
 
-      console.log(`[UPDATE_SESSION] Calendar relevant changes:`, {
-        dateChanged,
-        timeChanged,
-        sessionTypeChanged,
-        changedToOnline,
-        calendarRelevantChange,
-        originalDate: originalSession.bookingDate,
-        newDate: updates.bookingDate,
-        originalTime: originalSession.bookingTime,
-        newTime: updates.bookingTime,
-        originalType: originalSession.sessionType,
-        newType: updates.sessionType,
-        sessionEventId: session.eventId
-      });
 
       // Handle calendar updates for Date, Time, or Session Type changes
       if (calendarRelevantChange) {
-        console.log(`[UPDATE_SESSION] Calendar relevant change detected, handling calendar update`);
 
         // Calculate days until session
         const sessionDate = new Date(session.bookingDate);
@@ -1689,7 +1605,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
             // Only delete calendar if session is ≤7 days away
             // If >7 days away, keep the calendar (it will be deleted/replaced on day 7)
             if (daysUntilSession <= 7) {
-              console.log(`[UPDATE_SESSION] Session changed to Online (${daysUntilSession} days away) - deleting calendar event (Make will create new one with Meet link)`);
 
               // Delete the calendar event
               const deleteResponse = await fetch('/api/calendar/delete', {
@@ -1703,7 +1618,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
               });
 
               if (deleteResponse.ok) {
-                console.log(`[UPDATE_SESSION] Calendar event deleted successfully`);
                 // Clear the eventId from the session
                 await updateSessionInternal(session.id, { eventId: undefined });
                 session.eventId = undefined;
@@ -1711,7 +1625,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 console.error(`[UPDATE_SESSION] Failed to delete calendar event:`, deleteResponse.status);
               }
             } else {
-              console.log(`[UPDATE_SESSION] Session changed to Online (${daysUntilSession} days away) - keeping calendar event (will be replaced on day 7)`);
               // Update the calendar event with new session type
               await updateCalendarEvent(session);
             }
@@ -1720,20 +1633,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
             // - Non-Online sessions with any changes
             // - Online sessions that are already Online (just date/time changes)
             // - Any session with an eventId that needs updating
-            console.log(`[UPDATE_SESSION] Updating existing calendar event: ${session.eventId} (${session.sessionType}, ${daysUntilSession} days away)`);
             await updateCalendarEvent(session);
-            console.log(`[UPDATE_SESSION] Calendar event updated successfully`);
           } else {
             // No eventId found - create new calendar event
             // Always create calendar events for all sessions
-            console.log(`[UPDATE_SESSION] No eventId found, creating new calendar event (${session.sessionType}, ${daysUntilSession} days away)`);
 
             // For Online sessions, only include Meet link if ≤7 days away
             const includeMeetLink = session.sessionType !== 'Online' || daysUntilSession <= 7;
             const calendarResult = await createCalendarEvent(session, includeMeetLink);
 
             if (calendarResult) {
-              console.log(`[UPDATE_SESSION] Calendar event created successfully: ${calendarResult.eventId}`, calendarResult.meetLink ? `with Meet link: ${calendarResult.meetLink}` : 'without Meet link');
               // Update session with eventId and meetLink (using internal update to avoid triggering webhooks)
               const updates: Partial<Session> = { eventId: calendarResult.eventId };
               if (calendarResult.meetLink) {
@@ -1751,7 +1660,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
           // Don't throw the error - calendar failure shouldn't prevent session update
         }
       } else {
-        console.log(`[UPDATE_SESSION] No calendar relevant changes detected, skipping calendar update`);
       }
 
       // Only trigger booking terms webhook for Date or Time changes
@@ -1762,17 +1670,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       ];
       const hasBookingTermsRelevantChange = Object.keys(updates).some(key => bookingTermsRelevantFields.includes(key));
 
-      console.log(`[UPDATE_SESSION] Booking terms webhook check for session ${id}:`, {
-        updatedFields: Object.keys(updates),
-        bookingTermsRelevantFields,
-        hasBookingTermsRelevantChange,
-        willTriggerWebhook: hasBookingTermsRelevantChange
-      });
 
       if (hasBookingTermsRelevantChange) {
-        console.log(`[UPDATE_SESSION] ✅ TRIGGERING webhooks for session ${id}`);
-        console.log(`[UPDATE_SESSION] Relevant changed fields:`, Object.keys(updates).filter(key => bookingTermsRelevantFields.includes(key)));
-        console.log(`[UPDATE_SESSION] Webhook timestamp:`, new Date().toISOString());
 
         // Trigger both webhooks in parallel for session updates
         await Promise.allSettled([
@@ -1780,13 +1679,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
           triggerSessionWebhookForUpdate(session)
         ]);
 
-        console.log(`[UPDATE_SESSION] Both webhooks completed for session ${id} at`, new Date().toISOString());
       } else {
-        console.log(`[UPDATE_SESSION] ❌ SKIPPING webhooks for session ${id} - no relevant changes`);
-        console.log(`[UPDATE_SESSION] Updated fields (not relevant):`, Object.keys(updates));
       }
 
-      console.log(`[UPDATE_SESSION] Update complete for session ${id} - NO OTHER SESSIONS AFFECTED`);
       return session;
     } catch (error) {
       console.error(`[UPDATE_SESSION] Failed to update session ${id}:`, error);
@@ -1804,15 +1699,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       // For Group/RMR Live sessions without a main client, use session type as the title
       const isGroupOrRMRLive = session.sessionType === 'Group' || session.sessionType === 'RMR Live';
 
-      console.log('Creating Google Calendar event for session:', {
-        sessionId: session.id,
-        clientName: client ? `${client.firstName} ${client.lastName}`.trim() : session.sessionType,
-        bookingDate: session.bookingDate,
-        bookingTime: session.bookingTime,
-        sessionType: session.sessionType,
-        isGroupOrRMRLive,
-        includeMeetLink
-      });
 
       // Create Google Calendar event with retry logic
       const createCalendarWithRetry = async (retryCount = 0): Promise<{ eventId: string; meetLink?: string } | null> => {
@@ -1821,7 +1707,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
 
         try {
-          console.log(`[CALENDAR_CREATE] Attempt ${retryCount + 1}/${maxRetries + 1} to create calendar event`);
 
           const calendarResponse = await fetch('/api/calendar/create', {
             method: 'POST',
@@ -1847,7 +1732,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
           if (calendarResponse.ok) {
             const result = await calendarResponse.json();
-            console.log('[CALENDAR_CREATE] Successfully created calendar event:', result.eventId, result.meetLink ? `with Meet link: ${result.meetLink}` : '');
             return {
               eventId: result.eventId || null,
               meetLink: result.meetLink || undefined
@@ -1869,7 +1753,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
           // Retry on network errors if we haven't exceeded max retries
           if (retryCount < maxRetries) {
-            console.log(`[CALENDAR_CREATE] Retrying in 2 seconds... (attempt ${retryCount + 2}/${maxRetries + 1})`);
             await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds before retry
             return createCalendarWithRetry(retryCount + 1);
           }
@@ -1895,25 +1778,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const client = session.clientId ? state.clients.find(c => c.id === session.clientId) : null;
 
       if (!session.eventId) {
-        console.log('No eventId found for session, skipping calendar update. Session:', {
-          id: session.id,
-          eventId: session.eventId,
-          clientId: session.clientId,
-          sessionType: session.sessionType
-        });
         return;
       }
 
-      console.log('Updating Google Calendar event for session (delete + recreate):', {
-        sessionId: session.id,
-        oldEventId: session.eventId,
-        clientName: client ? `${client.firstName} ${client.lastName}`.trim() : session.sessionType,
-        bookingDate: session.bookingDate,
-        bookingTime: session.bookingTime
-      });
 
       // Step 1: Delete the old calendar event
-      console.log(`[CALENDAR_UPDATE] Step 1: Deleting old calendar event ${session.eventId}`);
 
       const deleteCalendarWithRetry = async (retryCount = 0) => {
         const maxRetries = 2;
@@ -1921,7 +1790,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
 
         try {
-          console.log(`[CALENDAR_DELETE] Attempt ${retryCount + 1}/${maxRetries + 1} to delete calendar event ${session.eventId}`);
 
           const deleteResponse = await fetch('/api/calendar/delete', {
             method: 'POST',
@@ -1937,7 +1805,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
           clearTimeout(timeoutId);
 
           if (deleteResponse.ok) {
-            console.log('[CALENDAR_DELETE] Successfully deleted old calendar event');
             return true;
           } else {
             console.error('[CALENDAR_DELETE] Failed to delete calendar event:', deleteResponse.status);
@@ -1956,7 +1823,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
           // Retry on network errors if we haven't exceeded max retries
           if (retryCount < maxRetries) {
-            console.log(`[CALENDAR_DELETE] Retrying in 2 seconds... (attempt ${retryCount + 2}/${maxRetries + 1})`);
             await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds before retry
             return deleteCalendarWithRetry(retryCount + 1);
           }
@@ -1973,7 +1839,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
 
       // Step 2: Create a new calendar event
-      console.log(`[CALENDAR_UPDATE] Step 2: Creating new calendar event`);
 
       const createCalendarWithRetry = async (retryCount = 0) => {
         const maxRetries = 2;
@@ -1981,7 +1846,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
 
         try {
-          console.log(`[CALENDAR_CREATE] Attempt ${retryCount + 1}/${maxRetries + 1} to create new calendar event`);
 
           const createResponse = await fetch('/api/calendar/create', {
             method: 'POST',
@@ -2006,7 +1870,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
           if (createResponse.ok) {
             const result = await createResponse.json();
-            console.log('[CALENDAR_CREATE] Successfully created new calendar event:', result.eventId, result.meetLink ? `with Meet link: ${result.meetLink}` : '');
 
             // Update the session with the new eventId and meetLink using internal update (no webhooks)
             if (result.eventId) {
@@ -2015,7 +1878,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 updates.googleMeetLink = result.meetLink;
               }
               await updateSessionInternal(session.id, updates);
-              console.log('[CALENDAR_CREATE] Updated session with new eventId (internal):', result.eventId, result.meetLink ? `and Meet link` : '');
             }
             return true;
           } else {
@@ -2035,7 +1897,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
           // Retry on network errors if we haven't exceeded max retries
           if (retryCount < maxRetries) {
-            console.log(`[CALENDAR_CREATE] Retrying in 2 seconds... (attempt ${retryCount + 2}/${maxRetries + 1})`);
             await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds before retry
             return createCalendarWithRetry(retryCount + 1);
           }
@@ -2047,12 +1908,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const createSuccess = await createCalendarWithRetry();
 
       if (createSuccess) {
-        console.log('[CALENDAR_UPDATE] Successfully completed calendar event update (delete + recreate)');
       } else {
         console.error('[CALENDAR_UPDATE] Failed to create new calendar event after deleting old one');
         // Clear the eventId since the old event was deleted but new one failed
         await updateSessionInternal(session.id, { eventId: undefined });
-        console.log('[CALENDAR_UPDATE] Cleared eventId from session due to failed recreation');
       }
 
     } catch (error) {
@@ -2065,11 +1924,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const deleteCalendarEvent = async (session: Session) => {
     try {
       if (!session.eventId) {
-        console.log('No eventId found for session, skipping calendar deletion');
         return;
       }
 
-      console.log('Deleting Google Calendar event for session:', session.id);
 
       // Delete Google Calendar event with retry logic
       const deleteCalendarWithRetry = async (retryCount = 0) => {
@@ -2078,7 +1935,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
 
         try {
-          console.log(`[CALENDAR_DELETE] Attempt ${retryCount + 1}/${maxRetries + 1} to delete calendar event ${session.eventId}`);
 
           const calendarResponse = await fetch('/api/calendar/delete', {
             method: 'POST',
@@ -2094,7 +1950,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
           clearTimeout(timeoutId);
 
           if (calendarResponse.ok) {
-            console.log('[CALENDAR_DELETE] Successfully deleted calendar event');
             return true;
           } else {
             console.error('[CALENDAR_DELETE] Failed to delete calendar event via API:', calendarResponse.status);
@@ -2113,7 +1968,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
           // Retry on network errors if we haven't exceeded max retries
           if (retryCount < maxRetries) {
-            console.log(`[CALENDAR_DELETE] Retrying in 2 seconds... (attempt ${retryCount + 2}/${maxRetries + 1})`);
             await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds before retry
             return deleteCalendarWithRetry(retryCount + 1);
           }
@@ -2137,19 +1991,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Delete session from Supabase
   const deleteSession = async (id: string): Promise<void> => {
     try {
-      console.log('deleteSession called with ID:', id);
 
       // Get the session first from database to ensure we have latest data including Event ID
       const sessionFromDb = await sessionService.getById(id);
-      console.log('Found session in database for deletion:', sessionFromDb ? 'Yes' : 'No', sessionFromDb?.id);
-      console.log('Session Event ID:', sessionFromDb?.eventId || 'None');
 
       if (sessionFromDb) {
-        console.log('Deleting calendar event for session:', sessionFromDb.id);
         // Delete calendar event and wait for it to complete before deleting from database
         try {
           await deleteCalendarEvent(sessionFromDb);
-          console.log('Calendar event deletion completed successfully');
         } catch (calendarError) {
           console.error('Calendar event deletion failed:', calendarError);
           // Ask user if they want to proceed despite calendar failure
@@ -2157,15 +2006,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
             'The calendar event deletion failed. The session will still be deleted from the app, but the calendar event may remain. Do you want to proceed with deleting the session?'
           );
           if (!proceed) {
-            console.log('User cancelled deletion due to calendar failure');
             return; // Don't delete if user cancels
           }
         }
       } else {
-        console.log('No session found in database for ID:', id);
       }
 
-      console.log('Deleting session from database...');
 
       // Log audit trail before deletion (while we still have the session data)
       if (sessionFromDb) {
@@ -2174,7 +2020,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       await sessionService.delete(id);
       dispatch({ type: 'DELETE_SESSION', payload: id });
-      console.log('Session deleted successfully');
     } catch (error) {
       console.error('Failed to delete session:', error);
       throw error;
@@ -2301,11 +2146,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Membership Pairing
   const pairMembershipsWithClients = async () => {
     try {
-      console.log('🔄 Auto-pairing memberships with clients...');
       const result = await membershipPairingService.pairMembershipsWithClients();
 
       if (result.success) {
-        console.log(`✅ Successfully paired ${result.pairingCount} memberships`);
         // Reload clients to reflect updated membership statuses
         await loadClients();
         await loadMemberships();
@@ -2323,7 +2166,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Send Group Event Email - manually trigger webhook with sendSessionEmail: true
   const sendGroupEventEmail = async (session: Session): Promise<void> => {
     try {
-      console.log(`[GROUP_EVENT_EMAIL] Manually sending event email for ${session.sessionType} session ${session.id}`);
 
       if (session.sessionType !== 'Group' && session.sessionType !== 'RMR Live') {
         console.error('[GROUP_EVENT_EMAIL] This function is only for Group or RMR Live sessions');
@@ -2332,8 +2174,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       // Fetch participants for Group sessions
       const participants = await sessionParticipantService.getBySessionId(session.id);
-      console.log(`[GROUP_EVENT_EMAIL] Found ${participants.length} participants`);
-      console.log(`[GROUP_EVENT_EMAIL] Participant IDs:`, participants.map(p => p.clientId));
 
       if (participants.length === 0) {
         console.error('[GROUP_EVENT_EMAIL] No participants found for this session');
@@ -2341,7 +2181,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
 
       // Fetch fresh client data directly from the database instead of relying on state
-      console.log(`[GROUP_EVENT_EMAIL] Fetching client data from database...`);
       const participantClients: Client[] = [];
 
       for (const participant of participants) {
@@ -2349,16 +2188,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
           const client = await clientService.getById(participant.clientId);
           if (client) {
             participantClients.push(client);
-            console.log(`[GROUP_EVENT_EMAIL] Found client: ${client.firstName} ${client.lastName} (${client.email})`);
           } else {
-            console.warn(`[GROUP_EVENT_EMAIL] Client not found for ID: ${participant.clientId}`);
           }
         } catch (error) {
           console.error(`[GROUP_EVENT_EMAIL] Error fetching client ${participant.clientId}:`, error);
         }
       }
 
-      console.log(`[GROUP_EVENT_EMAIL] Successfully fetched ${participantClients.length} clients`);
 
       // Format client emails (semicolon-separated for Outlook BCC)
       const groupClientEmails = participantClients
@@ -2398,9 +2234,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         isManualTrigger: true
       };
 
-      console.log(`[GROUP_EVENT_EMAIL] Sending webhook for ${participants.length} participants`);
-      console.log(`[GROUP_EVENT_EMAIL] Group emails: ${groupClientEmails}`);
-      console.log(`[GROUP_EVENT_EMAIL] Group names: ${groupClientNames}`);
 
       // Send webhook to Make.com
       const response = await fetch('https://hook.eu1.make.com/lipggo8kcd8kwq2vp6j6mr3gnxbx12h7', {
@@ -2412,7 +2245,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       });
 
       if (response.ok) {
-        console.log(`[GROUP_EVENT_EMAIL] ✅ Successfully sent event email webhook for session ${session.id}`);
       } else {
         console.error(`[GROUP_EVENT_EMAIL] ❌ Failed to send webhook:`, response.status, response.statusText);
         throw new Error(`Failed to send event email: ${response.status} ${response.statusText}`);
@@ -2428,11 +2260,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (isInitializedRef.current) return;
 
-    console.log('🚀 AppContext: Initializing app with optimized loading...');
     const initializeApp = async () => {
       try {
         // Load essential data for calendar colors first - all at once for immediate visual consistency
-        console.log('📊 Loading essential calendar data...');
         await Promise.all([
           loadClients(),
           loadSessions(),
@@ -2442,12 +2272,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
           loadClientEmailAliases(), // Needed for session colors
         ]);
 
-        console.log('✅ Essential calendar data loaded, setting up real-time subscriptions...');
         // Setup real-time subscriptions early for essential data
         setupRealtimeSubscriptions();
 
         // Load remaining secondary data in background with reduced delays
-        console.log('📊 Loading remaining data in background...');
         setTimeout(async () => {
           try {
             await Promise.all([
@@ -2456,7 +2284,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
               loadDogClubGuides(),
               loadBehaviouralBriefs(),
             ]);
-            console.log('✅ Secondary data batch 1 loaded');
           } catch (error) {
             console.error('❌ Failed to load secondary data batch 1:', error);
           }
@@ -2467,14 +2294,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
             await Promise.all([
               loadSessionParticipants(),
             ]);
-            console.log('✅ Secondary data batch 2 loaded');
           } catch (error) {
             console.error('❌ Failed to load secondary data batch 2:', error);
           }
         }, 200); // Reduced from 1500ms
 
         isInitializedRef.current = true;
-        console.log('🎉 App initialization complete with optimized loading');
       } catch (error) {
         console.error('❌ Failed to initialize app:', error);
       }

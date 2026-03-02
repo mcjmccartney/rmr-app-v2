@@ -84,16 +84,9 @@ export default function CustomDropdown({
 
   // Debug logging
   if (placeholder === "00") { // Only log for time dropdowns
-    console.log('CustomDropdown render:', {
-      value,
-      selectedOption: selectedOption?.label,
-      optionsCount: options.length,
-      firstFewOptions: options.slice(0, 3).map(o => o.value)
-    });
   }
 
   const handleSelect = (optionValue: string) => {
-    console.log('CustomDropdown handleSelect:', { optionValue, placeholder });
     onChange(optionValue);
     setIsOpen(false);
     setHighlightedIndex(-1);

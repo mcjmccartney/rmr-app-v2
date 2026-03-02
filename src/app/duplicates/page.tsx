@@ -21,7 +21,6 @@ export default function DuplicatesPage() {
     loadClients = appContext.loadClients;
     clearDismissedDuplicates = appContext.clearDismissedDuplicates;
     detectDuplicates = appContext.detectDuplicates;
-    console.log('App context loaded successfully', { duplicatesCount: state.potentialDuplicates.length });
   } catch (error) {
     console.error('Error loading app context:', error);
     return (

@@ -81,10 +81,6 @@ export default function MonthlyBreakdownModal({ finance, allFinancesForMonth, is
 
       if (sessionsError) throw sessionsError;
 
-      console.log(`Fetching data for ${finance.month} ${finance.year}:`, {
-        sessions: sessions?.length || 0,
-        sessionsSample: sessions?.slice(0, 2)
-      });
 
       // Get memberships for this month/year
       const { data: memberships, error: membershipsError } = await supabase
@@ -95,10 +91,6 @@ export default function MonthlyBreakdownModal({ finance, allFinancesForMonth, is
 
       if (membershipsError) throw membershipsError;
 
-      console.log(`Memberships for ${finance.month} ${finance.year}:`, {
-        memberships: memberships?.length || 0,
-        membershipsSample: memberships?.slice(0, 2)
-      });
 
       // Process session data with travel expense tracking
       const sessionTypes: Record<string, { count: number; total: number; travelTotal?: number }> = {};
@@ -176,10 +168,8 @@ export default function MonthlyBreakdownModal({ finance, allFinancesForMonth, is
         return;
       }
 
-      console.log(`Updating expected amount for ${finance.month} ${finance.year} to £${newExpectedAmount}`);
 
       // First, let's test if we can read the records we're trying to update
-      console.log('Testing read access to records...');
       for (const entry of allFinancesForMonth) {
         const { data: testRead, error: readError } = await supabase
           .from('finances')
@@ -191,7 +181,6 @@ export default function MonthlyBreakdownModal({ finance, allFinancesForMonth, is
           console.error(`Cannot read record ${entry.id}:`, readError);
           throw new Error(`Cannot read record: ${readError.message}`);
         }
-        console.log(`Record ${entry.id} current data:`, testRead);
       }
 
       // Strategy: Put the entire expected amount in the first entry, set others to 0
@@ -199,11 +188,6 @@ export default function MonthlyBreakdownModal({ finance, allFinancesForMonth, is
 
       const updatePromises = allFinancesForMonth.map((financeEntry, index) => {
         const amount = index === 0 ? newExpectedAmount : 0;
-        console.log(`Preparing update for entry ${index + 1}:`, {
-          id: financeEntry.id,
-          amount: amount,
-          updatePayload: { expected: Number(amount.toFixed(2)) }
-        });
         return supabase
           .from('finances')
           .update({ expected: Number(amount.toFixed(2)) })
@@ -224,7 +208,6 @@ export default function MonthlyBreakdownModal({ finance, allFinancesForMonth, is
         throw new Error(`Failed to update expected amount: ${errors[0].error?.message || 'Unknown error'}`);
       }
 
-      console.log(`Successfully updated ${allFinancesForMonth.length} finance entries`);
 
       // Update the local state immediately to reflect the change
       setLocalExpectedTotal(newExpectedAmount);

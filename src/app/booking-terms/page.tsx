@@ -43,7 +43,6 @@ function BookingTermsContent() {
 
         // If this is an update request, skip the completion check and show the form
         if (isUpdate) {
-          console.log('Booking terms update request - showing form for re-signing');
           return;
         }
 

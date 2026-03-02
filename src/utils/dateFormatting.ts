@@ -9,7 +9,6 @@ import { format } from 'date-fns';
 // Format date string (YYYY-MM-DD) as DD/MM/YYYY
 export const formatDate = (dateString: string): string => {
   if (!dateString) {
-    console.warn('Missing date string');
     return 'Invalid Date';
   }
 
@@ -17,7 +16,6 @@ export const formatDate = (dateString: string): string => {
     const [year, month, day] = dateString.split('-');
     return `${day}/${month}/${year}`;
   } catch (error) {
-    console.warn('Error formatting date:', dateString, error);
     return 'Invalid Date';
   }
 };
@@ -25,14 +23,12 @@ export const formatDate = (dateString: string): string => {
 // Format time string (HH:mm:ss or HH:mm) as HH:mm
 export const formatTime = (timeString: string): string => {
   if (!timeString) {
-    console.warn('Missing time string');
     return 'Invalid Time';
   }
 
   try {
     return timeString.substring(0, 5); // Take first 5 characters (HH:mm)
   } catch (error) {
-    console.warn('Error formatting time:', timeString, error);
     return 'Invalid Time';
   }
 };
@@ -71,19 +67,16 @@ export const formatFullMonthYear = (dateString: string): string => {
 // Format day name with date for detailed display (EEEE, dd/MM/yyyy)
 export const formatDayDate = (dateString: string): string => {
   if (!dateString) {
-    console.warn('Missing date string for formatDayDate');
     return 'Invalid Date';
   }
 
   try {
     const dateObj = new Date(dateString);
     if (isNaN(dateObj.getTime())) {
-      console.warn('Invalid date string:', dateString);
       return 'Invalid Date';
     }
     return format(dateObj, 'EEEE, dd/MM/yyyy');
   } catch (error) {
-    console.warn('Error formatting day date:', dateString, error);
     return 'Invalid Date';
   }
 };

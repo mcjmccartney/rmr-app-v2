@@ -94,10 +94,6 @@ export class ClientMergeService {
     userChoices?: { [field: string]: any }
   ): Promise<MergeResult> {
     try {
-      console.log('Starting client merge:', {
-        primary: primaryClient.id,
-        duplicate: duplicateClient.id
-      });
 
       // Generate merge preview to get all the data
       const preview = await this.generateMergePreview(primaryClient, duplicateClient);
@@ -205,11 +201,6 @@ export class ClientMergeService {
 
       if (primaryValue && duplicateValue && primaryValue !== duplicateValue) {
         // Conflict detected
-        console.log(`🔍 Conflict detected for ${field}:`, {
-          primaryValue,
-          duplicateValue,
-          suggestedValue: this.chooseBetterValue(primaryValue, duplicateValue)
-        });
         conflicts.push({
           field,
           primaryValue,

@@ -170,17 +170,14 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
   };
 
   const updateTime = (hour: string, minute: string) => {
-    console.log('updateTime called with:', { hour, minute, currentTime: formData.time });
     if (hour !== '' && minute !== '') {
       const newTime = `${hour}:${minute}`;
-      console.log('Setting new time:', newTime);
       setFormData({ ...formData, time: newTime });
     } else if (hour !== '' || minute !== '') {
       // If only one is selected, still update to show partial selection
       const currentHour = hour !== '' ? hour : '00';
       const currentMinute = minute !== '' ? minute : '00';
       const newTime = `${currentHour}:${currentMinute}`;
-      console.log('Setting partial time:', newTime);
       setFormData({ ...formData, time: newTime });
     }
   };
@@ -335,15 +332,6 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
       return;
     }
 
-    console.log('Form data before submission:', {
-      clientId: formData.clientId,
-      dogName: formData.dogName,
-      sessionType: formData.sessionType,
-      date: formData.date,
-      time: formData.time,
-      quote: formData.quote,
-      notes: formData.notes
-    });
 
     setIsSubmitting(true);
 
@@ -469,7 +457,6 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
             <CustomDropdown
               value={getHourFromTime(formData.time)}
               onChange={(hour) => {
-                console.log('Hour changed to:', hour);
                 updateTime(hour, getMinuteFromTime(formData.time));
               }}
               options={hourOptions}
@@ -483,7 +470,6 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
             <CustomDropdown
               value={getMinuteFromTime(formData.time)}
               onChange={(minute) => {
-                console.log('Minute changed to:', minute);
                 updateTime(getHourFromTime(formData.time), minute);
               }}
               options={minuteOptions}

@@ -134,7 +134,6 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
       const totalHeight = tempWrapper.offsetHeight;
       // Subtract the 20px top padding since it's included in offsetHeight but not in our content max calculations
       const contentHeight = totalHeight - 20;
-      console.log(`measureCurrentPage: pageIndex=${pageIndex}, titleHeight=${titleHeight}, totalHeight=${totalHeight}, contentHeight=${contentHeight}, actionPoints=${currentPage.length}`);
       return contentHeight;
     };
 
@@ -156,7 +155,6 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
       if (!fits && !isLastOverall) {
         contentMax = CONTENT_MAX_FINAL;
         fits = pageHeight <= contentMax;
-        console.log(`AP ${apIndex + 1}: Doesn't fit with middle footer (${CONTENT_MAX_MIDDLE}), trying final footer (${CONTENT_MAX_FINAL}): pageHeight=${pageHeight}, fits=${fits}`);
       }
 
       // If it's the last overall, always use final footer
@@ -165,14 +163,12 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
         fits = pageHeight <= contentMax;
       }
 
-      console.log(`AP ${apIndex + 1}: pageHeight=${pageHeight}, contentMax=${contentMax}, fits=${fits}, isLastOverall=${isLastOverall}`);
 
       // Check if it fits
       if (!fits) {
         // Remove the action point that doesn't fit
         currentPage.pop();
 
-        console.log(`AP ${apIndex + 1} doesn't fit, moving to next page`);
 
         // Save the current page (if it has items)
         if (currentPage.length > 0) {

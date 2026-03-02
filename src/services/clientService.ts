@@ -206,20 +206,17 @@ export const clientService = {
       // Get client
       const client = await this.getById(clientId);
       if (!client) {
-        console.log('Client not found:', clientId);
         return null;
       }
 
       // Check if address already exists
       if (client.address && client.address.trim() !== '') {
-        console.log('Client already has address:', clientId);
         return client; // Address already exists
       }
 
       // Get questionnaires for this client (ordered by submitted_at ASC - first questionnaire first)
       const questionnaires = await behaviourQuestionnaireService.getByClientId(clientId);
       if (questionnaires.length === 0) {
-        console.log('No questionnaires found for client:', clientId);
         return client;
       }
 
@@ -229,12 +226,6 @@ export const clientService = {
       // Build full address from questionnaire
       const fullAddress = `${firstQuestionnaire.address1}${firstQuestionnaire.address2 ? ', ' + firstQuestionnaire.address2 : ''}, ${firstQuestionnaire.city}, ${firstQuestionnaire.stateProvince} ${firstQuestionnaire.zipPostalCode}, ${firstQuestionnaire.country}`;
 
-      console.log('Populating address for client:', {
-        clientId,
-        clientName: `${client.firstName} ${client.lastName}`,
-        questionnaireId: firstQuestionnaire.id,
-        address: fullAddress
-      });
 
       // Update client with address
       const updatedClient = await this.update(clientId, { address: fullAddress });
@@ -249,14 +240,12 @@ export const clientService = {
   // Bulk populate addresses for all clients with blank addresses
   async bulkPopulateAddressesFromQuestionnaires(): Promise<{ updated: number; skipped: number; errors: number }> {
     try {
-      console.log('Starting bulk address population...');
 
       const allClients = await this.getAll();
       const clientsWithBlankAddresses = allClients.filter(client =>
         !client.address || client.address.trim() === ''
       );
 
-      console.log(`Found ${clientsWithBlankAddresses.length} clients with blank addresses`);
 
       let updated = 0;
       let skipped = 0;
@@ -267,10 +256,8 @@ export const clientService = {
           const result = await this.populateAddressFromQuestionnaire(client.id);
           if (result && result.address && result.address !== client.address) {
             updated++;
-            console.log(`✅ Updated address for ${client.firstName} ${client.lastName}`);
           } else {
             skipped++;
-            console.log(`⏭️ Skipped ${client.firstName} ${client.lastName} (no questionnaire or address unchanged)`);
           }
 
           // Small delay to avoid overwhelming the database
@@ -282,7 +269,6 @@ export const clientService = {
         }
       }
 
-      console.log('Bulk address population completed:', { updated, skipped, errors });
       return { updated, skipped, errors };
 
     } catch (error) {

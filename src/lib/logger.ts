@@ -66,7 +66,6 @@ export const logger = {
    */
   debug: (message: string, ...args: any[]) => {
     if (isDevelopment) {
-      console.log(`[DEBUG] ${message}`, ...args.map(sanitizeForLogging));
     }
   },
 
@@ -75,9 +74,7 @@ export const logger = {
    */
   info: (message: string, ...args: any[]) => {
     if (isDevelopment) {
-      console.log(`[INFO] ${message}`, ...args);
     } else if (isProduction) {
-      console.log(`[INFO] ${message}`, ...args.map(sanitizeForLogging));
     }
   },
 
@@ -86,9 +83,7 @@ export const logger = {
    */
   warn: (message: string, ...args: any[]) => {
     if (isDevelopment) {
-      console.warn(`[WARN] ${message}`, ...args);
     } else {
-      console.warn(`[WARN] ${message}`, ...args.map(sanitizeForLogging));
     }
   },
 
@@ -113,9 +108,7 @@ export const logger = {
   webhook: (source: string, message: string, data?: any) => {
     const prefix = `[WEBHOOK-${source.toUpperCase()}]`;
     if (isDevelopment) {
-      console.log(`${prefix} ${message}`, data);
     } else if (isProduction) {
-      console.log(`${prefix} ${message}`, data ? sanitizeForLogging(data) : '');
     }
   },
 
@@ -123,10 +116,6 @@ export const logger = {
    * Security logging - always enabled, never sanitized (for audit trail)
    */
   security: (event: string, details: any) => {
-    console.log(`[SECURITY] ${event}`, {
-      timestamp: new Date().toISOString(),
-      ...details
-    });
   }
 };
 

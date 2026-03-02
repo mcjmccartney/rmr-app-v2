@@ -79,14 +79,12 @@ export const membershipExpirationService = {
 
     // Only update if the membership status has changed
     if (client.membership !== membershipStatus.isActive) {
-      console.log(`🔄 Updating membership status for ${client.firstName} ${client.lastName}: ${client.membership} → ${membershipStatus.isActive}`);
 
       try {
         const updatedClient = await clientService.update(client.id, {
           membership: membershipStatus.isActive
         });
 
-        console.log(`✅ Updated membership status for ${client.firstName} ${client.lastName} to ${membershipStatus.isActive}`);
         return updatedClient;
       } catch (error) {
         console.error('Error updating client membership status:', error);
@@ -102,7 +100,6 @@ export const membershipExpirationService = {
    */
   async updateAllClientMembershipStatuses(): Promise<{ updated: number; total: number }> {
     try {
-      console.log('🔍 Starting membership status update for all clients...');
       
       const clients = await clientService.getAll();
       let updatedCount = 0;
@@ -117,7 +114,6 @@ export const membershipExpirationService = {
         }
       }
       
-      console.log(`✅ Membership status update complete: ${updatedCount} clients updated out of ${clients.length} total`);
       
       return {
         updated: updatedCount,

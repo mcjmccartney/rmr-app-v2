@@ -6,12 +6,6 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const sessionId = searchParams.get('id');
     
-    console.log('Payment confirmation redirect received:', {
-      sessionId,
-      url: request.url,
-      userAgent: request.headers.get('user-agent'),
-      timestamp: new Date().toISOString()
-    });
 
     if (!sessionId) {
       console.error('No session ID provided in redirect');
@@ -34,14 +28,12 @@ export async function GET(request: NextRequest) {
 
     // Check if already paid
     if (session.sessionPaid) {
-      console.log('Session already paid, redirecting to confirmation:', sessionId);
       return NextResponse.redirect(new URL(`/payment-confirmed/${sessionId}`, request.url));
     }
 
     // Mark session as paid
     try {
       await sessionService.markAsPaid(sessionId);
-      console.log('Session marked as paid successfully:', sessionId);
       
       // Redirect to confirmation page
       return NextResponse.redirect(new URL(`/payment-confirmed/${sessionId}`, request.url));

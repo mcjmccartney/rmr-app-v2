@@ -206,7 +206,6 @@ export default function CalendarPage() {
     const daySessions = state.sessions.filter(session => {
       // Skip sessions with missing date/time data
       if (!session.bookingDate || !session.bookingTime) {
-        console.warn('Session missing date/time data:', session);
         return false;
       }
 
@@ -243,7 +242,6 @@ export default function CalendarPage() {
 
         return false;
       } catch (error) {
-        console.warn('Error processing session date:', session, error);
         return false;
       }
     });
@@ -289,8 +287,6 @@ export default function CalendarPage() {
   };
 
   const handleViewDuplicates = () => {
-    console.log('handleViewDuplicates clicked');
-    console.log('Navigating to /duplicates');
     router.push('/duplicates');
   };
 
@@ -494,7 +490,6 @@ export default function CalendarPage() {
 
         return false;
       } catch (error) {
-        console.warn('Error processing upcoming session:', session, error);
         return false;
       }
     })
@@ -504,7 +499,6 @@ export default function CalendarPage() {
         const bDateTime = combineDateAndTime(b.bookingDate, b.bookingTime);
         return aDateTime.getTime() - bDateTime.getTime();
       } catch (error) {
-        console.warn('Error sorting sessions:', { a, b, error });
         return 0;
       }
     });
@@ -678,27 +672,10 @@ export default function CalendarPage() {
 
                       // Debug logging for Christine Goldfinch session
                       if (client && client.firstName === 'Christine' && client.lastName === 'Goldfinch') {
-                        console.log('Christine session debug:', {
-                          sessionId: session.id,
-                          sessionPlan,
-                          hasContent: hasSessionPlanWithContent,
-                          totalSessionPlans: state.sessionPlans.length
-                        });
                       }
 
                       // Debug logging for Becky Cuthbertson session
                       if (client && client.firstName === 'Becky' && client.lastName === 'Cuthbertson') {
-                        console.log('🔍 Becky Cuthbertson session debug:', {
-                          sessionId: session.id,
-                          sessionDogName: session.dogName,
-                          clientDogName: client.dogName,
-                          clientOtherDogs: client.otherDogs,
-                          sessionPlan,
-                          hasContent: hasSessionPlanWithContent,
-                          sessionType: session.sessionType,
-                          bookingDate: session.bookingDate,
-                          bookingTime: session.bookingTime
-                        });
                       }
 
                       // For Group and RMR Live sessions, show session type instead of "Unknown Client"

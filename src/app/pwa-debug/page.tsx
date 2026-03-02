@@ -38,7 +38,6 @@ export default function PWADebugPage() {
     };
 
     const handleBeforeInstallPrompt = (e: Event) => {
-      console.log('beforeinstallprompt event fired');
       e.preventDefault();
       setDeferredPrompt(e);
       setDebugInfo((prev: any) => ({...prev, hasBeforeInstallPrompt: true}));
@@ -59,7 +58,6 @@ export default function PWADebugPage() {
     }
 
     const result = await deferredPrompt.prompt();
-    console.log('Install prompt result:', result);
     setDeferredPrompt(null);
   };
 
@@ -67,7 +65,6 @@ export default function PWADebugPage() {
     try {
       const response = await fetch('/manifest.json');
       const manifest = await response.json();
-      console.log('Manifest loaded:', manifest);
       alert('Manifest loaded successfully - check console for details');
     } catch (error) {
       console.error('Failed to load manifest:', error);
@@ -79,7 +76,6 @@ export default function PWADebugPage() {
     if ('serviceWorker' in navigator) {
       try {
         const registration = await navigator.serviceWorker.register('/sw.js');
-        console.log('Service worker registered:', registration);
         alert('Service worker registered successfully');
 
         // Wait a moment then check status again

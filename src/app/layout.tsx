@@ -15,7 +15,6 @@ export const metadata: Metadata = {
   title: "Raising My Rescue",
   description: "Dog training and behavioural consultation management system",
   manifest: "/manifest.json",
-  themeColor: "#6B8E6B",
   verification: {
     google: "uPAjKkMG_J459-n-zzLhlk1cueNgGUOce54k_psV15c",
   },

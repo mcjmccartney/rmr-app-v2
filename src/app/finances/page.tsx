@@ -74,9 +74,6 @@ export default function FinancesPage() {
         !existingMonths.has(monthYear)
       );
 
-      console.log('Session months found:', Array.from(sessionMonths));
-      console.log('Existing finance months:', Array.from(existingMonths));
-      console.log('Missing finance entries for months:', missingMonths);
 
       // Create finance entries for missing months
       const newFinanceEntries = [];
@@ -88,7 +85,6 @@ export default function FinancesPage() {
           expected: 0 // Default to 0, user can update later
         };
 
-        console.log('Creating finance entry for:', newEntry);
 
         const { data, error } = await supabase
           .from('finances')
@@ -99,7 +95,6 @@ export default function FinancesPage() {
         if (error) {
           console.error('Error creating finance entry:', error);
         } else {
-          console.log('Successfully created finance entry:', data);
           newFinanceEntries.push(data);
         }
       }
@@ -114,15 +109,12 @@ export default function FinancesPage() {
 
   const fetchAllData = async () => {
     try {
-      console.log('Fetching finances data...');
-      console.log('Supabase client:', supabase);
 
       // Test basic connection
       const { data: testData, error: testError } = await supabase
         .from('finances')
         .select('count', { count: 'exact', head: true });
 
-      console.log('Connection test result:', { testData, testError });
 
       // Fetch sessions first to determine which months need finance entries
       const { data: sessionsData, error: sessionsError } = await supabase
@@ -158,8 +150,6 @@ export default function FinancesPage() {
       // Auto-create finance entries for months with sessions but no finance entry
       const updatedFinancesData = await autoCreateFinanceEntries(sessionsData || [], financesData || []);
 
-      console.log('Raw finances data from Supabase:', updatedFinancesData);
-      console.log('Number of finance entries:', updatedFinancesData?.length || 0);
 
       // Map database fields to interface fields
       const mappedFinances = (updatedFinancesData || []).map(finance => ({
@@ -168,7 +158,6 @@ export default function FinancesPage() {
         actual: 0 // We'll calculate this from sessions/memberships
       }));
 
-      console.log('Mapped finances data:', mappedFinances);
       setFinances(mappedFinances);
       setSessions(sessionsData || []);
       setMemberships(membershipsData || []);

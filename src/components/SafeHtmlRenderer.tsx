@@ -79,7 +79,6 @@ export default function SafeHtmlRenderer({
     try {
       return sanitizeHtml(textToHtml(html));
     } catch (error) {
-      console.warn('Error sanitizing HTML:', error);
       return fallback || html;
     }
   }, [html, fallback]);

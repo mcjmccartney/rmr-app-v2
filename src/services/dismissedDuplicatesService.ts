@@ -73,7 +73,6 @@ export const dismissedDuplicatesService = {
   // Dismiss a duplicate
   async dismiss(duplicateId: string): Promise<DismissedDuplicate> {
     try {
-      console.log('💾 Dismissing duplicate in database:', duplicateId);
 
       const { data, error } = await supabase
         .from('dismissed_duplicates')
@@ -87,7 +86,6 @@ export const dismissedDuplicatesService = {
       if (error) {
         // Handle unique constraint violation (duplicate already dismissed)
         if (error.code === '23505') {
-          console.log('⚠️ Duplicate already dismissed:', duplicateId);
           // Return existing record
           const { data: existing } = await supabase
             .from('dismissed_duplicates')
@@ -106,7 +104,6 @@ export const dismissedDuplicatesService = {
         throw error;
       }
 
-      console.log('✅ Successfully dismissed duplicate in database:', duplicateId);
       return dbRowToDismissedDuplicate(data);
     } catch (error) {
       console.error('Failed to dismiss duplicate:', error);
@@ -117,7 +114,6 @@ export const dismissedDuplicatesService = {
   // Un-dismiss a duplicate (for testing/debugging)
   async undismiss(duplicateId: string): Promise<void> {
     try {
-      console.log('🔄 Un-dismissing duplicate:', duplicateId);
 
       const { error } = await supabase
         .from('dismissed_duplicates')
@@ -129,7 +125,6 @@ export const dismissedDuplicatesService = {
         throw error;
       }
 
-      console.log('✅ Successfully un-dismissed duplicate:', duplicateId);
     } catch (error) {
       console.error('Failed to un-dismiss duplicate:', error);
       throw error;

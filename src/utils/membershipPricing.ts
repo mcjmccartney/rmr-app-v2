@@ -63,11 +63,9 @@ export async function updateFutureSessionPricesForMember(
   membershipDate: string
 ): Promise<{ updatedCount: number; sessions: Session[] }> {
   try {
-    console.log(`[MEMBERSHIP PRICING] Updating future session prices for client ${clientId}`);
     
     // Calculate membership expiration
     const membershipExpiration = calculateMembershipExpiration(membershipDate);
-    console.log(`[MEMBERSHIP PRICING] Membership period: ${membershipDate} to ${membershipExpiration.toISOString().split('T')[0]}`);
     
     // Get all sessions for this client
     const allSessions = await sessionService.getByClientId(clientId);
@@ -83,7 +81,6 @@ export async function updateFutureSessionPricesForMember(
       );
     });
     
-    console.log(`[MEMBERSHIP PRICING] Found ${futureSessions.length} future sessions within membership period`);
     
     const updatedSessions: Session[] = [];
     let updatedCount = 0;
@@ -93,7 +90,6 @@ export async function updateFutureSessionPricesForMember(
       if (session.sessionType === 'Group' || 
           session.sessionType === 'Phone Call' || 
           session.sessionType === 'Coaching') {
-        console.log(`[MEMBERSHIP PRICING] Skipping ${session.sessionType} session (no automatic pricing)`);
         continue;
       }
       
@@ -115,7 +111,6 @@ export async function updateFutureSessionPricesForMember(
       
       // Only update if the price has changed
       if (newQuote !== session.quote) {
-        console.log(`[MEMBERSHIP PRICING] Updating session ${session.id}: £${session.quote} → £${newQuote}`);
         
         const updatedSession = await sessionService.update(session.id, {
           quote: newQuote
@@ -124,11 +119,9 @@ export async function updateFutureSessionPricesForMember(
         updatedSessions.push(updatedSession);
         updatedCount++;
       } else {
-        console.log(`[MEMBERSHIP PRICING] Session ${session.id} already has correct price: £${newQuote}`);
       }
     }
     
-    console.log(`[MEMBERSHIP PRICING] Updated ${updatedCount} session(s)`);
     
     return {
       updatedCount,

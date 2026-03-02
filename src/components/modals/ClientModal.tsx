@@ -81,16 +81,12 @@ const ClientModal = memo(function ClientModal({ client, isOpen, onClose, onEditC
       setIsLoadingData(true);
       try {
         // Load sessions for this client (including sessions where they're a participant)
-        console.log('Loading sessions for client:', currentClient.id);
         const sessions = await sessionService.getAllSessionsForClient(currentClient.id);
-        console.log('Found sessions (including participant sessions):', sessions.length);
         setClientSessions(sessions || []);
 
         // Load memberships for this client including email aliases
         let memberships: Membership[] = [];
-        console.log('Loading memberships for client ID:', currentClient.id);
         memberships = await getMembershipsByClientIdWithAliases(currentClient.id);
-        console.log('Found memberships (including aliases):', memberships.length);
 
         setClientMemberships(memberships || []);
       } catch (error) {

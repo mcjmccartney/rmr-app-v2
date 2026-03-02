@@ -125,19 +125,6 @@ const SessionModal = memo(function SessionModal({ session, isOpen, onClose, onEd
 
   // Debug logging for questionnaire matching
   if (client && sessionDogName && !behaviourQuestionnaire) {
-    console.log('🔍 [SessionModal] Questionnaire NOT found for:', {
-      clientId: client.id,
-      clientEmail: client.email,
-      sessionDogName: sessionDogName,
-      availableQuestionnaires: state.behaviourQuestionnaires
-        .filter(q => q.client_id === client.id || q.email?.toLowerCase() === client.email?.toLowerCase())
-        .map(q => ({
-          id: q.id,
-          email: q.email,
-          dogName: q.dogName,
-          client_id: q.client_id
-        }))
-    });
   }
 
   const handleDelete = async () => {

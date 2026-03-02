@@ -16,7 +16,6 @@ import ActionPointLibraryModal from '@/components/modals/ActionPointLibraryModal
 import DogClubGuidesModal from '@/components/modals/DogClubGuidesModal';
 import { DOG_CLUB_GUIDES } from '@/data/dogClubGuides';
 import { getSessionDogName as getSessionDogNameUtil } from '@/utils/dogNameUtils';
-// import SessionPlanPreviewModal from '@/components/modals/SessionPlanPreviewModal';
 
 function SessionPlanContent() {
   const searchParams = useSearchParams();
@@ -63,7 +62,6 @@ function SessionPlanContent() {
   const [isGeneratingDoc, setIsGeneratingDoc] = useState(false);
   const [generatedDocUrl, setGeneratedDocUrl] = useState<string | null>(null);
   const [isPollingForUrl, setIsPollingForUrl] = useState(false);
-  // const [showPreviewModal, setShowPreviewModal] = useState(false);
 
   // Use fallback data if state data is not available (moved up for scope)
   const currentSession = session || fallbackSession;

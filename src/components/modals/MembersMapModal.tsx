@@ -68,7 +68,6 @@ export default function MembersMapModal({ isOpen, onClose }: MembersMapModalProp
 
       return validCache;
     } catch (error) {
-      console.warn('Failed to load geocoding cache:', error);
       return {};
     }
   };
@@ -78,7 +77,6 @@ export default function MembersMapModal({ isOpen, onClose }: MembersMapModalProp
     try {
       localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
     } catch (error) {
-      console.warn('Failed to save geocoding cache:', error);
     }
   };
 
@@ -122,7 +120,6 @@ export default function MembersMapModal({ isOpen, onClose }: MembersMapModalProp
 
       return null;
     } catch (error) {
-      console.warn('Geocoding failed for address:', address);
       return null;
     }
   };

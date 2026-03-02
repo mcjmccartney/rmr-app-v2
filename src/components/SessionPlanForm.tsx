@@ -6,9 +6,6 @@ import { predefinedActionPoints, personalizeActionPoint } from '@/data/actionPoi
 import { useEnterKeyHandler } from '@/hooks/useEnterKeyHandler';
 import SafeHtmlRenderer from '@/components/SafeHtmlRenderer';
 import { getSessionDogName as getSessionDogNameUtil } from '@/utils/dogNameUtils';
-// import { sessionPlanService } from '@/services/sessionPlanService';
-// import { googleDocsService } from '@/services/googleDocsService';
-// import SessionPlanPreview from './SessionPlanPreview';
 
 interface SessionPlanFormProps {
   session: Session;
@@ -39,20 +36,9 @@ export default function SessionPlanForm({ session, client, existingPlan, onClose
 
 
   useEffect(() => {
-    // For now, just default to session number 1
-    // Later we can enable database session number calculation
     if (!existingPlan) {
       setSessionPlan(prev => ({ ...prev, sessionNumber: 1 }));
     }
-
-    // Optionally try to calculate session number from database
-    // sessionPlanService.calculateSessionNumber(session.id)
-    //   .then(number => {
-    //     setSessionPlan(prev => ({ ...prev, sessionNumber: number }));
-    //   })
-    //   .catch(error => {
-    //     console.error('Error calculating session number (database may not be set up):', error);
-    //   });
   }, [session.id, existingPlan]);
 
   const handleInputChange = (field: keyof SessionPlan, value: string) => {
@@ -90,20 +76,6 @@ export default function SessionPlanForm({ session, client, existingPlan, onClose
 
       setSessionPlan(tempPlan);
       alert('Session plan saved locally! (Database saving will be enabled once you run the database schema)');
-
-      // Optionally try database save
-      // const planData = {
-      //   ...sessionPlan,
-      //   actionPoints: selectedActionPoints,
-      // } as Omit<SessionPlan, 'id' | 'createdAt' | 'updatedAt'>;
-      //
-      // let savedPlan: SessionPlan;
-      // if (existingPlan) {
-      //   savedPlan = await sessionPlanService.update(existingPlan.id, planData);
-      // } else {
-      //   savedPlan = await sessionPlanService.create(planData);
-      // }
-      // onSave(savedPlan);
 
     } catch (error) {
       console.error('Error saving session plan:', error);

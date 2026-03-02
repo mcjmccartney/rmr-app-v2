@@ -102,21 +102,18 @@ export default function GroupSessionModal({ session, isOpen, onClose, onEditSess
     const totalQuote = participants.length * individualQuote;
     // This would need to be implemented to update the session's quote
     // For now, we'll just log it
-    console.log('Session total should be updated to:', totalQuote);
   };
 
   const handleSendEventEmail = async () => {
     if (!session) return;
 
     if (participants.length === 0) {
-      console.warn('Cannot send event email: No participants found');
       return;
     }
 
     try {
       setSendingEmail(true);
       await sendGroupEventEmail(session);
-      console.log('✅ Event email sent successfully');
     } catch (error) {
       console.error('❌ Failed to send event email:', error);
     } finally {

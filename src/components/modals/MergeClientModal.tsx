@@ -36,24 +36,6 @@ export default function MergeClientModal({
       setIsLoading(true);
       try {
         const preview = await clientMergeService.generateMergePreview(primaryClient, duplicateClient);
-        console.log('🔍 Merge Preview Debug:', {
-          primaryClient: {
-            firstName: primaryClient.firstName,
-            lastName: primaryClient.lastName,
-            email: primaryClient.email
-          },
-          duplicateClient: {
-            firstName: duplicateClient.firstName,
-            lastName: duplicateClient.lastName,
-            email: duplicateClient.email
-          },
-          conflicts: preview.conflicts.map(c => ({
-            field: c.field,
-            primaryValue: c.primaryValue,
-            duplicateValue: c.duplicateValue,
-            suggestedValue: c.suggestedValue
-          }))
-        });
         setMergePreview(preview);
 
         // Initialize user choices with suggested values
@@ -61,7 +43,6 @@ export default function MergeClientModal({
         preview.conflicts.forEach(conflict => {
           initialChoices[conflict.field] = conflict.suggestedValue;
         });
-        console.log('🔍 Setting initial user choices:', initialChoices);
         setUserChoices(initialChoices);
       } catch (error) {
         console.error('Error loading merge preview:', error);
@@ -106,13 +87,11 @@ export default function MergeClientModal({
   };
 
   const handleConflictChoice = (field: string, value: any) => {
-    console.log('🔍 Conflict choice changed:', { field, value });
     setUserChoices(prev => {
       const newChoices = {
         ...prev,
         [field]: value
       };
-      console.log('🔍 Updated user choices:', newChoices);
       return newChoices;
     });
   };
@@ -174,15 +153,6 @@ export default function MergeClientModal({
                 
                 {mergePreview.conflicts.map((conflict, index) => {
                   // Debug logging for radio button state
-                  console.log('🔍 Rendering conflict:', {
-                    field: conflict.field,
-                    primaryValue: conflict.primaryValue,
-                    duplicateValue: conflict.duplicateValue,
-                    suggestedValue: conflict.suggestedValue,
-                    currentChoice: userChoices[conflict.field],
-                    primaryChecked: userChoices[conflict.field] === conflict.primaryValue,
-                    duplicateChecked: userChoices[conflict.field] === conflict.duplicateValue
-                  });
 
                   return (
                     <div key={index} className="border border-gray-200 rounded-lg p-4">
