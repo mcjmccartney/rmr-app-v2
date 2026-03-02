@@ -39,9 +39,9 @@ function ClientsPageContent() {
   // Membership tracking state - stores reset dates for each client (now from database)
   const [membershipResets, setMembershipResets] = useState<{ [clientId: string]: string }>({});
   const [resetsLoaded, setResetsLoaded] = useState(false);
-  // Undo state — tracks the DB row ID and previous reset date for the last "Added" click per client
-  const [addedResetIds, setAddedResetIds] = useState<{ [clientId: string]: string }>({});
-  const [previousResets, setPreviousResets] = useState<{ [clientId: string]: string | undefined }>({});
+  // Persistent undo state — loaded from DB on mount, survives page refresh
+  const [latestResetIds, setLatestResetIds] = useState<{ [clientId: string]: string }>({});
+  const [previousResetDates, setPreviousResetDates] = useState<{ [clientId: string]: string | undefined }>({});
 
   // Load membership resets from database on component mount
   useEffect(() => {
@@ -62,16 +62,29 @@ function ClientsPageContent() {
 
         // Load all resets from database
         const allResets = await groupCoachingResetService.getAllResets();
-        const resetMap: { [clientId: string]: string } = {};
 
-        // Create a map of clientId -> most recent reset date
+        // Group by clientId
+        const resetsByClient: { [clientId: string]: typeof allResets } = {};
         allResets.forEach(reset => {
-          if (!resetMap[reset.clientId] || reset.resetDate > resetMap[reset.clientId]) {
-            resetMap[reset.clientId] = reset.resetDate;
-          }
+          if (!resetsByClient[reset.clientId]) resetsByClient[reset.clientId] = [];
+          resetsByClient[reset.clientId].push(reset);
+        });
+
+        // For each client, sort by resetDate desc and extract the top two
+        const resetMap: { [clientId: string]: string } = {};
+        const latestIdMap: { [clientId: string]: string } = {};
+        const previousDateMap: { [clientId: string]: string | undefined } = {};
+
+        Object.entries(resetsByClient).forEach(([clientId, resets]) => {
+          const sorted = [...resets].sort((a, b) => b.resetDate.localeCompare(a.resetDate));
+          resetMap[clientId] = sorted[0].resetDate;        // most recent date (for counter)
+          latestIdMap[clientId] = sorted[0].id;             // ID of most recent reset (for undo)
+          previousDateMap[clientId] = sorted[1]?.resetDate; // second-most-recent (restore target)
         });
 
         setMembershipResets(resetMap);
+        setLatestResetIds(latestIdMap);
+        setPreviousResetDates(previousDateMap);
         setResetsLoaded(true);
       } catch (error) {
         console.error('❌ Error loading group coaching resets:', error);
@@ -206,8 +219,8 @@ function ClientsPageContent() {
 
       // Update local state
       setMembershipResets(prev => ({ ...prev, [client.id]: today }));
-      setAddedResetIds(prev => ({ ...prev, [client.id]: newReset.id }));
-      setPreviousResets(prev => ({ ...prev, [client.id]: previousDate }));
+      setLatestResetIds(prev => ({ ...prev, [client.id]: newReset.id }));
+      setPreviousResetDates(prev => ({ ...prev, [client.id]: previousDate }));
 
     } catch (error) {
       alert('Failed to reset group coaching count. Please try again.');
@@ -216,12 +229,12 @@ function ClientsPageContent() {
 
   // Handle "Undo" — reverts the most recent "Added" click for a client
   const handleUndoAddedToSession = async (client: Client) => {
-    const resetId = addedResetIds[client.id];
+    const resetId = latestResetIds[client.id];
     if (!resetId) return;
     try {
       await groupCoachingResetService.deleteReset(resetId);
 
-      const previous = previousResets[client.id];
+      const previous = previousResetDates[client.id];
       setMembershipResets(prev => {
         const next = { ...prev };
         if (previous !== undefined) {
@@ -232,8 +245,8 @@ function ClientsPageContent() {
         return next;
       });
 
-      setAddedResetIds(prev => { const n = { ...prev }; delete n[client.id]; return n; });
-      setPreviousResets(prev => { const n = { ...prev }; delete n[client.id]; return n; });
+      setLatestResetIds(prev => { const n = { ...prev }; delete n[client.id]; return n; });
+      setPreviousResetDates(prev => { const n = { ...prev }; delete n[client.id]; return n; });
     } catch (error) {
       alert('Failed to undo. Please try again.');
     }
@@ -731,8 +744,8 @@ function ClientsPageContent() {
                                   className="w-4 h-4 text-amber-600 bg-gray-100 border-gray-300 rounded focus:ring-amber-500 focus:ring-2"
                                 />
                               )}
-                              {/* Undo — shown after "Added" is clicked this session */}
-                              {addedResetIds[client.id] && (
+                              {/* Undo — shown for 0-month clients with a reset on record (persists across refresh) */}
+                              {count === 0 && latestResetIds[client.id] && (
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
@@ -743,8 +756,8 @@ function ClientsPageContent() {
                                   Undo
                                 </button>
                               )}
-                              {/* Added — only for 6+ month clients not just added this session */}
-                              {showAddedToSessionButton && !addedResetIds[client.id] && (
+                              {/* Added — only for 6+ month clients */}
+                              {showAddedToSessionButton && (
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
