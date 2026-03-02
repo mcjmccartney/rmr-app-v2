@@ -228,7 +228,7 @@ export async function POST(request: NextRequest) {
       sessions,
       clients,
       7, // targetDays = 7
-      'https://hook.eu1.make.com/lipggo8kcd8kwq2vp6j6mr3gnxbx12h7'
+      process.env.NEXT_PUBLIC_MAKE_WEBHOOK_SESSION_URL!
     );
 
     // 12-day webhooks are disabled

@@ -23,7 +23,6 @@
     "formdata-node": "^6.0.3",
     "framer-motion": "^12.16.0",
     "googleapis": "^150.0.1",
-    "html2canvas": "^1.4.1",
     "isomorphic-dompurify": "^2.33.0",
     "jspdf": "^3.0.3",
     "lucide-react": "^0.513.0",

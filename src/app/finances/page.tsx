@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { supabase } from '@/lib/supabase';
 import Header from '@/components/layout/Header';
@@ -169,13 +169,16 @@ export default function FinancesPage() {
   };
 
   // Filter finances based on search query
-  const filteredFinances = finances.filter(finance => {
-    const searchTerm = searchQuery.toLowerCase();
-    return (
-      finance.month.toLowerCase().includes(searchTerm) ||
-      finance.year.toString().includes(searchTerm)
-    );
-  });
+  const filteredFinances = useMemo(() =>
+    finances.filter(finance => {
+      const searchTerm = searchQuery.toLowerCase();
+      return (
+        finance.month.toLowerCase().includes(searchTerm) ||
+        finance.year.toString().includes(searchTerm)
+      );
+    }),
+    [finances, searchQuery]
+  );
 
   const handleFinanceClick = (finance: Finance, allMonthFinances: Finance[]) => {
     setSelectedFinance(finance);
@@ -207,26 +210,32 @@ export default function FinancesPage() {
   };
 
   // Group finances by UK tax year, then by month
-  const financesByTaxYear = filteredFinances.reduce((acc, finance) => {
-    const taxYear = getUKTaxYear(finance.month, finance.year);
-    const monthKey = `${finance.month} ${finance.year}`;
+  const financesByTaxYear = useMemo(() =>
+    filteredFinances.reduce((acc, finance) => {
+      const taxYear = getUKTaxYear(finance.month, finance.year);
+      const monthKey = `${finance.month} ${finance.year}`;
 
-    if (!acc[taxYear]) {
-      acc[taxYear] = {};
-    }
-    if (!acc[taxYear][monthKey]) {
-      acc[taxYear][monthKey] = [];
-    }
-    acc[taxYear][monthKey].push(finance);
-    return acc;
-  }, {} as Record<string, Record<string, Finance[]>>);
+      if (!acc[taxYear]) {
+        acc[taxYear] = {};
+      }
+      if (!acc[taxYear][monthKey]) {
+        acc[taxYear][monthKey] = [];
+      }
+      acc[taxYear][monthKey].push(finance);
+      return acc;
+    }, {} as Record<string, Record<string, Finance[]>>),
+    [filteredFinances]
+  );
 
   // Sort tax years (most recent first)
-  const sortedTaxYears = Object.keys(financesByTaxYear).sort((a, b) => {
-    const yearA = parseInt(a.split('/')[0]);
-    const yearB = parseInt(b.split('/')[0]);
-    return yearB - yearA;
-  });
+  const sortedTaxYears = useMemo(() =>
+    Object.keys(financesByTaxYear).sort((a, b) => {
+      const yearA = parseInt(a.split('/')[0]);
+      const yearB = parseInt(b.split('/')[0]);
+      return yearB - yearA;
+    }),
+    [financesByTaxYear]
+  );
 
   // Helper function to sort months within a tax year (most recent first)
   const sortMonthsInTaxYear = (months: string[]): string[] => {

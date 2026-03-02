@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { useApp } from '@/context/AppContext';
 import Header from '@/components/layout/Header';
@@ -34,44 +34,53 @@ export default function MembershipsPage() {
   const [showClientModal, setShowClientModal] = useState(false);
   const [showEditClientModal, setShowEditClientModal] = useState(false);
 
-  const filteredMemberships = state.memberships.filter(membership => {
-    const searchTerm = searchQuery.toLowerCase();
-    return membership.email.toLowerCase().includes(searchTerm);
-  });
+  const filteredMemberships = useMemo(() =>
+    state.memberships.filter(membership => {
+      const searchTerm = searchQuery.toLowerCase();
+      return membership.email.toLowerCase().includes(searchTerm);
+    }),
+    [state.memberships, searchQuery]
+  );
 
   // Group memberships by month/year from date
-  const membershipsByMonth = filteredMemberships.reduce((acc, membership) => {
-    const date = new Date(membership.date);
-    const monthKey = date.toLocaleDateString('en-GB', { year: 'numeric', month: 'long' });
-    if (!acc[monthKey]) {
-      acc[monthKey] = [];
-    }
-    acc[monthKey].push(membership);
-    return acc;
-  }, {} as Record<string, Membership[]>);
+  const membershipsByMonth = useMemo(() =>
+    filteredMemberships.reduce((acc, membership) => {
+      const date = new Date(membership.date);
+      const monthKey = date.toLocaleDateString('en-GB', { year: 'numeric', month: 'long' });
+      if (!acc[monthKey]) {
+        acc[monthKey] = [];
+      }
+      acc[monthKey].push(membership);
+      return acc;
+    }, {} as Record<string, Membership[]>),
+    [filteredMemberships]
+  );
 
   // Sort months with current year first, then chronologically within each year
-  const sortedMonths = Object.keys(membershipsByMonth).sort((a, b) => {
-    // Parse month strings like "June 2025" to get month and year
-    const [monthA, yearA] = a.split(' ');
-    const [monthB, yearB] = b.split(' ');
+  const sortedMonths = useMemo(() =>
+    Object.keys(membershipsByMonth).sort((a, b) => {
+      // Parse month strings like "June 2025" to get month and year
+      const [monthA, yearA] = a.split(' ');
+      const [monthB, yearB] = b.split(' ');
 
-    const yearNumA = parseInt(yearA);
-    const yearNumB = parseInt(yearB);
+      const yearNumA = parseInt(yearA);
+      const yearNumB = parseInt(yearB);
 
-    // First sort by year (descending - newest year first)
-    if (yearNumA !== yearNumB) {
-      return yearNumB - yearNumA;
-    }
+      // First sort by year (descending - newest year first)
+      if (yearNumA !== yearNumB) {
+        return yearNumB - yearNumA;
+      }
 
-    // Within the same year, sort by month (descending - newest month first)
-    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
-                       'July', 'August', 'September', 'October', 'November', 'December'];
-    const monthIndexA = monthNames.indexOf(monthA);
-    const monthIndexB = monthNames.indexOf(monthB);
+      // Within the same year, sort by month (descending - newest month first)
+      const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                         'July', 'August', 'September', 'October', 'November', 'December'];
+      const monthIndexA = monthNames.indexOf(monthA);
+      const monthIndexB = monthNames.indexOf(monthB);
 
-    return monthIndexB - monthIndexA;
-  });
+      return monthIndexB - monthIndexA;
+    }),
+    [membershipsByMonth]
+  );
 
   const handleAddMembership = () => {
     setShowAddMembershipSidepane(true);

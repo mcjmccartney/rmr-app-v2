@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Send to Make.com webhook for booking terms update email
-    const response = await fetch('https://hook.eu1.make.com/99iuq4uahpq22v5vf3mmyeokgod4qex8', {
+    const response = await fetch(process.env.NEXT_PUBLIC_MAKE_WEBHOOK_BOOKING_TERMS_URL!, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

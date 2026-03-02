@@ -205,7 +205,7 @@ export async function GET(req: Request) {
     });
 
     const makeRes = await fetch(
-      "https://hook.eu1.make.com/lbfmnhl3xpf7c0y2sfos3vdln6y1fmqm",
+      process.env.NEXT_PUBLIC_MAKE_WEBHOOK_PDF_URL!,
       {
         method: "POST",
         body: formData as any,

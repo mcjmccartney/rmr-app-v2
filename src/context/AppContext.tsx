@@ -1090,7 +1090,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
 
         // Trigger the webhook for Group/RMR Live sessions
-        await fetch('https://hook.eu1.make.com/lipggo8kcd8kwq2vp6j6mr3gnxbx12h7', {
+        await fetch(process.env.NEXT_PUBLIC_MAKE_WEBHOOK_SESSION_URL!, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -1189,7 +1189,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       // Comprehensive validation to prevent blank/empty webhook data
       if (isValidWebhookData(webhookData) && !shouldSkipWebhookCall(session.id, 'booking-terms')) {
         webhookPromises.push(
-          fetch('https://hook.eu1.make.com/yaoalfe77uqtw4xv9fbh5atf4okq14wm', {
+          fetch(process.env.NEXT_PUBLIC_MAKE_WEBHOOK_BOOKING_URL!, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -1210,7 +1210,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       };
 
       webhookPromises.push(
-        fetch('https://hook.eu1.make.com/lipggo8kcd8kwq2vp6j6mr3gnxbx12h7', {
+        fetch(process.env.NEXT_PUBLIC_MAKE_WEBHOOK_SESSION_URL!, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -1357,7 +1357,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
 
       // Send webhook to Make.com
-      const response = await fetch('https://hook.eu1.make.com/yaoalfe77uqtw4xv9fbh5atf4okq14wm', {
+      const response = await fetch(process.env.NEXT_PUBLIC_MAKE_WEBHOOK_BOOKING_URL!, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1433,7 +1433,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         };
 
 
-        const response = await fetch('https://hook.eu1.make.com/lipggo8kcd8kwq2vp6j6mr3gnxbx12h7', {
+        const response = await fetch(process.env.NEXT_PUBLIC_MAKE_WEBHOOK_SESSION_URL!, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -1525,7 +1525,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
 
       // Send webhook to Make.com
-      const response = await fetch('https://hook.eu1.make.com/lipggo8kcd8kwq2vp6j6mr3gnxbx12h7', {
+      const response = await fetch(process.env.NEXT_PUBLIC_MAKE_WEBHOOK_SESSION_URL!, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -2236,7 +2236,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
 
       // Send webhook to Make.com
-      const response = await fetch('https://hook.eu1.make.com/lipggo8kcd8kwq2vp6j6mr3gnxbx12h7', {
+      const response = await fetch(process.env.NEXT_PUBLIC_MAKE_WEBHOOK_SESSION_URL!, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -175,7 +175,7 @@ export async function POST(request: NextRequest) {
 
         console.log(`[MANUAL-WEBHOOK] Sending webhook for ${client.first_name} ${client.last_name} - ${session.booking_date} ${session.booking_time}`);
 
-        const response = await fetch('https://hook.eu1.make.com/lipggo8kcd8kwq2vp6j6mr3gnxbx12h7', {
+        const response = await fetch(process.env.NEXT_PUBLIC_MAKE_WEBHOOK_SESSION_URL!, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(webhookData)

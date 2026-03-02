@@ -1,12 +1,6 @@
 import { SessionPlan, ActionPoint, Session, Client } from '@/types';
 import { personalizeActionPoint } from '@/data/actionPoints';
 
-// For PDF generation - we'll use jsPDF
-declare global {
-  interface Window {
-    jsPDF: any;
-  }
-}
 
 interface EditableContent {
   title: string;
@@ -35,18 +29,7 @@ interface SessionPlanDocumentData {
 export const googleDocsService = {
   // Generate PDF from edited content
   async generatePDFFromContent(content: EditableContent): Promise<void> {
-    // Load jsPDF dynamically
-    if (!window.jsPDF) {
-      const script = document.createElement('script');
-      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
-      document.head.appendChild(script);
-
-      await new Promise((resolve) => {
-        script.onload = resolve;
-      });
-    }
-
-    const { jsPDF } = window;
+    const { jsPDF } = await import('jspdf');
     const doc = new jsPDF();
 
     let yPosition = 20;

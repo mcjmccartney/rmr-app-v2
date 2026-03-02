@@ -28,7 +28,7 @@ module.exports = {
     },
   },
   plugins: [],
-  // Disable oklch colors - use RGB instead for html2canvas compatibility
+  // Use RGB color format for Puppeteer PDF rendering compatibility
   experimental: {
     colorFormat: 'rgb',
   },

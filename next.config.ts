@@ -99,7 +99,7 @@ export default withPWA({
           maxEntries: 16,
           maxAgeSeconds: 24 * 60 * 60 // 24 hours
         },
-        networkTimeoutSeconds: 30 // Increased from 10 to 30 seconds
+        networkTimeoutSeconds: 10 // Increased from 10 to 30 seconds
       }
     },
     {
@@ -111,7 +111,7 @@ export default withPWA({
           maxEntries: 32,
           maxAgeSeconds: 24 * 60 * 60 // 24 hours
         },
-        networkTimeoutSeconds: 30 // Increased from 10 to 30 seconds
+        networkTimeoutSeconds: 10 // Increased from 10 to 30 seconds
       }
     }
   ]
