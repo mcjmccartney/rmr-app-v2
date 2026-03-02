@@ -39,6 +39,9 @@ function ClientsPageContent() {
   // Membership tracking state - stores reset dates for each client (now from database)
   const [membershipResets, setMembershipResets] = useState<{ [clientId: string]: string }>({});
   const [resetsLoaded, setResetsLoaded] = useState(false);
+  // Undo state — tracks the DB row ID and previous reset date for the last "Added" click per client
+  const [addedResetIds, setAddedResetIds] = useState<{ [clientId: string]: string }>({});
+  const [previousResets, setPreviousResets] = useState<{ [clientId: string]: string | undefined }>({});
 
   // Load membership resets from database on component mount
   useEffect(() => {
@@ -196,18 +199,43 @@ function ClientsPageContent() {
   const handleAddedToSession = async (client: Client) => {
     try {
       const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+      const previousDate = membershipResets[client.id]; // capture before overwriting
 
-      // Save to database
-      await groupCoachingResetService.addReset(client.id, today);
+      // Save to database — returns the full reset including its id
+      const newReset = await groupCoachingResetService.addReset(client.id, today);
 
       // Update local state
-      setMembershipResets(prev => ({
-        ...prev,
-        [client.id]: today
-      }));
+      setMembershipResets(prev => ({ ...prev, [client.id]: today }));
+      setAddedResetIds(prev => ({ ...prev, [client.id]: newReset.id }));
+      setPreviousResets(prev => ({ ...prev, [client.id]: previousDate }));
 
     } catch (error) {
       alert('Failed to reset group coaching count. Please try again.');
+    }
+  };
+
+  // Handle "Undo" — reverts the most recent "Added" click for a client
+  const handleUndoAddedToSession = async (client: Client) => {
+    const resetId = addedResetIds[client.id];
+    if (!resetId) return;
+    try {
+      await groupCoachingResetService.deleteReset(resetId);
+
+      const previous = previousResets[client.id];
+      setMembershipResets(prev => {
+        const next = { ...prev };
+        if (previous !== undefined) {
+          next[client.id] = previous;
+        } else {
+          delete next[client.id];
+        }
+        return next;
+      });
+
+      setAddedResetIds(prev => { const n = { ...prev }; delete n[client.id]; return n; });
+      setPreviousResets(prev => { const n = { ...prev }; delete n[client.id]; return n; });
+    } catch (error) {
+      alert('Failed to undo. Please try again.');
     }
   };
 
@@ -703,8 +731,20 @@ function ClientsPageContent() {
                                   className="w-4 h-4 text-amber-600 bg-gray-100 border-gray-300 rounded focus:ring-amber-500 focus:ring-2"
                                 />
                               )}
-                              {/* Group Coaching Button - inline */}
-                              {showAddedToSessionButton && (
+                              {/* Undo — shown after "Added" is clicked this session */}
+                              {addedResetIds[client.id] && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleUndoAddedToSession(client);
+                                  }}
+                                  className="py-1.5 px-3 bg-gray-600 text-white rounded-lg hover:bg-gray-500 transition-colors font-medium text-sm"
+                                >
+                                  Undo
+                                </button>
+                              )}
+                              {/* Added — only for 6+ month clients not just added this session */}
+                              {showAddedToSessionButton && !addedResetIds[client.id] && (
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();

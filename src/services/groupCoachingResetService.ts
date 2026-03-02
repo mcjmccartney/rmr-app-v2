@@ -101,6 +101,15 @@ export const groupCoachingResetService = {
     }
   },
 
+  // Delete a specific reset by ID (used for undo)
+  async deleteReset(id: string): Promise<void> {
+    const { error } = await supabase
+      .from('group_coaching_resets')
+      .delete()
+      .eq('id', id);
+    if (error) throw error;
+  },
+
   // Get all resets (for debugging/admin purposes)
   async getAllResets(): Promise<GroupCoachingReset[]> {
     try {
