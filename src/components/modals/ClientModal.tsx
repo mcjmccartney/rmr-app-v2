@@ -50,11 +50,18 @@ const ClientModal = memo(function ClientModal({ client, isOpen, onClose, onEditC
     return emails;
   };
 
-  // Find the behavioural brief for this client - look for briefs with matching client_id
-  const behaviouralBrief = currentClient
-    ? state.behaviouralBriefs.find(b => b.client_id === currentClient.id) ||
-      (currentClient.behaviouralBriefId ? state.behaviouralBriefs.find(b => b.id === currentClient.behaviouralBriefId) : null)
-    : null;
+  // Find all behavioural briefs for this client - look for briefs with matching client_id
+  const behaviouralBriefs = currentClient
+    ? (() => {
+        const byClientId = state.behaviouralBriefs.filter(b => b.client_id === currentClient.id);
+        if (byClientId.length > 0) return byClientId;
+        if (currentClient.behaviouralBriefId) {
+          const legacy = state.behaviouralBriefs.find(b => b.id === currentClient.behaviouralBriefId);
+          return legacy ? [legacy] : [];
+        }
+        return [];
+      })()
+    : [];
 
   // Find all behaviour questionnaires for this client - look for questionnaires with matching client_id
   const behaviourQuestionnaires = currentClient
@@ -367,18 +374,40 @@ const ClientModal = memo(function ClientModal({ client, isOpen, onClose, onEditC
         )}
 
         {/* Behavioural Brief and Behaviour Questionnaire Buttons */}
-        {(behaviouralBrief || behaviourQuestionnaires.length > 0) && (
+        {(behaviouralBriefs.length > 0 || behaviourQuestionnaires.length > 0) && (
           <div className="space-y-3">
-            {behaviouralBrief && onViewBehaviouralBrief && (
-              <button
-                onClick={() => onViewBehaviouralBrief(behaviouralBrief.id)}
-                className="w-full text-white py-3 px-4 rounded-lg font-medium transition-colors"
-                style={{ backgroundColor: '#4f6749' }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3d5237'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#4f6749'}
-              >
-                View Behavioural Brief
-              </button>
+            {behaviouralBriefs.length > 0 && onViewBehaviouralBrief && (
+              <div className="space-y-2">
+                {behaviouralBriefs.length === 1 ? (
+                  <button
+                    onClick={() => onViewBehaviouralBrief(behaviouralBriefs[0].id)}
+                    className="w-full text-white py-3 px-4 rounded-lg font-medium transition-colors"
+                    style={{ backgroundColor: '#4f6749' }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3d5237'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#4f6749'}
+                  >
+                    View Behavioural Brief
+                  </button>
+                ) : (
+                  <>
+                    <div className="text-sm font-medium text-gray-700 mb-2">
+                      Behavioural Briefs ({behaviouralBriefs.length})
+                    </div>
+                    {behaviouralBriefs.map((brief) => (
+                      <button
+                        key={brief.id}
+                        onClick={() => onViewBehaviouralBrief(brief.id)}
+                        className="w-full text-white py-2.5 px-4 rounded-lg font-medium transition-colors text-sm"
+                        style={{ backgroundColor: '#4f6749' }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3d5237'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#4f6749'}
+                      >
+                        View Brief - {brief.dogName}
+                      </button>
+                    ))}
+                  </>
+                )}
+              </div>
             )}
 
             {behaviourQuestionnaires.length > 0 && onViewBehaviourQuestionnaire && (
