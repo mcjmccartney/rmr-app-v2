@@ -147,58 +147,67 @@ export default function MembersMapModal({ isOpen, onClose }: MembersMapModalProp
     // Load cache
     const cache = loadCache();
 
-    // Get all unique emails from membership payments
-    const allMemberEmails = new Set(memberships.map(m => m.email));
+    // Case-insensitive email matching
+    const allMemberEmails = new Set(memberships.map(m => m.email?.toLowerCase()));
 
     // Get all clients who have ever paid for membership AND have an address
     const allMembers = clients.filter(client => {
       return client.email &&
-             allMemberEmails.has(client.email) &&
+             allMemberEmails.has(client.email.toLowerCase()) &&
              client.address &&
              client.address.trim().length > 0;
     });
 
     const locations: MemberLocation[] = [];
 
-    for (let i = 0; i < allMembers.length; i++) {
-      const client = allMembers[i];
-      const address = client.address!;
+    // Track used coordinates to apply jitter for stacked pins
+    const usedCoords = new Map<string, number>();
 
-      // Extract postcode from address
-      const postcode = extractPostcode(address);
-      const dogName = client.dogName || '';
+    // Geocode in parallel batches of 10 to avoid rate limiting while being fast
+    const BATCH_SIZE = 10;
+    for (let i = 0; i < allMembers.length; i += BATCH_SIZE) {
+      const batch = allMembers.slice(i, i + BATCH_SIZE);
 
-      // Check if this will be cached
-      const normalizedPostcode = postcode.trim().toLowerCase();
-      const isCached = !!cache[normalizedPostcode];
+      const results = await Promise.allSettled(
+        batch.map(client => geocodeAddress(extractPostcode(client.address!), cache))
+      );
 
-      // Geocode the postcode (with caching)
-      const coords = await geocodeAddress(postcode, cache);
+      results.forEach((result, batchIndex) => {
+        const client = batch[batchIndex];
+        if (result.status !== 'fulfilled' || !result.value) return;
 
-      if (coords) {
+        let { lat, lng } = result.value;
+
+        // Apply jitter if this coordinate is already used (pins stacking fix)
+        const coordKey = `${Math.round(lat * 100)},${Math.round(lng * 100)}`;
+        const existing = usedCoords.get(coordKey) || 0;
+        if (existing > 0) {
+          const angle = (existing * 137.5) * (Math.PI / 180); // golden angle spread
+          lat += Math.cos(angle) * 0.0015;
+          lng += Math.sin(angle) * 0.0015;
+        }
+        usedCoords.set(coordKey, existing + 1);
+
         // Get most recent membership date for this client
-        const clientMemberships = memberships.filter(m => m.email === client.email);
+        const clientMemberships = memberships.filter(
+          m => m.email?.toLowerCase() === client.email?.toLowerCase()
+        );
         const mostRecentMembership = clientMemberships.sort((a, b) =>
           new Date(b.date).getTime() - new Date(a.date).getTime()
         )[0];
 
         locations.push({
-          id: `${client.id}-${i}`, // Unique ID for map marker
+          id: client.id,
           clientId: client.id,
           clientName: `${client.firstName} ${client.lastName}`,
-          dogName,
+          dogName: client.dogName || '',
           email: client.email,
           membershipDate: mostRecentMembership?.date,
-          latitude: coords.lat,
-          longitude: coords.lng,
-          address: postcode
+          latitude: lat,
+          longitude: lng,
+          address: extractPostcode(client.address!)
         });
-      }
-
-      // Only add delay for fresh API calls to avoid rate limiting
-      if (!isCached && i < allMembers.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, 100));
-      }
+      });
     }
 
     setMemberLocations(locations);
@@ -248,12 +257,13 @@ export default function MembersMapModal({ isOpen, onClose }: MembersMapModalProp
     setSelectedClient(null);
   };
 
-  // Load member locations when modal opens
+  // Load member locations when modal opens (not on every clients/memberships update)
   useEffect(() => {
     if (isOpen) {
       loadMemberLocations();
     }
-  }, [isOpen, clients, memberships]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
