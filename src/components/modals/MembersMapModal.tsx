@@ -331,7 +331,7 @@ export default function MembersMapModal({ isOpen, onClose }: MembersMapModalProp
           </div>
 
           {/* Map */}
-          <div className="flex-1 relative">
+          <div className="flex-1 relative min-h-0">
             {isLoading && (
               <div className="absolute inset-0 bg-white bg-opacity-90 flex items-center justify-center z-10">
                 <div className="text-center">

@@ -68,6 +68,11 @@ export default function MembersMap({ locations, onClientClick }: MembersMapProps
     // Add navigation controls
     map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
+    // Force resize after load to fix h-full sizing in Chrome/mobile
+    map.current.once('load', () => {
+      map.current?.resize();
+    });
+
     return () => {
       if (map.current) {
         map.current.remove();
@@ -80,46 +85,55 @@ export default function MembersMap({ locations, onClientClick }: MembersMapProps
   useEffect(() => {
     if (!map.current || !mapboxgl || !locations.length) return;
 
-    // Clear existing markers
-    markersRef.current.forEach(marker => marker.remove());
-    markersRef.current = [];
+    const addMarkers = () => {
+      // Clear existing markers
+      markersRef.current.forEach(marker => marker.remove());
+      markersRef.current = [];
 
-    const bounds = new mapboxgl.LngLatBounds();
+      const bounds = new mapboxgl.LngLatBounds();
 
-    locations.forEach(location => {
-      // Create Google Maps-style pin marker element
-      const markerElement = document.createElement('div');
-      markerElement.className = 'mapbox-marker';
-      markerElement.innerHTML = `
-        <svg width="32" height="42" viewBox="0 0 32 42" fill="none" xmlns="http://www.w3.org/2000/svg" style="cursor: pointer; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">
-          <path d="M16 0C7.163 0 0 7.163 0 16C0 28 16 42 16 42C16 42 32 28 32 16C32 7.163 24.837 0 16 0Z" fill="#5a6f54"/>
-          <circle cx="16" cy="16" r="6" fill="white"/>
-        </svg>
-      `;
+      locations.forEach(location => {
+        // Create Google Maps-style pin marker element
+        const markerElement = document.createElement('div');
+        markerElement.className = 'mapbox-marker';
+        markerElement.innerHTML = `
+          <svg width="32" height="42" viewBox="0 0 32 42" fill="none" xmlns="http://www.w3.org/2000/svg" style="cursor: pointer; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">
+            <path d="M16 0C7.163 0 0 7.163 0 16C0 28 16 42 16 42C16 42 32 28 32 16C32 7.163 24.837 0 16 0Z" fill="#5a6f54"/>
+            <circle cx="16" cy="16" r="6" fill="white"/>
+          </svg>
+        `;
 
-      // Add click handler to open client modal
-      markerElement.addEventListener('click', () => {
-        onClientClick(location.clientId);
+        // Add click handler to open client modal
+        markerElement.addEventListener('click', () => {
+          onClientClick(location.clientId);
+        });
+
+        // Create marker
+        const marker = new mapboxgl.Marker(markerElement)
+          .setLngLat([location.longitude, location.latitude])
+          .addTo(map.current);
+
+        markersRef.current.push(marker);
+
+        // Extend bounds
+        bounds.extend([location.longitude, location.latitude]);
       });
 
-      // Create marker
-      const marker = new mapboxgl.Marker(markerElement)
-        .setLngLat([location.longitude, location.latitude])
-        .addTo(map.current);
+      // Fit map to show all markers only on initial load
+      if (locations.length > 0 && !hasInitializedBounds.current) {
+        map.current.fitBounds(bounds, {
+          padding: 50,
+          maxZoom: 12
+        });
+        hasInitializedBounds.current = true;
+      }
+    };
 
-      markersRef.current.push(marker);
-
-      // Extend bounds
-      bounds.extend([location.longitude, location.latitude]);
-    });
-
-    // Fit map to show all markers only on initial load
-    if (locations.length > 0 && !hasInitializedBounds.current) {
-      map.current.fitBounds(bounds, {
-        padding: 50,
-        maxZoom: 12
-      });
-      hasInitializedBounds.current = true;
+    // Wait for map style to be loaded before adding markers (fixes Chrome/mobile timing)
+    if (map.current.isStyleLoaded()) {
+      addMarkers();
+    } else {
+      map.current.once('load', addMarkers);
     }
   }, [locations, mapboxgl, onClientClick]);
 
