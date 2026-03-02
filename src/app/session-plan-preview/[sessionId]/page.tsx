@@ -286,7 +286,7 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
                     fontFamily: 'Arial, sans-serif'
                   }}
                 >
-                  <p style={{ margin: 0, fontSize: '14px' }}>
+                  <p style={{ margin: 0, fontSize: '16px' }}>
                     <strong>Reminder:</strong><br />
                     I'm here to support you and your dog from a behavioural perspective.
                     Sometimes, behavioural challenges can be linked to pain, diet, or
@@ -330,7 +330,7 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
                 fontFamily: 'Arial, sans-serif'
               }}
             >
-              <p style={{ margin: 0, fontSize: '14px' }}>
+              <p style={{ margin: 0, fontSize: '16px' }}>
                 <strong>Reminder:</strong><br />
                 I'm here to support you and your dog from a behavioural perspective.
                 Sometimes, behavioural challenges can be linked to pain, diet, or
@@ -573,7 +573,7 @@ export default function SessionPlanPreviewPage() {
         .action-point {
           page-break-inside: avoid;
           break-inside: avoid;
-          font-size: 14px;
+          font-size: 16px;
         }
 
         @media print {
@@ -595,7 +595,7 @@ export default function SessionPlanPreviewPage() {
           .action-point {
             page-break-inside: avoid;
             break-inside: avoid;
-            font-size: 14px;
+            font-size: 16px;
           }
         }
       `}</style>
@@ -666,7 +666,7 @@ export default function SessionPlanPreviewPage() {
                     borderRadius: '0.5rem',
                     padding: '1.5rem 1rem 1rem',
                     display: 'grid',
-                    fontSize: '14px',
+                    fontSize: '16px',
                     gridTemplateColumns: '1fr 1fr',
                     gap: '0.5rem 2rem'
                   }}>
@@ -693,7 +693,7 @@ export default function SessionPlanPreviewPage() {
 
                   <div style={{
                     fontFamily: 'Arial, sans-serif',
-                    fontSize: '14px',
+                    fontSize: '16px',
                     display: 'flex'
                   }}>
                     <div style={{ flex: 1 }}>
