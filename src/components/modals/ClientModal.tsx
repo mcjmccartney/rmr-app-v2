@@ -489,10 +489,14 @@ const ClientModal = memo(function ClientModal({ client, isOpen, onClose, onEditC
                       {Array.isArray(clientSessions) && clientSessions.length > 0 ? (
                         clientSessions.map((session, index) => {
                           if (!session || !session.id) return null;
-                          // Sessions are sorted by date descending (most recent first),
-                          // but session numbers should be chronological (oldest = Session 1)
-                          // So we reverse the numbering: total sessions - current index
-                          const sessionNumber = clientSessions.length - index;
+                          // Sessions are sorted by date descending (most recent first).
+                          // Session numbers are per-dog: count sessions for the same dog
+                          // that appear after this one in the list (i.e. are chronologically earlier).
+                          const sameDogSessions = session.dogName
+                            ? clientSessions.filter(s => s.dogName === session.dogName)
+                            : clientSessions;
+                          const dogIndex = sameDogSessions.findIndex(s => s.id === session.id);
+                          const sessionNumber = sameDogSessions.length - dogIndex;
                           return (
                             <div
                               key={session.id}

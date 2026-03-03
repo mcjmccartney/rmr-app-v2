@@ -159,10 +159,10 @@ export const sessionPlanService = {
   // Calculate session number for a session (only counting Online and In-Person sessions)
   async calculateSessionNumber(sessionId: string): Promise<number> {
     try {
-      // First, get the session to find the client and session type
+      // First, get the session to find the client, dog, and session type
       const { data: session, error: sessionError } = await supabase
         .from('sessions')
-        .select('client_id, booking_date, booking_time, session_type')
+        .select('client_id, dog_name, booking_date, booking_time, session_type')
         .eq('id', sessionId)
         .single();
 
@@ -171,14 +171,21 @@ export const sessionPlanService = {
         return 1;
       }
 
-      // Get all Online and In-Person sessions for this client that are chronologically before or equal to this session
-      const { data: clientSessions, error: sessionsError } = await supabase
+      // Get all Online and In-Person sessions for this client's specific dog
+      let query = supabase
         .from('sessions')
         .select('id, booking_date, booking_time, session_type')
         .eq('client_id', session.client_id)
         .in('session_type', ['Online', 'In-Person'])
         .order('booking_date', { ascending: true })
         .order('booking_time', { ascending: true });
+
+      // Filter by dog_name if available so session number is per-dog
+      if (session.dog_name) {
+        query = query.eq('dog_name', session.dog_name);
+      }
+
+      const { data: clientSessions, error: sessionsError } = await query;
 
       if (sessionsError || !clientSessions) {
         console.error('Error fetching client sessions:', sessionsError);
