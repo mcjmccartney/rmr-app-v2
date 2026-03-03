@@ -6,6 +6,7 @@ import { SessionPlan, Session, Client, ActionPoint } from '@/types';
 import SafeHtmlRenderer from '@/components/SafeHtmlRenderer';
 import { cooperLtBT } from '@/app/fonts';
 import { getSessionDogName } from '@/utils/dogNameUtils';
+import { sessionPlanService } from '@/services/sessionPlanService';
 
 interface EditableActionPoint {
   header: string;
@@ -375,6 +376,7 @@ export default function SessionPlanPreviewPage() {
   const [mainGoals, setMainGoals] = useState<string[]>([]);
   const [explanationOfBehaviour, setExplanationOfBehaviour] = useState('');
   const [title, setTitle] = useState('');
+  const [sessionNumber, setSessionNumber] = useState<number>(1);
   const [isGenerating, setIsGenerating] = useState(false);
   const [buttonText, setButtonText] = useState('Generate PDF & Send Email');
   const [paginationComplete, setPaginationComplete] = useState(false);
@@ -401,7 +403,7 @@ export default function SessionPlanPreviewPage() {
         clientFirstName: (client as any).first_name || '',
         clientLastName: (client as any).last_name || '',
         dogName: (session as any).dog_name || (client as any).dog_name || '',
-        sessionNumber: sessionPlan.sessionNumber?.toString() || '1',
+        sessionNumber: sessionNumber.toString(),
         bookingDate: (session as any).booking_date || '',
         bookingTime: (session as any).booking_time || '',
       });
@@ -497,7 +499,10 @@ export default function SessionPlanPreviewPage() {
         setEditableActionPoints(aps);
 
         const dogName = getSessionDogName(sess.dog_name, cli);
-        setTitle(`Session ${plan.session_number} - ${dogName}`);
+        // Recalculate session number dynamically (per-dog) rather than using the stored value
+        const recalculated = await sessionPlanService.calculateSessionNumber(sess.id);
+        setSessionNumber(recalculated);
+        setTitle(`Session ${recalculated} - ${dogName}`);
 
         setLoading(false);
       } catch (err) {
