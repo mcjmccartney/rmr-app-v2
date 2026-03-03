@@ -76,25 +76,32 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
     let pageIndex = 0;
 
     // Helper function to create an action point element
+    // Structure must match the rendered JSX exactly so measured heights are accurate.
+    // The h3 is a sibling of block (not inside it) and is absolutely positioned,
+    // so it does not contribute to the wrapper's offsetHeight — matching the render.
     const createActionPointElement = (ap: EditableActionPoint, isFirstOnPage: boolean, isLastOnPage: boolean, isVeryFirstOverall: boolean) => {
       const wrapper = document.createElement('div');
       wrapper.style.marginBottom = '0';
       wrapper.style.marginTop = isVeryFirstOverall ? '0' : '1.5rem';
       wrapper.style.position = 'relative';
 
+      // h3 outside block, absolutely positioned — matches rendered layout
+      const h3 = document.createElement('h3');
+      h3.style.fontSize = '1.875rem';
+      h3.style.fontStyle = 'italic';
+      h3.style.position = 'absolute';
+      h3.style.top = '-1rem';
+      h3.style.left = '1.5rem';
+      h3.style.padding = '0 0.5rem';
+      h3.innerHTML = ap.header;
+      wrapper.appendChild(h3);
+
       const block = document.createElement('div');
       block.style.border = '5px solid #4e6749';
       block.style.borderRadius = '0.5rem';
       block.style.padding = '1.5rem 1rem 1rem 1rem';
 
-      block.innerHTML = `
-        <h3 style="font-size:1.875rem;font-style:italic;margin-bottom:1rem;">
-          ${ap.header}
-        </h3>
-        <div class="action-point-content">
-          ${ap.details}
-        </div>
-      `;
+      block.innerHTML = `<div class="action-point-content">${ap.details}</div>`;
 
       const paragraphs = block.querySelectorAll('p');
       paragraphs.forEach((p, index) => {
