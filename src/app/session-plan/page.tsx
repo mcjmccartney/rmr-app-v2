@@ -785,6 +785,17 @@ function SessionPlanContent() {
         };
       }).filter(Boolean),
 
+      // Dog Club Guides (formatted as HTML links for Make.com)
+      dogClubGuides: selectedDogClubGuides.length > 0
+        ? selectedDogClubGuides
+            .map(id => {
+              const guide = DOG_CLUB_GUIDES.find(g => g.id === id);
+              return guide ? `<a href="${guide.url}">${guide.title}</a>` : null;
+            })
+            .filter(Boolean)
+            .join('<br/>')
+        : '',
+
       // Callback URL for Make.com to send the document URL back
       callbackUrl: `${window.location.origin}/api/session-plan/document-url`,
 
