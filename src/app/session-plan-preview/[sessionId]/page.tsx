@@ -384,6 +384,7 @@ export default function SessionPlanPreviewPage() {
   const [explanationOfBehaviour, setExplanationOfBehaviour] = useState('');
   const [title, setTitle] = useState('');
   const [sessionNumber, setSessionNumber] = useState<number>(1);
+  const [dogClubGuideIds, setDogClubGuideIds] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [buttonText, setButtonText] = useState('Generate PDF & Send Email');
   const [paginationComplete, setPaginationComplete] = useState(false);
@@ -413,6 +414,7 @@ export default function SessionPlanPreviewPage() {
         sessionNumber: sessionNumber.toString(),
         bookingDate: (session as any).booking_date || '',
         bookingTime: (session as any).booking_time || '',
+        dogClubGuides: JSON.stringify(dogClubGuideIds),
       });
 
       const response = await fetch(`/api/generate-session-plan-pdf?${params}`);
@@ -470,6 +472,7 @@ export default function SessionPlanPreviewPage() {
         setSessionPlan(planObj);
         setSession(sess);
         setClient(cli);
+        setDogClubGuideIds(plan.dog_club_guides || []);
 
         setMainGoals([
           plan.main_goal_1,

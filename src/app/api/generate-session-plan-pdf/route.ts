@@ -21,6 +21,7 @@ export async function GET(req: Request) {
     const sessionNumber = searchParams.get("sessionNumber") ?? "";
     const bookingDate = searchParams.get("bookingDate") ?? "";
     const bookingTime = searchParams.get("bookingTime") ?? "";
+    const dogClubGuidesParam = searchParams.get("dogClubGuides");
 
     if (!sessionId) {
       return NextResponse.json(
@@ -46,10 +47,15 @@ export async function GET(req: Request) {
       .single();
 
     let dogClubGuides: string[] = [];
-    if (!sessionPlanError && sessionPlanData?.dog_club_guides) {
+    // Prefer the guides passed directly from the preview page (avoids DB timing issues)
+    if (dogClubGuidesParam) {
+      try {
+        dogClubGuides = JSON.parse(dogClubGuidesParam);
+      } catch {}
+    } else if (!sessionPlanError && sessionPlanData?.dog_club_guides) {
       dogClubGuides = sessionPlanData.dog_club_guides;
-      console.log("[PDF-GEN] Found Dog Club Guides:", dogClubGuides);
     }
+    console.log("[PDF-GEN] Dog Club Guides:", dogClubGuides);
 
     console.log("[PDF-GEN] Launching Chromium...");
 
