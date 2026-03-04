@@ -698,18 +698,31 @@ function SessionPlanContent() {
   const generateDocument = async () => {
     if (!currentSession || !currentClient) return;
 
-    // Build client name including partner if set (e.g. "Steve & Horatia")
-    const partnerFirstName = currentClient.partnerName?.trim().split(' ')[0];
-    const displayClientName = partnerFirstName
-      ? `${currentClient.firstName} & ${partnerFirstName}`
-      : `${currentClient.firstName} ${currentClient.lastName}`.trim();
-
     // Gather all emails: primary + any aliases
     const aliasEmails = (state.clientEmailAliases[currentClient.id] || [])
       .map(a => a.email)
       .filter(e => e.toLowerCase() !== currentClient.email?.toLowerCase());
     const allEmails = [currentClient.email, ...aliasEmails].filter(Boolean);
     const emailList = allEmails.join(', ');
+
+    // Build client name including partner:
+    // 1. Use explicit partnerName field if set
+    // 2. Otherwise look up alias emails against other clients to find a linked partner
+    let partnerFirstName = currentClient.partnerName?.trim().split(' ')[0];
+    if (!partnerFirstName) {
+      for (const aliasEmail of aliasEmails) {
+        const linkedClient = state.clients.find(
+          c => c.id !== currentClient.id && c.email?.toLowerCase() === aliasEmail.toLowerCase()
+        );
+        if (linkedClient) {
+          partnerFirstName = linkedClient.firstName;
+          break;
+        }
+      }
+    }
+    const displayClientName = partnerFirstName
+      ? `${currentClient.firstName} & ${partnerFirstName}`
+      : `${currentClient.firstName} ${currentClient.lastName}`.trim();
 
     // Prepare the data for the webhook with current form state
     const sessionData = {

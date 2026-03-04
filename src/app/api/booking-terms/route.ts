@@ -158,16 +158,33 @@ export async function POST(request: NextRequest) {
           .eq('client_id', resolvedClientId);
 
         if (fullClient) {
-          const partnerFirstName = fullClient.partner_name?.trim().split(' ')[0];
-          const allNames = partnerFirstName
-            ? `${fullClient.first_name} & ${partnerFirstName}`
-            : `${fullClient.first_name} ${fullClient.last_name}`.trim();
-
           const aliasEmails = (aliases || [])
             .map((a: { email: string }) => a.email)
             .filter((e: string) => e.toLowerCase() !== fullClient.email?.toLowerCase());
           const allEmails = [fullClient.email, ...aliasEmails].filter(Boolean);
           const emailList = allEmails.join(', ');
+
+          // Determine partner first name:
+          // 1. Use explicit partner_name field if set
+          // 2. Otherwise look up alias emails to find a linked client
+          let partnerFirstName = fullClient.partner_name?.trim().split(' ')[0];
+          if (!partnerFirstName) {
+            for (const aliasEmail of aliasEmails) {
+              const { data: linkedClient } = await supabaseServiceRole
+                .from('clients')
+                .select('first_name')
+                .eq('email', aliasEmail.toLowerCase())
+                .neq('id', resolvedClientId)
+                .single();
+              if (linkedClient) {
+                partnerFirstName = linkedClient.first_name;
+                break;
+              }
+            }
+          }
+          const allNames = partnerFirstName
+            ? `${fullClient.first_name} & ${partnerFirstName}`
+            : `${fullClient.first_name} ${fullClient.last_name}`.trim();
 
           await fetch('https://hook.eu1.make.com/yaoalfe77uqtw4xv9fbh5atf4okq14wm', {
             method: 'POST',
