@@ -108,6 +108,8 @@ export async function POST(request: NextRequest) {
       termsVersion = `From ${activationDate}`;
     }
 
+    let resolvedClientId: string | null = null;
+
     if (clientData && !clientError) {
       // Update client with booking terms signed status
       await supabaseServiceRole
@@ -118,6 +120,7 @@ export async function POST(request: NextRequest) {
           booking_terms_version: termsVersion
         })
         .eq('id', clientData.id);
+      resolvedClientId = clientData.id;
     } else {
       // Check email aliases table
       const { data: aliasData, error: aliasError } = await supabaseServiceRole
@@ -136,12 +139,58 @@ export async function POST(request: NextRequest) {
             booking_terms_version: termsVersion
           })
           .eq('id', aliasData.client_id);
+        resolvedClientId = aliasData.client_id;
       }
     }
 
-    return NextResponse.json({ 
-      success: true, 
-      bookingTerms: bookingTerms 
+    // Fire booking terms webhook with client name and email data
+    if (resolvedClientId) {
+      try {
+        const { data: fullClient } = await supabaseServiceRole
+          .from('clients')
+          .select('first_name, last_name, partner_name, email')
+          .eq('id', resolvedClientId)
+          .single();
+
+        const { data: aliases } = await supabaseServiceRole
+          .from('client_email_aliases')
+          .select('email')
+          .eq('client_id', resolvedClientId);
+
+        if (fullClient) {
+          const partnerFirstName = fullClient.partner_name?.trim().split(' ')[0];
+          const allNames = partnerFirstName
+            ? `${fullClient.first_name} & ${partnerFirstName}`
+            : `${fullClient.first_name} ${fullClient.last_name}`.trim();
+
+          const aliasEmails = (aliases || [])
+            .map((a: { email: string }) => a.email)
+            .filter((e: string) => e.toLowerCase() !== fullClient.email?.toLowerCase());
+          const allEmails = [fullClient.email, ...aliasEmails].filter(Boolean);
+          const emailList = allEmails.join(', ');
+
+          await fetch('https://hook.eu1.make.com/yaoalfe77uqtw4xv9fbh5atf4okq14wm', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              all_names: allNames,
+              email_list: emailList,
+              clientFirstName: fullClient.first_name,
+              clientLastName: fullClient.last_name,
+              clientEmail: fullClient.email,
+              isUpdate: true,
+            }),
+          });
+        }
+      } catch (webhookError) {
+        console.error('Error firing booking terms webhook:', webhookError);
+        // Don't fail the request if webhook errors
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      bookingTerms: bookingTerms
     });
 
   } catch (error) {

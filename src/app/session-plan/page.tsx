@@ -709,6 +709,7 @@ function SessionPlanContent() {
       .map(a => a.email)
       .filter(e => e.toLowerCase() !== currentClient.email?.toLowerCase());
     const allEmails = [currentClient.email, ...aliasEmails].filter(Boolean);
+    const emailList = allEmails.join(', ');
 
     // Prepare the data for the webhook with current form state
     const sessionData = {
@@ -724,6 +725,8 @@ function SessionPlanContent() {
       clientName: displayClientName,
       clientEmail: currentClient.email,
       toEmails: allEmails,
+      all_names: displayClientName,
+      email_list: emailList,
       sessionType: currentSession.sessionType,
       sessionDate: new Date(currentSession.bookingDate).toLocaleDateString('en-GB'),
       sessionTime: currentSession.bookingTime.substring(0, 5), // Ensure HH:mm format (remove seconds)
