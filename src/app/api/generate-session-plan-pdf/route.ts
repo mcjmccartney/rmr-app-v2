@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import puppeteer from "puppeteer-core";
 import chromium from "@sparticuz/chromium-min";
 import { createClient } from '@supabase/supabase-js';
-import { DOG_CLUB_GUIDES } from '@/data/dogClubGuides';
 
 export const maxDuration = 300; // allow long Vercel runtimes
 
@@ -47,12 +46,17 @@ export async function GET(req: Request) {
       .single();
 
     let dogClubGuides: string[] = [];
-    // Prefer the guides passed directly from the preview page (avoids DB timing issues)
+    // Try URL param first (passed from preview page state)
     if (dogClubGuidesParam) {
       try {
-        dogClubGuides = JSON.parse(dogClubGuidesParam);
+        const parsed = JSON.parse(dogClubGuidesParam);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          dogClubGuides = parsed;
+        }
       } catch {}
-    } else if (!sessionPlanError && sessionPlanData?.dog_club_guides) {
+    }
+    // Fall back to DB if URL param was empty or missing
+    if (dogClubGuides.length === 0 && !sessionPlanError && sessionPlanData?.dog_club_guides?.length) {
       dogClubGuides = sessionPlanData.dog_club_guides;
     }
     console.log("[PDF-GEN] Dog Club Guides:", dogClubGuides);
@@ -184,13 +188,15 @@ export async function GET(req: Request) {
 
     // Add Dog Club Guides if any are selected
     if (dogClubGuides.length > 0) {
-      const selectedGuides = dogClubGuides
-        .map(guideId => DOG_CLUB_GUIDES.find(g => g.id === guideId))
-        .filter(Boolean);
+      // Fetch guide details from the dog_club_guides table (IDs are UUIDs, not static string IDs)
+      const { data: guideRecords } = await supabase
+        .from('dog_club_guides')
+        .select('title, url')
+        .in('id', dogClubGuides);
 
       // Create formatted HTML links for email
-      const guidesHtml = selectedGuides
-        .map(guide => `<a href="${guide!.url}">${guide!.title}</a>`)
+      const guidesHtml = (guideRecords || [])
+        .map(guide => `<a href="${guide.url}">${guide.title}</a>`)
         .join('<br>\n');
 
       formData.append('dogClubGuides', guidesHtml);
