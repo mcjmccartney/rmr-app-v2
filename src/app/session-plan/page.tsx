@@ -698,6 +698,18 @@ function SessionPlanContent() {
   const generateDocument = async () => {
     if (!currentSession || !currentClient) return;
 
+    // Build client name including partner if set (e.g. "Steve & Horatia")
+    const partnerFirstName = currentClient.partnerName?.trim().split(' ')[0];
+    const displayClientName = partnerFirstName
+      ? `${currentClient.firstName} & ${partnerFirstName}`
+      : `${currentClient.firstName} ${currentClient.lastName}`.trim();
+
+    // Gather all emails: primary + any aliases
+    const aliasEmails = (state.clientEmailAliases[currentClient.id] || [])
+      .map(a => a.email)
+      .filter(e => e.toLowerCase() !== currentClient.email?.toLowerCase());
+    const allEmails = [currentClient.email, ...aliasEmails].filter(Boolean);
+
     // Prepare the data for the webhook with current form state
     const sessionData = {
       // Session identification for callback
@@ -709,7 +721,9 @@ function SessionPlanContent() {
       // Basic session info
       sessionNumber: sessionNumber.toString(),
       dogName: getSessionDogName(),
-      clientName: `${currentClient.firstName} ${currentClient.lastName}`.trim(),
+      clientName: displayClientName,
+      clientEmail: currentClient.email,
+      toEmails: allEmails,
       sessionType: currentSession.sessionType,
       sessionDate: new Date(currentSession.bookingDate).toLocaleDateString('en-GB'),
       sessionTime: currentSession.bookingTime.substring(0, 5), // Ensure HH:mm format (remove seconds)
