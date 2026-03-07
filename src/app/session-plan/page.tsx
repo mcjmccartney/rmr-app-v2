@@ -162,8 +162,6 @@ function SessionPlanContent() {
           });
           setSelectedActionPoints(existingPlan.actionPoints || []);
           setSelectedDogClubGuides(existingPlan.dogClubGuides || []);
-          // Use existing session number if plan already exists
-          setSessionNumber(existingPlan.sessionNumber);
 
           if (existingPlan.editedActionPoints) {
             // Replace old dog name with current dog name in action points
