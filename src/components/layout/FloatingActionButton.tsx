@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Calendar, Edit3, Star, Users, PieChart, Menu, X } from 'lucide-react';
+import { Calendar, Edit3, Star, Users, PieChart, LineChart, Menu, X } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useModal } from '@/context/ModalContext';
 
@@ -11,6 +11,7 @@ const navItems = [
   { icon: Edit3, label: 'Sessions', path: '/sessions' },
   { icon: Star, label: 'Memberships', path: '/memberships' },
   { icon: Users, label: 'Clients', path: '/clients' },
+  { icon: LineChart, label: 'Analytics', path: '/analytics' },
   { icon: PieChart, label: 'Finances', path: '/finances' },
 ];
 
