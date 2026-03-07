@@ -1,8 +1,9 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState, useRef } from 'react';
 import { useApp } from '@/context/AppContext';
 import Header from '@/components/layout/Header';
+import ClientModal from '@/components/modals/ClientModal';
 import {
   Chart as ChartJS,
   BarElement,
@@ -78,6 +79,9 @@ function makeBarOptions(prefix: string) {
 function AnalyticsContent() {
   const { state } = useApp();
   const { clients, sessions, memberships, behaviourQuestionnaires, clientEmailAliases } = state;
+  const [selectedClient, setSelectedClient] = useState<typeof clients[0] | null>(null);
+  const [showClientModal, setShowClientModal] = useState(false);
+  const payChartRef = useRef<any>(null);
 
   // --- Grand total per client (all session quotes + memberships, matching client profile) ---
   const clientPayTotals = useMemo(() => {
@@ -115,9 +119,9 @@ function AnalyticsContent() {
           ? `${client.firstName} & ${client.partnerName}`
           : `${client.firstName} ${client.lastName}`;
         if (name === 'Soothing Moon Therapies') return null;
-        return { name, total };
+        return { name, total, clientId, client };
       })
-      .filter((x): x is { name: string; total: number } => x !== null)
+      .filter((x): x is { name: string; total: number; clientId: string; client: typeof clients[0] } => x !== null)
       .sort((a, b) => b.total - a.total);
   }, [sessions, clients, memberships, clientEmailAliases]);
 
@@ -282,12 +286,36 @@ function AnalyticsContent() {
           {clientPayTotals.length === 0 ? (
             <p className="text-sm text-gray-400 text-center py-8">No paid sessions found</p>
           ) : (
-            <div style={{ height: payChartHeight }}>
-              <Bar data={payBarData} options={payBarOptions} />
+            <div style={{ height: payChartHeight, cursor: 'pointer' }}>
+              <Bar
+                ref={payChartRef}
+                data={payBarData}
+                options={payBarOptions}
+                onClick={(event) => {
+                  const chart = payChartRef.current;
+                  if (!chart) return;
+                  const elements = chart.getElementsAtEventForMode(event.nativeEvent, 'nearest', { intersect: true }, false);
+                  if (elements.length > 0) {
+                    const index = elements[0].index;
+                    const entry = clientPayTotals[index];
+                    if (entry) {
+                      setSelectedClient(entry.client);
+                      setShowClientModal(true);
+                    }
+                  }
+                }}
+              />
             </div>
           )}
         </div>
       </div>
+
+      <ClientModal
+        client={selectedClient}
+        isOpen={showClientModal}
+        onClose={() => setShowClientModal(false)}
+        onEditClient={() => {}}
+      />
     </div>
   );
 }
