@@ -42,6 +42,15 @@ function ClientsPageContent() {
   // Persistent undo state — loaded from DB on mount, survives page refresh
   const [latestResetIds, setLatestResetIds] = useState<{ [clientId: string]: string }>({});
   const [previousResetDates, setPreviousResetDates] = useState<{ [clientId: string]: string | undefined }>({});
+  // Archived members state (persisted to localStorage)
+  const [archivedMemberIds, setArchivedMemberIds] = useState<Set<string>>(() => {
+    try {
+      const stored = localStorage.getItem('archivedGroupCoachingMembers');
+      return stored ? new Set(JSON.parse(stored)) : new Set();
+    } catch {
+      return new Set();
+    }
+  });
 
   // Load membership resets from database on component mount
   useEffect(() => {
@@ -250,6 +259,26 @@ function ClientsPageContent() {
     } catch (error) {
       alert('Failed to undo. Please try again.');
     }
+  };
+
+  // Handle archiving a member
+  const handleArchiveMember = (client: Client) => {
+    setArchivedMemberIds(prev => {
+      const next = new Set(prev);
+      next.add(client.id);
+      try { localStorage.setItem('archivedGroupCoachingMembers', JSON.stringify([...next])); } catch {}
+      return next;
+    });
+  };
+
+  // Handle unarchiving a member
+  const handleUnarchiveMember = (client: Client) => {
+    setArchivedMemberIds(prev => {
+      const next = new Set(prev);
+      next.delete(client.id);
+      try { localStorage.setItem('archivedGroupCoachingMembers', JSON.stringify([...next])); } catch {}
+      return next;
+    });
   };
 
   // Handle checkbox selection
@@ -677,8 +706,11 @@ function ClientsPageContent() {
           {showMembersOnly ? (
             // Grouped view for Members filter
             (() => {
-              // Group clients by membership count
-              const groupedClients = filteredClients.reduce((groups, client) => {
+              const activeClients = filteredClients.filter(c => !archivedMemberIds.has(c.id));
+              const archivedClients = filteredClients.filter(c => archivedMemberIds.has(c.id));
+
+              // Group active clients by membership count
+              const groupedClients = activeClients.reduce((groups, client) => {
                 const count = getMembershipCountSinceReset(client);
                 if (!groups[count]) {
                   groups[count] = [];
@@ -692,90 +724,126 @@ function ClientsPageContent() {
                 .map(Number)
                 .sort((a, b) => b - a);
 
-              return sortedCounts.map(count => (
-                <div key={count} className="mb-6">
-                  {/* Group Header */}
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                    {count} Month{count !== 1 ? 's' : ''} Since Group Coaching
-                  </h3>
+              const renderClientCard = (client: Client, count: number, isArchived = false) => {
+                const showAddedToSessionButton = !isArchived && count >= 6;
 
-                  {/* Clients in this group */}
-                  <div className="space-y-2">
-                    {groupedClients[count].map((client) => {
-                      const showAddedToSessionButton = count >= 6;
-
-                      return (
-                        <div
-                          key={client.id}
-                          className={`rounded-lg p-3 shadow-sm transition-colors ${
-                            client.active ? 'bg-white' : 'bg-gray-100'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div
-                              onClick={() => handleClientClick(client)}
-                              className="flex items-center space-x-3 cursor-pointer flex-1"
-                            >
-                              {client.membership && (
-                                <RMRLogo size={32} />
-                              )}
-                              <div className={client.membership ? '' : 'ml-0'}>
-                                <h3 className={`font-medium ${client.active ? 'text-gray-900' : 'text-gray-600'}`}>
-                                  {client.firstName} {client.lastName}
-                                </h3>
-                                {client.dogName && (
-                                  <p className={`text-sm ${client.active ? 'text-gray-500' : 'text-gray-400'}`}>
-                                    {client.dogName}
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-
-                            <div className="flex items-center space-x-2">
-                              {/* Checkbox for Members filter */}
-                              {showMembersOnly && (
-                                <input
-                                  type="checkbox"
-                                  checked={selectedClients.has(client.id)}
-                                  onChange={(e) => {
-                                    e.stopPropagation();
-                                    handleClientSelection(client.id, e.target.checked);
-                                  }}
-                                  className="w-4 h-4 text-amber-600 bg-gray-100 border-gray-300 rounded focus:ring-amber-500 focus:ring-2"
-                                />
-                              )}
-                              {/* Undo — shown for 0-month clients with a reset on record (persists across refresh) */}
-                              {count === 0 && latestResetIds[client.id] && (
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleUndoAddedToSession(client);
-                                  }}
-                                  className="py-1.5 px-3 bg-gray-600 text-white rounded-lg hover:bg-gray-500 transition-colors font-medium text-sm"
-                                >
-                                  Undo
-                                </button>
-                              )}
-                              {/* Added — only for 6+ month clients */}
-                              {showAddedToSessionButton && (
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleAddedToSession(client);
-                                  }}
-                                  className="py-1.5 px-3 bg-amber-800 text-white rounded-lg hover:bg-amber-700 transition-colors font-medium text-sm"
-                                >
-                                  Added
-                                </button>
-                              )}
-                            </div>
-                          </div>
+                return (
+                  <div
+                    key={client.id}
+                    className={`rounded-lg p-3 shadow-sm transition-colors ${
+                      isArchived ? 'bg-gray-100 opacity-60' : client.active ? 'bg-white' : 'bg-gray-100'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div
+                        onClick={() => handleClientClick(client)}
+                        className="flex items-center space-x-3 cursor-pointer flex-1"
+                      >
+                        {client.membership && (
+                          <RMRLogo size={32} />
+                        )}
+                        <div className={client.membership ? '' : 'ml-0'}>
+                          <h3 className={`font-medium ${isArchived ? 'text-gray-500' : client.active ? 'text-gray-900' : 'text-gray-600'}`}>
+                            {client.firstName} {client.lastName}
+                          </h3>
+                          {client.dogName && (
+                            <p className={`text-sm ${isArchived ? 'text-gray-400' : client.active ? 'text-gray-500' : 'text-gray-400'}`}>
+                              {client.dogName}
+                            </p>
+                          )}
                         </div>
-                      );
-                    })}
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        {/* Checkbox for Members filter — only on non-archived */}
+                        {showMembersOnly && !isArchived && (
+                          <input
+                            type="checkbox"
+                            checked={selectedClients.has(client.id)}
+                            onChange={(e) => {
+                              e.stopPropagation();
+                              handleClientSelection(client.id, e.target.checked);
+                            }}
+                            className="w-4 h-4 text-amber-600 bg-gray-100 border-gray-300 rounded focus:ring-amber-500 focus:ring-2"
+                          />
+                        )}
+                        {/* Undo (unarchive) — shown in archived section */}
+                        {isArchived && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleUnarchiveMember(client);
+                            }}
+                            className="py-1.5 px-3 bg-gray-600 text-white rounded-lg hover:bg-gray-500 transition-colors font-medium text-sm"
+                          >
+                            Undo
+                          </button>
+                        )}
+                        {/* Undo Added — shown for 0-month clients with a reset on record */}
+                        {!isArchived && count === 0 && latestResetIds[client.id] && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleUndoAddedToSession(client);
+                            }}
+                            className="py-1.5 px-3 bg-gray-600 text-white rounded-lg hover:bg-gray-500 transition-colors font-medium text-sm"
+                          >
+                            Undo
+                          </button>
+                        )}
+                        {/* Archive — shown on all non-archived cards */}
+                        {!isArchived && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleArchiveMember(client);
+                            }}
+                            className="py-1.5 px-3 bg-gray-400 text-white rounded-lg hover:bg-gray-500 transition-colors font-medium text-sm"
+                          >
+                            Archive
+                          </button>
+                        )}
+                        {/* Added — only for 6+ month non-archived clients */}
+                        {showAddedToSessionButton && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleAddedToSession(client);
+                            }}
+                            className="py-1.5 px-3 bg-amber-800 text-white rounded-lg hover:bg-amber-700 transition-colors font-medium text-sm"
+                          >
+                            Added
+                          </button>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ));
+                );
+              };
+
+              return (
+                <>
+                  {sortedCounts.map(count => (
+                    <div key={count} className="mb-6">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                        {count} Month{count !== 1 ? 's' : ''} Since Group Coaching
+                      </h3>
+                      <div className="space-y-2">
+                        {groupedClients[count].map(client => renderClientCard(client, getMembershipCountSinceReset(client)))}
+                      </div>
+                    </div>
+                  ))}
+
+                  {archivedClients.length > 0 && (
+                    <div className="mb-6">
+                      <h3 className="text-lg font-semibold text-gray-400 mb-3">Archived</h3>
+                      <div className="space-y-2">
+                        {archivedClients.map(client => renderClientCard(client, getMembershipCountSinceReset(client), true))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              );
             })()
           ) : (
             // Standard view for non-Members filter
