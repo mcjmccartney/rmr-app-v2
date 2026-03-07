@@ -82,12 +82,42 @@ export async function GET(
       console.error('Action points error:', actionPointsError);
     }
 
+    // Calculate session number server-side (avoids RLS issues in unauthenticated Puppeteer context)
+    let calculatedSessionNumber = planData.session_number || 1;
+    try {
+      let query = supabaseAdmin
+        .from('sessions')
+        .select('id, booking_date, booking_time')
+        .eq('client_id', sessionData.client_id)
+        .in('session_type', ['Online', 'In-Person'])
+        .order('booking_date', { ascending: true })
+        .order('booking_time', { ascending: true });
+
+      if (sessionData.dog_name) {
+        query = query.eq('dog_name', sessionData.dog_name);
+      }
+
+      const { data: clientSessions } = await query;
+
+      if (clientSessions) {
+        const currentDate = new Date(`${sessionData.booking_date}T${sessionData.booking_time}`);
+        const sessionsBeforeOrEqual = clientSessions.filter(s => {
+          const sDate = new Date(`${s.booking_date}T${s.booking_time}`);
+          return sDate <= currentDate;
+        });
+        calculatedSessionNumber = Math.max(sessionsBeforeOrEqual.length, 1);
+      }
+    } catch {
+      // Keep stored session number as fallback
+    }
+
     // Return all data
     return NextResponse.json({
       sessionPlan: planData,
       session: sessionData,
       client: clientData,
-      actionPoints: actionPointsData || []
+      actionPoints: actionPointsData || [],
+      calculatedSessionNumber
     }, {
       status: 200,
       headers: {

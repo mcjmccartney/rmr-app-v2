@@ -6,7 +6,6 @@ import { SessionPlan, Session, Client, ActionPoint } from '@/types';
 import SafeHtmlRenderer from '@/components/SafeHtmlRenderer';
 import { cooperLtBT } from '@/app/fonts';
 import { getSessionDogName } from '@/utils/dogNameUtils';
-import { sessionPlanService } from '@/services/sessionPlanService';
 
 interface EditableActionPoint {
   header: string;
@@ -509,8 +508,8 @@ export default function SessionPlanPreviewPage() {
         setEditableActionPoints(aps);
 
         const dogName = getSessionDogName(sess.dog_name, cli);
-        // Recalculate session number dynamically (per-dog) rather than using the stored value
-        const recalculated = await sessionPlanService.calculateSessionNumber(sess.id);
+        // Use server-calculated session number (avoids RLS issues in unauthenticated Puppeteer context)
+        const recalculated = json.calculatedSessionNumber || 1;
         setSessionNumber(recalculated);
         setTitle(`Session ${recalculated} - ${dogName}`);
 
