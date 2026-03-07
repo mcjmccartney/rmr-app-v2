@@ -79,13 +79,13 @@ function AnalyticsContent() {
   const { state } = useApp();
   const { clients, sessions, memberships, behaviourQuestionnaires, clientEmailAliases } = state;
 
-  // --- Total paid per client (sessions + memberships, excluding Soothing Moon Therapies) ---
+  // --- Grand total per client (all session quotes + memberships, matching client profile) ---
   const clientPayTotals = useMemo(() => {
     const totals: Record<string, number> = {};
 
-    // Session payments
+    // All session quotes (matches client profile Sessions Total)
     for (const session of sessions) {
-      if (session.sessionPaid && session.clientId) {
+      if (session.clientId) {
         totals[session.clientId] = (totals[session.clientId] || 0) + (session.quote || 0);
       }
     }
@@ -190,7 +190,7 @@ function AnalyticsContent() {
   const payBarData = {
     labels: clientPayTotals.map(c => c.name),
     datasets: [{
-      label: 'Total Paid (£)',
+      label: 'Grand Total (£)',
       data: clientPayTotals.map(c => c.total),
       backgroundColor: '#92400e',
       borderRadius: 4,
@@ -278,7 +278,7 @@ function AnalyticsContent() {
 
         {/* Total pay bar chart */}
         <div className="mt-4 bg-white rounded-xl p-4 shadow-sm">
-          <p className="text-sm font-semibold text-gray-700 mb-4">Total Paid by Client</p>
+          <p className="text-sm font-semibold text-gray-700 mb-4">Grand Total by Client</p>
           {clientPayTotals.length === 0 ? (
             <p className="text-sm text-gray-400 text-center py-8">No paid sessions found</p>
           ) : (
