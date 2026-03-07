@@ -11,7 +11,7 @@ import BehaviouralBriefModal from '@/components/modals/BehaviouralBriefModal';
 import BehaviourQuestionnaireModal from '@/components/modals/BehaviourQuestionnaireModal';
 import RMRLogo from '@/components/RMRLogo';
 import { Client, Session, BehaviouralBrief, BehaviourQuestionnaire, Membership } from '@/types';
-import { Calendar, UserPlus, Users, UserCheck, ClipboardList, FileQuestion, Star, Edit3, Download, FileSpreadsheet, Send } from 'lucide-react';
+import { Calendar, UserPlus, Users, UserCheck, ClipboardList, FileQuestion, Star, Edit3, Download, FileSpreadsheet, Send, GitMerge } from 'lucide-react';
 import { groupCoachingResetService } from '@/services/groupCoachingResetService';
 import { formatClientWithAllDogs, getClientDogsPart } from '@/utils/dateFormatting';
 import * as XLSX from 'xlsx';
@@ -685,6 +685,12 @@ function ClientsPageContent() {
               icon: Edit3,
               onClick: handleAddSession,
               title: 'Add Session',
+              iconOnly: true
+            },
+            {
+              icon: GitMerge,
+              onClick: () => router.push('/duplicates'),
+              title: 'Merge Clients',
               iconOnly: true
             },
             {
