@@ -77,16 +77,36 @@ function makeBarOptions(prefix: string) {
 
 function AnalyticsContent() {
   const { state } = useApp();
-  const { clients, sessions, memberships, behaviourQuestionnaires } = state;
+  const { clients, sessions, memberships, behaviourQuestionnaires, clientEmailAliases } = state;
 
-  // --- Total paid per client (excluding Soothing Moon Therapies) ---
+  // --- Total paid per client (sessions + memberships, excluding Soothing Moon Therapies) ---
   const clientPayTotals = useMemo(() => {
     const totals: Record<string, number> = {};
+
+    // Session payments
     for (const session of sessions) {
       if (session.sessionPaid && session.clientId) {
         totals[session.clientId] = (totals[session.clientId] || 0) + (session.quote || 0);
       }
     }
+
+    // Build email → clientId map (primary email + aliases)
+    const emailToClientId = new Map<string, string>();
+    for (const client of clients) {
+      if (client.email) emailToClientId.set(client.email.toLowerCase(), client.id);
+      for (const alias of (clientEmailAliases[client.id] || [])) {
+        emailToClientId.set(alias.email.toLowerCase(), client.id);
+      }
+    }
+
+    // Membership payments
+    for (const m of memberships) {
+      const clientId = emailToClientId.get(m.email.toLowerCase());
+      if (clientId) {
+        totals[clientId] = (totals[clientId] || 0) + (m.amount || 0);
+      }
+    }
+
     return Object.entries(totals)
       .map(([clientId, total]) => {
         const client = clients.find(c => c.id === clientId);
@@ -99,7 +119,7 @@ function AnalyticsContent() {
       })
       .filter((x): x is { name: string; total: number } => x !== null)
       .sort((a, b) => b.total - a.total);
-  }, [sessions, clients]);
+  }, [sessions, clients, memberships, clientEmailAliases]);
 
   // --- Average sessions per client ---
   const avgSessions = useMemo(() => {
@@ -130,7 +150,7 @@ function AnalyticsContent() {
     return values.reduce((a, b) => a + b, 0) / values.length;
   }, [memberships, clients]);
 
-  // --- Membership churn rate (last 2 months only) ---
+  // --- Membership churn rate (all-time average monthly rate) ---
   const churnRate = useMemo(() => {
     const byMonth: Record<string, Set<string>> = {};
     for (const m of memberships) {
@@ -141,13 +161,10 @@ function AnalyticsContent() {
     const sortedMonths = Object.keys(byMonth).sort();
     if (sortedMonths.length < 2) return 0;
 
-    // Take the last 2 consecutive month pairs
-    const pairs = sortedMonths.slice(-3); // last 3 months gives 2 pairs
     const rates: number[] = [];
-    for (let i = 0; i < pairs.length - 1; i++) {
-      const current = byMonth[pairs[i]];
-      const next = byMonth[pairs[i + 1]];
-      if (!current || !next) continue;
+    for (let i = 0; i < sortedMonths.length - 1; i++) {
+      const current = byMonth[sortedMonths[i]];
+      const next = byMonth[sortedMonths[i + 1]];
       const lost = [...current].filter(email => !next.has(email)).length;
       if (current.size > 0) {
         rates.push((lost / current.size) * 100);
@@ -243,7 +260,7 @@ function AnalyticsContent() {
           <div className="bg-white rounded-xl p-4 shadow-sm">
             <p className="text-xs text-gray-500 mb-1">Churn Rate</p>
             <p className="text-2xl font-bold text-gray-900">{churnRate.toFixed(1)}%</p>
-            <p className="text-xs text-gray-400 mt-1">last 2 months</p>
+            <p className="text-xs text-gray-400 mt-1">avg per month (all time)</p>
           </div>
         </div>
 
