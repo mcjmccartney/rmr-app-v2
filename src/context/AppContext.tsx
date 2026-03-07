@@ -1194,7 +1194,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify(webhookData)
+            body: JSON.stringify({ ...webhookData, createCalendarEvent: false })
           })
         );
         webhookNames.push('booking terms email webhook');
