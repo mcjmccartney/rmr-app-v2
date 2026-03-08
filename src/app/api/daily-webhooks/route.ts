@@ -133,7 +133,7 @@ export async function POST(request: NextRequest) {
             // Google Meet link for Online sessions
             googleMeetLink: session.google_meet_link || null,
             ...(targetDays === 7 && { sendSessionEmail: true, createCalendarEvent: false }),
-          ...(targetDays === 4 && { paymentReminder: true, emailSubject: 'Upcoming Session - Payment Due' })
+          ...(targetDays === 4 && { sendSessionEmail: true, paymentReminder: true, emailSubject: 'Upcoming Session - Payment Due' })
           };
 
           // Validate essential data
