@@ -162,8 +162,9 @@ function AnalyticsContent() {
       if (!byMonth[month]) byMonth[month] = new Set();
       byMonth[month].add(m.email);
     }
-    // Take last 7 months to get 6 consecutive month pairs
-    const sortedMonths = Object.keys(byMonth).sort().slice(-7);
+    // Exclude the most recent month (current month may be incomplete mid-month),
+    // then take last 7 months to get 6 consecutive complete pairs
+    const sortedMonths = Object.keys(byMonth).sort().slice(0, -1).slice(-7);
     if (sortedMonths.length < 2) return { churnRate: 0, churnBreakdown: [] };
 
     const breakdown: { month: string; starting: number; lost: number; rate: number }[] = [];
