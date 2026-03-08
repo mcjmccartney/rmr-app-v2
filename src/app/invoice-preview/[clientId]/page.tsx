@@ -74,10 +74,10 @@ function InvoicePreviewContent() {
   }, [clientId]);
 
   useEffect(() => {
-    if (!loading && !error) {
+    if (!loading) {
       document.body.setAttribute('data-paged-ready', 'true');
     }
-  }, [loading, error]);
+  }, [loading]);
 
   const generatedDate = new Date().toLocaleDateString('en-GB', {
     day: '2-digit',
@@ -86,7 +86,13 @@ function InvoicePreviewContent() {
   });
 
   if (loading) return <div style={{ minHeight: '100vh', background: '#eaeade', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Arial, sans-serif' }}>Loading...</div>;
-  if (error) return <div style={{ minHeight: '100vh', background: '#eaeade', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Arial, sans-serif' }}>Error: {error}</div>;
+  if (error) return (
+    <div style={{ minHeight: '100vh', background: '#eaeade', padding: '40px', fontFamily: 'Arial, sans-serif' }}>
+      <h2 style={{ color: '#dc2626' }}>Error loading invoice data</h2>
+      <p style={{ color: '#374151', marginTop: '8px' }}>{error}</p>
+      <p style={{ color: '#6b7280', marginTop: '8px', fontSize: '12px' }}>clientId: {clientId}</p>
+    </div>
+  );
 
   return (
     <>
