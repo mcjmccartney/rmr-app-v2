@@ -27,6 +27,7 @@ function InvoicePreviewContent() {
   const [clientName, setClientName] = useState('');
   const [clientFirstName, setClientFirstName] = useState('');
   const [clientLastName, setClientLastName] = useState('');
+  const [dogName, setDogName] = useState('');
   const [rows, setRows] = useState<InvoiceRow[]>([]);
   const [grandTotal, setGrandTotal] = useState(0);
   const [isDownloading, setIsDownloading] = useState(false);
@@ -48,6 +49,7 @@ function InvoicePreviewContent() {
         setClientName(`${client.first_name} ${client.last_name}`);
         setClientFirstName(client.first_name || '');
         setClientLastName(client.last_name || '');
+        setDogName(client.dog_name || '');
 
         const allRows: InvoiceRow[] = [];
 
@@ -173,6 +175,8 @@ function InvoicePreviewContent() {
           margin: 0 auto 2rem auto;
           box-shadow: 0 4px 6px rgba(0,0,0,0.3);
           font-family: Arial, sans-serif;
+          display: flex;
+          flex-direction: column;
         }
 
         .page-header {
@@ -182,7 +186,19 @@ function InvoicePreviewContent() {
         }
 
         .page-content {
-          padding: 28px 40px 40px 40px;
+          padding: 28px 40px 80px 40px;
+          flex: 1;
+        }
+
+        .page-footer {
+          padding: 16px 40px;
+          border-top: 1px solid #c5bfb0;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          font-size: 11px;
+          color: #6b7280;
+          font-family: Arial, sans-serif;
         }
 
         table {
@@ -192,7 +208,7 @@ function InvoicePreviewContent() {
         }
 
         thead tr {
-          background: #92400e;
+          background: #4e6749;
           color: white;
         }
 
@@ -218,10 +234,10 @@ function InvoicePreviewContent() {
 
         .grand-total-row td {
           padding: 12px 12px;
-          border-top: 2px solid #92400e;
+          border-top: 2px solid #4e6749;
           font-weight: 700;
           font-size: 14px;
-          background: rgba(146,64,14,0.07);
+          background: rgba(78,103,73,0.07);
         }
       `}</style>
 
@@ -237,10 +253,17 @@ function InvoicePreviewContent() {
             {/* Title row */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '6px' }}>
               <div>
-                <h1 style={{ fontSize: '1.6rem', fontWeight: 'bold', margin: '0 0 4px 0', color: '#1a1a1a' }}>
-                  Payment Record
+                <h1 style={{ fontSize: '1.6rem', fontWeight: 'bold', margin: '0 0 8px 0', color: '#1a1a1a' }}>
+                  Behavioural Support Payment Record
                 </h1>
-                <p style={{ margin: 0, fontSize: '15px', color: '#374151', fontWeight: '500' }}>{clientName}</p>
+                <p style={{ margin: '0 0 2px 0', fontSize: '14px', color: '#374151', fontWeight: '500' }}>
+                  Client: {clientName}
+                </p>
+                {dogName && (
+                  <p style={{ margin: 0, fontSize: '14px', color: '#374151', fontWeight: '500' }}>
+                    Dog: {dogName}
+                  </p>
+                )}
               </div>
               <div style={{ textAlign: 'right', fontSize: '12px', color: '#6b7280', paddingTop: '4px' }}>
                 <div>Generated: {generatedDate}</div>
@@ -276,12 +299,17 @@ function InvoicePreviewContent() {
               </tbody>
               <tfoot>
                 <tr className="grand-total-row">
-                  <td colSpan={2} style={{ textAlign: 'right', color: '#92400e' }}>Grand Total</td>
-                  <td style={{ textAlign: 'right', color: '#92400e' }}>£{grandTotal.toFixed(2)}</td>
+                  <td colSpan={2} style={{ textAlign: 'right', color: '#4e6749' }}>Grand Total</td>
+                  <td style={{ textAlign: 'right', color: '#4e6749' }}>£{grandTotal.toFixed(2)}</td>
                   <td />
                 </tr>
               </tfoot>
             </table>
+          </div>
+
+          <div className="page-footer">
+            <span>Molly Fisher, Behavioural Specialist (Trading as Raising My Rescue)</span>
+            <span>raisingmyrescue@outlook.com</span>
           </div>
         </div>
       </div>
@@ -294,7 +322,7 @@ function InvoicePreviewContent() {
             position: 'fixed',
             bottom: '2rem',
             right: '2rem',
-            backgroundColor: buttonText.includes('✓') ? '#059669' : '#92400e',
+            backgroundColor: buttonText.includes('✓') ? '#059669' : '#4e6749',
             color: 'white',
             padding: '0.75rem 1.5rem',
             borderRadius: '0.5rem',

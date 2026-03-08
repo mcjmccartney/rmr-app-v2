@@ -13,11 +13,12 @@ function formatDate(dateStr: string): string {
 function buildInvoiceHtml(params: {
   clientFirstName: string;
   clientLastName: string;
+  dogName: string;
   rows: Array<{ date: string; service: string; amount: number; paid: boolean }>;
   grandTotal: number;
   generatedDate: string;
 }): string {
-  const { clientFirstName, clientLastName, rows, grandTotal, generatedDate } = params;
+  const { clientFirstName, clientLastName, dogName, rows, grandTotal, generatedDate } = params;
 
   const rowsHtml = rows.map((row, i) => `
     <tr style="${i % 2 === 1 ? 'background: rgba(255,255,255,0.4);' : ''}">
@@ -27,6 +28,8 @@ function buildInvoiceHtml(params: {
       <td style="padding: 9px 12px; vertical-align: top; text-align: center; color: ${row.paid ? '#16a34a' : '#dc2626'}; font-weight: 600; font-size: 12px; border-bottom: 1px solid #d4c9b8;">${row.paid ? 'Paid' : 'Unpaid'}</td>
     </tr>
   `).join('');
+
+  const dogLine = dogName ? `<p style="margin: 2px 0 0 0; font-size: 14px; color: #374151; font-weight: 500;">Dog: ${dogName}</p>` : '';
 
   return `<!DOCTYPE html>
 <html>
@@ -46,9 +49,20 @@ function buildInvoiceHtml(params: {
       min-height: 297mm;
       background: #eaeade;
       font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
     }
     .page-header { width: 100%; height: auto; display: block; }
-    .page-content { padding: 28px 40px 40px 40px; }
+    .page-content { padding: 28px 40px 40px 40px; flex: 1; }
+    .page-footer {
+      padding: 16px 40px;
+      border-top: 1px solid #c5bfb0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      color: #6b7280;
+    }
     table { width: 100%; border-collapse: collapse; font-size: 13px; }
   </style>
 </head>
@@ -58,8 +72,9 @@ function buildInvoiceHtml(params: {
     <div class="page-content">
       <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
         <div>
-          <h1 style="font-size: 1.6rem; font-weight: bold; margin: 0 0 4px 0; color: #1a1a1a;">Payment Record</h1>
-          <p style="margin: 0; font-size: 15px; color: #374151; font-weight: 500;">${clientFirstName} ${clientLastName}</p>
+          <h1 style="font-size: 1.6rem; font-weight: bold; margin: 0 0 8px 0; color: #1a1a1a;">Behavioural Support Payment Record</h1>
+          <p style="margin: 0 0 2px 0; font-size: 14px; color: #374151; font-weight: 500;">Client: ${clientFirstName} ${clientLastName}</p>
+          ${dogLine}
         </div>
         <div style="text-align: right; font-size: 12px; color: #6b7280; padding-top: 4px;">
           <div>Generated: ${generatedDate}</div>
@@ -72,7 +87,7 @@ function buildInvoiceHtml(params: {
 
       <table>
         <thead>
-          <tr style="background: #92400e; color: white;">
+          <tr style="background: #4e6749; color: white;">
             <th style="padding: 10px 12px; text-align: left; font-weight: 600; font-size: 13px; width: 100px;">Date</th>
             <th style="padding: 10px 12px; text-align: left; font-weight: 600; font-size: 13px;">Service</th>
             <th style="padding: 10px 12px; text-align: right; font-weight: 600; font-size: 13px; width: 90px;">Amount</th>
@@ -84,12 +99,16 @@ function buildInvoiceHtml(params: {
         </tbody>
         <tfoot>
           <tr>
-            <td colspan="2" style="padding: 12px; text-align: right; color: #92400e; border-top: 2px solid #92400e; font-weight: 700; font-size: 14px; background: rgba(146,64,14,0.07);">Grand Total</td>
-            <td style="padding: 12px; text-align: right; color: #92400e; border-top: 2px solid #92400e; font-weight: 700; font-size: 14px; background: rgba(146,64,14,0.07);">£${grandTotal.toFixed(2)}</td>
-            <td style="border-top: 2px solid #92400e; background: rgba(146,64,14,0.07);"></td>
+            <td colspan="2" style="padding: 12px; text-align: right; color: #4e6749; border-top: 2px solid #4e6749; font-weight: 700; font-size: 14px; background: rgba(78,103,73,0.07);">Grand Total</td>
+            <td style="padding: 12px; text-align: right; color: #4e6749; border-top: 2px solid #4e6749; font-weight: 700; font-size: 14px; background: rgba(78,103,73,0.07);">£${grandTotal.toFixed(2)}</td>
+            <td style="border-top: 2px solid #4e6749; background: rgba(78,103,73,0.07);"></td>
           </tr>
         </tfoot>
       </table>
+    </div>
+    <div class="page-footer">
+      <span>Molly Fisher, Behavioural Specialist (Trading as Raising My Rescue)</span>
+      <span>raisingmyrescue@outlook.com</span>
     </div>
   </div>
 </body>
@@ -180,10 +199,11 @@ export async function GET(req: NextRequest) {
 
     const firstName = clientFirstName || client.first_name || '';
     const lastName = clientLastName || client.last_name || '';
+    const dogName = client.dog_name || '';
 
     console.log(`[INVOICE-PDF] Data fetched: ${rows.length} rows, £${grandTotal.toFixed(2)} total`);
 
-    const html = buildInvoiceHtml({ clientFirstName: firstName, clientLastName: lastName, rows, grandTotal, generatedDate });
+    const html = buildInvoiceHtml({ clientFirstName: firstName, clientLastName: lastName, dogName, rows, grandTotal, generatedDate });
 
     // Launch browser
     const isProduction = !!process.env.VERCEL_ENV && process.env.VERCEL_ENV === 'production';
