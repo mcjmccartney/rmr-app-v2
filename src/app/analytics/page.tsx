@@ -154,7 +154,7 @@ function AnalyticsContent() {
     return values.reduce((a, b) => a + b, 0) / values.length;
   }, [memberships, clients]);
 
-  // --- Membership churn rate (all-time average monthly rate) ---
+  // --- Membership churn rate (last 6 months average) ---
   const churnRate = useMemo(() => {
     const byMonth: Record<string, Set<string>> = {};
     for (const m of memberships) {
@@ -162,7 +162,8 @@ function AnalyticsContent() {
       if (!byMonth[month]) byMonth[month] = new Set();
       byMonth[month].add(m.email);
     }
-    const sortedMonths = Object.keys(byMonth).sort();
+    // Take last 7 months to get 6 consecutive month pairs
+    const sortedMonths = Object.keys(byMonth).sort().slice(-7);
     if (sortedMonths.length < 2) return 0;
 
     const rates: number[] = [];
@@ -211,7 +212,24 @@ function AnalyticsContent() {
     }],
   };
 
-  const payBarOptions = makeBarOptions('£');
+  const payBarOptions = {
+    ...makeBarOptions('£'),
+    scales: {
+      ...makeBarOptions('£').scales,
+      x: {
+        position: 'top' as const,
+        ticks: {
+          callback: (value: any) => `£${value.toLocaleString()}`,
+          color: '#6b7280',
+        },
+        grid: { color: 'rgba(0,0,0,0.07)' },
+      },
+      y: {
+        ticks: { color: '#374151', font: { size: 12 } },
+        grid: { display: false },
+      },
+    },
+  };
   const referralBarOptions = {
     ...makeBarOptions(''),
     scales: {
@@ -264,7 +282,7 @@ function AnalyticsContent() {
           <div className="bg-white rounded-xl p-4 shadow-sm">
             <p className="text-xs text-gray-500 mb-1">Churn Rate</p>
             <p className="text-2xl font-bold text-gray-900">{churnRate.toFixed(1)}%</p>
-            <p className="text-xs text-gray-400 mt-1">avg per month (all time)</p>
+            <p className="text-xs text-gray-400 mt-1">avg per month (6 months)</p>
           </div>
         </div>
 
