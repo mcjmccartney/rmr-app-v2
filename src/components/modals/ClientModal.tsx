@@ -27,6 +27,7 @@ const ClientModal = memo(function ClientModal({ client, isOpen, onClose, onEditC
   const [isUpdatingActive, setIsUpdatingActive] = useState(false);
   const [isUpdatingMembership, setIsUpdatingMembership] = useState(false);
   const [isSendingBookingTermsUpdate, setIsSendingBookingTermsUpdate] = useState(false);
+  const [isGeneratingInvoice, setIsGeneratingInvoice] = useState(false);
 
   // Get the fresh client data from state to ensure we have the latest updates
   const currentClient = client ? (state.clients.find(c => c.id === client.id) || client) : null;
@@ -159,6 +160,31 @@ const ClientModal = memo(function ClientModal({ client, isOpen, onClose, onEditC
   const handleEditClick = () => {
     if (!currentClient) return;
     onEditClient(currentClient);
+  };
+
+  const handleGenerateInvoice = async () => {
+    if (!currentClient) return;
+    setIsGeneratingInvoice(true);
+    try {
+      const params = new URLSearchParams({
+        clientId: currentClient.id,
+        clientFirstName: currentClient.firstName,
+        clientLastName: currentClient.lastName,
+      });
+      const res = await fetch(`/api/generate-invoice-pdf?${params}`);
+      if (!res.ok) throw new Error('Failed to generate PDF');
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${currentClient.firstName} ${currentClient.lastName} - Behavioural Support Payment Record.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      alert('Failed to generate invoice PDF. Please try again.');
+    } finally {
+      setIsGeneratingInvoice(false);
+    }
   };
 
   const handleSendBookingTermsUpdate = async () => {
@@ -605,6 +631,15 @@ const ClientModal = memo(function ClientModal({ client, isOpen, onClose, onEditC
             );
           })()}
         </div>
+
+        {/* Generate Invoice Button */}
+        <button
+          onClick={handleGenerateInvoice}
+          disabled={isGeneratingInvoice}
+          className="w-full bg-amber-700 hover:bg-amber-600 text-white py-3 px-4 rounded-lg font-medium transition-colors disabled:opacity-50"
+        >
+          {isGeneratingInvoice ? 'Generating Invoice...' : 'Generate Invoice PDF'}
+        </button>
 
         {/* Edit Button */}
         <button
