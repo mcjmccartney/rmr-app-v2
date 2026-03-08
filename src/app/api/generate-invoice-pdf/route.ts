@@ -56,12 +56,12 @@ function buildInvoiceHtml(params: {
     .page-content { padding: 28px 40px 40px 40px; flex: 1; }
     .page-footer {
       padding: 16px 40px;
-      border-top: 1px solid #c5bfb0;
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      font-size: 11px;
-      color: #6b7280;
+      align-items: flex-start;
+      font-size: 14px;
+      color: #374151;
+      font-weight: 500;
     }
     table { width: 100%; border-collapse: collapse; font-size: 13px; }
   </style>
@@ -87,7 +87,7 @@ function buildInvoiceHtml(params: {
 
       <table>
         <thead>
-          <tr style="background: #4e6749; color: white;">
+          <tr style="background: #92400e; color: white;">
             <th style="padding: 10px 12px; text-align: left; font-weight: 600; font-size: 13px; width: 100px;">Date</th>
             <th style="padding: 10px 12px; text-align: left; font-weight: 600; font-size: 13px;">Service</th>
             <th style="padding: 10px 12px; text-align: right; font-weight: 600; font-size: 13px; width: 90px;">Amount</th>
@@ -99,15 +99,15 @@ function buildInvoiceHtml(params: {
         </tbody>
         <tfoot>
           <tr>
-            <td colspan="2" style="padding: 12px; text-align: right; color: #4e6749; border-top: 2px solid #4e6749; font-weight: 700; font-size: 14px; background: rgba(78,103,73,0.07);">Grand Total</td>
-            <td style="padding: 12px; text-align: right; color: #4e6749; border-top: 2px solid #4e6749; font-weight: 700; font-size: 14px; background: rgba(78,103,73,0.07);">£${grandTotal.toFixed(2)}</td>
-            <td style="border-top: 2px solid #4e6749; background: rgba(78,103,73,0.07);"></td>
+            <td colspan="2" style="padding: 12px; text-align: right; color: #92400e; border-top: 2px solid #92400e; font-weight: 700; font-size: 14px; background: rgba(146,64,14,0.07);">Grand Total</td>
+            <td style="padding: 12px; text-align: right; color: #92400e; border-top: 2px solid #92400e; font-weight: 700; font-size: 14px; background: rgba(146,64,14,0.07);">£${grandTotal.toFixed(2)}</td>
+            <td style="border-top: 2px solid #92400e; background: rgba(146,64,14,0.07);"></td>
           </tr>
         </tfoot>
       </table>
     </div>
     <div class="page-footer">
-      <span>Molly Fisher, Behavioural Specialist (Trading as Raising My Rescue)</span>
+      <span>Molly Fisher, Behavioural Specialist<br />(Trading as Raising My Rescue)</span>
       <span>raisingmyrescue@outlook.com</span>
     </div>
   </div>

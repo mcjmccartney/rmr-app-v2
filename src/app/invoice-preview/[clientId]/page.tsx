@@ -192,12 +192,12 @@ function InvoicePreviewContent() {
 
         .page-footer {
           padding: 16px 40px;
-          border-top: 1px solid #c5bfb0;
           display: flex;
           justify-content: space-between;
-          align-items: center;
-          font-size: 11px;
-          color: #6b7280;
+          align-items: flex-start;
+          font-size: 14px;
+          color: #374151;
+          font-weight: 500;
           font-family: Arial, sans-serif;
         }
 
@@ -208,7 +208,7 @@ function InvoicePreviewContent() {
         }
 
         thead tr {
-          background: #4e6749;
+          background: #92400e;
           color: white;
         }
 
@@ -234,10 +234,10 @@ function InvoicePreviewContent() {
 
         .grand-total-row td {
           padding: 12px 12px;
-          border-top: 2px solid #4e6749;
+          border-top: 2px solid #92400e;
           font-weight: 700;
           font-size: 14px;
-          background: rgba(78,103,73,0.07);
+          background: rgba(146,64,14,0.07);
         }
       `}</style>
 
@@ -299,8 +299,8 @@ function InvoicePreviewContent() {
               </tbody>
               <tfoot>
                 <tr className="grand-total-row">
-                  <td colSpan={2} style={{ textAlign: 'right', color: '#4e6749' }}>Grand Total</td>
-                  <td style={{ textAlign: 'right', color: '#4e6749' }}>£{grandTotal.toFixed(2)}</td>
+                  <td colSpan={2} style={{ textAlign: 'right', color: '#92400e' }}>Grand Total</td>
+                  <td style={{ textAlign: 'right', color: '#92400e' }}>£{grandTotal.toFixed(2)}</td>
                   <td />
                 </tr>
               </tfoot>
@@ -308,7 +308,7 @@ function InvoicePreviewContent() {
           </div>
 
           <div className="page-footer">
-            <span>Molly Fisher, Behavioural Specialist (Trading as Raising My Rescue)</span>
+            <span>Molly Fisher, Behavioural Specialist<br />(Trading as Raising My Rescue)</span>
             <span>raisingmyrescue@outlook.com</span>
           </div>
         </div>
