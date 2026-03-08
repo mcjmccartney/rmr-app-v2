@@ -172,7 +172,10 @@ const ClientModal = memo(function ClientModal({ client, isOpen, onClose, onEditC
         clientLastName: currentClient.lastName,
       });
       const res = await fetch(`/api/generate-invoice-pdf?${params}`);
-      if (!res.ok) throw new Error('Failed to generate PDF');
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || `Server error ${res.status}`);
+      }
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -180,8 +183,8 @@ const ClientModal = memo(function ClientModal({ client, isOpen, onClose, onEditC
       a.download = `${currentClient.firstName} ${currentClient.lastName} - Behavioural Support Payment Record.pdf`;
       a.click();
       URL.revokeObjectURL(url);
-    } catch {
-      alert('Failed to generate invoice PDF. Please try again.');
+    } catch (err: any) {
+      alert(`Failed to generate invoice PDF: ${err.message}`);
     } finally {
       setIsGeneratingInvoice(false);
     }
