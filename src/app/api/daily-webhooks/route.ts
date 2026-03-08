@@ -132,7 +132,8 @@ export async function POST(request: NextRequest) {
             paymentLink: paymentLink,
             // Google Meet link for Online sessions
             googleMeetLink: session.google_meet_link || null,
-            ...(targetDays === 7 && { sendSessionEmail: true, createCalendarEvent: false })
+            ...(targetDays === 7 && { sendSessionEmail: true, createCalendarEvent: false }),
+          ...(targetDays === 4 && { paymentReminder: true, emailSubject: 'Upcoming Session - Payment Due' })
           };
 
           // Validate essential data
@@ -231,13 +232,23 @@ export async function POST(request: NextRequest) {
       process.env.NEXT_PUBLIC_MAKE_WEBHOOK_SESSION_URL!
     );
 
+    // Process 4-day unpaid payment reminder webhooks
+    console.log('[DAILY-WEBHOOKS] Processing 4-day unpaid payment reminder webhooks...');
+    const unpaidSessions = sessions.filter(s => !s.session_paid);
+    const fourDayResult = await processWebhooks(
+      unpaidSessions,
+      clients,
+      4,
+      process.env.NEXT_PUBLIC_MAKE_WEBHOOK_SESSION_URL!
+    );
+
     // 12-day webhooks are disabled
     console.log('[DAILY-WEBHOOKS] 12-day webhooks disabled');
     const twelveDayResult: any[] = [];
 
-    const totalProcessed = sevenDayResult.length + twelveDayResult.length;
-    const totalSuccess = sevenDayResult.filter(r => r.status === 'success').length;
-    const totalFailure = sevenDayResult.filter(r => r.status === 'failed' || r.status === 'error').length;
+    const totalProcessed = sevenDayResult.length + fourDayResult.length + twelveDayResult.length;
+    const totalSuccess = [...sevenDayResult, ...fourDayResult].filter(r => r.status === 'success').length;
+    const totalFailure = [...sevenDayResult, ...fourDayResult].filter(r => r.status === 'failed' || r.status === 'error').length;
 
     console.log(`[DAILY-WEBHOOKS] Completed: ${totalProcessed} sessions processed, ${totalSuccess} successful, ${totalFailure} failed`);
 
@@ -390,6 +401,7 @@ export async function POST(request: NextRequest) {
       message: `Daily webhooks completed: ${totalProcessed} sessions processed, ${membershipUpdated} memberships updated`,
       summary: {
         sevenDaySessionsProcessed: sevenDayResult.length,
+        fourDayUnpaidSessionsProcessed: fourDayResult.length,
         twelveDaySessionsProcessed: 0, // Disabled
         totalProcessed,
         successCount: totalSuccess,
@@ -403,6 +415,7 @@ export async function POST(request: NextRequest) {
       },
       results: {
         sevenDayWebhooks: sevenDayResult,
+        fourDayUnpaidWebhooks: fourDayResult,
         twelveDayWebhooks: [] // Disabled
       },
       timestamp: new Date().toISOString()
@@ -428,7 +441,7 @@ export async function GET() {
 
     const { data: sessionsData } = await supabase
       .from('sessions')
-      .select('id, booking_date, session_type, client_id')
+      .select('id, booking_date, session_type, client_id, session_paid')
       .order('booking_date', { ascending: false });
 
     const { data: clientsData } = await supabase
@@ -464,6 +477,30 @@ export async function GET() {
       };
     });
 
+    // Find unpaid sessions 4 days away
+    const fourDayUnpaidSessions = sessions.filter(session => {
+      if (!session.client_id || session.session_type === 'Group' || session.session_type === 'RMR Live' || session.session_paid) {
+        return false;
+      }
+      const sessionDate = new Date(session.booking_date);
+      sessionDate.setHours(0, 0, 0, 0);
+      const daysUntilSession = Math.ceil((sessionDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      return daysUntilSession === 4;
+    }).map(session => {
+      const client = clients.find(c => c.id === session.client_id);
+      const sessionDate = new Date(session.booking_date);
+      sessionDate.setHours(0, 0, 0, 0);
+      const daysUntilSession = Math.ceil((sessionDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      return {
+        sessionId: session.id,
+        clientName: client ? `${client.first_name} ${client.last_name}` : 'Unknown',
+        sessionDate: session.booking_date,
+        sessionType: session.session_type,
+        daysUntilSession,
+        sessionPaid: false
+      };
+    });
+
     // 12-day sessions are disabled
     const twelveDaySessions: any[] = [];
 
@@ -473,12 +510,13 @@ export async function GET() {
       currentTime: now.toISOString(),
       sessionsToProcess: {
         sevenDaySessions: sevenDaySessions,
+        fourDayUnpaidSessions: fourDayUnpaidSessions,
         twelveDaySessions: [], // Disabled
-        totalSessions: sevenDaySessions.length
+        totalSessions: sevenDaySessions.length + fourDayUnpaidSessions.length
       },
       instructions: 'Call POST /api/daily-webhooks to process these sessions',
       webhooks: {
-        fourDay: 'DISABLED - webhook only triggers on new session creation',
+        fourDay: 'Enabled - triggers for unpaid sessions 4 days before date',
         twelveDay: 'DISABLED - 12-day webhook removed'
       }
     });
