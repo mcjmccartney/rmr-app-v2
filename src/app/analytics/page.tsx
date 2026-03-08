@@ -154,8 +154,8 @@ function AnalyticsContent() {
     return values.reduce((a, b) => a + b, 0) / values.length;
   }, [memberships, clients]);
 
-  // --- Membership churn rate (last 6 months average) ---
-  const churnRate = useMemo(() => {
+  // --- Membership churn rate (last 6 months average) with workings ---
+  const { churnRate, churnBreakdown } = useMemo(() => {
     const byMonth: Record<string, Set<string>> = {};
     for (const m of memberships) {
       const month = m.date.slice(0, 7);
@@ -164,19 +164,24 @@ function AnalyticsContent() {
     }
     // Take last 7 months to get 6 consecutive month pairs
     const sortedMonths = Object.keys(byMonth).sort().slice(-7);
-    if (sortedMonths.length < 2) return 0;
+    if (sortedMonths.length < 2) return { churnRate: 0, churnBreakdown: [] };
 
-    const rates: number[] = [];
+    const breakdown: { month: string; starting: number; lost: number; rate: number }[] = [];
     for (let i = 0; i < sortedMonths.length - 1; i++) {
       const current = byMonth[sortedMonths[i]];
       const next = byMonth[sortedMonths[i + 1]];
-      const lost = [...current].filter(email => !next.has(email)).length;
+      const lostCount = [...current].filter(email => !next.has(email)).length;
       if (current.size > 0) {
-        rates.push((lost / current.size) * 100);
+        const rate = (lostCount / current.size) * 100;
+        // Format month label e.g. "2026-02" → "Feb 2026"
+        const [y, mo] = sortedMonths[i].split('-');
+        const label = new Date(Number(y), Number(mo) - 1).toLocaleString('en-GB', { month: 'short', year: 'numeric' });
+        breakdown.push({ month: label, starting: current.size, lost: lostCount, rate });
       }
     }
-    if (rates.length === 0) return 0;
-    return rates.reduce((a, b) => a + b, 0) / rates.length;
+    const rates = breakdown.map(b => b.rate);
+    const avg = rates.length === 0 ? 0 : rates.reduce((a, b) => a + b, 0) / rates.length;
+    return { churnRate: avg, churnBreakdown: breakdown };
   }, [memberships]);
 
   // --- How Did You Hear categories ---
@@ -285,6 +290,39 @@ function AnalyticsContent() {
             <p className="text-xs text-gray-400 mt-1">avg per month (6 months)</p>
           </div>
         </div>
+
+        {/* Churn Rate Workings */}
+        {churnBreakdown.length > 0 && (
+          <div className="mt-4 bg-white rounded-xl p-4 shadow-sm">
+            <p className="text-sm font-semibold text-gray-700 mb-3">Churn Rate Workings</p>
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-xs text-gray-400 border-b border-gray-100">
+                  <th className="text-left pb-2 font-medium">Month</th>
+                  <th className="text-right pb-2 font-medium">Start</th>
+                  <th className="text-right pb-2 font-medium">Lost</th>
+                  <th className="text-right pb-2 font-medium">Rate</th>
+                </tr>
+              </thead>
+              <tbody>
+                {churnBreakdown.map((row, i) => (
+                  <tr key={i} className="border-b border-gray-50 last:border-0">
+                    <td className="py-2 text-gray-700">{row.month}</td>
+                    <td className="py-2 text-right text-gray-600">{row.starting}</td>
+                    <td className="py-2 text-right text-gray-600">{row.lost}</td>
+                    <td className="py-2 text-right font-medium text-gray-900">{row.rate.toFixed(1)}%</td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr className="border-t border-gray-200">
+                  <td colSpan={3} className="pt-2 text-xs text-gray-400">Average ({churnBreakdown.length} months)</td>
+                  <td className="pt-2 text-right font-bold text-amber-800">{churnRate.toFixed(1)}%</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        )}
 
         {/* How Did You Hear chart */}
         <div className="mt-4 bg-white rounded-xl p-4 shadow-sm">
