@@ -186,19 +186,21 @@ function InvoicePreviewContent() {
         }
 
         .page-content {
-          padding: 28px 40px 80px 40px;
+          padding: 28px 40px 40px 40px;
           flex: 1;
         }
 
-        .page-footer {
-          padding: 16px 40px;
+        .table-footer {
+          background: #92400e;
+          padding: 12px 12px;
           display: flex;
           justify-content: space-between;
           align-items: flex-start;
           font-size: 14px;
-          color: #374151;
+          color: #ffffff;
           font-weight: 500;
           font-family: Arial, sans-serif;
+          width: 100%;
         }
 
         table {
@@ -305,11 +307,10 @@ function InvoicePreviewContent() {
                 </tr>
               </tfoot>
             </table>
-          </div>
-
-          <div className="page-footer">
-            <span>Molly Fisher, Behavioural Specialist<br />(Trading as Raising My Rescue)</span>
-            <span>raisingmyrescue@outlook.com</span>
+            <div className="table-footer">
+              <span>Molly Fisher, Behavioural Specialist<br />(Trading as Raising My Rescue)</span>
+              <span>raisingmyrescue@outlook.com</span>
+            </div>
           </div>
         </div>
       </div>

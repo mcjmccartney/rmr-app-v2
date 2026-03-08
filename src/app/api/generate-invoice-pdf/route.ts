@@ -54,14 +54,16 @@ function buildInvoiceHtml(params: {
     }
     .page-header { width: 100%; height: auto; display: block; }
     .page-content { padding: 28px 40px 40px 40px; flex: 1; }
-    .page-footer {
-      padding: 16px 40px;
+    .table-footer {
+      background: #92400e;
+      padding: 12px 12px;
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
       font-size: 14px;
-      color: #374151;
+      color: #ffffff;
       font-weight: 500;
+      width: 100%;
     }
     table { width: 100%; border-collapse: collapse; font-size: 13px; }
   </style>
@@ -105,10 +107,10 @@ function buildInvoiceHtml(params: {
           </tr>
         </tfoot>
       </table>
-    </div>
-    <div class="page-footer">
-      <span>Molly Fisher, Behavioural Specialist<br />(Trading as Raising My Rescue)</span>
-      <span>raisingmyrescue@outlook.com</span>
+      <div class="table-footer">
+        <span>Molly Fisher, Behavioural Specialist<br />(Trading as Raising My Rescue)</span>
+        <span>raisingmyrescue@outlook.com</span>
+      </div>
     </div>
   </div>
 </body>
