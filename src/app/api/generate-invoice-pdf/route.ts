@@ -1,8 +1,100 @@
 import { NextRequest, NextResponse } from "next/server";
 import puppeteer from "puppeteer-core";
 import chromium from "@sparticuz/chromium-min";
+import { createClient } from "@supabase/supabase-js";
 
 export const maxDuration = 300;
+
+function formatDate(dateStr: string): string {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' });
+}
+
+function buildInvoiceHtml(params: {
+  clientFirstName: string;
+  clientLastName: string;
+  rows: Array<{ date: string; service: string; amount: number; paid: boolean }>;
+  grandTotal: number;
+  generatedDate: string;
+}): string {
+  const { clientFirstName, clientLastName, rows, grandTotal, generatedDate } = params;
+
+  const rowsHtml = rows.map((row, i) => `
+    <tr style="${i % 2 === 1 ? 'background: rgba(255,255,255,0.4);' : ''}">
+      <td style="padding: 9px 12px; vertical-align: top; color: #374151; border-bottom: 1px solid #d4c9b8;">${formatDate(row.date)}</td>
+      <td style="padding: 9px 12px; vertical-align: top; color: #1a1a1a; border-bottom: 1px solid #d4c9b8;">${row.service}</td>
+      <td style="padding: 9px 12px; vertical-align: top; text-align: right; color: #1a1a1a; border-bottom: 1px solid #d4c9b8;">£${row.amount.toFixed(2)}</td>
+      <td style="padding: 9px 12px; vertical-align: top; text-align: center; color: ${row.paid ? '#16a34a' : '#dc2626'}; font-weight: 600; font-size: 12px; border-bottom: 1px solid #d4c9b8;">${row.paid ? 'Paid' : 'Unpaid'}</td>
+    </tr>
+  `).join('');
+
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body, html {
+      -webkit-font-smoothing: antialiased;
+      margin: 0;
+      padding: 0;
+      background: #eaeade;
+    }
+    @page { size: A4; margin: 0; }
+    .page {
+      width: 210mm;
+      min-height: 297mm;
+      background: #eaeade;
+      font-family: Arial, sans-serif;
+    }
+    .page-header { width: 100%; height: auto; display: block; }
+    .page-content { padding: 28px 40px 40px 40px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <img src="https://i.ibb.co/qYk7fyKf/Header-Banner.png" alt="Header" class="page-header" />
+    <div class="page-content">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
+        <div>
+          <h1 style="font-size: 1.6rem; font-weight: bold; margin: 0 0 4px 0; color: #1a1a1a;">Payment Record</h1>
+          <p style="margin: 0; font-size: 15px; color: #374151; font-weight: 500;">${clientFirstName} ${clientLastName}</p>
+        </div>
+        <div style="text-align: right; font-size: 12px; color: #6b7280; padding-top: 4px;">
+          <div>Generated: ${generatedDate}</div>
+        </div>
+      </div>
+
+      <p style="font-size: 13px; color: #4b5563; margin: 16px 0 20px 0; line-height: 1.5; font-style: italic;">
+        Behaviour consultations and support provided following veterinary referral for behavioural concerns.
+      </p>
+
+      <table>
+        <thead>
+          <tr style="background: #92400e; color: white;">
+            <th style="padding: 10px 12px; text-align: left; font-weight: 600; font-size: 13px; width: 100px;">Date</th>
+            <th style="padding: 10px 12px; text-align: left; font-weight: 600; font-size: 13px;">Service</th>
+            <th style="padding: 10px 12px; text-align: right; font-weight: 600; font-size: 13px; width: 90px;">Amount</th>
+            <th style="padding: 10px 12px; text-align: center; font-weight: 600; font-size: 13px; width: 70px;">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rowsHtml}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="2" style="padding: 12px; text-align: right; color: #92400e; border-top: 2px solid #92400e; font-weight: 700; font-size: 14px; background: rgba(146,64,14,0.07);">Grand Total</td>
+            <td style="padding: 12px; text-align: right; color: #92400e; border-top: 2px solid #92400e; font-weight: 700; font-size: 14px; background: rgba(146,64,14,0.07);">£${grandTotal.toFixed(2)}</td>
+            <td style="border-top: 2px solid #92400e; background: rgba(146,64,14,0.07);"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+</body>
+</html>`;
+}
 
 export async function GET(req: NextRequest) {
   let browser;
@@ -20,17 +112,86 @@ export async function GET(req: NextRequest) {
 
     console.log(`[INVOICE-PDF] Starting PDF generation for client ${clientId}`);
 
+    // Fetch data server-side — avoids all client-side auth/redirect issues
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
+    const { data: client, error: clientError } = await supabase
+      .from('clients')
+      .select('*')
+      .eq('id', clientId)
+      .single();
+
+    if (clientError || !client) {
+      return NextResponse.json({ error: 'Client not found' }, { status: 404 });
+    }
+
+    const { data: sessions } = await supabase
+      .from('sessions')
+      .select('*')
+      .eq('client_id', clientId)
+      .order('booking_date', { ascending: true });
+
+    const { data: aliases } = await supabase
+      .from('client_email_aliases')
+      .select('*')
+      .eq('client_id', clientId);
+
+    const emails = [
+      client.email,
+      ...(aliases || []).map((a: any) => a.email),
+    ].filter(Boolean).map((e: string) => e.toLowerCase());
+
+    const { data: memberships } = await supabase
+      .from('memberships')
+      .select('*')
+      .in('email', emails)
+      .order('date', { ascending: true });
+
+    // Build merged, sorted rows
+    const rows: Array<{ date: string; service: string; amount: number; paid: boolean }> = [];
+
+    for (const s of sessions || []) {
+      rows.push({
+        date: s.booking_date,
+        service: s.session_type || 'Session',
+        amount: s.quote || 0,
+        paid: !!s.session_paid,
+      });
+    }
+
+    for (const m of memberships || []) {
+      rows.push({
+        date: m.date,
+        service: 'Behaviour Support Programme (Monthly)',
+        amount: m.amount || 0,
+        paid: true,
+      });
+    }
+
+    rows.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    const grandTotal = rows.reduce((sum, r) => sum + r.amount, 0);
+    const generatedDate = new Date().toLocaleDateString('en-GB', {
+      day: '2-digit', month: 'long', year: 'numeric',
+    });
+
+    const firstName = clientFirstName || client.first_name || '';
+    const lastName = clientLastName || client.last_name || '';
+
+    console.log(`[INVOICE-PDF] Data fetched: ${rows.length} rows, £${grandTotal.toFixed(2)} total`);
+
+    const html = buildInvoiceHtml({ clientFirstName: firstName, clientLastName: lastName, rows, grandTotal, generatedDate });
+
+    // Launch browser
     const isProduction = !!process.env.VERCEL_ENV && process.env.VERCEL_ENV === 'production';
 
     if (isProduction) {
       const chromiumPackUrl = 'https://github.com/Sparticuz/chromium/releases/download/v143.0.0/chromium-v143.0.0-pack.x64.tar';
       const executablePath = await chromium.executablePath(chromiumPackUrl);
-
-      browser = await puppeteer.launch({
-        args: chromium.args,
-        executablePath,
-        headless: true,
-      });
+      browser = await puppeteer.launch({ args: chromium.args, executablePath, headless: true });
     } else {
       const puppeteerFull = await import('puppeteer');
       browser = await puppeteerFull.default.launch({ headless: true });
@@ -40,33 +201,11 @@ export async function GET(req: NextRequest) {
 
     const page = await browser.newPage();
 
-    // Capture page console messages and errors for debugging
-    page.on('console', (msg) => console.log(`[INVOICE-PDF][PAGE-${msg.type()}] ${msg.text()}`));
-    page.on('pageerror', (err) => console.error(`[INVOICE-PDF][PAGE-ERROR] ${String(err)}`));
-    page.on('requestfailed', (req) => console.error(`[INVOICE-PDF][REQ-FAIL] ${req.url()} - ${req.failure()?.errorText}`));
-
-    let baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
-    if (!baseUrl) {
-      baseUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000";
-    }
-
-    const previewUrl = `${baseUrl}/invoice-preview/${clientId}?playwright=true`;
-    console.log(`[INVOICE-PDF] Loading: ${previewUrl}`);
-
-    await page.goto(previewUrl, { waitUntil: "domcontentloaded", timeout: 120_000 });
-
-    console.log("[INVOICE-PDF] DOM content loaded, waiting for data-paged-ready...");
-
-    // Wait up to 60s for React to finish loading data and set the ready signal
-    await page.waitForFunction(
-      () => document.body.getAttribute("data-paged-ready") === "true",
-      { timeout: 60_000 }
-    );
-
-    console.log("[INVOICE-PDF] data-paged-ready confirmed");
+    // Load HTML directly — no network requests, no auth issues
+    await page.setContent(html, { waitUntil: "networkidle0", timeout: 60_000 });
 
     await page.evaluate(() => document.fonts.ready);
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
     console.log("[INVOICE-PDF] Generating PDF...");
 
@@ -82,7 +221,7 @@ export async function GET(req: NextRequest) {
 
     console.log(`[INVOICE-PDF] PDF generated (${pdfBuffer.length} bytes)`);
 
-    const filename = `${clientFirstName} ${clientLastName} - Behavioural Support Payment Record.pdf`;
+    const filename = `${firstName} ${lastName} - Behavioural Support Payment Record.pdf`;
 
     return new NextResponse(pdfBuffer, {
       status: 200,
