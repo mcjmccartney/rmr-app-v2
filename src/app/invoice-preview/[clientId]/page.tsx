@@ -193,12 +193,13 @@ function InvoicePreviewContent() {
         .table-footer {
           background: #92400e;
           padding: 12px 12px;
+          margin-top: 50px;
           display: flex;
           justify-content: space-between;
-          align-items: flex-start;
+          align-items: center;
           font-size: 14px;
           color: #ffffff;
-          font-weight: 500;
+          font-weight: 600;
           font-family: Arial, sans-serif;
           width: 100%;
         }
