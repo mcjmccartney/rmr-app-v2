@@ -25,8 +25,12 @@ function InvoicePreviewContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [clientName, setClientName] = useState('');
+  const [clientFirstName, setClientFirstName] = useState('');
+  const [clientLastName, setClientLastName] = useState('');
   const [rows, setRows] = useState<InvoiceRow[]>([]);
   const [grandTotal, setGrandTotal] = useState(0);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [buttonText, setButtonText] = useState('Download PDF');
 
   useEffect(() => {
     async function load() {
@@ -38,6 +42,8 @@ function InvoicePreviewContent() {
         const { client, sessions, memberships } = json;
 
         setClientName(`${client.first_name} ${client.last_name}`);
+        setClientFirstName(client.first_name || '');
+        setClientLastName(client.last_name || '');
 
         const allRows: InvoiceRow[] = [];
 
@@ -84,6 +90,37 @@ function InvoicePreviewContent() {
     month: 'long',
     year: 'numeric',
   });
+
+  const handleDownloadPDF = async () => {
+    setIsDownloading(true);
+    setButtonText('Generating PDF...');
+    try {
+      const params = new URLSearchParams({
+        clientId,
+        clientFirstName,
+        clientLastName,
+      });
+      const res = await fetch(`/api/generate-invoice-pdf?${params}`);
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || `Server error ${res.status}`);
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${clientFirstName} ${clientLastName} - Behavioural Support Payment Record.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+      setButtonText('✓ Downloaded!');
+      setTimeout(() => setButtonText('Download PDF'), 3000);
+    } catch (err: any) {
+      alert(`Failed to generate PDF: ${err.message}`);
+      setButtonText('Download PDF');
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   if (loading) return <div style={{ minHeight: '100vh', background: '#eaeade', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Arial, sans-serif' }}>Loading...</div>;
   if (error) return (
@@ -242,20 +279,27 @@ function InvoicePreviewContent() {
       </div>
 
       {!isPlaywrightMode && (
-        <div style={{
-          position: 'fixed',
-          bottom: '2rem',
-          right: '2rem',
-          background: '#92400e',
-          color: 'white',
-          padding: '0.5rem 1rem',
-          borderRadius: '0.5rem',
-          fontSize: '13px',
-          fontFamily: 'Arial, sans-serif',
-          zIndex: 9999,
-        }}>
-          Preview — use &ldquo;Generate Invoice PDF&rdquo; in the client profile
-        </div>
+        <button
+          onClick={handleDownloadPDF}
+          disabled={isDownloading}
+          style={{
+            position: 'fixed',
+            bottom: '2rem',
+            right: '2rem',
+            backgroundColor: buttonText.includes('✓') ? '#059669' : '#92400e',
+            color: 'white',
+            padding: '0.75rem 1.5rem',
+            borderRadius: '0.5rem',
+            fontWeight: '500',
+            border: 'none',
+            cursor: isDownloading ? 'wait' : 'pointer',
+            zIndex: 999999,
+            fontFamily: 'Arial, sans-serif',
+            fontSize: '14px',
+          }}
+        >
+          {buttonText}
+        </button>
       )}
     </>
   );
