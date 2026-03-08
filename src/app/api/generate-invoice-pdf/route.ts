@@ -40,6 +40,11 @@ export async function GET(req: NextRequest) {
 
     const page = await browser.newPage();
 
+    // Capture page console messages and errors for debugging
+    page.on('console', (msg) => console.log(`[INVOICE-PDF][PAGE-${msg.type()}] ${msg.text()}`));
+    page.on('pageerror', (err) => console.error(`[INVOICE-PDF][PAGE-ERROR] ${String(err)}`));
+    page.on('requestfailed', (req) => console.error(`[INVOICE-PDF][REQ-FAIL] ${req.url()} - ${req.failure()?.errorText}`));
+
     let baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
     if (!baseUrl) {
       baseUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000";
@@ -48,12 +53,17 @@ export async function GET(req: NextRequest) {
     const previewUrl = `${baseUrl}/invoice-preview/${clientId}?playwright=true`;
     console.log(`[INVOICE-PDF] Loading: ${previewUrl}`);
 
-    await page.goto(previewUrl, { waitUntil: "networkidle0", timeout: 120_000 });
+    await page.goto(previewUrl, { waitUntil: "domcontentloaded", timeout: 120_000 });
 
+    console.log("[INVOICE-PDF] DOM content loaded, waiting for data-paged-ready...");
+
+    // Wait up to 60s for React to finish loading data and set the ready signal
     await page.waitForFunction(
       () => document.body.getAttribute("data-paged-ready") === "true",
-      { timeout: 30_000 }
+      { timeout: 60_000 }
     );
+
+    console.log("[INVOICE-PDF] data-paged-ready confirmed");
 
     await page.evaluate(() => document.fonts.ready);
     await new Promise(resolve => setTimeout(resolve, 2000));

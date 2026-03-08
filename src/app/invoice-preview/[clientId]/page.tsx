@@ -34,12 +34,16 @@ function InvoicePreviewContent() {
 
   useEffect(() => {
     async function load() {
+      console.log(`[INVOICE] Starting load for clientId: ${clientId}`);
       try {
+        console.log(`[INVOICE] Fetching /api/invoice-preview/${clientId}`);
         const res = await fetch(`/api/invoice-preview/${clientId}`);
+        console.log(`[INVOICE] Fetch response status: ${res.status}`);
         const json = await res.json();
         if (!res.ok) throw new Error(json.error);
 
         const { client, sessions, memberships } = json;
+        console.log(`[INVOICE] Data loaded: ${sessions?.length} sessions, ${memberships?.length} memberships`);
 
         setClientName(`${client.first_name} ${client.last_name}`);
         setClientFirstName(client.first_name || '');
@@ -71,16 +75,20 @@ function InvoicePreviewContent() {
         setGrandTotal(allRows.reduce((sum, r) => sum + r.amount, 0));
         setLoading(false);
       } catch (err: any) {
+        console.error(`[INVOICE] Load error: ${err.message}`);
         setError(err.message);
         setLoading(false);
       }
     }
 
     if (clientId) load();
+    else console.warn('[INVOICE] No clientId available');
   }, [clientId]);
 
   useEffect(() => {
+    console.log(`[INVOICE] loading changed to: ${loading}`);
     if (!loading) {
+      console.log('[INVOICE] Setting data-paged-ready=true');
       document.body.setAttribute('data-paged-ready', 'true');
     }
   }, [loading]);
