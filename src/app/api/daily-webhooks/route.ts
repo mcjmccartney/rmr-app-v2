@@ -133,7 +133,7 @@ export async function POST(request: NextRequest) {
             // Google Meet link for Online sessions
             googleMeetLink: session.google_meet_link || null,
             ...(targetDays === 7 && { sendSessionEmail: true, createCalendarEvent: false }),
-          ...(targetDays === 4 && { sendSessionEmail: true, paymentReminder: true, emailSubject: 'Upcoming Session - Payment Due' })
+          ...(targetDays === 3 && { sendSessionEmail: true, paymentReminder: true, emailSubject: 'Upcoming Session - Payment Due' })
           };
 
           // Validate essential data
@@ -232,13 +232,13 @@ export async function POST(request: NextRequest) {
       process.env.NEXT_PUBLIC_MAKE_WEBHOOK_SESSION_URL!
     );
 
-    // Process 4-day unpaid payment reminder webhooks
-    console.log('[DAILY-WEBHOOKS] Processing 4-day unpaid payment reminder webhooks...');
+    // Process 3-day unpaid payment reminder webhooks
+    console.log('[DAILY-WEBHOOKS] Processing 3-day unpaid payment reminder webhooks...');
     const unpaidSessions = sessions.filter(s => !s.session_paid);
     const fourDayResult = await processWebhooks(
       unpaidSessions,
       clients,
-      4,
+      3,
       process.env.NEXT_PUBLIC_MAKE_WEBHOOK_SESSION_URL!
     );
 
@@ -477,7 +477,7 @@ export async function GET() {
       };
     });
 
-    // Find unpaid sessions 4 days away
+    // Find unpaid sessions 3 days away
     const fourDayUnpaidSessions = sessions.filter(session => {
       if (!session.client_id || session.session_type === 'Group' || session.session_type === 'RMR Live' || session.session_paid) {
         return false;
@@ -485,7 +485,7 @@ export async function GET() {
       const sessionDate = new Date(session.booking_date);
       sessionDate.setHours(0, 0, 0, 0);
       const daysUntilSession = Math.ceil((sessionDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-      return daysUntilSession === 4;
+      return daysUntilSession === 3;
     }).map(session => {
       const client = clients.find(c => c.id === session.client_id);
       const sessionDate = new Date(session.booking_date);
@@ -516,7 +516,7 @@ export async function GET() {
       },
       instructions: 'Call POST /api/daily-webhooks to process these sessions',
       webhooks: {
-        fourDay: 'Enabled - triggers for unpaid sessions 4 days before date',
+        fourDay: 'Enabled - triggers for unpaid sessions 3 days before date',
         twelveDay: 'DISABLED - 12-day webhook removed'
       }
     });
