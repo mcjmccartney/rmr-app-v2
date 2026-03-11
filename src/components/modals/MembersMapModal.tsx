@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { X } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import MembersMap from '@/components/maps/MembersMap';
@@ -15,6 +15,7 @@ interface MemberLocation {
   dogName?: string;
   email?: string;
   membershipDate?: string;
+  isCurrent?: boolean;
   latitude: number;
   longitude: number;
   address: string;
@@ -36,203 +37,251 @@ interface GeocodingCache {
 }
 
 const CACHE_KEY = 'mapbox_geocoding_cache';
-const CACHE_EXPIRY_DAYS = 30; // Cache addresses for 30 days
+const CACHE_EXPIRY_DAYS = 30;
 
 export default function MembersMapModal({ isOpen, onClose }: MembersMapModalProps) {
   const { state } = useApp();
   const { clients, memberships } = state;
+
   const [memberLocations, setMemberLocations] = useState<MemberLocation[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [memberFilter, setMemberFilter] = useState<MemberFilter>('all');
+  const [fitBoundsKey, setFitBoundsKey] = useState(0);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [showClientModal, setShowClientModal] = useState(false);
   const [showEditClientModal, setShowEditClientModal] = useState(false);
 
-  // Load cache from localStorage
+  // Mapbox refs — initialised once, persist across filter changes and re-opens
+  const [mapboxgl, setMapboxgl] = useState<any>(null);
+  const mapRef = useRef<any>(null);
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+
+  // Persist geocoded locations across re-opens (avoid re-geocoding already-known members)
+  const cachedLocations = useRef<MemberLocation[]>([]);
+  const cachedMemberIds = useRef<Set<string>>(new Set());
+
+  // Load Mapbox once
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const mod = await import('mapbox-gl');
+        const mgl = mod.default;
+        mgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || '';
+        setMapboxgl(mgl);
+      } catch (e) {
+        console.error('Failed to load Mapbox GL JS:', e);
+      }
+    };
+    load();
+  }, []);
+
+  // Initialise map once mapboxgl is ready and container is in the DOM
+  useEffect(() => {
+    if (!mapboxgl || !mapContainerRef.current || mapRef.current) return;
+
+    mapRef.current = new mapboxgl.Map({
+      container: mapContainerRef.current,
+      style: 'mapbox://styles/mapbox/light-v11',
+      center: [-2.5, 54.5],
+      zoom: 5.5,
+    });
+
+    mapRef.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+    mapRef.current.once('load', () => mapRef.current?.resize());
+
+    return () => {
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+    };
+  }, [mapboxgl]);
+
+  // Resize map whenever modal opens (fixes sizing if container was hidden)
+  useEffect(() => {
+    if (isOpen && mapRef.current) {
+      setTimeout(() => mapRef.current?.resize(), 50);
+    }
+  }, [isOpen]);
+
+  // --- Geocoding helpers ---
+
   const loadCache = (): GeocodingCache => {
     try {
       const cached = localStorage.getItem(CACHE_KEY);
       if (!cached) return {};
-
       const cache: GeocodingCache = JSON.parse(cached);
       const now = Date.now();
       const expiryMs = CACHE_EXPIRY_DAYS * 24 * 60 * 60 * 1000;
-
-      // Filter out expired entries
-      const validCache: GeocodingCache = {};
-      Object.entries(cache).forEach(([address, data]) => {
-        if (now - data.timestamp < expiryMs) {
-          validCache[address] = data;
-        }
+      const valid: GeocodingCache = {};
+      Object.entries(cache).forEach(([addr, data]) => {
+        if (now - data.timestamp < expiryMs) valid[addr] = data;
       });
-
-      return validCache;
-    } catch (error) {
+      return valid;
+    } catch {
       return {};
     }
   };
 
-  // Save cache to localStorage
   const saveCache = (cache: GeocodingCache) => {
-    try {
-      localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
-    } catch (error) {
-    }
+    try { localStorage.setItem(CACHE_KEY, JSON.stringify(cache)); } catch {}
   };
 
-  // Geocode with caching
   const geocodeAddress = async (address: string, cache: GeocodingCache): Promise<{ lat: number; lng: number } | null> => {
-    // Normalize address for cache key
-    const normalizedAddress = address.trim().toLowerCase();
-
-    // Check cache first
-    if (cache[normalizedAddress]) {
-      return {
-        lat: cache[normalizedAddress].lat,
-        lng: cache[normalizedAddress].lng
-      };
-    }
-
-    // Not in cache - make API call
+    const key = address.trim().toLowerCase();
+    if (cache[key]) return { lat: cache[key].lat, lng: cache[key].lng };
     try {
-      const response = await fetch('/api/geocode', {
+      const res = await fetch('/api/geocode', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ address }),
       });
-
-      if (!response.ok) return null;
-
-      const data = await response.json();
+      if (!res.ok) return null;
+      const data = await res.json();
       if (data.lat && data.lng) {
-        // Save to cache
-        cache[normalizedAddress] = {
-          lat: data.lat,
-          lng: data.lng,
-          timestamp: Date.now()
-        };
+        cache[key] = { lat: data.lat, lng: data.lng, timestamp: Date.now() };
         saveCache(cache);
-
         return { lat: data.lat, lng: data.lng };
       }
-
       return null;
-    } catch (error) {
+    } catch {
       return null;
     }
   };
 
-  // Extract postcode/zip code from address (UK or US format)
   const extractPostcode = (address: string): string => {
-    // UK postcode pattern: matches postcodes like "SW1A 1AA", "M1 1AE", "EC1A 1BB"
-    const ukPostcodeMatch = address.match(/([A-Z]{1,2}\d{1,2}[A-Z]?\s?\d[A-Z]{2})$/i);
-    if (ukPostcodeMatch) return ukPostcodeMatch[1];
-
-    // US zip code pattern: matches 5-digit or 5+4 format like "08003", "90210-1234"
-    const usZipMatch = address.match(/(\d{5}(-\d{4})?)$/);
-    if (usZipMatch) return usZipMatch[1];
-
-    // Fall back to full address if no postcode/zip found
+    const ukMatch = address.match(/([A-Z]{1,2}\d{1,2}[A-Z]?\s?\d[A-Z]{2})$/i);
+    if (ukMatch) return ukMatch[1];
+    const usMatch = address.match(/(\d{5}(-\d{4})?)$/);
+    if (usMatch) return usMatch[1];
     return address;
   };
 
-  // Get all members who've ever paid (current + past)
-  const loadMemberLocations = async () => {
+  const isMemberCurrent = (membershipDate: string | undefined): boolean => {
+    if (!membershipDate) return false;
+    const twoMonthsAgo = new Date();
+    twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
+    return new Date(membershipDate) >= twoMonthsAgo;
+  };
+
+  // --- Load / update member locations ---
+
+  const loadMemberLocations = useCallback(async () => {
     if (!clients || !memberships) return;
+
+    const allMemberEmails = new Set(memberships.map(m => m.email?.toLowerCase()));
+
+    const allMembers = clients.filter(client =>
+      client.email &&
+      allMemberEmails.has(client.email.toLowerCase()) &&
+      client.address &&
+      client.address.trim().length > 0
+    );
+
+    // Show already-geocoded locations immediately (no spinner for cached members)
+    if (cachedLocations.current.length > 0) {
+      setMemberLocations(cachedLocations.current);
+    }
+
+    // Only geocode members not already in cache
+    const newMembers = allMembers.filter(c => !cachedMemberIds.current.has(c.id));
+
+    if (newMembers.length === 0) {
+      setIsLoading(false);
+      return;
+    }
 
     setIsLoading(true);
 
-    // Load cache
     const cache = loadCache();
-
-    // Case-insensitive email matching
-    const allMemberEmails = new Set(memberships.map(m => m.email?.toLowerCase()));
-
-    // Get all clients who have ever paid for membership AND have an address
-    const allMembers = clients.filter(client => {
-      return client.email &&
-             allMemberEmails.has(client.email.toLowerCase()) &&
-             client.address &&
-             client.address.trim().length > 0;
-    });
-
-    const locations: MemberLocation[] = [];
-
-    // Track used coordinates to apply jitter for stacked pins
     const usedCoords = new Map<string, number>();
 
-    // Geocode in parallel batches of 10 to avoid rate limiting while being fast
-    const BATCH_SIZE = 10;
-    for (let i = 0; i < allMembers.length; i += BATCH_SIZE) {
-      const batch = allMembers.slice(i, i + BATCH_SIZE);
+    // Seed usedCoords from already-cached locations to avoid jitter overlap
+    cachedLocations.current.forEach(loc => {
+      const key = `${Math.round(loc.latitude * 100)},${Math.round(loc.longitude * 100)}`;
+      usedCoords.set(key, (usedCoords.get(key) || 0) + 1);
+    });
 
+    const newLocations: MemberLocation[] = [];
+    const BATCH_SIZE = 10;
+
+    for (let i = 0; i < newMembers.length; i += BATCH_SIZE) {
+      const batch = newMembers.slice(i, i + BATCH_SIZE);
       const results = await Promise.allSettled(
         batch.map(client => geocodeAddress(extractPostcode(client.address!), cache))
       );
 
-      results.forEach((result, batchIndex) => {
-        const client = batch[batchIndex];
+      results.forEach((result, idx) => {
+        const client = batch[idx];
         if (result.status !== 'fulfilled' || !result.value) return;
 
         let { lat, lng } = result.value;
 
-        // Apply jitter if this coordinate is already used (pins stacking fix)
         const coordKey = `${Math.round(lat * 100)},${Math.round(lng * 100)}`;
         const existing = usedCoords.get(coordKey) || 0;
         if (existing > 0) {
-          const angle = (existing * 137.5) * (Math.PI / 180); // golden angle spread
+          const angle = (existing * 137.5) * (Math.PI / 180);
           lat += Math.cos(angle) * 0.0015;
           lng += Math.sin(angle) * 0.0015;
         }
         usedCoords.set(coordKey, existing + 1);
 
-        // Get most recent membership date for this client
         const clientMemberships = memberships.filter(
           m => m.email?.toLowerCase() === client.email?.toLowerCase()
         );
-        const mostRecentMembership = clientMemberships.sort((a, b) =>
-          new Date(b.date).getTime() - new Date(a.date).getTime()
+        const mostRecent = clientMemberships.sort(
+          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
         )[0];
 
-        locations.push({
+        newLocations.push({
           id: client.id,
           clientId: client.id,
           clientName: `${client.firstName} ${client.lastName}`,
           dogName: client.dogName || '',
           email: client.email,
-          membershipDate: mostRecentMembership?.date,
+          membershipDate: mostRecent?.date,
+          isCurrent: isMemberCurrent(mostRecent?.date),
           latitude: lat,
           longitude: lng,
-          address: extractPostcode(client.address!)
+          address: extractPostcode(client.address!),
         });
+
+        cachedMemberIds.current.add(client.id);
       });
     }
 
-    setMemberLocations(locations);
+    cachedLocations.current = [...cachedLocations.current, ...newLocations];
+    setMemberLocations(cachedLocations.current);
     setIsLoading(false);
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clients, memberships]);
 
-  // Filter locations based on current filter
-  const filteredLocations = memberLocations.filter(location => {
+  useEffect(() => {
+    if (isOpen) {
+      loadMemberLocations();
+      setFitBoundsKey(k => k + 1);
+    }
+  }, [isOpen, loadMemberLocations]);
+
+  // --- Filtering ---
+
+  const filteredLocations = memberLocations.filter(loc => {
     if (memberFilter === 'all') return true;
-
-    if (!location.membershipDate) return false;
-
-    const membershipDate = new Date(location.membershipDate);
-    const twoMonthsAgo = new Date();
-    twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
-
-    const isCurrent = membershipDate >= twoMonthsAgo;
-
-    if (memberFilter === 'current') return isCurrent;
-    if (memberFilter === 'past') return !isCurrent;
-
+    if (memberFilter === 'current') return loc.isCurrent === true;
+    if (memberFilter === 'past') return loc.isCurrent === false;
     return true;
   });
 
-  // Handle client click from map
+  const currentCount = memberLocations.filter(l => l.isCurrent === true).length;
+  const pastCount = memberLocations.filter(l => l.isCurrent === false).length;
+
+  const handleFilterChange = (f: MemberFilter) => {
+    setMemberFilter(f);
+    setFitBoundsKey(k => k + 1);
+  };
+
+  // --- Client modal ---
+
   const handleClientClick = (clientId: string) => {
     const client = clients?.find(c => c.id === clientId);
     if (client) {
@@ -257,98 +306,97 @@ export default function MembersMapModal({ isOpen, onClose }: MembersMapModalProp
     setSelectedClient(null);
   };
 
-  // Load member locations when modal opens (not on every clients/memberships update)
-  useEffect(() => {
-    if (isOpen) {
-      loadMemberLocations();
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen]);
-
   if (!isOpen) return null;
 
   return (
     <>
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl h-[90vh] flex flex-col">
-          {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200">
-            <div className="flex items-center gap-4">
-              <h2 className="text-xl font-semibold text-gray-900">Members Map</h2>
+      <div className="fixed inset-0 z-50">
+        {/* Full-screen map */}
+        <MembersMap
+          locations={filteredLocations}
+          onClientClick={handleClientClick}
+          fitBoundsKey={fitBoundsKey}
+          mapboxgl={mapboxgl}
+          mapRef={mapRef}
+          mapContainerRef={mapContainerRef}
+        />
 
-              {/* Filter buttons */}
+        {/* Floating top bar */}
+        <div className="absolute top-4 left-4 right-4 z-10 flex items-center justify-between pointer-events-none">
+          {/* Left: title + filters */}
+          <div className="flex items-center gap-2 pointer-events-auto">
+            <div className="flex items-center gap-3 bg-white/85 backdrop-blur-sm rounded-xl px-4 py-2.5 shadow-lg">
+              <span className="text-sm font-semibold text-gray-900">Members Map</span>
+
               {!isLoading && memberLocations.length > 0 && (
-                <div className="flex items-center gap-2 ml-4">
+                <div className="flex items-center gap-1.5">
                   <button
-                    onClick={() => setMemberFilter('all')}
-                    className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
+                    onClick={() => handleFilterChange('all')}
+                    className={`px-3 py-1 text-xs font-medium rounded-lg transition-colors ${
                       memberFilter === 'all'
                         ? 'bg-amber-800 text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                     }`}
                   >
                     All ({memberLocations.length})
                   </button>
                   <button
-                    onClick={() => setMemberFilter('current')}
-                    className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
+                    onClick={() => handleFilterChange('current')}
+                    className={`px-3 py-1 text-xs font-medium rounded-lg transition-colors ${
                       memberFilter === 'current'
                         ? 'bg-amber-800 text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                     }`}
                   >
-                    Current ({memberLocations.filter(l => {
-                      if (!l.membershipDate) return false;
-                      const twoMonthsAgo = new Date();
-                      twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
-                      return new Date(l.membershipDate) >= twoMonthsAgo;
-                    }).length})
+                    Current ({currentCount})
                   </button>
                   <button
-                    onClick={() => setMemberFilter('past')}
-                    className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
+                    onClick={() => handleFilterChange('past')}
+                    className={`px-3 py-1 text-xs font-medium rounded-lg transition-colors ${
                       memberFilter === 'past'
                         ? 'bg-amber-800 text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                     }`}
                   >
-                    Past ({memberLocations.filter(l => {
-                      if (!l.membershipDate) return false;
-                      const twoMonthsAgo = new Date();
-                      twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
-                      return new Date(l.membershipDate) < twoMonthsAgo;
-                    }).length})
+                    Past ({pastCount})
                   </button>
                 </div>
               )}
             </div>
+          </div>
+
+          {/* Right: close button */}
+          <div className="pointer-events-auto">
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="bg-white/85 backdrop-blur-sm hover:bg-white rounded-xl p-2.5 shadow-lg transition-colors"
             >
-              <X size={24} />
+              <X size={18} className="text-gray-700" />
             </button>
           </div>
-
-          {/* Map */}
-          <div className="flex-1 relative min-h-0">
-            {isLoading && (
-              <div className="absolute inset-0 bg-white bg-opacity-90 flex items-center justify-center z-10">
-                <div className="text-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-800 mx-auto mb-2"></div>
-                  <p className="text-sm text-gray-600">Loading map...</p>
-                </div>
-              </div>
-            )}
-            <MembersMap
-              locations={filteredLocations}
-              onClientClick={handleClientClick}
-            />
-          </div>
         </div>
+
+        {/* Loading overlay */}
+        {isLoading && memberLocations.length === 0 && (
+          <div className="absolute inset-0 bg-white/70 backdrop-blur-sm flex items-center justify-center z-10">
+            <div className="bg-white rounded-xl px-6 py-4 shadow-lg flex items-center gap-3">
+              <div className="animate-spin rounded-full h-5 w-5 border-2 border-amber-800 border-t-transparent" />
+              <span className="text-sm text-gray-700 font-medium">Loading members...</span>
+            </div>
+          </div>
+        )}
+
+        {/* Background loading indicator (new members geocoding, existing shown) */}
+        {isLoading && memberLocations.length > 0 && (
+          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10">
+            <div className="bg-white/85 backdrop-blur-sm rounded-xl px-4 py-2 shadow-lg flex items-center gap-2">
+              <div className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-amber-800 border-t-transparent" />
+              <span className="text-xs text-gray-600">Updating locations…</span>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Client Modal */}
       <ClientModal
         client={selectedClient}
         isOpen={showClientModal}
@@ -356,7 +404,6 @@ export default function MembersMapModal({ isOpen, onClose }: MembersMapModalProp
         onEditClient={handleEditClient}
       />
 
-      {/* Edit Client Modal */}
       <EditClientModal
         client={selectedClient}
         isOpen={showEditClientModal}

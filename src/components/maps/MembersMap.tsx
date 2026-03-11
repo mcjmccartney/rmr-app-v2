@@ -1,12 +1,11 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 
 // Mapbox GL JS types
 interface MapboxGL {
   Map: any;
   Marker: any;
-  Popup: any;
   LngLatBounds: any;
   NavigationControl: any;
 }
@@ -18,6 +17,7 @@ interface MemberLocation {
   dogName?: string;
   email?: string;
   membershipDate?: string;
+  isCurrent?: boolean;
   latitude: number;
   longitude: number;
   address: string;
@@ -26,64 +26,19 @@ interface MemberLocation {
 interface MembersMapProps {
   locations: MemberLocation[];
   onClientClick: (clientId: string) => void;
+  fitBoundsKey?: number;
+  mapboxgl: MapboxGL | null;
+  mapRef: React.MutableRefObject<any>;
+  mapContainerRef: React.RefObject<HTMLDivElement | null>;
 }
 
-export default function MembersMap({ locations, onClientClick }: MembersMapProps) {
-  const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<any>(null);
-  const [mapboxgl, setMapboxgl] = useState<MapboxGL | null>(null);
+export default function MembersMap({ locations, onClientClick, fitBoundsKey, mapboxgl, mapRef, mapContainerRef }: MembersMapProps) {
   const markersRef = useRef<any[]>([]);
-  const hasInitializedBounds = useRef(false);
-
-  // Dynamically import Mapbox GL JS
-  useEffect(() => {
-    const loadMapbox = async () => {
-      try {
-        const mapboxModule = await import('mapbox-gl');
-        const mapboxgl = mapboxModule.default;
-        
-        // Set access token
-        mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || '';
-        
-        setMapboxgl(mapboxgl);
-      } catch (error) {
-        console.error('Failed to load Mapbox GL JS:', error);
-      }
-    };
-
-    loadMapbox();
-  }, []);
-
-  // Initialize map
-  useEffect(() => {
-    if (!mapboxgl || !mapContainer.current || map.current) return;
-
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/streets-v12',
-      center: [-2.5, 54.5], // Center on UK
-      zoom: 5.5
-    });
-
-    // Add navigation controls
-    map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
-
-    // Force resize after load to fix h-full sizing in Chrome/mobile
-    map.current.once('load', () => {
-      map.current?.resize();
-    });
-
-    return () => {
-      if (map.current) {
-        map.current.remove();
-        map.current = null;
-      }
-    };
-  }, [mapboxgl]);
+  const prevFitBoundsKey = useRef<number | undefined>(undefined);
 
   // Add markers when locations change
   useEffect(() => {
-    if (!map.current || !mapboxgl || !locations.length) return;
+    if (!mapRef.current || !mapboxgl || !locations.length) return;
 
     const addMarkers = () => {
       // Clear existing markers
@@ -93,69 +48,63 @@ export default function MembersMap({ locations, onClientClick }: MembersMapProps
       const bounds = new mapboxgl.LngLatBounds();
 
       locations.forEach(location => {
-        // Create Google Maps-style pin marker element
+        const isCurrent = location.isCurrent !== false; // default to current styling if not specified
+        const pinColor = isCurrent ? '#4e6749' : '#9ca3af';
+
         const markerElement = document.createElement('div');
         markerElement.className = 'mapbox-marker';
+        markerElement.style.cursor = 'pointer';
         markerElement.innerHTML = `
-          <svg width="32" height="42" viewBox="0 0 32 42" fill="none" xmlns="http://www.w3.org/2000/svg" style="cursor: pointer; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">
-            <path d="M16 0C7.163 0 0 7.163 0 16C0 28 16 42 16 42C16 42 32 28 32 16C32 7.163 24.837 0 16 0Z" fill="#5a6f54"/>
-            <circle cx="16" cy="16" r="6" fill="white"/>
+          <svg width="36" height="46" viewBox="0 0 36 46" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 2px 6px rgba(0,0,0,0.25)); transition: transform 0.1s;">
+            <path d="M18 0C8.059 0 0 8.059 0 18C0 31.5 18 46 18 46C18 46 36 31.5 36 18C36 8.059 27.941 0 18 0Z" fill="${pinColor}"/>
+            <circle cx="18" cy="18" r="7" fill="white"/>
           </svg>
         `;
 
-        // Add click handler to open client modal
+        markerElement.addEventListener('mouseenter', () => {
+          const svg = markerElement.querySelector('svg') as SVGElement;
+          if (svg) svg.style.transform = 'scale(1.15)';
+        });
+        markerElement.addEventListener('mouseleave', () => {
+          const svg = markerElement.querySelector('svg') as SVGElement;
+          if (svg) svg.style.transform = 'scale(1)';
+        });
         markerElement.addEventListener('click', () => {
           onClientClick(location.clientId);
         });
 
-        // Create marker
         const marker = new mapboxgl.Marker(markerElement)
           .setLngLat([location.longitude, location.latitude])
-          .addTo(map.current);
+          .addTo(mapRef.current);
 
         markersRef.current.push(marker);
-
-        // Extend bounds
         bounds.extend([location.longitude, location.latitude]);
       });
 
-      // Fit map to show all markers only on initial load
-      if (locations.length > 0 && !hasInitializedBounds.current) {
-        map.current.fitBounds(bounds, {
-          padding: 50,
-          maxZoom: 12
-        });
-        hasInitializedBounds.current = true;
+      // Re-fit bounds when fitBoundsKey changes or on first load
+      const shouldFit = fitBoundsKey !== prevFitBoundsKey.current;
+      if (shouldFit) {
+        mapRef.current.fitBounds(bounds, { padding: 80, maxZoom: 12, duration: 800 });
+        prevFitBoundsKey.current = fitBoundsKey;
       }
     };
 
-    // Wait for map style to be loaded before adding markers (fixes Chrome/mobile timing)
-    if (map.current.isStyleLoaded()) {
+    if (mapRef.current.isStyleLoaded()) {
       addMarkers();
     } else {
-      map.current.once('load', addMarkers);
+      mapRef.current.once('load', addMarkers);
     }
-  }, [locations, mapboxgl, onClientClick]);
+  }, [locations, mapboxgl, onClientClick, fitBoundsKey, mapRef]);
 
-  if (!mapboxgl) {
-    return (
-      <div className="flex items-center justify-center h-96 bg-gray-100 rounded-lg">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600 mx-auto mb-2"></div>
-          <p className="text-gray-600">Loading map...</p>
-        </div>
-      </div>
-    );
-  }
+  // Clear markers when locations become empty
+  useEffect(() => {
+    if (!locations.length) {
+      markersRef.current.forEach(marker => marker.remove());
+      markersRef.current = [];
+    }
+  }, [locations]);
 
   return (
-    <div className="relative w-full h-full">
-      <div ref={mapContainer} className="w-full h-full" />
-
-      {/* Map attribution */}
-      <div className="absolute bottom-2 right-2 bg-white bg-opacity-90 px-2 py-1 rounded text-xs text-gray-600">
-        © Mapbox © OpenStreetMap
-      </div>
-    </div>
+    <div ref={mapContainerRef} className="w-full h-full" />
   );
 }
