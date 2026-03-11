@@ -95,7 +95,9 @@ export default function MembersMapModal({ isOpen, onClose }: MembersMapModalProp
         mapRef.current = null;
       }
     };
-  }, [mapboxgl]);
+  // isOpen is included so the map re-initialises when the modal opens (mapContainerRef is null while closed)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mapboxgl, isOpen]);
 
   // Resize map whenever modal opens (fixes sizing if container was hidden)
   useEffect(() => {

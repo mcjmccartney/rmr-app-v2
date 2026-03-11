@@ -137,11 +137,12 @@ export default function FinancesPage() {
         console.error('Finances error:', financesError);
       }
 
-      // Fetch memberships
+      // Fetch memberships (high limit to avoid Supabase's default 1000-row cap)
       const { data: membershipsData, error: membershipsError } = await supabase
         .from('memberships')
         .select('*')
-        .order('date', { ascending: false });
+        .order('date', { ascending: false })
+        .limit(10000);
 
       if (membershipsError) {
         console.error('Memberships error:', membershipsError);
