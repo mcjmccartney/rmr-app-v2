@@ -302,7 +302,7 @@ export async function POST(request: NextRequest) {
         const batch = membershipsToCreate.slice(i, i + batchSize);
         const { data, error } = await supabase
           .from('memberships')
-          .insert(batch)
+          .upsert(batch, { onConflict: 'email,date', ignoreDuplicates: true })
           .select('id, email, date');
 
         if (error) {
