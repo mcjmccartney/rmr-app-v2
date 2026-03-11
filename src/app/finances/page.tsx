@@ -137,16 +137,27 @@ export default function FinancesPage() {
         console.error('Finances error:', financesError);
       }
 
-      // Fetch memberships (high limit to avoid Supabase's default 1000-row cap)
-      const { data: membershipsData, error: membershipsError } = await supabase
-        .from('memberships')
-        .select('*')
-        .order('date', { ascending: false })
-        .limit(10000);
+      // Fetch all memberships with pagination (Supabase server caps at 1000 rows per request)
+      const PAGE_SIZE = 1000;
+      let allMembershipsData: any[] = [];
+      let pageFrom = 0;
+      while (true) {
+        const { data: pageData, error: membershipsError } = await supabase
+          .from('memberships')
+          .select('*')
+          .order('date', { ascending: false })
+          .range(pageFrom, pageFrom + PAGE_SIZE - 1);
 
-      if (membershipsError) {
-        console.error('Memberships error:', membershipsError);
+        if (membershipsError) {
+          console.error('Memberships error:', membershipsError);
+          break;
+        }
+        if (!pageData || pageData.length === 0) break;
+        allMembershipsData = [...allMembershipsData, ...pageData];
+        if (pageData.length < PAGE_SIZE) break;
+        pageFrom += PAGE_SIZE;
       }
+      const membershipsData = allMembershipsData;
 
       // Auto-create finance entries for months with sessions but no finance entry
       const updatedFinancesData = await autoCreateFinanceEntries(sessionsData || [], financesData || []);

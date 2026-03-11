@@ -24,19 +24,30 @@ function membershipToDbRow(membership: Partial<Membership>): Record<string, any>
 }
 
 export const membershipService = {
-  // Get all memberships
+  // Get all memberships (paginated to bypass Supabase's 1000-row server cap)
   async getAll(): Promise<Membership[]> {
-    const { data, error } = await supabase
-      .from('memberships')
-      .select('*')
-      .order('date', { ascending: false }) // Order by date column
+    const PAGE_SIZE = 1000;
+    let allData: any[] = [];
+    let from = 0;
 
-    if (error) {
-      console.error('Error fetching memberships:', error)
-      throw error
+    while (true) {
+      const { data, error } = await supabase
+        .from('memberships')
+        .select('*')
+        .order('date', { ascending: false })
+        .range(from, from + PAGE_SIZE - 1);
+
+      if (error) {
+        console.error('Error fetching memberships:', error);
+        throw error;
+      }
+      if (!data || data.length === 0) break;
+      allData = [...allData, ...data];
+      if (data.length < PAGE_SIZE) break;
+      from += PAGE_SIZE;
     }
 
-    return data?.map(dbRowToMembership) || []
+    return allData.map(dbRowToMembership);
   },
 
   // Get memberships by client ID (not used since we don't have client_id in your table)
