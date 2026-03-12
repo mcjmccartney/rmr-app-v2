@@ -32,11 +32,14 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
 
     // Approx A4 height in px (297mm * 3.78)
     const PAGE_HEIGHT = 297 * 3.78; // ~1122px
-    // Header (113px) + Middle Footer (113px) = 226px
-    // Note: tempWrapper already has padding: 20px top, so we don't subtract it here
-    const CONTENT_MAX_MIDDLE = PAGE_HEIGHT - 226;
-    // Header (113px) + Final Footer - adjusted to allow ~950px for Action Points + ~110px for Reminder = ~1060px total
-    const CONTENT_MAX_FINAL = PAGE_HEIGHT - 62.66;
+    const HEADER_HEIGHT = 113;
+    const FOOTER_HEIGHT = 113;
+    const GAP = 10; // minimum clearance above the footer
+
+    // Content budget: full page minus header, footer, and the gap
+    // Action points squeeze as close as possible while staying above the footer
+    const CONTENT_MAX_MIDDLE = PAGE_HEIGHT - HEADER_HEIGHT - FOOTER_HEIGHT - GAP;
+    const CONTENT_MAX_FINAL   = PAGE_HEIGHT - HEADER_HEIGHT - FOOTER_HEIGHT - GAP;
 
     const tempWrapper = document.createElement('div');
     tempWrapper.style.position = 'absolute';
@@ -66,8 +69,9 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
       </p>
     `;
     tempWrapper.appendChild(reminderBlock);
-    // Reminder height + 93px footer space
-    const REMINDER_HEIGHT = reminderBlock.offsetHeight + 93;
+    // Total vertical space the reminder occupies: its own text height, plus the
+    // FOOTER_HEIGHT + GAP clearance it needs above the footer image
+    const REMINDER_HEIGHT = reminderBlock.offsetHeight + FOOTER_HEIGHT + GAP;
     tempWrapper.innerHTML = '';
 
     const builtPages: EditableActionPoint[][] = [];
@@ -287,7 +291,7 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
                 <div
                   style={{
                     position: 'absolute',
-                    bottom: '80px',
+                    bottom: '123px',
                     left: '2rem',
                     right: '2rem',
                     fontFamily: 'Arial, sans-serif'
