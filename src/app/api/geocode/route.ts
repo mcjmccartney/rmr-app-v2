@@ -8,32 +8,28 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Address is required' }, { status: 400 });
     }
 
-    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-    if (!apiKey) {
-      return NextResponse.json({ error: 'Google Maps API key not configured' }, { status: 500 });
+    const accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
+    if (!accessToken) {
+      return NextResponse.json({ error: 'Mapbox access token not configured' }, { status: 500 });
     }
 
-    // Use Google Maps Geocoding API (supports worldwide postcodes/addresses)
+    // Use Mapbox Geocoding API (same token already used for the map tiles)
     const response = await fetch(
-      `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${apiKey}`
+      `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(address)}.json?access_token=${accessToken}&limit=1`
     );
 
     if (!response.ok) {
-      throw new Error(`Google Maps API error: ${response.status}`);
+      throw new Error(`Mapbox API error: ${response.status}`);
     }
 
     const data = await response.json();
 
-    if (data.status === 'OK' && data.results && data.results.length > 0) {
-      const { lat, lng } = data.results[0].geometry.location;
+    if (data.features && data.features.length > 0) {
+      const [lng, lat] = data.features[0].center;
       return NextResponse.json({ lat, lng });
     }
 
-    if (data.status === 'ZERO_RESULTS') {
-      return NextResponse.json({ error: 'No results found' }, { status: 404 });
-    }
-
-    return NextResponse.json({ error: `Geocoding failed: ${data.status}` }, { status: 500 });
+    return NextResponse.json({ error: 'No results found' }, { status: 404 });
 
   } catch (error) {
     console.error('Geocoding error:', error);
