@@ -34,12 +34,10 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
     const PAGE_HEIGHT = 297 * 3.78; // ~1122px
     const HEADER_HEIGHT = 113;
     const FOOTER_HEIGHT = 113;
-    const GAP = 10; // minimum clearance above the footer
 
-    // Content budget: full page minus header, footer, and the gap
-    // Action points squeeze as close as possible while staying above the footer
-    const CONTENT_MAX_MIDDLE = PAGE_HEIGHT - HEADER_HEIGHT - FOOTER_HEIGHT - GAP;
-    const CONTENT_MAX_FINAL   = PAGE_HEIGHT - HEADER_HEIGHT - FOOTER_HEIGHT - GAP;
+    // Content budget: full page minus header and footer — action points fill right to the footer
+    const CONTENT_MAX_MIDDLE = PAGE_HEIGHT - HEADER_HEIGHT - FOOTER_HEIGHT;
+    const CONTENT_MAX_FINAL   = PAGE_HEIGHT - HEADER_HEIGHT - FOOTER_HEIGHT;
 
     const tempWrapper = document.createElement('div');
     tempWrapper.style.position = 'absolute';
@@ -69,9 +67,9 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
       </p>
     `;
     tempWrapper.appendChild(reminderBlock);
-    // Total vertical space the reminder occupies: its own text height, plus the
-    // FOOTER_HEIGHT + GAP clearance it needs above the footer image
-    const REMINDER_HEIGHT = reminderBlock.offsetHeight + FOOTER_HEIGHT + GAP;
+    // Total vertical space the reminder occupies: its own text height plus the
+    // FOOTER_HEIGHT clearance it needs to sit above the footer image
+    const REMINDER_HEIGHT = reminderBlock.offsetHeight + FOOTER_HEIGHT;
     tempWrapper.innerHTML = '';
 
     const builtPages: EditableActionPoint[][] = [];
@@ -291,7 +289,7 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
                 <div
                   style={{
                     position: 'absolute',
-                    bottom: '123px',
+                    bottom: '113px',
                     left: '2rem',
                     right: '2rem',
                     fontFamily: 'Arial, sans-serif'
