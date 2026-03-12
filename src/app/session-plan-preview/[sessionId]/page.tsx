@@ -166,9 +166,10 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
         fits = pageHeight <= contentMax;
       }
 
-      // If it's the last overall, always use final footer
+      // If it's the last overall, reserve space for the reminder so it always
+      // fits on the same page as the last action point
       if (isLastOverall) {
-        contentMax = CONTENT_MAX_FINAL;
+        contentMax = CONTENT_MAX_FINAL - REMINDER_HEIGHT;
         fits = pageHeight <= contentMax;
       }
 
