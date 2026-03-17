@@ -17,6 +17,7 @@ import { auditService } from '@/services/auditService';
 import { dismissedDuplicatesService } from '@/services/dismissedDuplicatesService';
 import { membershipExpirationService } from '@/services/membershipExpirationService';
 import { ClientEmailAliasService, ClientEmailAlias } from '@/services/clientEmailAliasService';
+import { triggerSessionWebhook } from '@/lib/webhooks';
 import { sessionParticipantService } from '@/services/sessionParticipantService';
 import { membershipPairingService } from '@/services/membershipPairingService';
 import { useAuth } from '@/context/AuthContext';
@@ -1090,13 +1091,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
 
         // Trigger the webhook for Group/RMR Live sessions
-        await fetch(process.env.NEXT_PUBLIC_MAKE_WEBHOOK_SESSION_URL!, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(minimalWebhookData)
-        });
+        await triggerSessionWebhook(minimalWebhookData);
 
         return;
       }
@@ -1209,15 +1204,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         createCalendarEvent: false // App always creates calendar events directly (Make.com should NOT create)
       };
 
-      webhookPromises.push(
-        fetch(process.env.NEXT_PUBLIC_MAKE_WEBHOOK_SESSION_URL!, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(webhookDataWithFlags)
-        })
-      );
+      webhookPromises.push(triggerSessionWebhook(webhookDataWithFlags));
       webhookNames.push('session webhook (new session created)');
 
       const responses = await Promise.allSettled(webhookPromises);
@@ -1433,13 +1420,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         };
 
 
-        const response = await fetch(process.env.NEXT_PUBLIC_MAKE_WEBHOOK_SESSION_URL!, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(minimalWebhookData)
-        });
+        const response = await triggerSessionWebhook(minimalWebhookData);
 
         if (response.ok) {
         } else {
@@ -1524,14 +1505,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
 
 
-      // Send webhook to Make.com
-      const response = await fetch(process.env.NEXT_PUBLIC_MAKE_WEBHOOK_SESSION_URL!, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(webhookData)
-      });
+      // Send webhook to Make.com and n8n
+      const response = await triggerSessionWebhook(webhookData);
 
       if (response.ok) {
       } else {
@@ -2235,14 +2210,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       };
 
 
-      // Send webhook to Make.com
-      const response = await fetch(process.env.NEXT_PUBLIC_MAKE_WEBHOOK_SESSION_URL!, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(webhookData)
-      });
+      // Send webhook to Make.com and n8n
+      const response = await triggerSessionWebhook(webhookData);
 
       if (response.ok) {
       } else {

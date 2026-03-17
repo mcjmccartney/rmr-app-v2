@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { verifyWebhookApiKey } from '@/lib/webhookAuth';
 import { paymentService } from '@/services/paymentService';
 import { Session, Client } from '@/types';
+import { triggerSessionWebhook } from '@/lib/webhooks';
 
 // Daily webhook endpoint - triggered by Supabase cron job at 8:00 AM UTC
 export async function POST(request: NextRequest) {
@@ -44,7 +45,7 @@ export async function POST(request: NextRequest) {
     const clients = clientsData || [];
 
     // Process webhooks function
-    const processWebhooks = async (sessions: any[], clients: any[], targetDays: number, webhookUrl: string) => {
+    const processWebhooks = async (sessions: any[], clients: any[], targetDays: number) => {
       const now = new Date();
       now.setHours(0, 0, 0, 0); // Reset to midnight for accurate calendar day comparison
       const results: any[] = [];
@@ -188,11 +189,7 @@ export async function POST(request: NextRequest) {
 
           console.log(`[DAILY-WEBHOOKS] Sending ${targetDays}-day webhook for ${client.first_name} ${client.last_name}`);
 
-          const response = await fetch(webhookUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(webhookData)
-          });
+          const response = await triggerSessionWebhook(webhookData);
 
           if (response.ok) {
             results.push({
@@ -228,8 +225,7 @@ export async function POST(request: NextRequest) {
     const sevenDayResult = await processWebhooks(
       sessions,
       clients,
-      7, // targetDays = 7
-      process.env.NEXT_PUBLIC_MAKE_WEBHOOK_SESSION_URL!
+      7 // targetDays = 7
     );
 
     // Process 3-day unpaid payment reminder webhooks
@@ -238,8 +234,7 @@ export async function POST(request: NextRequest) {
     const fourDayResult = await processWebhooks(
       unpaidSessions,
       clients,
-      3,
-      process.env.NEXT_PUBLIC_MAKE_WEBHOOK_SESSION_URL!
+      3
     );
 
     // 12-day webhooks are disabled

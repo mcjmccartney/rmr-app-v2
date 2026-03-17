@@ -3,8 +3,9 @@ import { createClient } from '@supabase/supabase-js';
 import { verifyWebhookApiKey } from '@/lib/webhookAuth';
 import { paymentService } from '@/services/paymentService';
 import { Session, Client } from '@/types';
+import { triggerSessionWebhook } from '@/lib/webhooks';
 
-async function processWebhooks(sessions: any[], clients: any[], targetDays: number, webhookUrl: string, supabase: any) {
+async function processWebhooks(sessions: any[], clients: any[], targetDays: number, supabase: any) {
   const now = new Date();
   now.setHours(0, 0, 0, 0); // Reset to midnight for accurate calendar day comparison
   const results: any[] = [];
@@ -182,11 +183,7 @@ async function processWebhooks(sessions: any[], clients: any[], targetDays: numb
         console.log(`[COMBINED-WEBHOOKS] Keeping existing calendar event for Online session ${session.id} (has Meet link: ${session.google_meet_link || 'none'})`);
       }
 
-      const response = await fetch(webhookUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(webhookData)
-      });
+      const response = await triggerSessionWebhook(webhookData);
 
       if (response.ok) {
         results.push({
@@ -263,7 +260,6 @@ export async function POST(request: NextRequest) {
       sessions,
       clients,
       7, // targetDays = 7
-      process.env.NEXT_PUBLIC_MAKE_WEBHOOK_SESSION_URL!,
       supabase
     );
 
