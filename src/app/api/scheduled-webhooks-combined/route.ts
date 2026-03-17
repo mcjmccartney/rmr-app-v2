@@ -5,7 +5,7 @@ import { paymentService } from '@/services/paymentService';
 import { Session, Client } from '@/types';
 import { fireSessionWebhooks } from '@/lib/webhooks';
 
-async function processWebhooks(sessions: any[], clients: any[], targetDays: number, supabase: any) {
+async function processWebhooks(sessions: any[], clients: any[], targetDays: number, aliasesByClient: { [clientId: string]: string[] }) {
   const now = new Date();
   now.setHours(0, 0, 0, 0); // Reset to midnight for accurate calendar day comparison
   const results: any[] = [];
@@ -96,13 +96,20 @@ async function processWebhooks(sessions: any[], clients: any[], targetDays: numb
       // Generate payment link
       const paymentLink = paymentService.generatePaymentLink(sessionForPayment, clientForPayment);
 
+      const clientEmails = client.email
+        ? [client.email, ...(aliasesByClient[client.id] || []).filter((e: string) => e !== client.email)]
+        : (aliasesByClient[client.id] || []);
+      const partnerFirstName = client.partner_name ? client.partner_name.trim().split(/\s+/)[0] : null;
+      const clientFirstNameDisplay = partnerFirstName ? `${client.first_name} & ${partnerFirstName}` : client.first_name;
+
       const webhookData = {
         sessionId: session.id,
         clientId: session.client_id,
         clientName: `${client.first_name} ${client.last_name}`.trim(),
-        clientFirstName: client.first_name,
+        clientFirstName: clientFirstNameDisplay,
         clientLastName: client.last_name,
         clientEmail: client.email,
+        clientEmails,
         address: client.address || '',
         dogName: session.dog_name || client.dog_name || '',
         sessionType: session.session_type,
@@ -254,13 +261,21 @@ export async function POST(request: NextRequest) {
     const sessions = sessionsData || [];
     const clients = clientsData || [];
 
+    // Fetch all email aliases (keyed by client_id)
+    const { data: aliasesData } = await supabase.from('client_email_aliases').select('*');
+    const aliasesByClient: { [clientId: string]: string[] } = {};
+    (aliasesData || []).forEach((row: any) => {
+      if (!aliasesByClient[row.client_id]) aliasesByClient[row.client_id] = [];
+      aliasesByClient[row.client_id].push(row.email);
+    });
+
     // Process 7-day webhooks (sessions exactly 7 days away)
     console.log('[COMBINED WEBHOOKS] Processing 7-day webhooks...');
     const sevenDayResult = await processWebhooks(
       sessions,
       clients,
       7, // targetDays = 7
-      supabase
+      aliasesByClient
     );
 
     // 12-day webhooks are disabled

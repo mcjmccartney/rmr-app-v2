@@ -44,6 +44,14 @@ export async function POST(request: NextRequest) {
     const sessions = sessionsData || [];
     const clients = clientsData || [];
 
+    // Fetch all email aliases (keyed by client_id)
+    const { data: aliasesData } = await supabase.from('client_email_aliases').select('*');
+    const aliasesByClient: { [clientId: string]: string[] } = {};
+    (aliasesData || []).forEach((row: any) => {
+      if (!aliasesByClient[row.client_id]) aliasesByClient[row.client_id] = [];
+      aliasesByClient[row.client_id].push(row.email);
+    });
+
     // Process webhooks function
     const processWebhooks = async (sessions: any[], clients: any[], targetDays: number) => {
       const now = new Date();
@@ -109,13 +117,20 @@ export async function POST(request: NextRequest) {
           // Generate payment link
           const paymentLink = paymentService.generatePaymentLink(sessionForPayment, clientForPayment);
 
+          const clientEmails = client.email
+            ? [client.email, ...(aliasesByClient[client.id] || []).filter((e: string) => e !== client.email)]
+            : (aliasesByClient[client.id] || []);
+          const partnerFirstName = client.partner_name ? client.partner_name.trim().split(/\s+/)[0] : null;
+          const clientFirstNameDisplay = partnerFirstName ? `${client.first_name} & ${partnerFirstName}` : client.first_name;
+
           const webhookData = {
             sessionId: session.id,
             clientId: session.client_id,
             clientName: `${client.first_name} ${client.last_name}`.trim(),
-            clientFirstName: client.first_name,
+            clientFirstName: clientFirstNameDisplay,
             clientLastName: client.last_name,
             clientEmail: client.email,
+            clientEmails,
             address: client.address || '',
             dogName: session.dog_name || client.dog_name || '',
             sessionType: session.session_type,
