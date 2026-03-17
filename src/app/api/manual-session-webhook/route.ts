@@ -152,9 +152,9 @@ export async function POST(request: NextRequest) {
         // Generate payment link
         const paymentLink = paymentService.generatePaymentLink(sessionForPayment, clientForPayment);
 
-        const clientEmails = client.email
+        const clientEmails = (client.email
           ? [client.email, ...(aliasesByClient[client.id] || []).filter((e: string) => e !== client.email)]
-          : (aliasesByClient[client.id] || []);
+          : (aliasesByClient[client.id] || [])).join(', ');
         const partnerFirstName = client.partner_name ? client.partner_name.trim().split(/\s+/)[0] : null;
         const clientFirstNameDisplay = partnerFirstName ? `${client.first_name} & ${partnerFirstName}` : client.first_name;
 
