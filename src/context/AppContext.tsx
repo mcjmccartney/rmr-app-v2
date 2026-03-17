@@ -17,7 +17,7 @@ import { auditService } from '@/services/auditService';
 import { dismissedDuplicatesService } from '@/services/dismissedDuplicatesService';
 import { membershipExpirationService } from '@/services/membershipExpirationService';
 import { ClientEmailAliasService, ClientEmailAlias } from '@/services/clientEmailAliasService';
-import { triggerSessionWebhook } from '@/lib/webhooks';
+import { fireSessionWebhooks } from '@/lib/webhooks';
 import { sessionParticipantService } from '@/services/sessionParticipantService';
 import { membershipPairingService } from '@/services/membershipPairingService';
 import { useAuth } from '@/context/AuthContext';
@@ -1091,7 +1091,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
 
         // Trigger the webhook for Group/RMR Live sessions
-        await triggerSessionWebhook(minimalWebhookData);
+        await fireSessionWebhooks(minimalWebhookData);
 
         return;
       }
@@ -1204,7 +1204,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         createCalendarEvent: false // App always creates calendar events directly (Make.com should NOT create)
       };
 
-      webhookPromises.push(triggerSessionWebhook(webhookDataWithFlags));
+      webhookPromises.push(fireSessionWebhooks(webhookDataWithFlags));
       webhookNames.push('session webhook (new session created)');
 
       const responses = await Promise.allSettled(webhookPromises);
@@ -1420,7 +1420,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         };
 
 
-        const response = await triggerSessionWebhook(minimalWebhookData);
+        const response = await fireSessionWebhooks(minimalWebhookData);
 
         if (response.ok) {
         } else {
@@ -1506,7 +1506,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
 
       // Send webhook to Make.com and n8n
-      const response = await triggerSessionWebhook(webhookData);
+      const response = await fireSessionWebhooks(webhookData);
 
       if (response.ok) {
       } else {
@@ -2211,7 +2211,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
 
       // Send webhook to Make.com and n8n
-      const response = await triggerSessionWebhook(webhookData);
+      const response = await fireSessionWebhooks(webhookData);
 
       if (response.ok) {
       } else {

@@ -3,7 +3,7 @@
  * Returns the Make.com Response so existing response.ok checks continue to work.
  * The n8n call is fire-and-forget — it never blocks or breaks the Make flow.
  */
-export async function triggerSessionWebhook(body: object): Promise<Response> {
+export async function fireSessionWebhooks(body: object): Promise<Response> {
   const makeUrl = process.env.NEXT_PUBLIC_MAKE_WEBHOOK_SESSION_URL!;
   const n8nUrl = process.env.NEXT_PUBLIC_N8N_SESSION_WEBHOOK_URL;
 

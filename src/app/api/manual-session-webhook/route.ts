@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { verifyWebhookApiKey } from '@/lib/webhookAuth';
 import { paymentService } from '@/services/paymentService';
 import { Session, Client } from '@/types';
-import { triggerSessionWebhook } from '@/lib/webhooks';
+import { fireSessionWebhooks } from '@/lib/webhooks';
 
 // Manual webhook trigger for specific sessions or dates
 export async function POST(request: NextRequest) {
@@ -176,7 +176,7 @@ export async function POST(request: NextRequest) {
 
         console.log(`[MANUAL-WEBHOOK] Sending webhook for ${client.first_name} ${client.last_name} - ${session.booking_date} ${session.booking_time}`);
 
-        const response = await triggerSessionWebhook(webhookData);
+        const response = await fireSessionWebhooks(webhookData);
 
         if (response.ok) {
           results.push({

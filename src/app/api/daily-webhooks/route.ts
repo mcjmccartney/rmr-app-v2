@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { verifyWebhookApiKey } from '@/lib/webhookAuth';
 import { paymentService } from '@/services/paymentService';
 import { Session, Client } from '@/types';
-import { triggerSessionWebhook } from '@/lib/webhooks';
+import { fireSessionWebhooks } from '@/lib/webhooks';
 
 // Daily webhook endpoint - triggered by Supabase cron job at 8:00 AM UTC
 export async function POST(request: NextRequest) {
@@ -189,7 +189,7 @@ export async function POST(request: NextRequest) {
 
           console.log(`[DAILY-WEBHOOKS] Sending ${targetDays}-day webhook for ${client.first_name} ${client.last_name}`);
 
-          const response = await triggerSessionWebhook(webhookData);
+          const response = await fireSessionWebhooks(webhookData);
 
           if (response.ok) {
             results.push({
