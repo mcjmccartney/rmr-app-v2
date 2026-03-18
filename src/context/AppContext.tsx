@@ -1313,14 +1313,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
       // Generate payment link for this session
       const paymentLink = paymentService.generatePaymentLink(session, client);
 
+      // Build email list (primary + aliases)
+      const clientAliases = state.clientEmailAliases[client.id] || [];
+      const aliasEmails = clientAliases.map(a => a.email).filter(Boolean);
+      const clientEmails = (client.email ? [client.email, ...aliasEmails] : aliasEmails).join(', ');
+
+      // Build first name display (include partner first name if set)
+      const partnerFirstName = client.partnerName ? client.partnerName.trim().split(/\s+/)[0] : null;
+      const clientFirstNameDisplay = partnerFirstName ? `${client.firstName} & ${partnerFirstName}` : client.firstName;
+
       // Prepare webhook data (same structure as new session webhook)
       const webhookData = {
         sessionId: session.id,
         clientId: session.clientId,
         clientName: `${client.firstName} ${client.lastName}`.trim(),
-        clientFirstName: client.firstName,
+        clientFirstName: clientFirstNameDisplay,
         clientLastName: client.lastName,
         clientEmail: client.email,
+        clientEmails,
         address: client.address || '',
         dogName: sessionDogName || '',
         sessionType: session.sessionType,
