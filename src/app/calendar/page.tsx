@@ -614,7 +614,7 @@ export default function CalendarPage() {
       <div className="bg-white flex flex-col flex-1 overflow-hidden">
 
         {/* Calendar Grid - Fills remaining space */}
-        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+        <div className="flex-1 flex flex-col md:min-h-0 overflow-y-auto md:overflow-hidden">
           <div className={`grid gap-1 flex-shrink-0 ${hideWeekends ? 'grid-cols-5' : 'grid-cols-7'}`}>
             {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
               .filter((_, index) => !hideWeekends || index < 5)
@@ -625,7 +625,7 @@ export default function CalendarPage() {
               ))}
           </div>
 
-          <div className={`grid gap-1 flex-1 min-h-0 auto-rows-fr ${hideWeekends ? 'grid-cols-5' : 'grid-cols-7'}`}>
+          <div className={`grid gap-1 flex-1 md:min-h-0 auto-rows-[minmax(5.5rem,1fr)] md:auto-rows-fr ${hideWeekends ? 'grid-cols-5' : 'grid-cols-7'}`}>
             {daysInMonth
               .filter(day => {
                 if (!hideWeekends) return true;
@@ -642,7 +642,7 @@ export default function CalendarPage() {
                 return (
                 <div
                   key={day.toISOString()}
-                  className={`flex flex-col p-1 min-h-0 border-r border-b border-gray-100 last:border-r-0 cursor-default ${
+                  className={`flex flex-col p-1 md:min-h-0 border-r border-b border-gray-100 last:border-r-0 cursor-default ${
                     isToday ? 'ring-2 ring-brand-primary ring-inset' : ''
                   }`}
                   onClick={() => handleDayClick(day, sessions)}
@@ -656,7 +656,7 @@ export default function CalendarPage() {
                   }`}>{dayNumber}</div>
                   <div className={`space-y-1 flex-1 min-h-0 ${
                     // Desktop: scrollable with custom scrollbar, Mobile: overflow hidden
-                    'md:overflow-y-auto calendar-day-scroll overflow-hidden'
+                    'md:overflow-y-auto calendar-day-scroll'
                   }`}>
                     {/* Show all sessions - CSS will handle mobile vs desktop display */}
                     {sessions.map((session, sessionIndex) => {
