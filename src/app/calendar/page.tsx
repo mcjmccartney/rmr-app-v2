@@ -614,12 +614,12 @@ export default function CalendarPage() {
       <div className="bg-white flex flex-col flex-1 overflow-hidden">
 
         {/* Calendar Grid - Fills remaining space */}
-        <div className="flex-1 px-4 py-3 flex flex-col min-h-0 overflow-hidden">
-          <div className={`grid gap-1 mb-3 flex-shrink-0 ${hideWeekends ? 'grid-cols-5' : 'grid-cols-7'}`}>
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+          <div className={`grid gap-1 flex-shrink-0 ${hideWeekends ? 'grid-cols-5' : 'grid-cols-7'}`}>
             {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
               .filter((_, index) => !hideWeekends || index < 5)
               .map(day => (
-                <div key={day} className="text-center text-sm font-medium text-gray-500 py-3">
+                <div key={day} className="text-center text-sm font-medium text-gray-500 py-2">
                   {day}
                 </div>
               ))}
@@ -700,8 +700,8 @@ export default function CalendarPage() {
                             handleSessionClick(session);
                           }}
                           className={`${buttonClasses} ${
-                            // Hide sessions beyond first 2 on mobile
-                            sessionIndex >= 2 ? 'hidden md:block' : ''
+                            // Hide sessions beyond first 3 on mobile
+                            sessionIndex >= 3 ? 'hidden md:block' : ''
                           } relative`}
                           style={buttonStyle}
                         >
@@ -737,9 +737,9 @@ export default function CalendarPage() {
                       );
                     })}
                     {/* Only show "+X more" on mobile */}
-                    {sessions.length > 2 && (
+                    {sessions.length > 3 && (
                       <div className="text-xs text-amber-800 font-medium flex-shrink-0 md:hidden">
-                        +{sessions.length - 2} more
+                        +{sessions.length - 3} more
                       </div>
                     )}
                   </div>

@@ -101,7 +101,7 @@ export default function FloatingActionButton() {
             ? 'bg-gray-600 text-white'
             : 'bg-amber-800 text-white'
           }
-          ${pathname === '/calendar' ? 'bottom-14' : 'bottom-6'}
+          bottom-6
         `}
       >
         {isExpanded ? (
