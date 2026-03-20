@@ -654,7 +654,7 @@ export default function CalendarPage() {
                         ? 'text-gray-900'
                         : 'text-gray-400'
                   }`}>{dayNumber}</div>
-                  <div className={`space-y-1 flex-1 min-h-0 ${
+                  <div className={`space-y-0.5 flex-1 min-h-0 ${
                     // Desktop: scrollable with custom scrollbar, Mobile: overflow hidden
                     'md:overflow-y-auto calendar-day-scroll overflow-hidden'
                   }`}>
@@ -706,7 +706,7 @@ export default function CalendarPage() {
                           style={buttonStyle}
                         >
                           {/* Show only time on mobile, full text on desktop */}
-                          <span className="block sm:hidden text-[10px]">{timeOnly}</span>
+                          <span className="block sm:hidden">{timeOnly}</span>
                           <span className="hidden sm:block">{fullDisplayText}</span>
 
                           {/* Icons container */}
