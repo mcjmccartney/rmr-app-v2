@@ -1128,8 +1128,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const aliasEmails = clientAliases.map(a => a.email).filter(Boolean);
       const clientEmails = (client.email ? [client.email, ...aliasEmails] : aliasEmails).join(', ');
 
-      // Build first name display (include partner first name if set)
-      const partnerFirstName = client.partnerName ? client.partnerName.trim().split(/\s+/)[0] : null;
+      // Build first name display: use partnerName field, or fall back to looking up
+      // the partner client by alias email (covers couples with linked email addresses)
+      let partnerFirstName: string | null = null;
+      if (client.partnerName) {
+        partnerFirstName = client.partnerName.trim().split(/\s+/)[0];
+      } else if (aliasEmails.length > 0) {
+        const aliasEmailSet = new Set(aliasEmails.map(e => e.toLowerCase()));
+        const partnerClient = state.clients.find(c =>
+          c.id !== client.id && c.email && aliasEmailSet.has(c.email.toLowerCase())
+        );
+        if (partnerClient) partnerFirstName = partnerClient.firstName;
+      }
       const clientFirstNameDisplay = partnerFirstName ? `${client.firstName} & ${partnerFirstName}` : client.firstName;
 
       // Prepare session data for Make.com
@@ -1318,8 +1328,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const aliasEmails = clientAliases.map(a => a.email).filter(Boolean);
       const clientEmails = (client.email ? [client.email, ...aliasEmails] : aliasEmails).join(', ');
 
-      // Build first name display (include partner first name if set)
-      const partnerFirstName = client.partnerName ? client.partnerName.trim().split(/\s+/)[0] : null;
+      // Build first name display: use partnerName field, or fall back to looking up
+      // the partner client by alias email (covers couples with linked email addresses)
+      let partnerFirstName: string | null = null;
+      if (client.partnerName) {
+        partnerFirstName = client.partnerName.trim().split(/\s+/)[0];
+      } else if (aliasEmails.length > 0) {
+        const aliasEmailSet = new Set(aliasEmails.map(e => e.toLowerCase()));
+        const partnerClient = state.clients.find(c =>
+          c.id !== client.id && c.email && aliasEmailSet.has(c.email.toLowerCase())
+        );
+        if (partnerClient) partnerFirstName = partnerClient.firstName;
+      }
       const clientFirstNameDisplay = partnerFirstName ? `${client.firstName} & ${partnerFirstName}` : client.firstName;
 
       // Prepare webhook data (same structure as new session webhook)
@@ -1484,8 +1504,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const aliasEmails = clientAliases.map(a => a.email).filter(Boolean);
       const clientEmails = (client.email ? [client.email, ...aliasEmails] : aliasEmails).join(', ');
 
-      // Build first name display (include partner first name if set)
-      const partnerFirstName = client.partnerName ? client.partnerName.trim().split(/\s+/)[0] : null;
+      // Build first name display: use partnerName field, or fall back to looking up
+      // the partner client by alias email (covers couples with linked email addresses)
+      let partnerFirstName: string | null = null;
+      if (client.partnerName) {
+        partnerFirstName = client.partnerName.trim().split(/\s+/)[0];
+      } else if (aliasEmails.length > 0) {
+        const aliasEmailSet = new Set(aliasEmails.map(e => e.toLowerCase()));
+        const partnerClient = state.clients.find(c =>
+          c.id !== client.id && c.email && aliasEmailSet.has(c.email.toLowerCase())
+        );
+        if (partnerClient) partnerFirstName = partnerClient.firstName;
+      }
       const clientFirstNameDisplay = partnerFirstName ? `${client.firstName} & ${partnerFirstName}` : client.firstName;
 
       // Prepare webhook data with session flags

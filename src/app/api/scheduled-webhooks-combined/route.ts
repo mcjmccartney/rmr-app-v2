@@ -99,7 +99,15 @@ async function processWebhooks(sessions: any[], clients: any[], targetDays: numb
       const clientEmails = (client.email
         ? [client.email, ...(aliasesByClient[client.id] || []).filter((e: string) => e !== client.email)]
         : (aliasesByClient[client.id] || [])).join(', ');
-      const partnerFirstName = client.partner_name ? client.partner_name.trim().split(/\s+/)[0] : null;
+      const aliasOnlyEmails = (aliasesByClient[client.id] || []).filter((e: string) => e !== client.email);
+      let partnerFirstName = null;
+      if (client.partner_name) {
+        partnerFirstName = client.partner_name.trim().split(/\s+/)[0];
+      } else if (aliasOnlyEmails.length > 0) {
+        const aliasEmailSet = new Set(aliasOnlyEmails.map((e: string) => e.toLowerCase()));
+        const partnerClient = clients.find((c: any) => c.id !== client.id && c.email && aliasEmailSet.has(c.email.toLowerCase()));
+        if (partnerClient) partnerFirstName = partnerClient.first_name;
+      }
       const clientFirstNameDisplay = partnerFirstName ? `${client.first_name} & ${partnerFirstName}` : client.first_name;
 
       const webhookData = {
