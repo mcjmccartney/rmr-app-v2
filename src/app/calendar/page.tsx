@@ -702,7 +702,7 @@ export default function CalendarPage() {
                           className={`${buttonClasses} ${
                             // Hide sessions beyond first 3 on mobile
                             sessionIndex >= 3 ? 'hidden md:block' : ''
-                          } !py-0.5 md:!py-1 relative`}
+                          } !py-[3px] md:!py-1 relative`}
                           style={buttonStyle}
                         >
                           {/* Show only time on mobile, full text on desktop */}
