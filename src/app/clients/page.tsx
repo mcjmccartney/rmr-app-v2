@@ -19,7 +19,7 @@ import * as XLSX from 'xlsx';
 function ClientsPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { state, updateMembershipStatuses } = useApp();
+  const { state, updateMembershipStatuses, updateClient } = useApp();
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [addModalType, setAddModalType] = useState<'session' | 'client'>('client');
@@ -42,15 +42,6 @@ function ClientsPageContent() {
   // Persistent undo state — loaded from DB on mount, survives page refresh
   const [latestResetIds, setLatestResetIds] = useState<{ [clientId: string]: string }>({});
   const [previousResetDates, setPreviousResetDates] = useState<{ [clientId: string]: string | undefined }>({});
-  // Archived members state (persisted to localStorage)
-  const [archivedMemberIds, setArchivedMemberIds] = useState<Set<string>>(() => {
-    try {
-      const stored = localStorage.getItem('archivedGroupCoachingMembers');
-      return stored ? new Set(JSON.parse(stored)) : new Set();
-    } catch {
-      return new Set();
-    }
-  });
 
   // Load membership resets from database on component mount
   useEffect(() => {
@@ -262,23 +253,13 @@ function ClientsPageContent() {
   };
 
   // Handle archiving a member
-  const handleArchiveMember = (client: Client) => {
-    setArchivedMemberIds(prev => {
-      const next = new Set(prev);
-      next.add(client.id);
-      try { localStorage.setItem('archivedGroupCoachingMembers', JSON.stringify([...next])); } catch {}
-      return next;
-    });
+  const handleArchiveMember = async (client: Client) => {
+    await updateClient(client.id, { active: false });
   };
 
   // Handle unarchiving a member
-  const handleUnarchiveMember = (client: Client) => {
-    setArchivedMemberIds(prev => {
-      const next = new Set(prev);
-      next.delete(client.id);
-      try { localStorage.setItem('archivedGroupCoachingMembers', JSON.stringify([...next])); } catch {}
-      return next;
-    });
+  const handleUnarchiveMember = async (client: Client) => {
+    await updateClient(client.id, { active: true });
   };
 
   // Handle checkbox selection
@@ -712,8 +693,8 @@ function ClientsPageContent() {
           {showMembersOnly ? (
             // Grouped view for Members filter
             (() => {
-              const activeClients = filteredClients.filter(c => !archivedMemberIds.has(c.id));
-              const archivedClients = filteredClients.filter(c => archivedMemberIds.has(c.id));
+              const activeClients = filteredClients.filter(c => c.active !== false);
+              const archivedClients = filteredClients.filter(c => c.active === false);
 
               // Group active clients by membership count
               const groupedClients = activeClients.reduce((groups, client) => {
