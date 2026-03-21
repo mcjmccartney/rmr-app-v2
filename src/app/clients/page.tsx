@@ -208,17 +208,6 @@ function ClientsPageContent() {
     return Math.max(0, totalMonths);
   };
 
-  const getDisplayCount = (rawCount: number) => rawCount > 6 ? rawCount - 6 : rawCount;
-
-  const getEffectiveCount = (client: Client): number => {
-    const emails = new Set<string>();
-    if (client.email) emails.add(client.email.toLowerCase());
-    (state.clientEmailAliases[client.id] || []).forEach(a => {
-      if (a.email) emails.add(a.email.toLowerCase());
-    });
-    const membershipCount = state.memberships.filter(m => m.email && emails.has(m.email.toLowerCase())).length;
-    return getDisplayCount(membershipCount);
-  };
 
   // Handle "Added to Session" button click
   const handleAddedToSession = async (client: Client) => {
@@ -458,8 +447,8 @@ function ClientsPageContent() {
   }).sort((a, b) => {
     // Special sorting when Members filter is active
     if (showMembersOnly) {
-      const aCount = getEffectiveCount(a);
-      const bCount = getEffectiveCount(b);
+      const aCount = getMembershipCountSinceReset(a);
+      const bCount = getMembershipCountSinceReset(b);
 
       // Sort by membership count descending (highest first)
       if (aCount !== bCount) {
@@ -710,7 +699,7 @@ function ClientsPageContent() {
 
               // Group active clients by membership count
               const groupedClients = activeClients.reduce((groups, client) => {
-                const count = getEffectiveCount(client);
+                const count = getMembershipCountSinceReset(client);
                 if (!groups[count]) {
                   groups[count] = [];
                 }
@@ -829,7 +818,7 @@ function ClientsPageContent() {
                         {count} Month{count !== 1 ? 's' : ''} Since Group Coaching
                       </h3>
                       <div className="space-y-2">
-                        {groupedClients[count].map(client => renderClientCard(client, getEffectiveCount(client)))}
+                        {groupedClients[count].map(client => renderClientCard(client, getMembershipCountSinceReset(client)))}
                       </div>
                     </div>
                   ))}
