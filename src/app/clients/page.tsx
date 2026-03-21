@@ -210,6 +210,17 @@ function ClientsPageContent() {
 
   const getDisplayCount = (rawCount: number) => rawCount > 6 ? rawCount - 6 : rawCount;
 
+  const getEffectiveCount = (client: Client): number => {
+    const rawCount = getMembershipCountSinceReset(client);
+    if (rawCount > 0) return getDisplayCount(rawCount);
+    // No reset date — fall back to months since client was created
+    if (!client.createdAt) return 0;
+    const created = new Date(client.createdAt);
+    const today = new Date();
+    const months = (today.getFullYear() - created.getFullYear()) * 12 + (today.getMonth() - created.getMonth());
+    return getDisplayCount(Math.max(0, months));
+  };
+
   // Handle "Added to Session" button click
   const handleAddedToSession = async (client: Client) => {
     try {
@@ -700,7 +711,7 @@ function ClientsPageContent() {
 
               // Group active clients by membership count
               const groupedClients = activeClients.reduce((groups, client) => {
-                const count = getDisplayCount(getMembershipCountSinceReset(client));
+                const count = getEffectiveCount(client);
                 if (!groups[count]) {
                   groups[count] = [];
                 }
@@ -713,18 +724,6 @@ function ClientsPageContent() {
                 .map(Number)
                 .sort((a, b) => b - a);
 
-              // Sort the 0-months group by months since createdAt (longest members first)
-              if (groupedClients[0]) {
-                groupedClients[0].sort((a, b) => {
-                  const monthsSince = (client: Client) => {
-                    if (!client.createdAt) return 0;
-                    const created = new Date(client.createdAt);
-                    const today = new Date();
-                    return (today.getFullYear() - created.getFullYear()) * 12 + (today.getMonth() - created.getMonth());
-                  };
-                  return monthsSince(b) - monthsSince(a);
-                });
-              }
 
               const renderClientCard = (client: Client, count: number, isArchived = false) => {
                 const showAddedToSessionButton = !isArchived && count >= 6;
