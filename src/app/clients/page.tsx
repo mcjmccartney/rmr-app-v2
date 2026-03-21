@@ -459,8 +459,8 @@ function ClientsPageContent() {
   }).sort((a, b) => {
     // Special sorting when Members filter is active
     if (showMembersOnly) {
-      const aCount = getMembershipCountSinceReset(a);
-      const bCount = getMembershipCountSinceReset(b);
+      const aCount = getEffectiveCount(a);
+      const bCount = getEffectiveCount(b);
 
       // Sort by membership count descending (highest first)
       if (aCount !== bCount) {
@@ -830,7 +830,7 @@ function ClientsPageContent() {
                         {count} Month{count !== 1 ? 's' : ''} Since Group Coaching
                       </h3>
                       <div className="space-y-2">
-                        {groupedClients[count].map(client => renderClientCard(client, getMembershipCountSinceReset(client)))}
+                        {groupedClients[count].map(client => renderClientCard(client, getEffectiveCount(client)))}
                       </div>
                     </div>
                   ))}
