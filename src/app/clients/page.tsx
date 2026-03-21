@@ -211,7 +211,12 @@ function ClientsPageContent() {
   const getDisplayCount = (rawCount: number) => rawCount > 6 ? rawCount - 6 : rawCount;
 
   const getEffectiveCount = (client: Client): number => {
-    const membershipCount = state.memberships.filter(m => m.clientId === client.id).length;
+    const emails = new Set<string>();
+    if (client.email) emails.add(client.email.toLowerCase());
+    (state.clientEmailAliases[client.id] || []).forEach(a => {
+      if (a.email) emails.add(a.email.toLowerCase());
+    });
+    const membershipCount = state.memberships.filter(m => m.email && emails.has(m.email.toLowerCase())).length;
     return getDisplayCount(membershipCount);
   };
 
