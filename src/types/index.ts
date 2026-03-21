@@ -219,6 +219,7 @@ export interface Client {
   email?: string;
   address?: string;
   active: boolean;
+  archived?: boolean;
   membership: boolean;
   avatar?: string;
   behaviouralBriefId?: string;

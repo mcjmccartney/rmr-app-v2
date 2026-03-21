@@ -266,12 +266,12 @@ function ClientsPageContent() {
 
   // Handle archiving a member
   const handleArchiveMember = async (client: Client) => {
-    await updateClient(client.id, { active: false });
+    await updateClient(client.id, { archived: true });
   };
 
   // Handle unarchiving a member
   const handleUnarchiveMember = async (client: Client) => {
-    await updateClient(client.id, { active: true });
+    await updateClient(client.id, { archived: false });
   };
 
   // Handle checkbox selection
@@ -705,8 +705,8 @@ function ClientsPageContent() {
           {showMembersOnly ? (
             // Grouped view for Members filter
             (() => {
-              const activeClients = filteredClients.filter(c => c.active !== false);
-              const archivedClients = filteredClients.filter(c => c.active === false);
+              const activeClients = filteredClients.filter(c => !c.archived);
+              const archivedClients = filteredClients.filter(c => c.archived);
 
               // Group active clients by membership count
               const groupedClients = activeClients.reduce((groups, client) => {
