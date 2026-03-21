@@ -211,11 +211,8 @@ function ClientsPageContent() {
   const getDisplayCount = (rawCount: number) => rawCount > 6 ? rawCount - 6 : rawCount;
 
   const getEffectiveCount = (client: Client): number => {
-    if (!client.createdAt) return 0;
-    const created = new Date(client.createdAt);
-    const today = new Date();
-    const months = (today.getFullYear() - created.getFullYear()) * 12 + (today.getMonth() - created.getMonth());
-    return getDisplayCount(Math.max(0, months));
+    const membershipCount = state.memberships.filter(m => m.clientId === client.id).length;
+    return getDisplayCount(membershipCount);
   };
 
   // Handle "Added to Session" button click
