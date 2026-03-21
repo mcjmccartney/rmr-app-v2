@@ -208,6 +208,8 @@ function ClientsPageContent() {
     return Math.max(0, totalMonths);
   };
 
+  const getDisplayCount = (rawCount: number) => rawCount > 6 ? rawCount - 6 : rawCount;
+
   // Handle "Added to Session" button click
   const handleAddedToSession = async (client: Client) => {
     try {
@@ -698,7 +700,7 @@ function ClientsPageContent() {
 
               // Group active clients by membership count
               const groupedClients = activeClients.reduce((groups, client) => {
-                const count = getMembershipCountSinceReset(client);
+                const count = getDisplayCount(getMembershipCountSinceReset(client));
                 if (!groups[count]) {
                   groups[count] = [];
                 }
@@ -710,6 +712,19 @@ function ClientsPageContent() {
               const sortedCounts = Object.keys(groupedClients)
                 .map(Number)
                 .sort((a, b) => b - a);
+
+              // Sort the 0-months group by months since createdAt (longest members first)
+              if (groupedClients[0]) {
+                groupedClients[0].sort((a, b) => {
+                  const monthsSince = (client: Client) => {
+                    if (!client.createdAt) return 0;
+                    const created = new Date(client.createdAt);
+                    const today = new Date();
+                    return (today.getFullYear() - created.getFullYear()) * 12 + (today.getMonth() - created.getMonth());
+                  };
+                  return monthsSince(b) - monthsSince(a);
+                });
+              }
 
               const renderClientCard = (client: Client, count: number, isArchived = false) => {
                 const showAddedToSessionButton = !isArchived && count >= 6;

@@ -225,6 +225,7 @@ export interface Client {
   // behaviourQuestionnaireId removed - clients can now have multiple questionnaires
   booking_terms_signed?: boolean;
   booking_terms_signed_date?: string;
+  createdAt?: string;
 }
 
 export interface MonthlyFinance {

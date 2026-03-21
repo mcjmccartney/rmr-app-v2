@@ -21,6 +21,7 @@ function dbRowToClient(row: Record<string, any>): Client {
     // behaviourQuestionnaireId removed - clients can now have multiple questionnaires
     booking_terms_signed: row.booking_terms_signed,
     booking_terms_signed_date: row.booking_terms_signed_date,
+    createdAt: row.created_at,
   }
 }
 
