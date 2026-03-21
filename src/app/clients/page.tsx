@@ -211,9 +211,6 @@ function ClientsPageContent() {
   const getDisplayCount = (rawCount: number) => rawCount > 6 ? rawCount - 6 : rawCount;
 
   const getEffectiveCount = (client: Client): number => {
-    const rawCount = getMembershipCountSinceReset(client);
-    if (rawCount > 0) return getDisplayCount(rawCount);
-    // No reset date — fall back to months since client was created
     if (!client.createdAt) return 0;
     const created = new Date(client.createdAt);
     const today = new Date();
