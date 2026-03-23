@@ -208,6 +208,17 @@ function ClientsPageContent() {
     return Math.max(0, totalMonths);
   };
 
+  const getDisplayCount = (rawCount: number) => rawCount > 6 ? rawCount - 6 : rawCount;
+
+  const getTotalMembershipCount = (client: Client): number => {
+    const emails = new Set<string>();
+    if (client.email) emails.add(client.email.toLowerCase());
+    (state.clientEmailAliases[client.id] || []).forEach(a => {
+      if (a.email) emails.add(a.email.toLowerCase());
+    });
+    const total = state.memberships.filter(m => m.email && emails.has(m.email.toLowerCase())).length;
+    return getDisplayCount(total);
+  };
 
   // Handle "Added to Session" button click
   const handleAddedToSession = async (client: Client) => {
@@ -447,8 +458,8 @@ function ClientsPageContent() {
   }).sort((a, b) => {
     // Special sorting when Members filter is active
     if (showMembersOnly) {
-      const aCount = getMembershipCountSinceReset(a);
-      const bCount = getMembershipCountSinceReset(b);
+      const aCount = getTotalMembershipCount(a);
+      const bCount = getTotalMembershipCount(b);
 
       // Sort by membership count descending (highest first)
       if (aCount !== bCount) {
@@ -699,7 +710,7 @@ function ClientsPageContent() {
 
               // Group active clients by membership count
               const groupedClients = activeClients.reduce((groups, client) => {
-                const count = getMembershipCountSinceReset(client);
+                const count = getTotalMembershipCount(client);
                 if (!groups[count]) {
                   groups[count] = [];
                 }
@@ -818,7 +829,7 @@ function ClientsPageContent() {
                         {count} Month{count !== 1 ? 's' : ''} Since Group Coaching
                       </h3>
                       <div className="space-y-2">
-                        {groupedClients[count].map(client => renderClientCard(client, getMembershipCountSinceReset(client)))}
+                        {groupedClients[count].map(client => renderClientCard(client, getTotalMembershipCount(client)))}
                       </div>
                     </div>
                   ))}
