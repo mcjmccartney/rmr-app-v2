@@ -217,7 +217,12 @@ function ClientsPageContent() {
       if (a.email) emails.add(a.email.toLowerCase());
     });
     const total = state.memberships.filter(m => m.email && emails.has(m.email.toLowerCase())).length;
-    return getDisplayCount(total);
+    const displayed = getDisplayCount(total);
+    // If still > 6 after one deduction (raw total 13+), fall back to reset-based count
+    if (displayed > 6) {
+      return getDisplayCount(getMembershipCountSinceReset(client));
+    }
+    return displayed;
   };
 
   // Handle "Added to Session" button click
