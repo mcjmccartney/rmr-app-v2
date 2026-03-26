@@ -67,10 +67,16 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
       </p>
     `;
     tempWrapper.appendChild(reminderBlock);
-    // Total vertical space the reminder occupies: its own text height plus the
-    // FOOTER_HEIGHT clearance it needs to sit above the footer image
-    const REMINDER_HEIGHT = reminderBlock.offsetHeight + FOOTER_HEIGHT;
+    const reminderTextHeight = reminderBlock.offsetHeight;
     tempWrapper.innerHTML = '';
+
+    // Reminder is `position:absolute; bottom:80px` inside page-content.
+    // page-content height = PAGE_HEIGHT - HEADER_HEIGHT (footer is absolute, not in flow).
+    // Available height for APs when reminder is present:
+    //   page-content (1009px) - top padding (20px) - bottom gap (80px) - reminder text
+    const REMINDER_BOTTOM_GAP = 80;
+    const PAGE_CONTENT_HEIGHT = PAGE_HEIGHT - HEADER_HEIGHT;
+    const CONTENT_MAX_WITH_REMINDER = PAGE_CONTENT_HEIGHT - 20 - REMINDER_BOTTOM_GAP - reminderTextHeight;
 
     const builtPages: EditableActionPoint[][] = [];
     let currentPage: EditableActionPoint[] = [];
@@ -169,7 +175,7 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
       // If it's the last overall, reserve space for the reminder so it always
       // fits on the same page as the last action point
       if (isLastOverall) {
-        contentMax = CONTENT_MAX_FINAL - REMINDER_HEIGHT;
+        contentMax = CONTENT_MAX_WITH_REMINDER;
         fits = pageHeight <= contentMax;
       }
 
@@ -198,8 +204,7 @@ function DynamicActionPointPages({ title, editableActionPoints, isPlaywrightMode
     // The Reminder now flows naturally after Action Points with marginTop: 2rem
     // So we need to check if Action Points + Reminder fit within CONTENT_MAX_FINAL
     const lastPageHeight = measureCurrentPage();
-    const totalHeightWithReminder = lastPageHeight + REMINDER_HEIGHT;
-    const needsNewPage = totalHeightWithReminder > CONTENT_MAX_FINAL;
+    const needsNewPage = lastPageHeight > CONTENT_MAX_WITH_REMINDER;
     setNeedsSeparateReminderPage(needsNewPage);
 
     document.body.removeChild(tempWrapper);
