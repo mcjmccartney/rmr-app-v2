@@ -191,13 +191,6 @@ async function processWebhooks(sessions: any[], clients: any[], targetDays: numb
         continue;
       }
 
-      // For Online sessions with 7-day emails, keep the existing calendar event
-      // The app already created it with a Google Meet link, so just send the webhook
-      // Make.com will use the googleMeetLink from the webhook data
-      if (targetDays === 7 && session.session_type === 'Online' && session.event_id) {
-        console.log(`[COMBINED-WEBHOOKS] Keeping existing calendar event for Online session ${session.id} (has Meet link: ${session.google_meet_link || 'none'})`);
-      }
-
       const response = await fireSessionWebhooks(webhookData);
 
       if (response.ok) {
