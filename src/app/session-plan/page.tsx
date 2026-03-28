@@ -1056,8 +1056,6 @@ function SessionPlanContent() {
                           }}
                           placeholder="Describe the behaviour patterns, triggers, and context..."
                           className="w-full"
-                          maxLength={1600}
-                          showCharCount={true}
                         />
                       </div>
                     </div>
@@ -1214,8 +1212,6 @@ function SessionPlanContent() {
                                     onChange={(value) => updateEditableActionPoint(actionPointId, 'details', value)}
                                     placeholder="Action point details"
                                     className="w-full text-sm"
-                                    maxLength={2150}
-                                    showCharCount={true}
                                   />
                                 </div>
                               </div>

@@ -167,8 +167,6 @@ export default function ActionPointsPage() {
                       onChange={(value) => setAddForm({ ...addForm, details: value })}
                       placeholder="Enter action point details (use [Dog Name], [he/she], [him/her] for personalization)"
                       className="w-full"
-                      maxLength={2150}
-                      showCharCount={true}
                     />
                   </div>
                   <div className="flex gap-3">
@@ -234,8 +232,6 @@ export default function ActionPointsPage() {
                             onChange={(value) => setEditForm({ ...editForm, details: value })}
                             placeholder="Enter action point details"
                             className="w-full"
-                            maxLength={2150}
-                            showCharCount={true}
                           />
                         </div>
                         <div className="flex gap-3">
