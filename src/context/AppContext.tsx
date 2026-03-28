@@ -1809,85 +1809,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // This now deletes the old event and creates a new one for better audit trail
   const updateCalendarEvent = async (session: Session) => {
     try {
-      // Find the client for this session (if any)
+      if (!session.eventId) return;
+
       const client = session.clientId ? state.clients.find(c => c.id === session.clientId) : null;
 
-      if (!session.eventId) {
-        return;
-      }
-
-
-      // Step 1: Delete the old calendar event
-
-      const deleteCalendarWithRetry = async (retryCount = 0) => {
+      const updateWithRetry = async (retryCount = 0): Promise<boolean> => {
         const maxRetries = 2;
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+        const timeoutId = setTimeout(() => controller.abort(), 15000);
 
         try {
-
-          const deleteResponse = await fetch('/api/calendar/delete', {
+          const response = await fetch('/api/calendar/update', {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              eventId: session.eventId
-            }),
-            signal: controller.signal
-          });
-
-          clearTimeout(timeoutId);
-
-          if (deleteResponse.ok) {
-            return true;
-          } else {
-            console.error('[CALENDAR_DELETE] Failed to delete calendar event:', deleteResponse.status);
-            const errorText = await deleteResponse.text();
-            console.error('[CALENDAR_DELETE] Error response:', errorText);
-            return false;
-          }
-        } catch (fetchError) {
-          clearTimeout(timeoutId);
-
-          if (fetchError instanceof Error && fetchError.name === 'AbortError') {
-            console.error('[CALENDAR_DELETE] Calendar delete request timed out');
-          } else {
-            console.error('[CALENDAR_DELETE] Calendar delete request failed:', fetchError);
-          }
-
-          // Retry on network errors if we haven't exceeded max retries
-          if (retryCount < maxRetries) {
-            await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds before retry
-            return deleteCalendarWithRetry(retryCount + 1);
-          }
-
-          return false;
-        }
-      };
-
-      const deleteSuccess = await deleteCalendarWithRetry();
-
-      if (!deleteSuccess) {
-        console.error('[CALENDAR_UPDATE] Failed to delete old calendar event, aborting update');
-        return;
-      }
-
-      // Step 2: Create a new calendar event
-
-      const createCalendarWithRetry = async (retryCount = 0) => {
-        const maxRetries = 2;
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
-
-        try {
-
-          const createResponse = await fetch('/api/calendar/create', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
+              eventId: session.eventId,
               clientName: client ? `${client.firstName} ${client.lastName}`.trim() : session.sessionType,
               clientEmail: client?.email || '',
               clientAddress: client?.address || '',
@@ -1896,57 +1832,29 @@ export function AppProvider({ children }: { children: ReactNode }) {
               bookingDate: session.bookingDate,
               bookingTime: session.bookingTime,
               notes: session.notes,
-              quote: session.quote
+              quote: session.quote,
             }),
-            signal: controller.signal
+            signal: controller.signal,
           });
-
           clearTimeout(timeoutId);
 
-          if (createResponse.ok) {
-            const result = await createResponse.json();
+          if (response.ok) return true;
 
-            // Update the session with the new eventId and meetLink using internal update (no webhooks)
-            if (result.eventId) {
-              const updates: Partial<Session> = { eventId: result.eventId };
-              if (result.meetLink) {
-                updates.googleMeetLink = result.meetLink;
-              }
-              await updateSessionInternal(session.id, updates);
-            }
-            return true;
-          } else {
-            console.error('[CALENDAR_CREATE] Failed to create new calendar event:', createResponse.status);
-            const errorText = await createResponse.text();
-            console.error('[CALENDAR_CREATE] Error response:', errorText);
-            return false;
-          }
+          console.error('[CALENDAR_UPDATE] Failed:', response.status, await response.text());
+          return false;
         } catch (fetchError) {
           clearTimeout(timeoutId);
-
-          if (fetchError instanceof Error && fetchError.name === 'AbortError') {
-            console.error('[CALENDAR_CREATE] Calendar create request timed out');
-          } else {
-            console.error('[CALENDAR_CREATE] Calendar create request failed:', fetchError);
-          }
-
-          // Retry on network errors if we haven't exceeded max retries
           if (retryCount < maxRetries) {
-            await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds before retry
-            return createCalendarWithRetry(retryCount + 1);
+            await new Promise(r => setTimeout(r, 2000));
+            return updateWithRetry(retryCount + 1);
           }
-
           return false;
         }
       };
 
-      const createSuccess = await createCalendarWithRetry();
-
-      if (createSuccess) {
-      } else {
-        console.error('[CALENDAR_UPDATE] Failed to create new calendar event after deleting old one');
-        // Clear the eventId since the old event was deleted but new one failed
-        await updateSessionInternal(session.id, { eventId: undefined });
+      const success = await updateWithRetry();
+      if (!success) {
+        console.error('[CALENDAR_UPDATE] All retries failed — event unchanged in calendar');
       }
 
     } catch (error) {
