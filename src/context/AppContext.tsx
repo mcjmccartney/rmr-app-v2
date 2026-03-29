@@ -1599,56 +1599,38 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
 
       // Handle calendar updates for Date, Time, or Session Type changes
-      if (calendarRelevantChange) {
+      let forceCreateCalendar = false;
 
-        // Calculate days until session
-        const sessionDate = new Date(session.bookingDate);
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        sessionDate.setHours(0, 0, 0, 0);
-        const timeDiff = sessionDate.getTime() - today.getTime();
-        const daysUntilSession = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+      if (calendarRelevantChange) {
+        const isOnlineOrGroup = (['Online', 'Group'] as string[]).includes(session.sessionType);
 
         try {
-          // Special handling: If changing TO "Online" from another type
-          if (changedToOnline && session.eventId) {
-            // Only delete calendar if session is ≤7 days away
-            // If >7 days away, keep the calendar (it will be deleted/replaced on day 7)
-            if (daysUntilSession <= 7) {
-
-              // Delete the calendar event
+          if (session.eventId) {
+            if (isOnlineOrGroup) {
+              // Online/Group: delete old event — Make.com will create a new one with fresh Meet link
               const deleteResponse = await fetch('/api/calendar/delete', {
                 method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  eventId: session.eventId
-                })
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ eventId: session.eventId })
               });
-
               if (deleteResponse.ok) {
-                await updateSessionInternal(session.id, { eventId: undefined });
+                await updateSessionInternal(session.id, { eventId: undefined, googleMeetLink: undefined });
                 session.eventId = undefined;
-                // Trigger webhook so Make.com creates the new Online calendar event (with Meet link)
-                await triggerSessionWebhookForUpdate(session, true);
+                session.googleMeetLink = undefined;
+                forceCreateCalendar = true;
               } else {
                 console.error(`[UPDATE_SESSION] Failed to delete calendar event:`, deleteResponse.status);
               }
             } else {
-              // Update the calendar event with new session type
+              // Non-Online/Group: update the existing event via service account
               await updateCalendarEvent(session);
             }
-          } else if (session.eventId) {
-            // Update existing calendar event for:
-            // - Non-Online sessions with any changes
-            // - Online sessions that are already Online (just date/time changes)
-            // - Any session with an eventId that needs updating
-            await updateCalendarEvent(session);
           } else {
-            // No eventId — create via service account for non-Online/Group sessions.
-            // Online/Group: Make.com will create the event via webhook (createCalendarEvent flag).
-            if (session.sessionType !== 'Online' && session.sessionType !== 'Group') {
+            if (isOnlineOrGroup) {
+              // No existing event — Make.com will create one via webhook
+              forceCreateCalendar = true;
+            } else {
+              // No existing event — create directly via service account
               const calendarResult = await createCalendarEvent(session, false);
               if (calendarResult) {
                 await updateSessionInternal(session.id, { eventId: calendarResult.eventId });
@@ -1658,9 +1640,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           }
         } catch (calendarError) {
           console.error(`[UPDATE_SESSION] Calendar update failed:`, calendarError);
-          // Don't throw the error - calendar failure shouldn't prevent session update
         }
-      } else {
       }
 
       // Only trigger booking terms webhook for Date or Time changes
@@ -1673,14 +1653,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
 
       if (hasBookingTermsRelevantChange) {
-
-        // Trigger both webhooks in parallel for session updates
         await Promise.allSettled([
           triggerBookingTermsWebhookForUpdate(session),
-          triggerSessionWebhookForUpdate(session)
+          triggerSessionWebhookForUpdate(session, forceCreateCalendar)
         ]);
-
-      } else {
+      } else if (forceCreateCalendar) {
+        // Session type changed to Online/Group — fire webhook so Make.com creates the calendar event
+        await triggerSessionWebhookForUpdate(session, true);
       }
 
       return session;

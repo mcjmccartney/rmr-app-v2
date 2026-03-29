@@ -54,8 +54,8 @@ function sessionToDbRow(session: Partial<Session>) {
     session_plan_sent: session.sessionPlanSent,
     questionnaire_bypass: session.questionnaireBypass,
     special_marking: session.specialMarking,
-    event_id: session.eventId,
-    google_meet_link: session.googleMeetLink,
+    ...('eventId' in session && { event_id: session.eventId ?? null }),
+    ...('googleMeetLink' in session && { google_meet_link: session.googleMeetLink ?? null }),
   };
 
   // Only include dog_name if it's provided (for backward compatibility)
