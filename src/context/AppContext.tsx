@@ -1379,7 +1379,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   // Trigger session webhook for session updates
-  const triggerSessionWebhookForUpdate = async (session: Session) => {
+  const triggerSessionWebhookForUpdate = async (session: Session, forceCreateCalendarEvent: boolean = false) => {
     try {
 
       // Handle Group and RMR Live sessions differently
@@ -1524,7 +1524,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         googleMeetLink: session.googleMeetLink || null,
         // Session webhook specific flags
         sendSessionEmail: daysUntilSession <= 7, // Only send email if ≤7 days away
-        createCalendarEvent: !session.eventId && (['Online', 'Group'] as string[]).includes(session.sessionType),
+        createCalendarEvent: forceCreateCalendarEvent,
         isUpdate: true, // Flag to indicate this is an update webhook
         eventId: session.eventId || null // Include eventId so Make.com knows if calendar exists
       };
@@ -1631,7 +1631,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 await updateSessionInternal(session.id, { eventId: undefined });
                 session.eventId = undefined;
                 // Trigger webhook so Make.com creates the new Online calendar event (with Meet link)
-                await triggerSessionWebhookForUpdate(session);
+                await triggerSessionWebhookForUpdate(session, true);
               } else {
                 console.error(`[UPDATE_SESSION] Failed to delete calendar event:`, deleteResponse.status);
               }
