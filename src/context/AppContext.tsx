@@ -1524,7 +1524,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         googleMeetLink: session.googleMeetLink || null,
         // Session webhook specific flags
         sendSessionEmail: daysUntilSession <= 7, // Only send email if ≤7 days away
-        createCalendarEvent: !session.eventId && (session.sessionType === 'Online' || session.sessionType === 'Group'),
+        createCalendarEvent: !session.eventId && (['Online', 'Group'] as string[]).includes(session.sessionType),
         isUpdate: true, // Flag to indicate this is an update webhook
         eventId: session.eventId || null // Include eventId so Make.com knows if calendar exists
       };
