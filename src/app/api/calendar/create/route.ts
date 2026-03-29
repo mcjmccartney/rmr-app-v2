@@ -125,22 +125,32 @@ export async function POST(request: NextRequest) {
       };
     }
 
-    const response = await calendar.events.insert({
+    const insertResponse = await calendar.events.insert({
       calendarId: CALENDAR_ID,
       requestBody: event,
       conferenceDataVersion: (sessionType === 'Online' && includeMeetLink) ? 1 : 0
     });
 
-    const eventId = response.data.id;
-    const meetLink = response.data.conferenceData?.entryPoints?.find(
-      (entry: any) => entry.entryPointType === 'video'
-    )?.uri;
+    const eventId = insertResponse.data.id!;
+
+    // Fetch the full event after insert — conference data (Meet link) is not always
+    // populated in the insert response immediately, but is available on GET.
+    let meetLink: string | null = null;
+    if (sessionType === 'Online' && includeMeetLink) {
+      const getResponse = await calendar.events.get({
+        calendarId: CALENDAR_ID,
+        eventId: eventId,
+      });
+      meetLink = getResponse.data.conferenceData?.entryPoints?.find(
+        (entry: any) => entry.entryPointType === 'video'
+      )?.uri ?? null;
+    }
 
     return NextResponse.json({
       success: true,
       message: 'Calendar event created successfully',
       eventId: eventId,
-      meetLink: meetLink || null
+      meetLink: meetLink
     });
 
   } catch (error) {
