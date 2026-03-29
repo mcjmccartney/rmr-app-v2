@@ -133,17 +133,18 @@ export async function POST(request: NextRequest) {
 
     const eventId = insertResponse.data.id!;
 
-    // Try to get the Meet link from the immediate response or a single GET.
-    // If it's still not ready, the client will poll /api/calendar/get-meet-link.
-    let meetLink: string | null = insertResponse.data.conferenceData?.entryPoints?.find(
-      (entry: any) => entry.entryPointType === 'video'
-    )?.uri ?? null;
+    // Extract Meet link — check both hangoutLink (available immediately) and
+    // conferenceData.entryPoints (may require async processing by Google).
+    const extractMeetLink = (data: any): string | null =>
+      data?.conferenceData?.entryPoints?.find((e: any) => e.entryPointType === 'video')?.uri
+      ?? data?.hangoutLink
+      ?? null;
+
+    let meetLink: string | null = extractMeetLink(insertResponse.data);
 
     if (!meetLink && sessionType === 'Online' && includeMeetLink) {
       const getResponse = await calendar.events.get({ calendarId: CALENDAR_ID, eventId });
-      meetLink = getResponse.data.conferenceData?.entryPoints?.find(
-        (entry: any) => entry.entryPointType === 'video'
-      )?.uri ?? null;
+      meetLink = extractMeetLink(getResponse.data);
     }
 
     return NextResponse.json({

@@ -34,9 +34,11 @@ export async function GET(request: NextRequest) {
   try {
     const calendar = getCalendarClient();
     const response = await calendar.events.get({ calendarId: CALENDAR_ID, eventId });
-    const meetLink = response.data.conferenceData?.entryPoints?.find(
-      (entry: any) => entry.entryPointType === 'video'
-    )?.uri ?? null;
+    const data = response.data;
+    const meetLink =
+      data?.conferenceData?.entryPoints?.find((e: any) => e.entryPointType === 'video')?.uri
+      ?? data?.hangoutLink
+      ?? null;
     return NextResponse.json({ meetLink });
   } catch (error) {
     return NextResponse.json({ meetLink: null });
