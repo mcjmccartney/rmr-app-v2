@@ -1637,9 +1637,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
               });
 
               if (deleteResponse.ok) {
-                // Clear the eventId from the session
                 await updateSessionInternal(session.id, { eventId: undefined });
                 session.eventId = undefined;
+
+                // Create new calendar event with Meet link for this Online session
+                const calendarResult = await createCalendarEvent(session, true);
+                if (calendarResult) {
+                  const newUpdates: Partial<Session> = { eventId: calendarResult.eventId };
+                  if (calendarResult.meetLink) newUpdates.googleMeetLink = calendarResult.meetLink;
+                  await updateSessionInternal(session.id, newUpdates);
+                  session.eventId = calendarResult.eventId;
+                  if (calendarResult.meetLink) session.googleMeetLink = calendarResult.meetLink;
+                }
               } else {
                 console.error(`[UPDATE_SESSION] Failed to delete calendar event:`, deleteResponse.status);
               }

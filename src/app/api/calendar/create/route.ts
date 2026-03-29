@@ -133,17 +133,23 @@ export async function POST(request: NextRequest) {
 
     const eventId = insertResponse.data.id!;
 
-    // Fetch the full event after insert — conference data (Meet link) is not always
-    // populated in the insert response immediately, but is available on GET.
+    // Google generates conference data asynchronously — retry GET up to 3 times
+    // with 1-second gaps until the Meet link appears.
     let meetLink: string | null = null;
     if (sessionType === 'Online' && includeMeetLink) {
-      const getResponse = await calendar.events.get({
-        calendarId: CALENDAR_ID,
-        eventId: eventId,
-      });
-      meetLink = getResponse.data.conferenceData?.entryPoints?.find(
-        (entry: any) => entry.entryPointType === 'video'
-      )?.uri ?? null;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        if (attempt > 0) {
+          await new Promise(r => setTimeout(r, 1000));
+        }
+        const getResponse = await calendar.events.get({
+          calendarId: CALENDAR_ID,
+          eventId,
+        });
+        meetLink = getResponse.data.conferenceData?.entryPoints?.find(
+          (entry: any) => entry.entryPointType === 'video'
+        )?.uri ?? null;
+        if (meetLink) break;
+      }
     }
 
     return NextResponse.json({
