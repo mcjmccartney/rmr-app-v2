@@ -1248,28 +1248,37 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       // Create calendar event first so googleMeetLink is available for the webhook
       try {
-        // Always create Meet link for Online sessions immediately at booking time
         const includeMeetLink = session.sessionType === 'Online';
-
         const calendarResult = await createCalendarEvent(session, includeMeetLink);
 
         if (calendarResult) {
-          const calendarUpdates: Partial<Session> = { eventId: calendarResult.eventId };
-          if (calendarResult.meetLink) {
-            calendarUpdates.googleMeetLink = calendarResult.meetLink;
+          let meetLink = calendarResult.meetLink || null;
+
+          // If Online but Meet link not yet in create response, poll client-side
+          // (browser has no timeout unlike Vercel serverless functions)
+          if (session.sessionType === 'Online' && !meetLink && calendarResult.eventId) {
+            for (let i = 0; i < 8; i++) {
+              await new Promise(r => setTimeout(r, 2000));
+              try {
+                const resp = await fetch(`/api/calendar/get-meet-link?eventId=${calendarResult.eventId}`);
+                const data = await resp.json();
+                if (data.meetLink) { meetLink = data.meetLink; break; }
+              } catch {}
+            }
           }
+
+          const calendarUpdates: Partial<Session> = { eventId: calendarResult.eventId };
+          if (meetLink) calendarUpdates.googleMeetLink = meetLink;
           await updateSessionInternal(session.id, calendarUpdates);
           session.eventId = calendarResult.eventId;
-          if (calendarResult.meetLink) {
-            session.googleMeetLink = calendarResult.meetLink;
-          }
+          if (meetLink) session.googleMeetLink = meetLink;
         }
       } catch (calendarError) {
         console.error(`[CREATE_SESSION] Calendar creation failed:`, calendarError);
         // Don't throw — calendar failure shouldn't prevent session creation
       }
 
-      // Trigger the webhook after calendar creation so googleMeetLink is included
+      // Trigger the webhook after polling confirms Meet link
       await triggerSessionWebhook(session);
 
       return session;
