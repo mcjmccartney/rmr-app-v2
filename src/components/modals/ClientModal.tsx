@@ -27,6 +27,7 @@ const ClientModal = memo(function ClientModal({ client, isOpen, onClose, onEditC
   const [isUpdatingActive, setIsUpdatingActive] = useState(false);
   const [isUpdatingMembership, setIsUpdatingMembership] = useState(false);
   const [isSendingBookingTermsUpdate, setIsSendingBookingTermsUpdate] = useState(false);
+  const [isSendingQuestionnaireUpdate, setIsSendingQuestionnaireUpdate] = useState(false);
 
   // Get the fresh client data from state to ensure we have the latest updates
   const currentClient = client ? (state.clients.find(c => c.id === client.id) || client) : null;
@@ -208,6 +209,35 @@ const ClientModal = memo(function ClientModal({ client, isOpen, onClose, onEditC
       alert('Failed to send booking terms update email. Please try again.');
     } finally {
       setIsSendingBookingTermsUpdate(false);
+    }
+  };
+
+  const handleSendQuestionnaireUpdate = async () => {
+    if (!currentClient?.firstName?.trim() || !currentClient?.email?.trim()) return;
+
+    if (!confirm(`Send behaviour questionnaire email to ${currentClient.firstName.trim()} (${currentClient.email.trim()})?`)) {
+      return;
+    }
+
+    setIsSendingQuestionnaireUpdate(true);
+    try {
+      const response = await fetch('/api/send-questionnaire-update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          firstName: currentClient.firstName.trim(),
+          email: currentClient.email.trim()
+        })
+      });
+
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Failed to send questionnaire email');
+      alert(`Behaviour questionnaire email sent successfully to ${currentClient.firstName}!`);
+    } catch (error) {
+      console.error('Error sending questionnaire email:', error);
+      alert('Failed to send questionnaire email. Please try again.');
+    } finally {
+      setIsSendingQuestionnaireUpdate(false);
     }
   };
 
@@ -441,6 +471,15 @@ const ClientModal = memo(function ClientModal({ client, isOpen, onClose, onEditC
                       </button>
                     ))}
                   </>
+                )}
+                {currentClient?.firstName?.trim() && currentClient?.email?.trim() && (
+                  <button
+                    onClick={handleSendQuestionnaireUpdate}
+                    disabled={isSendingQuestionnaireUpdate}
+                    className="w-full bg-amber-800 text-white py-3 px-4 rounded-lg font-medium hover:bg-amber-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isSendingQuestionnaireUpdate ? 'Sending...' : 'Resend Behaviour Questionnaire'}
+                  </button>
                 )}
               </div>
             )}

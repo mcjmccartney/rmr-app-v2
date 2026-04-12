@@ -62,35 +62,19 @@ export async function POST(request: NextRequest) {
     let bookingTerms;
     let createError;
 
-    if (existingBookingTerms && isUpdate) {
-      // Update existing booking terms
-      const { data: updatedBookingTerms, error: updateError } = await supabaseServiceRole
-        .from('booking_terms')
-        .update({
-          submitted: new Date().toISOString(),
-          version_id: activeVersion?.id || null
-        })
-        .eq('email', email.toLowerCase().trim())
-        .select()
-        .single();
+    // Always INSERT a new row — previous submissions are preserved as historical records
+    const { data: newBookingTerms, error: insertError } = await supabaseServiceRole
+      .from('booking_terms')
+      .insert([{
+        email: email.toLowerCase().trim(),
+        submitted: new Date().toISOString(),
+        version_id: activeVersion?.id || null
+      }])
+      .select()
+      .single();
 
-      bookingTerms = updatedBookingTerms;
-      createError = updateError;
-    } else {
-      // Create new booking terms entry
-      const { data: newBookingTerms, error: insertError } = await supabaseServiceRole
-        .from('booking_terms')
-        .insert([{
-          email: email.toLowerCase().trim(),
-          submitted: new Date().toISOString(),
-          version_id: activeVersion?.id || null
-        }])
-        .select()
-        .single();
-
-      bookingTerms = newBookingTerms;
-      createError = insertError;
-    }
+    bookingTerms = newBookingTerms;
+    createError = insertError;
 
     if (createError) throw createError;
 

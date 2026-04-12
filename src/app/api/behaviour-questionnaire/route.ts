@@ -182,20 +182,7 @@ export async function POST(request: NextRequest) {
     if (existingClient) {
       client = existingClient;
 
-      // Check if this client already has a questionnaire for this specific dog
-      const { data: existingQuestionnaire, error: questionnaireCheckError } = await supabaseServiceRole
-        .from('behaviour_questionnaires')
-        .select('id, dog_name')
-        .eq('client_id', client.id)
-        .eq('dog_name', formData.dogName)
-        .single();
-
-      if (existingQuestionnaire && !questionnaireCheckError) {
-        return NextResponse.json(
-          { error: `A behaviour questionnaire has already been submitted for ${formData.dogName}. Each dog can only have one questionnaire per client.` },
-          { status: 400 }
-        );
-      }
+      // Allow re-submissions — previous questionnaires are preserved as historical records
     } else {
       shouldCreateClient = true;
       // Will create client after questionnaire
