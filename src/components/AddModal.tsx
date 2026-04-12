@@ -13,13 +13,22 @@ import { generateHourOptions, generateMinuteOptions, sessionTypeOptions } from '
 import { formatClientWithAllDogs, formatClientWithSelectedDog } from '@/utils/dateFormatting';
 
 
+interface InitialSessionData {
+  clientId?: string;
+  dogName?: string;
+  sessionType?: Session['sessionType'];
+  date?: string;
+  time?: string;
+}
+
 interface AddModalProps {
   isOpen: boolean;
   onClose: () => void;
   type: 'session' | 'client';
+  initialData?: InitialSessionData;
 }
 
-export default function AddModal({ isOpen, onClose, type }: AddModalProps) {
+export default function AddModal({ isOpen, onClose, type, initialData }: AddModalProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const { registerModal, unregisterModal } = useModal();
@@ -88,7 +97,7 @@ export default function AddModal({ isOpen, onClose, type }: AddModalProps) {
         {/* Content */}
         <div className="p-6 overflow-y-auto" style={{ maxHeight: 'calc(90vh - 80px)' }}>
           {type === 'session' ? (
-            <SessionForm onSubmit={handleClose} />
+            <SessionForm onSubmit={handleClose} initialData={initialData} />
           ) : (
             <ClientForm onSubmit={handleClose} />
           )}
@@ -117,7 +126,7 @@ export default function AddModal({ isOpen, onClose, type }: AddModalProps) {
         {/* Content */}
         <div className="flex-1 p-6 overflow-y-auto">
           {type === 'session' ? (
-            <SessionForm onSubmit={handleClose} />
+            <SessionForm onSubmit={handleClose} initialData={initialData} />
           ) : (
             <ClientForm onSubmit={handleClose} />
           )}
@@ -127,15 +136,15 @@ export default function AddModal({ isOpen, onClose, type }: AddModalProps) {
   );
 }
 
-function SessionForm({ onSubmit }: { onSubmit: () => void }) {
+function SessionForm({ onSubmit, initialData }: { onSubmit: () => void; initialData?: InitialSessionData }) {
   const { state, createSession } = useApp();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
-    clientId: '',
-    dogName: '',
-    sessionType: 'In-Person' as Session['sessionType'],
-    date: '',
-    time: '',
+    clientId: initialData?.clientId || '',
+    dogName: initialData?.dogName || '',
+    sessionType: (initialData?.sessionType || 'In-Person') as Session['sessionType'],
+    date: initialData?.date || '',
+    time: initialData?.time || '',
     notes: '',
     quote: '',
     travelExpense: '' as 'Zone 1' | 'Zone 2' | 'Zone 3' | 'Zone 4' | ''
@@ -208,6 +217,17 @@ function SessionForm({ onSubmit }: { onSubmit: () => void }) {
 
     return dogSessions.length === 0; // True if no existing Online/In-Person sessions for this dog
   };
+
+  // Pre-fill selectedClient and quote when initialData is provided (e.g. from suggested session)
+  useEffect(() => {
+    if (!initialData?.clientId) return;
+    const client = state.clients.find(c => c.id === initialData.clientId);
+    if (!client) return;
+    setSelectedClient(client);
+    const isFirst = isFirstSession(initialData.clientId, formData.sessionType, formData.dogName);
+    const baseQuote = calculateQuote(formData.sessionType, client.membership || false, isFirst);
+    setFormData(prev => ({ ...prev, quote: baseQuote.toString() }));
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleClientChange = (clientId: string) => {
     const client = state.clients.find(c => c.id === clientId);

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
 import SessionModal from '@/components/modals/SessionModal';
@@ -13,9 +13,9 @@ import BehaviourQuestionnaireModal from '@/components/modals/BehaviourQuestionna
 import AddModal from '@/components/AddModal';
 import { useSessionColors, getSessionColor } from '@/hooks/useSessionColors';
 import { Session, Client, BehaviouralBrief, BehaviourQuestionnaire, SessionPlan } from '@/types';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek, addDays } from 'date-fns';
 import { formatTime, formatDayDate, formatMonthYear, combineDateAndTime } from '@/utils/dateFormatting';
-import { ChevronLeft, ChevronRight, Calendar, UserPlus, X, Users, CalendarDays, Edit3, FileText, Search, Bell, Circle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar, UserPlus, X, Users, CalendarDays, Edit3, FileText, Search, Bell, Circle, Sparkles } from 'lucide-react';
 import { getSessionDogName as getSessionDogNameUtil } from '@/utils/dogNameUtils';
 
 // Helper function to check if a session plan has meaningful content
@@ -147,6 +147,10 @@ export default function CalendarPage() {
 
   const [hideWeekends, setHideWeekends] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showSuggestedSessions, setShowSuggestedSessions] = useState(false);
+  const [suggestedSessionInitialData, setSuggestedSessionInitialData] = useState<{
+    clientId?: string; dogName?: string; sessionType?: Session['sessionType']; date?: string; time?: string;
+  } | undefined>(undefined);
 
   // Check if essential data for calendar colors is loaded
   const isEssentialDataLoaded = state.sessions.length > 0 ||
@@ -201,6 +205,61 @@ export default function CalendarPage() {
   const calendarStart = startOfWeek(monthStart, { weekStartsOn: 1 }); // 1 = Monday
   const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 1 });
   const daysInMonth = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
+
+  interface SuggestedSession {
+    id: string;
+    clientId: string;
+    dogName?: string;
+    sessionType: Session['sessionType'];
+    bookingDate: string;
+    bookingTime: string;
+  }
+
+  const suggestedSessions = useMemo((): SuggestedSession[] => {
+    if (!showSuggestedSessions) return [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const results: SuggestedSession[] = [];
+    const seen = new Set<string>();
+
+    const futureSessions = state.sessions
+      .filter(s => s.clientId && s.bookingDate && s.bookingTime && new Date(s.bookingDate) >= today)
+      .sort((a, b) => a.bookingDate.localeCompare(b.bookingDate));
+
+    for (const session of futureSessions) {
+      const sessionDate = new Date(session.bookingDate);
+      const windowEnd = addDays(sessionDate, 21);
+
+      const hasFollowUp = state.sessions.some(s =>
+        s.id !== session.id &&
+        s.clientId === session.clientId &&
+        s.bookingDate &&
+        new Date(s.bookingDate) > sessionDate &&
+        new Date(s.bookingDate) <= windowEnd
+      );
+
+      if (!hasFollowUp) {
+        const suggestedDate = format(addDays(sessionDate, 21), 'yyyy-MM-dd');
+        const key = `${session.clientId}-${suggestedDate}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          results.push({
+            id: `suggested-${session.id}`,
+            clientId: session.clientId!,
+            dogName: session.dogName,
+            sessionType: session.sessionType,
+            bookingDate: suggestedDate,
+            bookingTime: session.bookingTime,
+          });
+        }
+      }
+    }
+    return results;
+  }, [showSuggestedSessions, state.sessions]);
+
+  const getSuggestedSessionsForDay = (day: Date): SuggestedSession[] =>
+    suggestedSessions.filter(s => isSameDay(new Date(s.bookingDate), day));
 
   const getSessionsForDay = (day: Date) => {
     const daySessions = state.sessions.filter(session => {
@@ -292,6 +351,19 @@ export default function CalendarPage() {
 
   const handleCloseAddModal = () => {
     setShowAddModal(false);
+    setSuggestedSessionInitialData(undefined);
+  };
+
+  const handleSuggestedSessionClick = (suggested: SuggestedSession) => {
+    setSuggestedSessionInitialData({
+      clientId: suggested.clientId,
+      dogName: suggested.dogName,
+      sessionType: suggested.sessionType,
+      date: suggested.bookingDate,
+      time: suggested.bookingTime,
+    });
+    setAddModalType('session');
+    setShowAddModal(true);
   };
 
   const handleEditSession = (session: Session) => {
@@ -580,6 +652,17 @@ export default function CalendarPage() {
             <CalendarDays size={20} />
           </button>
 
+          {/* Suggested sessions toggle button */}
+          <button
+            onClick={() => setShowSuggestedSessions(prev => !prev)}
+            className={`p-2 rounded transition-colors text-white hover:bg-brand-primary-dark ${
+              showSuggestedSessions ? 'bg-brand-primary-dark' : ''
+            }`}
+            title={showSuggestedSessions ? 'Hide suggested sessions' : 'Show suggested sessions (3-week gaps)'}
+          >
+            <Sparkles size={20} />
+          </button>
+
           {/* Duplicate notification button */}
           {state.potentialDuplicates.length > 0 && (
             <button
@@ -736,6 +819,27 @@ export default function CalendarPage() {
                         </button>
                       );
                     })}
+                    {/* Ghost suggested sessions */}
+                    {showSuggestedSessions && getSuggestedSessionsForDay(day).map(suggested => {
+                      const suggestedClient = state.clients.find(c => c.id === suggested.clientId);
+                      const suggestedDogName = getSessionDogNameUtil(suggested.dogName, suggestedClient);
+                      const suggestedTimeOnly = formatTime(suggested.bookingTime);
+                      const suggestedDisplayText = suggestedClient
+                        ? `${suggestedTimeOnly} | ${suggestedClient.firstName} ${suggestedClient.lastName}${suggestedDogName ? ` w/ ${suggestedDogName}` : ''}`
+                        : `${suggestedTimeOnly} | Unknown`;
+                      return (
+                        <button
+                          key={suggested.id}
+                          onClick={(e) => { e.stopPropagation(); handleSuggestedSessionClick(suggested); }}
+                          className="w-full text-left text-xs px-1.5 !py-[3px] md:!py-1 rounded truncate opacity-50 border border-dashed border-amber-800 text-amber-800 bg-amber-50"
+                          title="Suggested follow-up — click to book"
+                        >
+                          <span className="block sm:hidden">{suggestedTimeOnly}</span>
+                          <span className="hidden sm:block">{suggestedDisplayText}</span>
+                        </button>
+                      );
+                    })}
+
                     {/* Only show "+X more" on mobile */}
                     {sessions.length > 3 && (
                       <div className="text-xs text-amber-800 font-medium flex-shrink-0 md:hidden">
@@ -837,6 +941,7 @@ export default function CalendarPage() {
         isOpen={showAddModal}
         onClose={handleCloseAddModal}
         type={addModalType}
+        initialData={suggestedSessionInitialData}
       />
 
       {/* Day Sessions Modal - Mobile & Desktop */}
