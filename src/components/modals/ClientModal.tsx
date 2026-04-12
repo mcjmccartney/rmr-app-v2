@@ -391,15 +391,22 @@ const ClientModal = memo(function ClientModal({ client, isOpen, onClose, onEditC
           </div>
         </div>
 
-        {/* Send Booking Terms Update Button */}
+        {/* Send Booking Terms Update + Resend Questionnaire Buttons */}
         {currentClient?.firstName?.trim() && currentClient?.email?.trim() && (
-          <div className="pt-4">
+          <div className="pt-4 space-y-2">
             <button
               onClick={handleSendBookingTermsUpdate}
               disabled={isSendingBookingTermsUpdate}
               className="w-full bg-amber-800 text-white py-3 px-4 rounded-lg font-medium hover:bg-amber-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSendingBookingTermsUpdate ? 'Sending...' : 'Send Booking Terms Update'}
+            </button>
+            <button
+              onClick={handleSendQuestionnaireUpdate}
+              disabled={isSendingQuestionnaireUpdate}
+              className="w-full bg-amber-800 text-white py-3 px-4 rounded-lg font-medium hover:bg-amber-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSendingQuestionnaireUpdate ? 'Sending...' : 'Send Behaviour Questionnaire'}
             </button>
           </div>
         )}
@@ -471,15 +478,6 @@ const ClientModal = memo(function ClientModal({ client, isOpen, onClose, onEditC
                       </button>
                     ))}
                   </>
-                )}
-                {currentClient?.firstName?.trim() && currentClient?.email?.trim() && (
-                  <button
-                    onClick={handleSendQuestionnaireUpdate}
-                    disabled={isSendingQuestionnaireUpdate}
-                    className="w-full bg-amber-800 text-white py-3 px-4 rounded-lg font-medium hover:bg-amber-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isSendingQuestionnaireUpdate ? 'Sending...' : 'Resend Behaviour Questionnaire'}
-                  </button>
                 )}
               </div>
             )}
