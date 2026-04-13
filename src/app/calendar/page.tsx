@@ -173,6 +173,14 @@ export default function CalendarPage() {
     } catch {}
     return new Set();
   });
+  const [draftPendingDelete, setDraftPendingDelete] = useState<string | null>(null);
+  const [daysOff, setDaysOff] = useState<Set<string>>(() => {
+    try {
+      const raw = localStorage.getItem('calendar-days-off');
+      if (raw) return new Set(JSON.parse(raw));
+    } catch {}
+    return new Set();
+  });
 
   // Check if essential data for calendar colors is loaded
   const isEssentialDataLoaded = state.sessions.length > 0 ||
@@ -398,12 +406,27 @@ export default function CalendarPage() {
 
   const handleDeleteDraft = (e: React.MouseEvent, draftKey: string) => {
     e.stopPropagation();
+    setDraftPendingDelete(draftKey);
+  };
+
+  const confirmDeleteDraft = (draftKey: string) => {
     try { localStorage.removeItem(draftKey); } catch {}
     setDraftOverrides(prev => { const next = { ...prev }; delete next[draftKey]; return next; });
     const next = new Set(dismissedDrafts);
     next.add(draftKey);
     setDismissedDrafts(next);
     try { localStorage.setItem('dismissed-draft-sessions', JSON.stringify([...next])); } catch {}
+    setDraftPendingDelete(null);
+  };
+
+  const toggleDayOff = (e: React.MouseEvent, dateKey: string) => {
+    e.stopPropagation();
+    setDaysOff(prev => {
+      const next = new Set(prev);
+      if (next.has(dateKey)) { next.delete(dateKey); } else { next.add(dateKey); }
+      try { localStorage.setItem('calendar-days-off', JSON.stringify([...next])); } catch {}
+      return next;
+    });
   };
 
   const handleEditSession = (session: Session) => {
@@ -762,21 +785,37 @@ export default function CalendarPage() {
                   (day >= monthStart && day <= monthEnd);
                 const isToday = isSameDay(day, new Date());
 
+                const dateKey = format(day, 'yyyy-MM-dd');
+                const isDayOff = daysOff.has(dateKey);
+
                 return (
                 <div
                   key={day.toISOString()}
-                  className={`flex flex-col p-1 min-h-0 border-r border-b border-gray-100 last:border-r-0 cursor-default ${
+                  className={`relative flex flex-col p-1 min-h-0 border-r border-b border-gray-100 last:border-r-0 cursor-default ${
                     isToday ? 'ring-2 ring-brand-primary ring-inset' : ''
                   }`}
                   onClick={() => handleDayClick(day, sessions)}
                 >
-                  <div className={`text-sm font-medium mb-1 flex-shrink-0 ${
-                    isToday
-                      ? 'text-brand-primary font-bold'
-                      : isCurrentMonth
-                        ? 'text-gray-900'
-                        : 'text-gray-400'
-                  }`}>{dayNumber}</div>
+                  {isDayOff && (
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden z-10">
+                      <span
+                        className="text-red-400 font-black uppercase tracking-widest select-none opacity-25"
+                        style={{ fontSize: 'clamp(8px, 1.8vw, 18px)', transform: 'rotate(-35deg)', whiteSpace: 'nowrap', letterSpacing: '0.15em' }}
+                      >
+                        DAY OFF
+                      </span>
+                    </div>
+                  )}
+                  <button
+                    onClick={(e) => toggleDayOff(e, dateKey)}
+                    className={`text-sm font-medium mb-1 flex-shrink-0 text-left leading-none hover:opacity-70 transition-opacity ${
+                      isToday
+                        ? 'text-brand-primary font-bold'
+                        : isCurrentMonth
+                          ? 'text-gray-900'
+                          : 'text-gray-400'
+                    }`}
+                  >{dayNumber}</button>
                   <div className={`space-y-0.5 flex-1 min-h-0 ${
                     // Desktop: scrollable with custom scrollbar, Mobile: overflow hidden
                     'md:overflow-y-auto calendar-day-scroll overflow-hidden'
@@ -867,26 +906,44 @@ export default function CalendarPage() {
                       const suggestedDisplayText = suggestedClient
                         ? `${suggestedTimeOnly} | ${suggestedClient.firstName} ${suggestedClient.lastName}${suggestedDogName ? ` w/ ${suggestedDogName}` : ''}`
                         : `${suggestedTimeOnly} | Unknown`;
+                      const isPendingDelete = draftPendingDelete === suggested.draftKey;
                       return (
                         <div
                           key={suggested.id}
                           className="relative flex items-center opacity-50 border border-dashed border-amber-800 rounded bg-amber-50 group"
+                          onClick={(e) => e.stopPropagation()}
                         >
-                          <button
-                            onClick={(e) => { e.stopPropagation(); handleSuggestedSessionClick(suggested); }}
-                            className="flex-1 text-left text-xs px-1.5 !py-[3px] md:!py-1 text-amber-800 truncate min-w-0"
-                            title="Suggested follow-up — click to book"
-                          >
-                            <span className="block sm:hidden">{suggestedTimeOnly}</span>
-                            <span className="hidden sm:block">{suggestedDisplayText}</span>
-                          </button>
-                          <button
-                            onClick={(e) => handleDeleteDraft(e, suggested.draftKey)}
-                            className="flex-shrink-0 px-1 text-amber-800 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
-                            title="Delete draft"
-                          >
-                            <X size={10} />
-                          </button>
+                          {isPendingDelete ? (
+                            <>
+                              <span className="flex-1 text-xs px-1.5 py-[3px] text-amber-800">Delete?</span>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); confirmDeleteDraft(suggested.draftKey); }}
+                                className="flex-shrink-0 px-1 text-xs text-red-600 font-medium hover:underline"
+                              >Yes</button>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); setDraftPendingDelete(null); }}
+                                className="flex-shrink-0 px-1 text-xs text-gray-500 hover:underline"
+                              >No</button>
+                            </>
+                          ) : (
+                            <>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleSuggestedSessionClick(suggested); }}
+                                className="flex-1 text-left text-xs px-1.5 !py-[3px] md:!py-1 text-amber-800 truncate min-w-0"
+                                title="Suggested follow-up — click to book"
+                              >
+                                <span className="block sm:hidden">{suggestedTimeOnly}</span>
+                                <span className="hidden sm:block">{suggestedDisplayText}</span>
+                              </button>
+                              <button
+                                onClick={(e) => handleDeleteDraft(e, suggested.draftKey)}
+                                className="flex-shrink-0 px-1 text-amber-800 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                                title="Delete draft"
+                              >
+                                <X size={10} />
+                              </button>
+                            </>
+                          )}
                         </div>
                       );
                     })}
