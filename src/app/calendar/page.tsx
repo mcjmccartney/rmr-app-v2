@@ -149,7 +149,7 @@ export default function CalendarPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showSuggestedSessions, setShowSuggestedSessions] = useState(false);
   const [suggestedSessionInitialData, setSuggestedSessionInitialData] = useState<{
-    clientId?: string; dogName?: string; sessionType?: Session['sessionType']; date?: string; time?: string;
+    clientId?: string; dogName?: string; sessionType?: Session['sessionType']; date?: string; time?: string; draftKey?: string;
   } | undefined>(undefined);
   const [draftOverrides, setDraftOverrides] = useState<Record<string, { date: string; time: string }>>(() => {
     // Initialise from any previously saved drafts in localStorage
@@ -165,6 +165,13 @@ export default function CalendarPage() {
       }
     } catch {}
     return overrides;
+  });
+  const [dismissedDrafts, setDismissedDrafts] = useState<Set<string>>(() => {
+    try {
+      const raw = localStorage.getItem('dismissed-draft-sessions');
+      if (raw) return new Set(JSON.parse(raw));
+    } catch {}
+    return new Set();
   });
 
   // Check if essential data for calendar colors is loaded
@@ -228,6 +235,7 @@ export default function CalendarPage() {
     sessionType: Session['sessionType'];
     bookingDate: string;
     bookingTime: string;
+    draftKey: string;
   }
 
   const suggestedSessions = useMemo((): SuggestedSession[] => {
@@ -261,6 +269,7 @@ export default function CalendarPage() {
 
       if (!hasFollowUp) {
         const draftKey = `draft-session-${clientId}-${session.dogName || 'primary'}`;
+        if (dismissedDrafts.has(draftKey)) continue;
         const override = draftOverrides[draftKey];
         results.push({
           id: `suggested-${session.id}`,
@@ -269,11 +278,12 @@ export default function CalendarPage() {
           sessionType: session.sessionType,
           bookingDate: override?.date || format(addDays(sessionDate, 21), 'yyyy-MM-dd'),
           bookingTime: override?.time || session.bookingTime,
+          draftKey,
         });
       }
     }
     return results;
-  }, [showSuggestedSessions, state.sessions, draftOverrides]);
+  }, [showSuggestedSessions, state.sessions, draftOverrides, dismissedDrafts]);
 
   const getSuggestedSessionsForDay = (day: Date): SuggestedSession[] =>
     suggestedSessions.filter(s => isSameDay(new Date(s.bookingDate), day));
@@ -378,9 +388,20 @@ export default function CalendarPage() {
       sessionType: suggested.sessionType,
       date: suggested.bookingDate,
       time: suggested.bookingTime,
+      draftKey: suggested.draftKey,
     });
     setAddModalType('session');
     setShowAddModal(true);
+  };
+
+  const handleDeleteDraft = (e: React.MouseEvent, draftKey: string) => {
+    e.stopPropagation();
+    try { localStorage.removeItem(draftKey); } catch {}
+    setDraftOverrides(prev => { const next = { ...prev }; delete next[draftKey]; return next; });
+    const next = new Set(dismissedDrafts);
+    next.add(draftKey);
+    setDismissedDrafts(next);
+    try { localStorage.setItem('dismissed-draft-sessions', JSON.stringify([...next])); } catch {}
   };
 
   const handleEditSession = (session: Session) => {
@@ -845,15 +866,26 @@ export default function CalendarPage() {
                         ? `${suggestedTimeOnly} | ${suggestedClient.firstName} ${suggestedClient.lastName}${suggestedDogName ? ` w/ ${suggestedDogName}` : ''}`
                         : `${suggestedTimeOnly} | Unknown`;
                       return (
-                        <button
+                        <div
                           key={suggested.id}
-                          onClick={(e) => { e.stopPropagation(); handleSuggestedSessionClick(suggested); }}
-                          className="w-full text-left text-xs px-1.5 !py-[3px] md:!py-1 rounded truncate opacity-50 border border-dashed border-amber-800 text-amber-800 bg-amber-50"
-                          title="Suggested follow-up — click to book"
+                          className="relative flex items-center opacity-50 border border-dashed border-amber-800 rounded bg-amber-50 group"
                         >
-                          <span className="block sm:hidden">{suggestedTimeOnly}</span>
-                          <span className="hidden sm:block">{suggestedDisplayText}</span>
-                        </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleSuggestedSessionClick(suggested); }}
+                            className="flex-1 text-left text-xs px-1.5 !py-[3px] md:!py-1 text-amber-800 truncate min-w-0"
+                            title="Suggested follow-up — click to book"
+                          >
+                            <span className="block sm:hidden">{suggestedTimeOnly}</span>
+                            <span className="hidden sm:block">{suggestedDisplayText}</span>
+                          </button>
+                          <button
+                            onClick={(e) => handleDeleteDraft(e, suggested.draftKey)}
+                            className="flex-shrink-0 px-1 text-amber-800 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                            title="Delete draft"
+                          >
+                            <X size={10} />
+                          </button>
+                        </div>
                       );
                     })}
 
@@ -959,11 +991,12 @@ export default function CalendarPage() {
         onClose={handleCloseAddModal}
         type={addModalType}
         initialData={suggestedSessionInitialData}
-        draftKey={suggestedSessionInitialData?.clientId
-          ? `draft-session-${suggestedSessionInitialData.clientId}-${suggestedSessionInitialData.dogName || 'primary'}`
-          : undefined}
+        draftKey={suggestedSessionInitialData?.draftKey}
         onDraftSave={(key, data) => setDraftOverrides(prev => ({ ...prev, [key]: data }))}
-        onDraftClear={(key) => setDraftOverrides(prev => { const next = { ...prev }; delete next[key]; return next; })}
+        onDraftClear={(key) => {
+          setDraftOverrides(prev => { const next = { ...prev }; delete next[key]; return next; });
+          setDismissedDrafts(prev => { const next = new Set(prev); next.delete(key); try { localStorage.setItem('dismissed-draft-sessions', JSON.stringify([...next])); } catch {} return next; });
+        }}
       />
 
       {/* Day Sessions Modal - Mobile & Desktop */}
