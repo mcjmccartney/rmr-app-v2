@@ -799,8 +799,8 @@ export default function CalendarPage() {
                   {isDayOff && (
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden z-10">
                       <span
-                        className="text-red-400 font-black uppercase tracking-widest select-none opacity-25"
-                        style={{ fontSize: 'clamp(8px, 1.8vw, 18px)', transform: 'rotate(-35deg)', whiteSpace: 'nowrap', letterSpacing: '0.15em' }}
+                        className="text-red-400 font-black uppercase select-none opacity-30 w-full text-center"
+                        style={{ fontSize: 'clamp(10px, 2.8vw, 28px)', transform: 'rotate(-45deg) scaleX(0.85)', whiteSpace: 'nowrap', letterSpacing: '0.05em' }}
                       >
                         DAY OFF
                       </span>
