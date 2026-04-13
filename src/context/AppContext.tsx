@@ -1219,15 +1219,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
       } else {
       }
 
-      // Always trigger session webhook for all new sessions
-      const webhookDataWithFlags = {
-        ...webhookData,
-        sendSessionEmail: session.sessionType === 'Online' || daysUntilSession <= 7,
-        createCalendarEvent: session.sessionType === 'Online' || session.sessionType === 'Group' // Make.com creates event for Online/Group (with Meet link)
-      };
-
-      webhookPromises.push(fireSessionWebhooks(webhookDataWithFlags));
-      webhookNames.push('session webhook (new session created)');
+      // Only fire session webhook if the session is within 7 days (email needed),
+      // or it's a Group session (Make.com needs to create the calendar event)
+      if (daysUntilSession <= 7 || session.sessionType === 'Group') {
+        const webhookDataWithFlags = {
+          ...webhookData,
+          sendSessionEmail: daysUntilSession <= 7,
+          createCalendarEvent: session.sessionType === 'Group' // Make.com creates event for Group sessions
+        };
+        webhookPromises.push(fireSessionWebhooks(webhookDataWithFlags));
+        webhookNames.push('session webhook (new session created)');
+      }
 
       const responses = await Promise.allSettled(webhookPromises);
 
@@ -1248,9 +1250,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
       // Log audit trail
       await auditService.logSessionCreate(session, user?.email);
 
-      // Create calendar event directly for non-Online/Group sessions (service account works without conferencing).
-      // Online/Group sessions: Make.com creates the event (with Meet link) via webhook callback.
-      if (session.sessionType !== 'Online' && session.sessionType !== 'Group') {
+      // Create calendar event directly for non-Group sessions via service account.
+      // Group sessions: Make.com creates the event via webhook callback.
+      // Online sessions within 7 days: Make webhook is triggered, so skip service account event.
+      const sessionDateForCalendar = new Date(session.bookingDate);
+      const todayForCalendar = new Date();
+      todayForCalendar.setHours(0, 0, 0, 0);
+      sessionDateForCalendar.setHours(0, 0, 0, 0);
+      const daysUntilSessionForCalendar = Math.ceil((sessionDateForCalendar.getTime() - todayForCalendar.getTime()) / (1000 * 60 * 60 * 24));
+      const skipServiceCalendar = session.sessionType === 'Online' && daysUntilSessionForCalendar <= 7;
+
+      if (session.sessionType !== 'Group' && !skipServiceCalendar) {
         try {
           const calendarResult = await createCalendarEvent(session, false);
           if (calendarResult) {
@@ -1525,7 +1535,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         // Google Meet link for Online sessions
         googleMeetLink: session.googleMeetLink || null,
         // Session webhook specific flags
-        sendSessionEmail: session.sessionType === 'Online' || daysUntilSession <= 7,
+        sendSessionEmail: daysUntilSession <= 7,
         createCalendarEvent: forceCreateCalendarEvent,
         isUpdate: true, // Flag to indicate this is an update webhook
         eventId: session.eventId || null // Include eventId so Make.com knows if calendar exists
@@ -1604,12 +1614,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       let forceCreateCalendar = false;
 
       if (calendarRelevantChange) {
-        const isOnlineOrGroup = (['Online', 'Group'] as string[]).includes(session.sessionType);
+        const isGroup = session.sessionType === 'Group';
 
         try {
           if (session.eventId) {
-            if (isOnlineOrGroup) {
-              // Online/Group: delete old event — Make.com will create a new one with fresh Meet link
+            if (isGroup) {
+              // Group: delete old event — Make.com will create a new one
               const deleteResponse = await fetch('/api/calendar/delete', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -1624,11 +1634,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 console.error(`[UPDATE_SESSION] Failed to delete calendar event:`, deleteResponse.status);
               }
             } else {
-              // Non-Online/Group: update the existing event via service account
+              // Online or regular: update the existing event via service account
               await updateCalendarEvent(session);
             }
           } else {
-            if (isOnlineOrGroup) {
+            if (isGroup) {
               // No existing event — Make.com will create one via webhook
               forceCreateCalendar = true;
             } else {
