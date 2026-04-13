@@ -286,7 +286,9 @@ export default function CalendarPage() {
   }, [showSuggestedSessions, state.sessions, draftOverrides, dismissedDrafts]);
 
   const getSuggestedSessionsForDay = (day: Date): SuggestedSession[] =>
-    suggestedSessions.filter(s => isSameDay(new Date(s.bookingDate), day));
+    suggestedSessions
+      .filter(s => isSameDay(new Date(s.bookingDate), day))
+      .sort((a, b) => a.bookingTime.localeCompare(b.bookingTime));
 
   const getSessionsForDay = (day: Date) => {
     const daySessions = state.sessions.filter(session => {
