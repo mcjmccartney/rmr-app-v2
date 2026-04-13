@@ -151,6 +151,21 @@ export default function CalendarPage() {
   const [suggestedSessionInitialData, setSuggestedSessionInitialData] = useState<{
     clientId?: string; dogName?: string; sessionType?: Session['sessionType']; date?: string; time?: string;
   } | undefined>(undefined);
+  const [draftOverrides, setDraftOverrides] = useState<Record<string, { date: string; time: string }>>(() => {
+    // Initialise from any previously saved drafts in localStorage
+    const overrides: Record<string, { date: string; time: string }> = {};
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (!key?.startsWith('draft-session-')) continue;
+        const raw = localStorage.getItem(key);
+        if (!raw) continue;
+        const draft = JSON.parse(raw);
+        if (draft.date || draft.time) overrides[key] = { date: draft.date || '', time: draft.time || '' };
+      }
+    } catch {}
+    return overrides;
+  });
 
   // Check if essential data for calendar colors is loaded
   const isEssentialDataLoaded = state.sessions.length > 0 ||
@@ -245,18 +260,20 @@ export default function CalendarPage() {
       );
 
       if (!hasFollowUp) {
+        const draftKey = `draft-session-${clientId}-${session.dogName || 'primary'}`;
+        const override = draftOverrides[draftKey];
         results.push({
           id: `suggested-${session.id}`,
           clientId,
           dogName: session.dogName,
           sessionType: session.sessionType,
-          bookingDate: format(addDays(sessionDate, 21), 'yyyy-MM-dd'),
-          bookingTime: session.bookingTime,
+          bookingDate: override?.date || format(addDays(sessionDate, 21), 'yyyy-MM-dd'),
+          bookingTime: override?.time || session.bookingTime,
         });
       }
     }
     return results;
-  }, [showSuggestedSessions, state.sessions]);
+  }, [showSuggestedSessions, state.sessions, draftOverrides]);
 
   const getSuggestedSessionsForDay = (day: Date): SuggestedSession[] =>
     suggestedSessions.filter(s => isSameDay(new Date(s.bookingDate), day));
@@ -945,6 +962,8 @@ export default function CalendarPage() {
         draftKey={suggestedSessionInitialData?.clientId
           ? `draft-session-${suggestedSessionInitialData.clientId}-${suggestedSessionInitialData.dogName || 'primary'}`
           : undefined}
+        onDraftSave={(key, data) => setDraftOverrides(prev => ({ ...prev, [key]: data }))}
+        onDraftClear={(key) => setDraftOverrides(prev => { const next = { ...prev }; delete next[key]; return next; })}
       />
 
       {/* Day Sessions Modal - Mobile & Desktop */}

@@ -27,9 +27,11 @@ interface AddModalProps {
   type: 'session' | 'client';
   initialData?: InitialSessionData;
   draftKey?: string;
+  onDraftSave?: (key: string, data: { date: string; time: string }) => void;
+  onDraftClear?: (key: string) => void;
 }
 
-export default function AddModal({ isOpen, onClose, type, initialData, draftKey }: AddModalProps) {
+export default function AddModal({ isOpen, onClose, type, initialData, draftKey, onDraftSave, onDraftClear }: AddModalProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const { registerModal, unregisterModal } = useModal();
@@ -98,7 +100,7 @@ export default function AddModal({ isOpen, onClose, type, initialData, draftKey 
         {/* Content */}
         <div className="p-6 overflow-y-auto" style={{ maxHeight: 'calc(90vh - 80px)' }}>
           {type === 'session' ? (
-            <SessionForm onSubmit={handleClose} initialData={initialData} draftKey={draftKey} />
+            <SessionForm onSubmit={handleClose} initialData={initialData} draftKey={draftKey} onDraftSave={onDraftSave} onDraftClear={onDraftClear} />
           ) : (
             <ClientForm onSubmit={handleClose} />
           )}
@@ -127,7 +129,7 @@ export default function AddModal({ isOpen, onClose, type, initialData, draftKey 
         {/* Content */}
         <div className="flex-1 p-6 overflow-y-auto">
           {type === 'session' ? (
-            <SessionForm onSubmit={handleClose} initialData={initialData} draftKey={draftKey} />
+            <SessionForm onSubmit={handleClose} initialData={initialData} draftKey={draftKey} onDraftSave={onDraftSave} onDraftClear={onDraftClear} />
           ) : (
             <ClientForm onSubmit={handleClose} />
           )}
@@ -148,7 +150,7 @@ type SessionFormData = {
   travelExpense: 'Zone 1' | 'Zone 2' | 'Zone 3' | 'Zone 4' | '';
 };
 
-function SessionForm({ onSubmit, initialData, draftKey }: { onSubmit: () => void; initialData?: InitialSessionData; draftKey?: string }) {
+function SessionForm({ onSubmit, initialData, draftKey, onDraftSave, onDraftClear }: { onSubmit: () => void; initialData?: InitialSessionData; draftKey?: string; onDraftSave?: (key: string, data: { date: string; time: string }) => void; onDraftClear?: (key: string) => void }) {
   const { state, createSession } = useApp();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
@@ -429,6 +431,7 @@ function SessionForm({ onSubmit, initialData, draftKey }: { onSubmit: () => void
 
       if (draftKey) {
         try { localStorage.removeItem(draftKey); } catch {}
+        onDraftClear?.(draftKey);
       }
 
       onSubmit();
@@ -632,6 +635,7 @@ function SessionForm({ onSubmit, initialData, draftKey }: { onSubmit: () => void
             try {
               localStorage.setItem(draftKey, JSON.stringify(formData));
               setDraftSaved(true);
+              onDraftSave?.(draftKey, { date: formData.date, time: formData.time });
             } catch {}
           }}
           className="w-full py-3 px-6 rounded-lg font-medium transition-colors border border-amber-800 text-amber-800 hover:bg-amber-50"
