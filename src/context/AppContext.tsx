@@ -1222,7 +1222,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       // Always trigger session webhook for all new sessions
       const webhookDataWithFlags = {
         ...webhookData,
-        sendSessionEmail: daysUntilSession <= 7, // Only send email if ≤7 days away
+        sendSessionEmail: session.sessionType === 'Online' || daysUntilSession <= 7,
         createCalendarEvent: session.sessionType === 'Online' || session.sessionType === 'Group' // Make.com creates event for Online/Group (with Meet link)
       };
 
@@ -1525,7 +1525,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         // Google Meet link for Online sessions
         googleMeetLink: session.googleMeetLink || null,
         // Session webhook specific flags
-        sendSessionEmail: daysUntilSession <= 7, // Only send email if ≤7 days away
+        sendSessionEmail: session.sessionType === 'Online' || daysUntilSession <= 7,
         createCalendarEvent: forceCreateCalendarEvent,
         isUpdate: true, // Flag to indicate this is an update webhook
         eventId: session.eventId || null // Include eventId so Make.com knows if calendar exists
