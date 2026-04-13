@@ -174,13 +174,14 @@ export default function CalendarPage() {
     return new Set();
   });
   const [draftPendingDelete, setDraftPendingDelete] = useState<string | null>(null);
-  const [daysOff, setDaysOff] = useState<Set<string>>(() => {
+  const [daysOff, setDaysOff] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
     try {
       const raw = localStorage.getItem('calendar-days-off');
-      if (raw) return new Set(JSON.parse(raw));
+      if (raw) setDaysOff(new Set(JSON.parse(raw)));
     } catch {}
-    return new Set();
-  });
+  }, []);
 
   // Check if essential data for calendar colors is loaded
   const isEssentialDataLoaded = state.sessions.length > 0 ||
