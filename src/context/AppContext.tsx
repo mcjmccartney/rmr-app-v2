@@ -345,7 +345,7 @@ const AppContext = createContext<{
   createClient: (client: Omit<Client, 'id'>) => Promise<Client>;
   updateClient: (id: string, updates: Partial<Client>) => Promise<Client>;
   deleteClient: (id: string) => Promise<void>;
-  createSession: (session: Omit<Session, 'id'>) => Promise<Session>;
+  createSession: (session: Omit<Session, 'id'>, options?: { sendFullEmail?: boolean }) => Promise<Session>;
   updateSession: (id: string, updates: Partial<Session>) => Promise<Session>;
   deleteSession: (id: string) => Promise<void>;
   triggerSessionWebhook: (session: Session) => Promise<void>;
@@ -1031,7 +1031,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   // Trigger Make.com webhooks for new session
-  const triggerSessionWebhook = async (session: Session) => {
+  const triggerSessionWebhook = async (session: Session, options?: { sendFullEmail?: boolean }) => {
     try {
       // Find the client for this session (if any)
       const client = session.clientId ? state.clients.find(c => c.id === session.clientId) : null;
@@ -1110,15 +1110,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
 
       // Check if client has already signed booking terms by looking in booking_terms table
-      const hasSignedBookingTerms = state.bookingTerms.some(bt =>
-        bt.email?.toLowerCase() === client.email?.toLowerCase()
-      );
+      const hasSignedBookingTerms = options?.sendFullEmail
+        ? false
+        : state.bookingTerms.some(bt => bt.email?.toLowerCase() === client.email?.toLowerCase());
 
       // Check if client has filled questionnaire for the specific dog in this session
       const sessionDogName = session.dogName || client.dogName;
-      const hasFilledQuestionnaire = sessionDogName
-        ? findQuestionnaireForClient(client, sessionDogName, state.behaviourQuestionnaires)
-        : false;
+      const hasFilledQuestionnaire = options?.sendFullEmail
+        ? false
+        : (sessionDogName
+            ? findQuestionnaireForClient(client, sessionDogName, state.behaviourQuestionnaires)
+            : false);
 
       // Generate payment link for this session
       const paymentLink = paymentService.generatePaymentLink(session, client);
@@ -1237,7 +1239,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   // Create session in Supabase
-  const createSession = async (sessionData: Omit<Session, 'id'>): Promise<Session> => {
+  const createSession = async (sessionData: Omit<Session, 'id'>, options?: { sendFullEmail?: boolean }): Promise<Session> => {
     try {
       // Create the session in the database
       const session = await sessionService.create(sessionData);
@@ -1261,7 +1263,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
 
       // Trigger the webhook after polling confirms Meet link
-      await triggerSessionWebhook(session);
+      await triggerSessionWebhook(session, options);
 
       return session;
     } catch (error) {

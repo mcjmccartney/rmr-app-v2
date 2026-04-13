@@ -177,6 +177,7 @@ function SessionForm({ onSubmit, initialData, draftKey, onDraftSave, onDraftClea
     return base;
   });
   const [applyFollowupRate, setApplyFollowupRate] = useState(false);
+  const [sendFullEmail, setSendFullEmail] = useState(false);
 
   // Generate time options
   const hourOptions = generateHourOptions();
@@ -427,7 +428,7 @@ function SessionForm({ onSubmit, initialData, draftKey, onDraftSave, onDraftClea
         quote: parseFloat(formData.quote) || 0,
         notes: formData.notes || undefined,
         travelExpense: formData.travelExpense || null,
-      });
+      }, { sendFullEmail });
 
       if (draftKey) {
         try { localStorage.removeItem(draftKey); } catch {}
@@ -627,6 +628,21 @@ function SessionForm({ onSubmit, initialData, draftKey, onDraftSave, onDraftClea
           rows={3}
         />
       </div>
+
+      {selectedClient && (
+        <div className="flex items-center">
+          <input
+            type="checkbox"
+            id="sendFullEmail"
+            checked={sendFullEmail}
+            onChange={(e) => setSendFullEmail(e.target.checked)}
+            className="w-4 h-4 text-amber-800 border-gray-300 rounded focus:ring-amber-500"
+          />
+          <label htmlFor="sendFullEmail" className="ml-2 text-sm text-gray-700">
+            Send Full Email
+          </label>
+        </div>
+      )}
 
       {draftKey && isDirty && (
         <button
