@@ -170,18 +170,27 @@ export async function POST(request: NextRequest) {
             ? `${fullClient.first_name} & ${partnerFirstName}`
             : `${fullClient.first_name} ${fullClient.last_name}`.trim();
 
-          await fetch('https://hook.eu1.make.com/yaoalfe77uqtw4xv9fbh5atf4okq14wm', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              all_names: allNames,
-              email_list: emailList,
-              clientFirstName: fullClient.first_name,
-              clientLastName: fullClient.last_name,
-              clientEmail: fullClient.email,
-              isUpdate: true,
+          const webhookPayload = {
+            all_names: allNames,
+            email_list: emailList,
+            clientFirstName: fullClient.first_name,
+            clientLastName: fullClient.last_name,
+            clientEmail: fullClient.email,
+            isUpdate: true,
+          };
+
+          await Promise.allSettled([
+            fetch('https://hook.eu1.make.com/yaoalfe77uqtw4xv9fbh5atf4okq14wm', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(webhookPayload),
             }),
-          });
+            fetch('https://hook.eu1.make.com/1idapny85mc0paxt4hr75ajoka01r2sk', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(webhookPayload),
+            }),
+          ]);
         }
       } catch (webhookError) {
         console.error('Error firing booking terms webhook:', webhookError);
