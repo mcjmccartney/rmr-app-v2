@@ -220,39 +220,39 @@ export default function CalendarPage() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
+    // Find the latest future session per client (one ghost per client)
+    const latestPerClient = new Map<string, Session>();
+    for (const session of state.sessions) {
+      if (!session.clientId || !session.bookingDate || !session.bookingTime) continue;
+      if (new Date(session.bookingDate) < today) continue;
+      const existing = latestPerClient.get(session.clientId);
+      if (!existing || session.bookingDate > existing.bookingDate) {
+        latestPerClient.set(session.clientId, session);
+      }
+    }
+
     const results: SuggestedSession[] = [];
-    const seen = new Set<string>();
-
-    const futureSessions = state.sessions
-      .filter(s => s.clientId && s.bookingDate && s.bookingTime && new Date(s.bookingDate) >= today)
-      .sort((a, b) => a.bookingDate.localeCompare(b.bookingDate));
-
-    for (const session of futureSessions) {
+    for (const [clientId, session] of latestPerClient) {
       const sessionDate = new Date(session.bookingDate);
       const windowEnd = addDays(sessionDate, 21);
 
       const hasFollowUp = state.sessions.some(s =>
         s.id !== session.id &&
-        s.clientId === session.clientId &&
+        s.clientId === clientId &&
         s.bookingDate &&
         new Date(s.bookingDate) > sessionDate &&
         new Date(s.bookingDate) <= windowEnd
       );
 
       if (!hasFollowUp) {
-        const suggestedDate = format(addDays(sessionDate, 21), 'yyyy-MM-dd');
-        const key = `${session.clientId}-${suggestedDate}`;
-        if (!seen.has(key)) {
-          seen.add(key);
-          results.push({
-            id: `suggested-${session.id}`,
-            clientId: session.clientId!,
-            dogName: session.dogName,
-            sessionType: session.sessionType,
-            bookingDate: suggestedDate,
-            bookingTime: session.bookingTime,
-          });
-        }
+        results.push({
+          id: `suggested-${session.id}`,
+          clientId,
+          dogName: session.dogName,
+          sessionType: session.sessionType,
+          bookingDate: format(addDays(sessionDate, 21), 'yyyy-MM-dd'),
+          bookingTime: session.bookingTime,
+        });
       }
     }
     return results;
@@ -942,6 +942,9 @@ export default function CalendarPage() {
         onClose={handleCloseAddModal}
         type={addModalType}
         initialData={suggestedSessionInitialData}
+        draftKey={suggestedSessionInitialData?.clientId
+          ? `draft-session-${suggestedSessionInitialData.clientId}-${suggestedSessionInitialData.dogName || 'primary'}`
+          : undefined}
       />
 
       {/* Day Sessions Modal - Mobile & Desktop */}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 import { useModal } from '@/context/ModalContext';
 import { useApp } from '@/context/AppContext';
@@ -26,9 +26,10 @@ interface AddModalProps {
   onClose: () => void;
   type: 'session' | 'client';
   initialData?: InitialSessionData;
+  draftKey?: string;
 }
 
-export default function AddModal({ isOpen, onClose, type, initialData }: AddModalProps) {
+export default function AddModal({ isOpen, onClose, type, initialData, draftKey }: AddModalProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const { registerModal, unregisterModal } = useModal();
@@ -97,7 +98,7 @@ export default function AddModal({ isOpen, onClose, type, initialData }: AddModa
         {/* Content */}
         <div className="p-6 overflow-y-auto" style={{ maxHeight: 'calc(90vh - 80px)' }}>
           {type === 'session' ? (
-            <SessionForm onSubmit={handleClose} initialData={initialData} />
+            <SessionForm onSubmit={handleClose} initialData={initialData} draftKey={draftKey} />
           ) : (
             <ClientForm onSubmit={handleClose} />
           )}
@@ -126,7 +127,7 @@ export default function AddModal({ isOpen, onClose, type, initialData }: AddModa
         {/* Content */}
         <div className="flex-1 p-6 overflow-y-auto">
           {type === 'session' ? (
-            <SessionForm onSubmit={handleClose} initialData={initialData} />
+            <SessionForm onSubmit={handleClose} initialData={initialData} draftKey={draftKey} />
           ) : (
             <ClientForm onSubmit={handleClose} />
           )}
@@ -136,18 +137,42 @@ export default function AddModal({ isOpen, onClose, type, initialData }: AddModa
   );
 }
 
-function SessionForm({ onSubmit, initialData }: { onSubmit: () => void; initialData?: InitialSessionData }) {
+type SessionFormData = {
+  clientId: string;
+  dogName: string;
+  sessionType: Session['sessionType'];
+  date: string;
+  time: string;
+  notes: string;
+  quote: string;
+  travelExpense: 'Zone 1' | 'Zone 2' | 'Zone 3' | 'Zone 4' | '';
+};
+
+function SessionForm({ onSubmit, initialData, draftKey }: { onSubmit: () => void; initialData?: InitialSessionData; draftKey?: string }) {
   const { state, createSession } = useApp();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState({
-    clientId: initialData?.clientId || '',
-    dogName: initialData?.dogName || '',
-    sessionType: (initialData?.sessionType || 'In-Person') as Session['sessionType'],
-    date: initialData?.date || '',
-    time: initialData?.time || '',
-    notes: '',
-    quote: '',
-    travelExpense: '' as 'Zone 1' | 'Zone 2' | 'Zone 3' | 'Zone 4' | ''
+  const [isDirty, setIsDirty] = useState(false);
+  const [draftSaved, setDraftSaved] = useState(false);
+  const initialDataRef = useRef(initialData);
+  const [formData, setFormData] = useState<SessionFormData>(() => {
+    // Seed from localStorage draft if available, otherwise use initialData
+    const base = {
+      clientId: initialData?.clientId || '',
+      dogName: initialData?.dogName || '',
+      sessionType: (initialData?.sessionType || 'In-Person') as Session['sessionType'],
+      date: initialData?.date || '',
+      time: initialData?.time || '',
+      notes: '',
+      quote: '',
+      travelExpense: '' as SessionFormData['travelExpense']
+    };
+    if (draftKey) {
+      try {
+        const saved = localStorage.getItem(draftKey);
+        if (saved) return { ...base, ...JSON.parse(saved) };
+      } catch {}
+    }
+    return base;
   });
   const [applyFollowupRate, setApplyFollowupRate] = useState(false);
 
@@ -182,12 +207,13 @@ function SessionForm({ onSubmit, initialData }: { onSubmit: () => void; initialD
     if (hour !== '' && minute !== '') {
       const newTime = `${hour}:${minute}`;
       setFormData({ ...formData, time: newTime });
+      setIsDirty(true); setDraftSaved(false);
     } else if (hour !== '' || minute !== '') {
-      // If only one is selected, still update to show partial selection
       const currentHour = hour !== '' ? hour : '00';
       const currentMinute = minute !== '' ? minute : '00';
       const newTime = `${currentHour}:${currentMinute}`;
       setFormData({ ...formData, time: newTime });
+      setIsDirty(true); setDraftSaved(false);
     }
   };
 
@@ -220,13 +246,18 @@ function SessionForm({ onSubmit, initialData }: { onSubmit: () => void; initialD
 
   // Pre-fill selectedClient and quote when initialData is provided (e.g. from suggested session)
   useEffect(() => {
-    if (!initialData?.clientId) return;
-    const client = state.clients.find(c => c.id === initialData.clientId);
+    const clientId = initialDataRef.current?.clientId;
+    if (!clientId) return;
+    const client = state.clients.find(c => c.id === clientId);
     if (!client) return;
     setSelectedClient(client);
-    const isFirst = isFirstSession(initialData.clientId, formData.sessionType, formData.dogName);
-    const baseQuote = calculateQuote(formData.sessionType, client.membership || false, isFirst);
-    setFormData(prev => ({ ...prev, quote: baseQuote.toString() }));
+    // Only auto-calculate quote if not already set from a saved draft
+    setFormData(prev => {
+      if (prev.quote) return prev;
+      const isFirst = isFirstSession(clientId, prev.sessionType, prev.dogName);
+      const baseQuote = calculateQuote(prev.sessionType, client.membership || false, isFirst);
+      return { ...prev, quote: baseQuote.toString() };
+    });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleClientChange = (clientId: string) => {
@@ -250,6 +281,8 @@ function SessionForm({ onSubmit, initialData }: { onSubmit: () => void; initialD
       dogName: defaultDogName,
       quote: (baseQuote + travelCost).toString()
     });
+    setIsDirty(true);
+    setDraftSaved(false);
   };
 
   const handleSessionTypeChange = (sessionType: Session['sessionType']) => {
@@ -270,6 +303,8 @@ function SessionForm({ onSubmit, initialData }: { onSubmit: () => void; initialD
       quote: (baseQuote + travelCost).toString(),
       travelExpense: newTravelExpense
     });
+    setIsDirty(true);
+    setDraftSaved(false);
   };
 
   const handleFollowupRateToggle = (checked: boolean) => {
@@ -288,6 +323,8 @@ function SessionForm({ onSubmit, initialData }: { onSubmit: () => void; initialD
         ...formData,
         quote: (baseQuote + travelCost).toString()
       });
+      setIsDirty(true);
+      setDraftSaved(false);
     }
   };
 
@@ -308,6 +345,8 @@ function SessionForm({ onSubmit, initialData }: { onSubmit: () => void; initialD
       travelExpense,
       quote: newQuote.toString()
     });
+    setIsDirty(true);
+    setDraftSaved(false);
   };
 
   const handleDogNameChange = (dogName: string) => {
@@ -327,6 +366,8 @@ function SessionForm({ onSubmit, initialData }: { onSubmit: () => void; initialD
       dogName,
       quote: (baseQuote + travelCost).toString()
     });
+    setIsDirty(true);
+    setDraftSaved(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -385,6 +426,10 @@ function SessionForm({ onSubmit, initialData }: { onSubmit: () => void; initialD
         notes: formData.notes || undefined,
         travelExpense: formData.travelExpense || null,
       });
+
+      if (draftKey) {
+        try { localStorage.removeItem(draftKey); } catch {}
+      }
 
       onSubmit();
     } catch (error) {
@@ -461,7 +506,7 @@ function SessionForm({ onSubmit, initialData }: { onSubmit: () => void; initialD
         </label>
         <CustomDatePicker
           value={formData.date}
-          onChange={(value) => setFormData({ ...formData, date: value })}
+          onChange={(value) => { setFormData({ ...formData, date: value }); setIsDirty(true); setDraftSaved(false); }}
         />
       </div>
 
@@ -506,7 +551,7 @@ function SessionForm({ onSubmit, initialData }: { onSubmit: () => void; initialD
         <input
           type="number"
           value={formData.quote}
-          onChange={(e) => setFormData({ ...formData, quote: e.target.value })}
+          onChange={(e) => { setFormData({ ...formData, quote: e.target.value }); setIsDirty(true); setDraftSaved(false); }}
           onWheel={(e) => e.currentTarget.blur()} // Prevent trackpad scrolling from affecting the input
           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
           placeholder="Enter quote amount"
@@ -573,12 +618,27 @@ function SessionForm({ onSubmit, initialData }: { onSubmit: () => void; initialD
         </label>
         <textarea
           value={formData.notes}
-          onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+          onChange={(e) => { setFormData({ ...formData, notes: e.target.value }); setIsDirty(true); setDraftSaved(false); }}
           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
           placeholder="Add any notes about the session"
           rows={3}
         />
       </div>
+
+      {draftKey && isDirty && (
+        <button
+          type="button"
+          onClick={() => {
+            try {
+              localStorage.setItem(draftKey, JSON.stringify(formData));
+              setDraftSaved(true);
+            } catch {}
+          }}
+          className="w-full py-3 px-6 rounded-lg font-medium transition-colors border border-amber-800 text-amber-800 hover:bg-amber-50"
+        >
+          {draftSaved ? 'Draft Saved' : 'Save Draft'}
+        </button>
+      )}
 
       <button
         type="submit"
